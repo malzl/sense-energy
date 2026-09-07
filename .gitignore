@@ -1,10 +1,30 @@
 # ---- Data (never commit patient- or site-level data) ----
-code/data/raw/*
-code/data/interim/*
-code/data/processed/*
-code/data/external/*
+# Ignore the whole data tree, including loose files dropped at its root -
+# listing only the subdirectories let a file land in code/data/ and be staged.
+code/data/**
+!code/data/
+!code/data/*/
 !code/data/**/.gitkeep
+!code/data/README.md
 !code/data/**/README.md
+
+# Belt and braces: data file formats are ignored ANYWHERE in the repo, so a
+# file dropped outside code/data/ still cannot be committed by accident.
+*.parquet
+*.csv
+*.xlsx
+*.xls
+*.feather
+*.orc
+*.avro
+*.dta
+*.sav
+*.zip
+*.gz
+*.7z
+*.tar
+# Small fixtures used by the test suite are the deliberate exception.
+!code/tests/fixtures/*.csv
 
 # ---- Models & artifacts ----
 code/models/*
