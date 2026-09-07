@@ -23,7 +23,7 @@ def rolling_origin_splits(
     n_splits: int = 5,
     test_size: int = 336,
     gap: int = 0,
-    timestamp_col: str = "timestamp",
+    timestamp_col: str = "datetime",
 ) -> Iterator[tuple[pd.DataFrame, pd.DataFrame]]:
     """Yield expanding-window (train, test) folds ordered in time.
 
@@ -45,7 +45,7 @@ def backtest(
     model_factory,
     df: pd.DataFrame,
     features: list[str],
-    target: str = "value",
+    target: str = "consumption_kwh",
     n_splits: int = 5,
     test_size: int = 336,
     gap: int = 0,
@@ -68,9 +68,9 @@ def backtest(
         results.append(
             {
                 "fold": fold,
-                "train_end": train_df["timestamp"].max(),
-                "test_start": test_df["timestamp"].min(),
-                "test_end": test_df["timestamp"].max(),
+                "train_end": train_df["datetime"].max(),
+                "test_start": test_df["datetime"].min(),
+                "test_end": test_df["datetime"].max(),
                 "n_train": len(train_df),
                 "n_test": len(test_df),
                 **all_metrics(test_df[target].to_numpy(), preds),

@@ -33,7 +33,7 @@ def build_model(config: dict[str, Any]):
     return MODEL_REGISTRY[name](**spec.get("params", {}))
 
 
-def time_split(df: pd.DataFrame, cutoff: str, timestamp_col: str = "timestamp"):
+def time_split(df: pd.DataFrame, cutoff: str, timestamp_col: str = "datetime"):
     """Split into train/test at a timestamp. Never split time series randomly."""
     cut = pd.Timestamp(cutoff, tz="UTC")
     return df[df[timestamp_col] < cut], df[df[timestamp_col] >= cut]
@@ -44,7 +44,7 @@ def train(config: dict[str, Any]) -> Path:
     ensure_dirs()
 
     df = pd.read_parquet(PROCESSED_DIR / config.get("input_filename", "features.parquet"))
-    target = config.get("target", "value")
+    target = config.get("target", "consumption_kwh")
     features = config["features"]
 
     train_df, _ = time_split(df, config["split"]["test_start"])

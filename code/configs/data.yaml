@@ -1,12 +1,31 @@
-# raw -> processed pipeline
-# Paths are relative to code/data/raw unless absolute.
+# raw -> interim pipeline for the Energy Systems Catapult NHS extract.
 
-meter_path: null            # null -> code/data/raw/hh_meter_data.csv
-site_metadata_path: null    # null -> code/data/raw/site_metadata.csv
-weather_path: null          # null -> code/data/raw/weather.csv
+# Path to the source parquet. null -> auto-discover in code/data/raw,
+# then code/data/external.
+source_path: null
 
-frequency: "30min"          # half-hourly settlement periods
-outlier_z: 5.0              # robust z-score threshold for flagging (not dropping)
-max_gap: 4                  # interpolate gaps of <= 4 periods (2 hours)
+# Which reading_type codes to keep. 1/2/3 are half-hourly ACTIVE energy in kWh
+# (actual / estimate / part-actual). Everything else is a different quantity or
+# granularity and must not enter a demand series:
+#   6      = export kWh (generation, not demand)
+#   8-11   = reactive power in kVArh - NOT energy, ~9.6M rows in the source
+#   4,5,14 = cumulative / monthly / time-of-use, not half-hourly
+reading_types: ["1", "2", "3"]
 
-output_filename: demand.parquet
+# null keeps every energy type. Currently "elec" and "gas".
+energy_types: null
+
+frequency: "30min"
+
+# Exact zeros are meter dropouts written as zero, not genuine demand.
+zeros_as_missing: true
+
+# Loose threshold - this targets meter faults, not weather-driven peaks.
+outlier_z: 10.0
+
+# Interpolate gaps of at most this many periods (4 = 2 hours). Longer outages
+# stay missing rather than being invented.
+max_gap: 4
+
+consumption_filename: consumption_halfhourly.parquet
+sites_filename: sites.parquet

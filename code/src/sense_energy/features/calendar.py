@@ -13,7 +13,7 @@ import pandas as pd
 from ..config import LOCAL_TZ
 
 
-def add_calendar_features(df: pd.DataFrame, timestamp_col: str = "timestamp") -> pd.DataFrame:
+def add_calendar_features(df: pd.DataFrame, timestamp_col: str = "datetime") -> pd.DataFrame:
     """Add local-time calendar features derived from a tz-aware UTC timestamp."""
     df = df.copy()
     local = df[timestamp_col].dt.tz_convert(LOCAL_TZ)
@@ -55,7 +55,7 @@ def add_holiday_features(
         df["is_day_after_holiday"] = 0
         return df
 
-    local_date = df["timestamp"].dt.tz_convert(LOCAL_TZ).dt.normalize().dt.tz_localize(None)
+    local_date = df["datetime"].dt.tz_convert(LOCAL_TZ).dt.normalize().dt.tz_localize(None)
     hset = set(pd.DatetimeIndex(holidays).normalize())
     df["is_holiday"] = local_date.isin(hset).astype(int)
     df["is_day_before_holiday"] = (local_date + pd.Timedelta(days=1)).isin(hset).astype(int)

@@ -25,8 +25,8 @@ def add_weather_lags(
     windows: tuple[int, ...] = (48, 336),
 ) -> pd.DataFrame:
     """Lagged and rolling-mean temperature — buildings respond with thermal inertia."""
-    df = df.sort_values(["site_id", "timestamp"]).copy()
-    grouped = df.groupby("site_id")[temp_col]
+    df = df.sort_values(["mpxn", "datetime"]).copy()
+    grouped = df.groupby("mpxn")[temp_col]
 
     for lag in lags:
         df[f"{temp_col}_lag_{lag}"] = grouped.shift(lag)

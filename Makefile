@@ -24,8 +24,8 @@ format: ## Auto-format and auto-fix
 test: ## Run the test suite with coverage
 	pytest --cov=sense_energy --cov-report=term-missing
 
-data: ## Build the processed dataset from raw inputs
-	python -m sense_energy.cli build-dataset --config code/configs/data.yaml
+data: ## Clean the raw extract into code/data/interim/
+	python -m sense_energy.cli build-interim --config code/configs/data.yaml
 
 features: ## Build the model-ready feature table
 	python -m sense_energy.cli build-features --config code/configs/features.yaml

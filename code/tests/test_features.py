@@ -24,14 +24,16 @@ def test_degree_days_are_non_negative_and_exclusive(synthetic_demand):
 
 def test_target_lags_do_not_leak_the_present(synthetic_demand):
     df = lags.add_target_lags(synthetic_demand, lags=(1, 48))
-    site = df[df["site_id"] == "SITE_A"].sort_values("timestamp").reset_index(drop=True)
+    site = df[df["mpxn"] == "1000000000001"].sort_values("datetime").reset_index(drop=True)
     # lag_1 at row i must equal the value at row i-1, never row i.
-    assert np.allclose(site["value_lag_1"].iloc[1:], site["value"].iloc[:-1], equal_nan=True)
-    assert site["value_lag_48"].iloc[:48].isna().all()
+    assert np.allclose(
+        site["consumption_kwh_lag_1"].iloc[1:], site["consumption_kwh"].iloc[:-1], equal_nan=True
+    )
+    assert site["consumption_kwh_lag_48"].iloc[:48].isna().all()
 
 
 def test_rolling_features_exclude_current_period(synthetic_demand):
     df = lags.add_rolling_features(synthetic_demand, windows=(48,))
-    site = df[df["site_id"] == "SITE_A"].sort_values("timestamp")
-    assert site["value_roll_mean_48"].iloc[0] != site["value"].iloc[0]
-    assert site["value_roll_mean_48"].isna().iloc[0]
+    site = df[df["mpxn"] == "1000000000001"].sort_values("datetime")
+    assert site["consumption_kwh_roll_mean_48"].iloc[0] != site["consumption_kwh"].iloc[0]
+    assert site["consumption_kwh_roll_mean_48"].isna().iloc[0]

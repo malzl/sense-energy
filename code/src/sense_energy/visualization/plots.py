@@ -12,16 +12,16 @@ import pandas as pd
 from ..config import FIGURES_DIR, LOCAL_TZ
 
 
-def plot_load_profile(df: pd.DataFrame, site_id: str | None = None, ax=None):
+def plot_load_profile(df: pd.DataFrame, mpxn: str | None = None, ax=None):
     """Average demand by time of day, split by weekday vs. weekend."""
-    if site_id is not None:
-        df = df[df["site_id"] == site_id]
-    local = df["timestamp"].dt.tz_convert(LOCAL_TZ)
+    if mpxn is not None:
+        df = df[df["mpxn"] == mpxn]
+    local = df["datetime"].dt.tz_convert(LOCAL_TZ)
     frame = pd.DataFrame(
         {
             "minute_of_day": local.dt.hour * 60 + local.dt.minute,
             "is_weekend": local.dt.dayofweek >= 5,
-            "value": df["value"].to_numpy(),
+            "value": df["consumption_kwh"].to_numpy(),
         }
     )
 
@@ -33,7 +33,7 @@ def plot_load_profile(df: pd.DataFrame, site_id: str | None = None, ax=None):
         )
     ax.set_xlabel("Hour of day (local)")
     ax.set_ylabel("Mean demand")
-    ax.set_title(f"Load profile{f' — {site_id}' if site_id else ''}")
+    ax.set_title(f"Load profile{f' — {mpxn}' if mpxn else ''}")
     ax.legend()
     return ax
 

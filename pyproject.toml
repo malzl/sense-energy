@@ -29,9 +29,9 @@ dependencies = [
 dev = [
     "pytest>=8.2",
     "pytest-cov>=5.0",
-    "ruff>=0.8",
+    "ruff>=0.16,<0.17",
     "mypy>=1.11",
-    "pre-commit>=3.7",
+    "pre-commit>=3.7,<4",  # 4.x needs git >= 2.31 for --all-files
     "ipykernel>=6.29",
     "jupyterlab>=4.2",
     "nbstripout>=0.8",

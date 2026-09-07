@@ -1,61 +1,127 @@
 # Data dictionary
 
-Every column of every source, with units and provenance. Update this in the same
-PR that adds or changes a data source.
-
 ## Conventions
 
-- All timestamps are stored **tz-aware UTC**. Half-hourly timestamps denote the
+- All timestamps are tz-aware **UTC**; a half-hourly timestamp denotes the
   **start** of the settlement period. Local time (`Europe/London`) is a display
-  concern only — this matters because BST transitions produce 46- and 50-period days.
-- Energy is in **kWh** per period unless stated. Power is in **kW**.
-- `site_id` is the primary site key across all tables.
+  concern — this matters because BST transitions produce 46- and 50-period days.
+- Energy is **kWh per half hour** unless stated.
+- The bottom grain is the **meter** (`mpxn`), not the site.
 
-## `raw/hh_meter_data.csv`
+## Source: `energy_systems_catapult.nhs_energy_consumption.nhs_trust_consumption_data.parquet`
 
-| Column | Type | Unit | Description | Notes |
-|---|---|---|---|---|
-| `site_id` | str | — | Site / MPAN identifier | TBD |
-| `timestamp` | datetime | UTC | Settlement period start | TBD |
-| `value` | float | kWh | Consumption in the period | TBD |
-| `unit` | str | — | Unit label | TBD |
+Energy Systems Catapult, NHS trust consumption. 454 MB, **21,315,603 rows**,
+31 columns, 2021-03-01 → 2026-05-08, 284 sites. Written by DuckDB v1.4.3.
 
-**Source:** TBD · **Provider:** TBD · **Coverage:** TBD · **Refresh:** TBD
+Site attributes are denormalised onto every reading row.
 
-## `raw/site_metadata.csv`
+### Reading columns
 
-| Column | Type | Unit | Description | Notes |
-|---|---|---|---|---|
-| `site_id` | str | — | Site identifier | Joins to meter data |
-| `trust_name` | str | — | NHS trust | TBD |
-| `site_type` | str | — | Acute / community / mental health | TBD |
-| `gia_m2` | float | m² | Gross internal area | TBD |
-| `beds` | int | — | Bed count | TBD |
-| `latitude` | float | ° | WGS84 | For weather matching |
-| `longitude` | float | ° | WGS84 | For weather matching |
-
-## `raw/weather.csv` (or `external/`)
-
-| Column | Type | Unit | Description | Notes |
-|---|---|---|---|---|
-| `site_id` | str | — | Site identifier | Nearest station / grid point |
-| `timestamp` | datetime | UTC | Observation time | TBD |
-| `temperature_c` | float | °C | Dry bulb air temperature | Primary demand driver |
-| `humidity_pct` | float | % | Relative humidity | TBD |
-| `wind_speed_ms` | float | m/s | Wind speed | Affects infiltration losses |
-| `solar_irradiance_wm2` | float | W/m² | Global horizontal irradiance | Solar gain, on-site PV |
-
-**Source:** TBD (Met Office / Open-Meteo / ERA5) · **Licence:** TBD
-
-## Derived columns
-
-Built by `code/src/sense_energy/features/`. See the module docstrings for exact definitions.
-
-| Column | Source module | Description |
+| Column | Type | Description |
 |---|---|---|
-| `hour`, `day_of_week`, `month`, `is_weekend` | `features/calendar.py` | Local-time calendar parts |
-| `tod_sin`/`tod_cos`, `dow_*`, `doy_*` | `features/calendar.py` | Cyclical encodings |
-| `is_holiday` | `features/calendar.py` | England & Wales bank holiday |
-| `heating_degrees`, `cooling_degrees` | `features/weather.py` | Degree hours, base 15.5 °C |
-| `value_lag_<n>` | `features/lags.py` | Target lagged *n* periods |
-| `value_roll_mean_<w>` | `features/lags.py` | Rolling mean, shifted by 1 |
+| `datetime` | timestamp[us, UTC] | Settlement period start |
+| `consumption` | double | **Unit depends on `reading_type`** — see below |
+| `reading_type` | string | Code 1–14; determines quantity and unit |
+| `reading_type_name` | string | Human-readable form of `reading_type` |
+| `energy_type` | string | `elec` (19.7M rows) or `gas` (1.6M) |
+| `mpxn` | string | Meter identifier (MPAN/MPRN) — **the true grain** |
+| `monitor_external_reference` | string | Alternative meter reference |
+
+### ⚠️ `reading_type` — the most important column in the file
+
+`consumption` mixes units and granularities. Filtering is mandatory.
+
+| Code | Name | Quantity | Rows | Keep? |
+|---|---|---|---|---|
+| `1` | 30 minute aggregated kWh | Active energy | 10,338,634 | ✅ |
+| `2` | Estimate 30 minute aggregated kWh | Active energy (estimated) | 516,574 | ✅ flagged |
+| `3` | Part actual 30 minute aggregate kWh | Active energy (partial) | 36,500 | ✅ flagged |
+| `6` | Export 30 minute aggregated kWh | Export (generation) | 79,952 | ❌ not demand |
+| `8` | Reactive Export 30 min aggregated **kVArh** | Reactive power | 4,606,851 | ❌ not energy |
+| `9` | Reactive Export estimate **kVArh** | Reactive power | 327,852 | ❌ not energy |
+| `10` | Reactive Import 30 min aggregated **kVArh** | Reactive power | 5,029,235 | ❌ not energy |
+| `11` | Reactive Import estimate **kVArh** | Reactive power | 366,941 | ❌ not energy |
+| `4` | Cumulative kWh | Meter register | 8,457 | ❌ wrong granularity |
+| `5` | Monthly aggregated kWh | Monthly | 2,403 | ❌ wrong granularity |
+| `14` | Time of use cumulative kWh | Register | 2,100 | ❌ wrong granularity |
+| `NULL` | — | Unknown | 104 | ❌ |
+
+**9.6M of 21.3M rows (45%) are reactive power in kVArh, not energy.** Averaging
+`consumption` without filtering silently mixes kVArh into kWh.
+
+### Site columns (constant per `site_code`; extracted to `sites.parquet`)
+
+| Column | Type | Description |
+|---|---|---|
+| `site_code` | string | Site identifier |
+| `site_name` | string | Site name |
+| `postcode` | string | Postcode — the route to weather matching |
+| `organisation_name` | string | NHS trust |
+| `organisation_type` | string | ACUTE - TEACHING / LARGE / MEDIUM / SMALL / SPECIALIST, COMMUNITY, MENTAL HEALTH AND LEARNING DISABILITY, AMBULANCE |
+| `comissioning_region` | string | **[sic]** — misspelled in source; renamed `commissioning_region` downstream |
+| `integrated_care_board` | string | ICB |
+| `local_authority` | string | Local authority |
+| `occupied_floor_area` | double | m² |
+| `site_gross_internal_area` | double | m² — the denominator for kWh/m² |
+| `site_heated_volume` | double | m³ |
+| `site_construction_year_band` | string | Construction era band |
+| `site_use_type` | string | Site use classification |
+| `fossil_fuel_led_chp_units_operated_on_site` | int32 | On-site CHP count |
+
+### Unused source columns
+
+`main_heating_fuel` is **empty for all 21,315,603 rows**. The pre-aggregated
+`total_*_energy_consumption_kwh`, `chp_*`, `*_reported_kwh_m2` and `kWh_m2`
+columns are trust/period roll-ups, not half-hourly, and are not carried into
+interim.
+
+---
+
+## Interim: `code/data/interim/consumption_halfhourly.parquet`
+
+Built by `sense-energy build-interim`. 11,013,277 rows, 38.6 MB (zstd).
+**235 meters, 146 sites**, 2022-12-07 → 2026-05-08.
+
+Grain: one row per (`mpxn`, `energy_type`, `datetime`) on a complete 30-minute
+grid. Meter grain is preserved deliberately so the series can be aggregated up a
+hierarchy — `mpxn → site_code → organisation_name → integrated_care_board →
+commissioning_region` — via `cleaning.aggregate_to_level`.
+
+| Column | Type | Description |
+|---|---|---|
+| `mpxn` | string | Meter identifier |
+| `site_code` | string | Joins to `sites.parquet` |
+| `energy_type` | string | `elec` or `gas` |
+| `datetime` | datetime64[us, UTC] | Period start, on a gap-free grid |
+| `consumption_kwh` | float64 | Active energy, kWh. NaN = missing (11.82%) |
+| `is_estimated` | bool | Came from `reading_type` 2 or 3 (3.10%) |
+| `is_interpolated` | bool | Linearly filled across a gap ≤ 4 periods (1.38%) |
+| `is_outlier` | bool | Per-meter robust z-score > 10 (1.31%) |
+
+### Cleaning decisions
+
+| Decision | Rationale |
+|---|---|
+| Keep `reading_type` 1/2/3 only | Everything else is a different quantity or granularity |
+| Meters **summed, never de-duplicated** | 33 of 146 sites have multiple meters (Homerton: 20). 3.1M rows share `site_code`+`datetime` and are distinct meters, not duplicates |
+| 101 true duplicates dropped | Identical on (`mpxn`, `energy_type`, `reading_type`, `datetime`); last kept |
+| 211,478 actual/estimate collisions resolved | Same meter and timestamp under two reading types; the actual (`1`) wins |
+| Exact zeros → NaN (1,120,688; 10.49%) | Meter dropout written as zero. Concentrated — 8 sites are >50% zero, 94 of 145 under 1% — which is what distinguishes it from genuine low demand |
+| Gaps ≤ 4 periods interpolated | Longer outages stay NaN rather than inventing a load profile |
+| Outliers flagged, never dropped | A genuine spike is signal. Threshold is loose (z > 10), targeting meter faults |
+
+### Known data quality issues
+
+- **Gas maximum of 32,611 kWh/half-hour** (65 MW thermal) against a gas mean of
+  204 — implausible, flagged as an outlier. Electricity peaks at 2,505
+  kWh/half-hour (5 MW), which is plausible for a large acute site.
+- **Coverage varies widely**: median 1,192 days per site, minimum 388.
+- **Only 146 of 284 sites** have half-hourly active energy at all.
+- **No weather data** in this source. Temperature is the strongest single
+  predictor of hospital demand and must be joined from elsewhere, matched on
+  `postcode`.
+
+## Interim: `code/data/interim/sites.parquet`
+
+284 rows, 14 columns — the site columns above, with `comissioning_region`
+renamed to `commissioning_region`.

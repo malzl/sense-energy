@@ -22,14 +22,15 @@ def cli(log_level: str | None) -> None:
     setup_logging(log_level)
 
 
-@cli.command("build-dataset")
+@cli.command("build-interim")
 @click.option("--config", "config_path", default="code/configs/data.yaml", show_default=True)
-def build_dataset_cmd(config_path: str) -> None:
-    """Run the raw -> processed data pipeline."""
-    from .data.make_dataset import build_dataset
+def build_interim_cmd(config_path: str) -> None:
+    """Clean the raw extract into the interim tables."""
+    from .data.make_dataset import build_interim
 
-    path = build_dataset(load_config(config_path))
-    click.echo(f"Wrote {path}")
+    paths = build_interim(load_config(config_path))
+    for name, path in paths.items():
+        click.echo(f"{name:<12} {path}")
 
 
 @cli.command("build-features")

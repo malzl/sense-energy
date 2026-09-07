@@ -12,7 +12,7 @@ from ..logging_utils import get_logger
 
 logger = get_logger(__name__)
 
-REQUIRED_COLUMNS = ("site_id", "timestamp", "value")
+REQUIRED_COLUMNS = ("site_code", "datetime", "consumption")
 
 
 def validate_schema(df: pd.DataFrame, required: tuple[str, ...] = REQUIRED_COLUMNS) -> None:
@@ -21,23 +21,25 @@ def validate_schema(df: pd.DataFrame, required: tuple[str, ...] = REQUIRED_COLUM
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
 
-    if "timestamp" in df.columns:
-        ts = df["timestamp"]
+    if "datetime" in df.columns:
+        ts = df["datetime"]
         if not pd.api.types.is_datetime64_any_dtype(ts):
-            raise TypeError("'timestamp' must be a datetime dtype")
+            raise TypeError("'datetime' must be a datetime dtype")
         if ts.dt.tz is None:
-            raise TypeError("'timestamp' must be tz-aware (store everything in UTC)")
+            raise TypeError("'datetime' must be tz-aware (store everything in UTC)")
 
 
-def check_regular_index(df: pd.DataFrame, freq: str = "30min") -> pd.DataFrame:
+def check_regular_index(
+    df: pd.DataFrame, freq: str = "30min", group_col: str = "mpxn"
+) -> pd.DataFrame:
     """Report gaps and duplicates per site on a regular ``freq`` grid."""
     rows = []
-    for site_id, group in df.groupby("site_id"):
-        ts = group["timestamp"].sort_values()
+    for key, group in df.groupby(group_col):
+        ts = group["datetime"].sort_values()
         expected = pd.date_range(ts.min(), ts.max(), freq=freq, tz="UTC")
         rows.append(
             {
-                "site_id": site_id,
+                group_col: key,
                 "n_rows": len(group),
                 "n_expected": len(expected),
                 "n_missing": len(expected.difference(ts)),

@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 def build_features(df: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
     """Apply the configured feature blocks in order."""
-    target = config.get("target", "value")
+    target = config.get("target", "consumption_kwh")
 
     df = calendar.add_calendar_features(df)
     df = calendar.add_cyclical_features(df)
