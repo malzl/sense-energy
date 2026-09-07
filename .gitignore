@@ -1,0 +1,54 @@
+# ---- Data (never commit patient- or site-level data) ----
+code/data/raw/*
+code/data/interim/*
+code/data/processed/*
+code/data/external/*
+!code/data/**/.gitkeep
+!code/data/**/README.md
+
+# ---- Models & artifacts ----
+code/models/*
+!code/models/.gitkeep
+code/reports/figures/*
+!code/reports/figures/.gitkeep
+mlruns/
+*.joblib
+*.pkl
+*.h5
+*.onnx
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# ---- Tooling caches ----
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---- Notebooks ----
+.ipynb_checkpoints/
+
+# ---- Secrets / env ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

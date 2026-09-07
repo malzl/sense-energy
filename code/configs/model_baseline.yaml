@@ -1,0 +1,19 @@
+run_name: baseline_seasonal_naive
+input_filename: features.parquet
+target: value
+
+model:
+  name: seasonal_naive
+  params:
+    season_length: 336
+
+split:
+  test_start: "2025-01-01"
+
+backtest:
+  n_splits: 5
+  test_size: 336   # one week per fold
+  gap: 48          # day-ahead lead time
+
+features:
+  - value_lag_336

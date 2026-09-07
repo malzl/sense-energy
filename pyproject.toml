@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sense-energy"
+version = "0.1.0"
+description = "Energy demand forecasting for NHS hospitals"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=16.0",
+    "scikit-learn>=1.5",
+    "scipy>=1.13",
+    "statsmodels>=0.14",
+    "lightgbm>=4.3",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "click>=8.1",
+    "joblib>=1.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "ruff>=0.8",
+    "mypy>=1.11",
+    "pre-commit>=3.7",
+    "ipykernel>=6.29",
+    "jupyterlab>=4.2",
+    "nbstripout>=0.8",
+]
+
+[project.scripts]
+sense-energy = "sense_energy.cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["code/src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["code/src", "code/tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "PD"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["code/tests"]
+pythonpath = ["code/src"]
+addopts = "-ra --strict-markers"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+files = ["code/src"]

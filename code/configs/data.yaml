@@ -1,0 +1,12 @@
+# raw -> processed pipeline
+# Paths are relative to code/data/raw unless absolute.
+
+meter_path: null            # null -> code/data/raw/hh_meter_data.csv
+site_metadata_path: null    # null -> code/data/raw/site_metadata.csv
+weather_path: null          # null -> code/data/raw/weather.csv
+
+frequency: "30min"          # half-hourly settlement periods
+outlier_z: 5.0              # robust z-score threshold for flagging (not dropping)
+max_gap: 4                  # interpolate gaps of <= 4 periods (2 hours)
+
+output_filename: demand.parquet

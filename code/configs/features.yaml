@@ -1,0 +1,9 @@
+input_filename: demand.parquet
+output_filename: features.parquet
+
+target: value
+use_weather: true
+
+# Half-hourly: 48 = 1 day, 336 = 1 week.
+target_lags: [1, 2, 48, 96, 336]
+rolling_windows: [48, 336]

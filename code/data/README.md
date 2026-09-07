@@ -1,0 +1,29 @@
+# Data
+
+**Nothing in this tree is committed to git.** `.gitignore` excludes every subdirectory;
+only this file and the `.gitkeep` placeholders are tracked.
+
+| Directory   | Contents                                                        | Written by |
+|-------------|-----------------------------------------------------------------|------------|
+| `raw/`      | Source files exactly as received. **Treat as read-only.**       | Humans     |
+| `external/` | Third-party data: weather, bank holidays, tariffs, degree days   | Humans / API scripts |
+| `interim/`  | Cleaned, reshaped intermediates                                  | Pipeline   |
+| `processed/`| Model-ready tables (`demand.parquet`, `features.parquet`)        | Pipeline   |
+
+## Adding a new source
+
+1. Drop the file in `raw/` with a name that includes the source and extract date,
+   e.g. `hh_meter_data_2026-09-01.csv`.
+2. Add a reader in [`code/src/sense_energy/data/loaders.py`](../src/sense_energy/data/loaders.py).
+3. Document every field, its units and its provenance in
+   [`doc/data_dictionary.md`](../../doc/data_dictionary.md).
+4. Never edit a file in `raw/` — corrections belong in the cleaning code, so they
+   are versioned and reproducible.
+
+## Expected raw files
+
+| File                  | Description                                             |
+|-----------------------|---------------------------------------------------------|
+| `hh_meter_data.csv`   | Half-hourly electricity consumption per site            |
+| `site_metadata.csv`   | Site register: trust, type, floor area, beds, lat/lon   |
+| `weather.csv`         | Temperature, humidity, wind, irradiance per site        |
