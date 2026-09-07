@@ -27,3 +27,9 @@ only this file and the `.gitkeep` placeholders are tracked.
 | `hh_meter_data.csv`   | Half-hourly electricity consumption per site            |
 | `site_metadata.csv`   | Site register: trust, type, floor area, beds, lat/lon   |
 | `weather.csv`         | Temperature, humidity, wind, irradiance per site        |
+
+## `geo/`
+
+Boundary layers and geocoded site centroids, fetched by `sense-energy fetch-geo`.
+Git-ignored like the rest of the tree. Contents and licensing are documented in
+[doc/data_dictionary.md](../../doc/data_dictionary.md#geography-codedatageo).

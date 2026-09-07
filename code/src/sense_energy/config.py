@@ -28,6 +28,7 @@ RAW_DIR = DATA_DIR / "raw"
 EXTERNAL_DIR = DATA_DIR / "external"
 INTERIM_DIR = DATA_DIR / "interim"
 PROCESSED_DIR = DATA_DIR / "processed"
+GEO_DIR = DATA_DIR / "geo"
 
 CONFIG_DIR = CODE_DIR / "configs"
 MODELS_DIR = CODE_DIR / "models"
@@ -66,6 +67,7 @@ def ensure_dirs() -> None:
         EXTERNAL_DIR,
         INTERIM_DIR,
         PROCESSED_DIR,
+        GEO_DIR,
         MODELS_DIR,
         FIGURES_DIR,
     ):

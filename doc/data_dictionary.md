@@ -125,3 +125,64 @@ commissioning_region` — via `cleaning.aggregate_to_level`.
 
 284 rows, 14 columns — the site columns above, with `comissioning_region`
 renamed to `commissioning_region`.
+
+---
+
+## Geography: `code/data/geo/`
+
+The NHS extract carries **no coordinates**. `postcode` is the only direct
+locator — present for 275 of 284 sites, and 141 of the 146 with half-hourly
+data. Everything below is fetched by `sense-energy fetch-geo`.
+
+### Boundary layers
+
+ONS Open Geography Portal, **Open Government Licence v3** — "Contains OS data
+© Crown copyright and database right". Generalised-clipped (`BGC`) versions:
+full-resolution coastlines are far larger and indistinguishable at national scale.
+
+| File | Layer | Features | Joins to |
+|---|---|---|---|
+| `countries_uk.geojson` | Countries December 2024 UK BGC | 4 | map background |
+| `nhs_regions_en.geojson` | NHS England Regions January 2024 BGC | 7 | `sites.commissioning_region` |
+| `icb_en.geojson` | Integrated Care Boards April 2023 BGC | 42 | `sites.integrated_care_board` |
+
+Each is also written as an ESRI Shapefile (`.shp` + `.dbf`/`.shx`/`.prj`/`.cpg`)
+via `sense-energy fetch-geo --shapefile`. GeoJSON is the native download and the
+better archival form — one file, explicit CRS, no 10-character field-name
+truncation — so the shapefiles are a convenience for tools that need them.
+
+⚠️ ONS layer names carry the boundary type as a suffix. `_NC` means **no
+coordinates** — a lookup table with null geometry, not a boundary layer.
+`BFC`/`BFE` are full resolution, `BGC` generalised, `BSC`/`BUC` (super/ultra)
+more so.
+
+### `sites_geo.parquet`
+
+284 rows — the site dimension with centroids appended.
+
+| Column | Description |
+|---|---|
+| *(all `sites.parquet` columns)* | |
+| `latitude`, `longitude` | Postcode centroid, EPSG:4326 |
+| `eastings`, `northings` | OSGB grid (EPSG:27700) |
+| `country`, `region_ons`, `admin_district` | ONS geographies — cross-check on the site table |
+| `postcode_is_terminated` | Centroid came from a retired postcode |
+
+**Source:** [postcodes.io](https://postcodes.io) — a free service over ONS open
+data. Only postcodes are sent; no consumption data leaves the machine. Hospital
+postcodes are public information, but see [data_governance.md](data_governance.md)
+before extending this to anything site-level.
+
+### Geocoding outcome
+
+- **275 of 284 sites** located; all 258 distinct postcodes resolved.
+- **5 postcodes are terminated** (retired 2010–2025) and were resolved through
+  the terminated-postcodes endpoint. NHS estates records outlive the postcode
+  register, so this fallback is required, not incidental.
+- **9 sites have no postcode at all.** Five are `Site(s) Unknown - <trust>`
+  placeholders — trust-level aggregates carried in the data as if they were
+  sites. They are unmappable, and should be excluded from site-level modelling
+  rather than treated as a location.
+- **141 of the 146 sites with demand data are mappable**; 134 appear on the map,
+  the rest having no non-outlier electricity readings.
+- Every located site is in **England** — consistent with an NHS England source.

@@ -33,6 +33,22 @@ def build_interim_cmd(config_path: str) -> None:
         click.echo(f"{name:<12} {path}")
 
 
+@cli.command("fetch-geo")
+@click.option("--overwrite", is_flag=True, help="Re-download even if files exist.")
+@click.option("--shapefile", is_flag=True, help="Also write ESRI Shapefiles alongside the GeoJSON.")
+def fetch_geo_cmd(overwrite: bool, shapefile: bool) -> None:
+    """Download boundary layers and geocode site postcodes into code/data/geo/."""
+    from .data import geo
+    from .data.make_dataset import load_sites
+
+    for key, path in geo.fetch_all_boundaries(overwrite=overwrite).items():
+        click.echo(f"{key:<16} {path}")
+        if shapefile:
+            click.echo(f"{'':<16} {geo.to_shapefile(path)}")
+
+    click.echo(f"{'sites_geo':<16} {geo.build_site_geometry(load_sites(), overwrite=overwrite)}")
+
+
 @cli.command("build-features")
 @click.option("--config", "config_path", default="code/configs/features.yaml", show_default=True)
 def build_features_cmd(config_path: str) -> None:

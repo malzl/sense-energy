@@ -23,6 +23,14 @@ code/data/**
 *.gz
 *.7z
 *.tar
+# Geospatial formats (shapefile sidecars included).
+*.geojson
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.gpkg
 # Small fixtures used by the test suite are the deliberate exception.
 !code/tests/fixtures/*.csv
 
