@@ -90,6 +90,14 @@ ROLE_COLORS = {
 }
 
 SEQUENTIAL_CMAPS = ("viridis", "cividis", "magma")
+
+#: Entity colours for exploratory figures, by conceptual role. Energy vectors
+#: take two categorical slots; day types take the reference/baseline greys so
+#: the two pairings never compete inside one figure.
+ENERGY_COLORS = {"elec": "#0072B2", "gas": "#E69F00"}
+ENERGY_LABELS = {"elec": "electricity", "gas": "gas"}
+DAYTYPE_COLORS = {"weekday": "#000000", "weekend": "#7A7A7A"}
+SPAGHETTI = "#B8B8B8"  # many background series; the highlighted statistic is black
 DIVERGING_CMAPS = ("RdBu_r", "coolwarm")
 
 # --------------------------------------------------------------------------- #
