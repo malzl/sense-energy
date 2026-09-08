@@ -178,18 +178,38 @@ def harvest_run(date: str, time: str, config: dict[str, Any]) -> Path:
 
 
 def harvest_available(config: dict[str, Any]) -> list[Path]:
-    """Harvest every run in the archive not yet on disk. Safe to run on a schedule."""
-    runs = list_available_runs(config)
-    logger.info(
-        "%d %s runs in the open-data archive at %s", len(runs), config["model"], config["run_times"]
-    )
-    written = []
-    for date, time in runs:
+    """Harvest every run in the archive not yet on disk. Safe to run on a schedule.
+
+    A lock file makes a second concurrent invocation (cron firing while a
+    manual run is still going) exit at once instead of racing on the same
+    work directory.
+    """
+    import fcntl
+
+    out_dir = output_dir(config)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = out_dir / ".harvest.lock"
+    with lock_path.open("w") as lock:
         try:
-            written.append(harvest_run(date, time, config))
-        except Exception as exc:  # noqa: BLE001 - one bad run must not stop the rest
-            logger.error("Run %sT%sz failed: %s", date, time, exc)
-    return written
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            logger.warning("Another harvest holds %s; exiting", lock_path)
+            return []
+
+        runs = list_available_runs(config)
+        logger.info(
+            "%d %s runs in the open-data archive at %s",
+            len(runs),
+            config["model"],
+            config["run_times"],
+        )
+        written = []
+        for date, time in runs:
+            try:
+                written.append(harvest_run(date, time, config))
+            except Exception as exc:  # noqa: BLE001 - one bad run must not stop the rest
+                logger.error("Run %sT%sz failed: %s", date, time, exc)
+        return written
 
 
 def extract_sites(nc_path: Path, sites: pd.DataFrame) -> pd.DataFrame:

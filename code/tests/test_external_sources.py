@@ -239,3 +239,18 @@ def test_canonical_agile_is_unique_per_region_and_time():
     out = prices.canonical_agile(rates, windows)
     assert not out.duplicated(["region", "datetime"]).any()
     assert len(out) == 6
+
+
+def test_harvest_exits_when_another_instance_holds_the_lock(tmp_path, monkeypatch):
+    import fcntl
+
+    cfg = {"output_subdir": str(tmp_path), "model": "aifs-ens", "run_times": ["00"]}
+    holder = (tmp_path / ".harvest.lock").open("w")
+    fcntl.flock(holder, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    monkeypatch.setattr(
+        forecasts,
+        "list_available_runs",
+        lambda c: (_ for _ in ()).throw(AssertionError("must not list")),
+    )
+    assert forecasts.harvest_available(cfg) == []
+    holder.close()
