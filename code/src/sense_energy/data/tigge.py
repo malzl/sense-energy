@@ -99,10 +99,12 @@ def sites_parquet_path(product_type: str, year: int, month: int, config: dict[st
 
 
 def month_present(product_type: str, year: int, month: int, config: dict[str, Any]) -> bool:
-    """A month counts as present once its site extract exists (the GRIB may have been deleted)."""
-    return sites_parquet_path(product_type, year, month, config).exists() or _opens_cleanly(
-        target_path(product_type, year, month, config)
-    )
+    """A month counts as done only once its site extract exists.
+
+    A GRIB on disk without an extract is not done: fetch_month will skip the
+    download and just extract it.
+    """
+    return sites_parquet_path(product_type, year, month, config).exists()
 
 
 def _located_sites() -> pd.DataFrame:
