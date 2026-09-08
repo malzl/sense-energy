@@ -110,6 +110,47 @@ def fetch_prices_cmd(config_path: str) -> None:
             click.echo(f"{'gsp_group':<12} added to {geo_path}")
 
 
+@cli.command("fetch-tigge")
+@click.option("--config", "config_path", default="code/configs/tigge.yaml", show_default=True)
+@click.option("--type", "types", multiple=True, help="cf and/or pf; default both.")
+def fetch_tigge_cmd(config_path: str, types: tuple[str, ...]) -> None:
+    """Pull IFS ENS historical forecasts from TIGGE via the ECMWF Web API. Resumable."""
+    from .data.tigge import fetch_all
+
+    paths = fetch_all(load_config(config_path), list(types) or None)
+    click.echo(f"{len(paths)} type-months present")
+
+
+@cli.command("build-tigge")
+@click.option("--config", "config_path", default="code/configs/tigge.yaml", show_default=True)
+def build_tigge_cmd(config_path: str) -> None:
+    """Extract nearest-grid-point TIGGE forecasts for every geocoded site into interim/."""
+    from .data.tigge import build_forecast_sites
+
+    sites = pd.read_parquet(GEO_DIR / "sites_geo.parquet")
+    click.echo(build_forecast_sites(load_config(config_path), sites))
+
+
+@cli.command("fetch-neso")
+@click.option("--config", "config_path", default="code/configs/neso.yaml", show_default=True)
+@click.option("--overwrite", is_flag=True)
+def fetch_neso_cmd(config_path: str, overwrite: bool) -> None:
+    """Download FES tables, GSP boundaries and national demand from the NESO data portal."""
+    from .data.neso import fetch
+
+    click.echo(f"{len(fetch(load_config(config_path), overwrite=overwrite))} files present")
+
+
+@cli.command("build-neso")
+@click.option("--config", "config_path", default="code/configs/neso.yaml", show_default=True)
+def build_neso_cmd(config_path: str) -> None:
+    """Tidy the NESO tables into interim/ and stamp sites with their GSP region."""
+    from .data.neso import build
+
+    for name, path in build(load_config(config_path)).items():
+        click.echo(f"{name:<40} {path}")
+
+
 @cli.command("build-features")
 @click.option("--config", "config_path", default="code/configs/features.yaml", show_default=True)
 def build_features_cmd(config_path: str) -> None:

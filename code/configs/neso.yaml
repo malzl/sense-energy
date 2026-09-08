@@ -1,0 +1,15 @@
+# NESO data portal (CKAN at api.neso.energy). Open data under the NESO Open
+# Data Licence - attribute "NESO". Everything lands under code/data/external/neso
+# (tables) and code/data/geo/neso (boundaries); both are git-ignored.
+#
+# FES = Future Energy Scenarios. The public "data workbook" is published on the
+# portal sheet by sheet: ED1 (demand summary incl. peaks), ES1 (supply incl.
+# distributed/embedded capacity), FLX1 (flexibility), the building blocks with
+# per-GSP technology counts/capacities, and the regional breakdown per GSP.
+
+fes_years: [2023, 2024, 2025]     # FES publication years to keep
+history_years: [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]   # NESO historic demand
+forecast_archive_years: [2022, 2023, 2024, 2025, 2026]            # embedded wind/solar forecast archive
+
+# Boundary layer used to assign sites to GSP regions.
+gsp_regions_layer: gsp_regions_20260209

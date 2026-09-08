@@ -48,9 +48,12 @@ What each candidate source can actually provide:
   the question.
 - The AIFS archive only exists from the day the cron job starts. Schedule it
   before anything else if forecast-based evaluation matters.
-- If true historical forecast ensembles are required, the route is TIGGE
-  (IFS ENS, 0.5 deg, from 2006) via the ECMWF Web API, which needs the API key
-  from https://api.ecmwf.int/v1/key/ - a username and password alone do not
-  drive it.
+- **Amendment 2026-09-08:** true historical forecast ensembles are now pulled
+  from TIGGE (IFS ENS, 51 members, 0.5 deg, 6-hourly, from 2006) via the ECMWF
+  Web API - `sense-energy fetch-tigge`. This becomes the *forecast-at-issue-time*
+  series for the training window; ERA5 remains the truth series and AIFS-ENS the
+  operational feed. The account needs the Web API key from
+  https://api.ecmwf.int/v1/key/ and the TIGGE licence accepted; a username and
+  password alone drive neither.
 - Agile rates are known from the afternoon of D-1. A forecast issued earlier
   that day cannot use them; check the issue time before adding the feature.

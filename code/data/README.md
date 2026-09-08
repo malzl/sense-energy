@@ -43,3 +43,14 @@ Git-ignored like the rest of the tree. Contents and licensing are documented in
 
 Both are git-ignored. The AIFS archive only exists from the day the harvester
 starts running - it cannot be backfilled.
+
+## `external/neso/` and `geo/neso/`
+
+NESO FES tables, national demand history, embedded forecast archive (~2.3 GB) and
+GSP boundaries. `sense-energy fetch-neso` downloads by resource name from the
+CKAN API; `sense-energy build-neso` tidies them into `interim/`.
+
+## `external/weather/tigge_ens/`
+
+IFS ENS historical forecasts from TIGGE, one NetCDF per type-month.
+`sense-energy fetch-tigge` (needs the ECMWF Web API key and the TIGGE licence).

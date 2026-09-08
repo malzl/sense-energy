@@ -287,3 +287,92 @@ ENTSO-E day-ahead prices for GB (`10YGB----------A`): none published since GB
 left EU market coupling in January 2021, and the REST host answers 404 for
 every zone at the time of writing. Nord Pool's data portal requires a
 subscription.
+
+
+---
+
+## Forecasts (historical): `code/data/external/weather/tigge_ens/` → `interim/forecast_tigge_ens.parquet`
+
+ECMWF IFS ENS from the **TIGGE** archive via the ECMWF Web API. Research use
+under the TIGGE terms. `sense-energy fetch-tigge` (resumable, one MARS request
+per type-month) then `sense-energy build-tigge`.
+
+This is *what the forecast said* for every day of the training window — the
+counterpart to ERA5 (*what happened*). A day-ahead model backtested on this,
+not on ERA5, sees the accuracy it would really have had.
+
+| | |
+|---|---|
+| Runs | 00z, 12z |
+| Lead times | 0–72 h, 6-hourly (TIGGE goes to 360 h) |
+| Members | 51: `cf` control = member 0, `pf` = 1–50 |
+| Grid | 0.5°, same area as ERA5 |
+
+| Parameter id | Short name | Units | Notes |
+|---|---|---|---|
+| 167 / 168 | `t2m` / `d2m` | K | |
+| 165 / 166 | `u10` / `v10` | m s⁻¹ | |
+| 134 | `sp` | Pa | |
+| 235 | `skt` | K | |
+| 228228 / 228144 | `tp` / `sf` | m | **accumulated from run start** |
+| 228164 | `tcc` | 0–1 | |
+| 176 / 177 | `ssr` / `str` | J m⁻² | **net** surface radiation in TIGGE (ERA5 gives *downward*) — not directly comparable |
+| 123 | `10fg6` | m s⁻¹ | max gust over the preceding 6 h |
+
+Output columns mirror `forecast_aifs_ens.parquet`: `site_code`, `run_time`,
+`valid_time`, `step_hours`, `member`, then the variables.
+
+---
+
+## NESO: `code/data/external/neso/`, `code/data/geo/neso/` → `interim/*.parquet`
+
+NESO data portal (CKAN, `api.neso.energy`), NESO Open Data Licence —
+"Contains NESO open data". `sense-energy fetch-neso` (manifest-driven, by
+resource name) then `sense-energy build-neso`.
+
+### Future Energy Scenarios — the "data workbook", sheet by sheet
+
+The FES workbook is published on the portal as one dataset per sheet. Kept for
+FES 2023, 2024 and 2025. Pathways: FES 2024 *Holistic Transition, Electric
+Engagement, Hydrogen Evolution, Counterfactual* (+ *Five Year Forecast*);
+FES 2025 replaces Counterfactual with *Falling Behind* (+ *Ten Year Forecast*).
+
+| Interim table | Sheet | Grain | Use |
+|---|---|---|---|
+| `fes_ed1_demand_summary` | ED1 | data item × pathway × year | **GB annual (GWh) and peak (GW) demand**; `statistic ∈ {Annual [Fiscal], Peak, Min (06:00), Min (14:00)}`; `neso.peak_demand()` filters the peaks |
+| `fes_es1_supply` | ES1 | connection × pathway × technology × year | capacity/output; `connection == "Distributed"` is the **embedded generation** fleet |
+| `fes_flx1_flexibility` | FLX1 | flexibility type × pathway × year | interconnectors, storage, DSR |
+| `fes_building_blocks` | BB | pathway × building block × GSP × year | per-GSP technology counts/capacities, joined to definitions |
+| `fes_regional_demand` | regional | scenario × GSP × year | **peak / AM / PM demand per GSP (MW)**, 2023–2050; 2024 is the latest published |
+| `fes_regional_distributed_generation` | regional | scenario × GSP × technology × year × size band | capacity and contribution at winter peak / summer AM / PM |
+| `fes_gsp_info` | regional | GSP | GSP id, group, name, lat/lon |
+
+`fes_year` on every row says which publication the value came from; scenario
+codes are expanded via `neso.SCENARIO_NAMES` (HE/EE/HT/CF/FB…). Years in the
+regional files arrive as two digits and are expanded.
+
+### National demand — known-beforehand covariates
+
+| Interim table | Source | Grain | Notes |
+|---|---|---|---|
+| `national_demand_halfhourly` | Historic Demand Data | 30 min, UTC | `nd` national demand, `tsd` transmission system demand, `england_wales_demand`, **embedded wind/solar generation and capacity**, interconnector flows. 2019–2026 |
+| `embedded_forecast_archive` | Embedded Wind & Solar Forecasts archive | 30 min target × issue time | every forecast NESO issued (`issued_at`, `lead_hours`). Use `neso.latest_forecast_before(min_lead_hours)` so a feature never uses a forecast issued after the model's own issue time. 2022–2026 |
+
+Settlement periods are local-clock half hours; conversion to UTC is exact on
+the 46- and 50-period clock-change days.
+
+### GSP boundaries → sites
+
+`code/data/geo/neso/`: GSP regions 2026-02-09 (362 regions, EPSG:4326 and
+27700, GeoPackage + GeoJSON), 2022-03-14 (333), the tRESP GSP areas 2025 (235),
+and the GSP/GNode/region lookup with GSP group per node. Sites gain two columns
+in `sites_geo.parquet`:
+
+| Column | Source | Notes |
+|---|---|---|
+| `gsp_region` | NESO 2026-02 polygons, point-in-polygon | e.g. `LEGA_1`; coastal misses snapped to the nearest region within 5 km |
+| `gsp_group_neso` | same polygons | A–P; cross-checked against the Octopus-derived `gsp_group`, disagreements logged |
+
+`gsp_region` is the join key to `fes_regional_demand.gsp_id` /
+`fes_regional_distributed_generation.gsp_id`, which is how a hospital gets its
+GSP's scenario demand pathway.

@@ -1,0 +1,43 @@
+# ECMWF IFS ENS historical forecasts from the TIGGE archive, via the ECMWF
+# Web API (needs ECMWF_API_* in .env and the TIGGE licence accepted at
+# http://apps.ecmwf.int/datasets/licences/tigge). TIGGE is for research use.
+#
+# This is the true historical FORECAST ensemble: 50 perturbed members + control,
+# every run since 2006, 0.5 deg, 6-hourly steps. It is what a day-ahead model
+# would actually have seen, unlike ERA5 (what happened) - see ADR 0003.
+
+dataset: tigge
+origin: ecmf
+expver: prod
+
+start: "2022-12"
+end: "2026-05"
+
+# Runs and lead times. 00z+12z with 0-72 h covers day-ahead and two-day-ahead
+# issuance; TIGGE goes to 360 h if needed.
+times: ["00:00:00", "12:00:00"]
+steps: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+
+# cf = control (member 0), pf = perturbed members 1-50.
+types: [cf, pf]
+members: "1/to/50"
+
+# GRIB parameter ids in the TIGGE surface table.
+#   167 2t   168 2d   165 10u   166 10v   134 sp   235 skt
+#   228228 tp (accumulated)   228144 sf (accumulated)   228164 tcc
+#   176 ssr  177 str  (NET surface radiation in TIGGE, not downward)
+#   123 10fg6 (max gust in previous 6 h)
+params: [167, 168, 165, 166, 134, 235, 228228, 228144, 228164, 176, 177, 123]
+
+grid: "0.5/0.5"
+# N/W/S/E - same box as ERA5 and AIFS.
+area: "55/-5/50/2"
+
+# MARS output format. netcdf is converted server-side; grib is the fallback.
+format: netcdf
+
+# Concurrent MARS requests; the public queue allows few.
+max_workers: 2
+
+# Under code/data/external/
+output_subdir: weather/tigge_ens
