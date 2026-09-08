@@ -309,7 +309,7 @@ not on ERA5, sees the accuracy it would really have had.
 | Lead times | 0–72 h, 6-hourly (TIGGE goes to 384 h) |
 | Members | 51: `cf` control = member 0, `pf` = 1–50 |
 | Grid | ECDS serves the model's **native reduced grid** (739 points in the box, ~9 km), not a regular 0.5° box; sites take the nearest point |
-| Storage | Each month is extracted to the located sites on arrival (`cf_sites/`, `pf_sites/`, float32 parquet) and the perturbed GRIB (~1 GB/month) deleted; control GRIBs (~19 MB) are kept |
+| Storage | Each month is extracted to the located sites on arrival (`control_forecast_sites/`, `perturbed_forecast_sites/`, float32 parquet) and the GRIB deleted (perturbed months are ~1 GB) |
 
 | ECDS variable | Short name | Units (as delivered) | Notes |
 |---|---|---|---|
