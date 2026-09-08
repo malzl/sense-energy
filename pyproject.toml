@@ -34,6 +34,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Time-series foundation models. Install torch FIRST from the CUDA index that
+# matches the driver (this box: driver 535 = CUDA 12.2):
+#   pip install "torch==2.5.1" --index-url https://download.pytorch.org/whl/cu121
+#   pip install -e ".[models]"
+models = [
+    "torch>=2.5",
+    "chronos-forecasting>=2.3",     # amazon/chronos-2
+    "timesfm>=3.0",                 # google/timesfm-3.0-pytorch
+    "tabpfn>=8.5",                  # Prior-Labs/tabpfn_3 (regressor + time-series checkpoint)
+    "tabpfn-time-series>=1.2",
+    "huggingface_hub>=0.28",
+]
 dev = [
     "pytest>=8.2",
     "pytest-cov>=5.0",

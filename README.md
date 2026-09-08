@@ -52,6 +52,14 @@ cp .env.example .env       # then fill in any API keys
 pytest
 ```
 
+## Foundation models
+
+Chronos-2, TimesFM 3.0 and TabPFN v3 (incl. its time-series checkpoint) are
+optional: `pip install -e ".[models]"` after installing a torch build that
+matches the GPU driver (see the comment in `pyproject.toml`). Weights live in
+the HuggingFace cache (`~/.cache/huggingface/hub`), not in the repo. Use the
+idle card: `CUDA_VISIBLE_DEVICES=1`.
+
 ## Workflow
 
 ```bash
