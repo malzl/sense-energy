@@ -480,14 +480,22 @@ def _settlement_to_utc(date: pd.Series, period: pd.Series) -> pd.Series:
 
 
 def _parse_settlement_date(values: pd.Series) -> pd.Series:
-    """NESO wrote ``01-JAN-2024`` until 2024 and ISO ``2025-01-01`` from 2025.
+    """NESO has used three date spellings: ``01-JAN-2024``, ``01-Jan-23`` and ISO ``2025-01-01``.
 
     Detect per file rather than letting pandas guess: ``dayfirst=True`` on a
     mixed parse silently swaps month and day in ISO strings.
     """
-    sample = str(values.dropna().iloc[0]).strip().strip('"')
-    fmt = "%Y-%m-%d" if re.fullmatch(r"\d{4}-\d{2}-\d{2}", sample) else "%d-%b-%Y"
-    return pd.to_datetime(values.astype(str).str.strip().str.strip('"'), format=fmt)
+    cleaned = values.astype(str).str.strip().str.strip('"')
+    sample = cleaned.dropna().iloc[0]
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", sample):
+        fmt = "%Y-%m-%d"
+    elif re.fullmatch(r"\d{2}-[A-Za-z]{3}-\d{4}", sample):
+        fmt = "%d-%b-%Y"
+    elif re.fullmatch(r"\d{2}-[A-Za-z]{3}-\d{2}", sample):
+        fmt = "%d-%b-%y"
+    else:
+        raise ValueError(f"Unrecognised settlement date format: {sample!r}")
+    return pd.to_datetime(cleaned, format=fmt)
 
 
 def load_historic_demand(years: list[int]) -> pd.DataFrame:
