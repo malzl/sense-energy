@@ -94,27 +94,49 @@ def reindex_to_grid(df: pd.DataFrame, freq: str = "30min") -> pd.DataFrame:
 
 
 def flag_outliers(
-    df: pd.DataFrame, column: str = "consumption_kwh", z_threshold: float = 10.0
+    df: pd.DataFrame,
+    column: str = "consumption_kwh",
+    z_threshold: float = 10.0,
+    min_ratio_to_median: float = 5.0,
+    ratio_to_p995: float = 3.0,
+    mad_floor_share: float = 0.05,
+    mad_floor_abs: float = 0.1,
 ) -> pd.DataFrame:
-    """Flag implausible readings with a per-meter robust (MAD-based) z-score.
+    """Flag implausible high readings per meter. Flag, never drop.
 
-    Flag, never drop: a genuine spike — a cold snap, a plant failure — is signal.
-    The threshold is deliberately loose; this targets meter faults such as the
-    Royal Preston reading of 32,611 kWh in a half hour against a mean of 720.
+    A reading is an outlier only if it is extreme on a robust z-score AND at
+    least ``min_ratio_to_median`` times the meter's median AND above
+    ``ratio_to_p995`` times the meter's 99.5th percentile. The last condition
+    is what keeps bimodal meters (idle most of the time, running at 20x idle
+    for part of the day) from having a whole operating regime flagged: by
+    construction it can only ever mark a sliver of any series. The MAD in the
+    z-score is floored at ``mad_floor_share`` of the median (and an absolute
+    ``mad_floor_abs`` kWh), because meters that read quantised small values
+    (0.1, 0.2 kWh) have a near-zero MAD that turns ordinary readings into
+    absurd z-scores. Only the high side is flagged: demand cannot be
+    implausibly low except at zero, which is already treated as missing.
     """
     df = df.copy()
 
-    def _robust_z(s: pd.Series) -> pd.Series:
+    def _score(s: pd.Series) -> pd.Series:
         median = s.median()
-        mad = (s - median).abs().median()
-        if mad == 0 or np.isnan(mad):
-            return pd.Series(0.0, index=s.index)
-        return 0.6745 * (s - median) / mad
+        if not np.isfinite(median) or median <= 0:
+            return pd.Series(False, index=s.index)
+        mad = max((s - median).abs().median(), mad_floor_share * median, mad_floor_abs)
+        z = 0.6745 * (s - median) / mad
+        p995 = s.quantile(0.995)
+        return (z > z_threshold) & (s > min_ratio_to_median * median) & (s > ratio_to_p995 * p995)
 
-    z = df.groupby(SERIES_KEYS, observed=True)[column].transform(_robust_z)
-    df["is_outlier"] = (z.abs() > z_threshold).fillna(False)
+    flagged = df.groupby(SERIES_KEYS, observed=True)[column].transform(_score)
+    df["is_outlier"] = flagged.fillna(False).astype(bool)
     df.loc[df[column].isna(), "is_outlier"] = False
-    logger.info("Flagged %d outliers (|robust z| > %s)", int(df["is_outlier"].sum()), z_threshold)
+    logger.info(
+        "Flagged %d outliers (z > %s, > %sx median, > %sx p99.5)",
+        int(df["is_outlier"].sum()),
+        z_threshold,
+        min_ratio_to_median,
+        ratio_to_p995,
+    )
     return df
 
 

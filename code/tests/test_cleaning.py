@@ -87,3 +87,43 @@ def test_aggregate_flags_partial_totals(synthetic_demand):
     row = out[(out.site_code == "RXX01") & (out.datetime == df.datetime.iloc[0])].iloc[0]
     assert row.is_partial
     assert row.n_reporting == 1
+
+
+def test_outlier_flag_ignores_quantised_low_consumption_meters():
+    """A meter reading 0.1/0.2 kWh with the odd 1 kWh must not be flagged: MAD ~ 0 is not evidence."""
+    idx = pd.date_range("2025-01-01", periods=500, freq="30min", tz="UTC")
+    vals = np.where(np.arange(500) % 2 == 0, 0.1, 0.2).astype(float)
+    vals[10] = (
+        1.0  # 5x median but tiny in absolute terms and well within the ratio-and-z rule? ratio=5 -> borderline
+    )
+    vals[20] = 25.0  # a genuine fault: 125x median
+    df = pd.DataFrame(
+        {"mpxn": "m", "energy_type": "elec", "datetime": idx, "consumption_kwh": vals}
+    )
+    out = cleaning.flag_outliers(df)
+    assert out.loc[out.index[20], "is_outlier"]
+    assert out["is_outlier"].sum() <= 2
+    assert out["is_outlier"].mean() < 0.01
+
+
+def test_outlier_flag_is_high_side_only(synthetic_readings):
+    df = cleaning.drop_duplicate_readings(synthetic_readings).rename(
+        columns={"consumption": "consumption_kwh"}
+    )
+    df.loc[df.index[100], "consumption_kwh"] = (
+        0.5  # implausibly low, but low is not an outlier here
+    )
+    out = cleaning.flag_outliers(df)
+    assert not out.loc[out.index[100], "is_outlier"]
+
+
+def test_bimodal_meter_regime_is_not_an_outlier():
+    """Idle at 0.2 kWh for 70% of periods, running at 6 kWh for 30%: nothing to flag."""
+    rng = np.random.default_rng(1)
+    idx = pd.date_range("2025-01-01", periods=2000, freq="30min", tz="UTC")
+    running = rng.random(2000) < 0.3
+    vals = np.where(running, 6.0 + rng.normal(0, 0.3, 2000), 0.2 + rng.normal(0, 0.02, 2000))
+    df = pd.DataFrame(
+        {"mpxn": "m", "energy_type": "elec", "datetime": idx, "consumption_kwh": vals}
+    )
+    assert cleaning.flag_outliers(df)["is_outlier"].sum() == 0

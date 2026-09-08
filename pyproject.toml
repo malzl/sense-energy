@@ -70,7 +70,7 @@ src = ["code/src", "code/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "PD"]
-ignore = ["E501"]
+ignore = ["E501", "PD010", "PD013"]  # pivot/stack are the right tools for wide<->long
 
 [tool.pytest.ini_options]
 testpaths = ["code/tests"]

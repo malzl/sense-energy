@@ -156,6 +156,16 @@ def build_neso_cmd(config_path: str) -> None:
         click.echo(f"{name:<40} {path}")
 
 
+@cli.command("build-processed")
+@click.option("--config", "config_path", default="code/configs/processed.yaml", show_default=True)
+def build_processed_cmd(config_path: str) -> None:
+    """Write clean analysis-ready datasets (elec/gas x meter/site/trust, raw + imputed) and the data manifest."""
+    from .data.processed import build
+
+    record = build(load_config(config_path))
+    click.echo(f"{len(record.files)} files written; manifest at doc/data_manifest.md")
+
+
 @cli.command("build-features")
 @click.option("--config", "config_path", default="code/configs/features.yaml", show_default=True)
 def build_features_cmd(config_path: str) -> None:

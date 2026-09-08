@@ -1,4 +1,4 @@
-.PHONY: help setup install lint format test clean data features train evaluate
+.PHONY: help setup install lint format test clean data processed features train evaluate
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -26,6 +26,9 @@ test: ## Run the test suite with coverage
 
 data: ## Clean the raw extract into code/data/interim/
 	python -m sense_energy.cli build-interim --config code/configs/data.yaml
+
+processed: ## Clean analysis-ready datasets (elec/gas x meter/site/trust, raw + imputed) + data manifest
+	python -m sense_energy.cli build-processed --config code/configs/processed.yaml
 
 features: ## Build the model-ready feature table
 	python -m sense_energy.cli build-features --config code/configs/features.yaml

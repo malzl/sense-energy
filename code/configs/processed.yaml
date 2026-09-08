@@ -1,0 +1,31 @@
+# interim -> processed: analysis-ready demand datasets.
+#
+# Every parameter here is echoed into doc/data_manifest.md by the build.
+
+energy_types: [elec, gas]
+levels: [meter, site, trust]
+
+# Rows whose site_code matches are dropped before anything else: these are
+# "Site(s) Unknown - <trust>" placeholders, i.e. trust-level residuals carried
+# in the source as if they were sites.
+exclude_site_code_regex: "Unknown"
+
+# Readings the interim step flagged as outliers (per-meter robust z > 10) are
+# treated as missing so they can be imputed rather than propagated.
+outliers_as_missing: true
+
+imputation:
+  method: profile_knn          # nearest complete days of the same series
+  k: 5
+  window_weeks: 8              # candidate days within +/- this many weeks
+  same_day_type: true          # weekday candidates for weekdays, weekend for weekends
+  min_observed_fraction_of_day: 0.25
+  max_gap_periods: 48          # never bridge more than 24 h
+  level_scaling: true          # scale neighbours to the day's observed level
+  max_imputed_fraction_per_series: 0.10   # above this a series is flagged and left out of wide_imputed
+
+# Series in the wide matrices need at least this share of the global grid observed
+# (raw) or observed+imputed (imputed). 0 keeps everything and leaves NaN columns.
+min_coverage_for_wide: 0.0
+
+write_csv: true                # wide matrices and indexes also as CSV
