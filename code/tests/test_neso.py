@@ -66,3 +66,17 @@ def test_manifest_templates_belong_to_exactly_one_family():
 @pytest.mark.parametrize("two_digit, full", [(23, 2023), (50, 2050), (2030, 2030)])
 def test_two_digit_years_are_expanded(two_digit, full):
     assert (two_digit + 2000 if two_digit < 100 else two_digit) == full
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("01-JAN-2024", "2024-01-01"),
+        ("12-AUG-2024", "2024-08-12"),
+        ("2026-08-12", "2026-08-12"),
+        ('"2025-12-31"', "2025-12-31"),
+    ],
+)
+def test_settlement_dates_never_swap_month_and_day(raw, expected):
+    out = neso._parse_settlement_date(pd.Series([raw]))
+    assert str(out.iloc[0].date()) == expected

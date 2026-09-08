@@ -479,6 +479,17 @@ def _settlement_to_utc(date: pd.Series, period: pd.Series) -> pd.Series:
     return utc_midnight + pd.to_timedelta((period.astype(int) - 1) * 30, unit="min")
 
 
+def _parse_settlement_date(values: pd.Series) -> pd.Series:
+    """NESO wrote ``01-JAN-2024`` until 2024 and ISO ``2025-01-01`` from 2025.
+
+    Detect per file rather than letting pandas guess: ``dayfirst=True`` on a
+    mixed parse silently swaps month and day in ISO strings.
+    """
+    sample = str(values.dropna().iloc[0]).strip().strip('"')
+    fmt = "%Y-%m-%d" if re.fullmatch(r"\d{4}-\d{2}-\d{2}", sample) else "%d-%b-%Y"
+    return pd.to_datetime(values.astype(str).str.strip().str.strip('"'), format=fmt)
+
+
 def load_historic_demand(years: list[int]) -> pd.DataFrame:
     """NESO half-hourly national demand with embedded wind/solar, in UTC."""
     frames = []
@@ -490,7 +501,7 @@ def load_historic_demand(years: list[int]) -> pd.DataFrame:
         f = pd.read_csv(path)
         f.columns = [c.strip().lower() for c in f.columns]
         f["datetime"] = _settlement_to_utc(
-            pd.to_datetime(f["settlement_date"], format="mixed", dayfirst=True),
+            _parse_settlement_date(f["settlement_date"]),
             f["settlement_period"],
         )
         frames.append(f)
