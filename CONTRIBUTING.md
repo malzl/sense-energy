@@ -2,36 +2,13 @@
 
 ## Branching
 
-`main` is protected and always releasable. It cannot be pushed to directly,
-force-pushed, or deleted — every change arrives through a pull request whose CI
-has passed.
+Development happens on a working branch (currently `feature/nhs-data-cleaning`).
+`main` holds what has been shown to work: when a piece is final, merge the
+branch into `main`. No branch protection is configured; CI runs on pushes and
+pull requests as a check, not a gate.
 
 ```bash
-git switch main && git pull
-git switch -c feature/<short-name>
-# ... work, commit ...
-git push -u origin feature/<short-name>
-gh pr create --fill          # or open the PR in the browser
-```
-
-Prefixes: `feature/` for new capability, `fix/` for corrections, `exp/` for
-modelling experiments that may never merge, `docs/` for documentation-only work.
-
-PRs are **squash merged**, so the PR title becomes the commit message on `main` —
-write it as one. The head branch is deleted automatically on merge.
-
-Approvals are not currently required, since the project has a single maintainer.
-Raise `required_approving_review_count` to 1 in
-[.github/setup-branch-protection.sh](.github/setup-branch-protection.sh) and
-re-run it as soon as a second person joins.
-
-### Protection setup
-
-Applied once per repo, by a maintainer with `admin` scope:
-
-```bash
-gh auth login
-./.github/setup-branch-protection.sh
+git switch main && git merge --no-ff feature/nhs-data-cleaning && git push
 ```
 
 ## Commits
