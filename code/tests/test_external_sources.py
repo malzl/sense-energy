@@ -282,3 +282,14 @@ def test_tigge_type_months_cover_the_window():
     cfg = load_config("code/configs/tigge.yaml")
     assert len(cfg["forecast_types"]) * len(weather.month_range(cfg["start"], cfg["end"])) == 84
     assert tigge.target_path("control_forecast", 2023, 1, cfg).name == "2023-01.grib"
+
+
+def test_tigge_nearest_index_on_reduced_grid_handles_0_360_longitudes():
+    from sense_energy.data import tigge
+
+    lat_grid = np.array([50.0, 50.0, 52.0, 52.0])
+    lon_grid = np.array([359.0, 1.0, 359.0, 1.0])  # -1 and +1 deg east in 0-360 form
+    idx = tigge.nearest_grid_indices(
+        lat_grid, lon_grid, np.array([52.1, 49.9]), np.array([-0.9, 0.9])
+    )
+    assert idx.tolist() == [2, 1]

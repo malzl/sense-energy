@@ -23,6 +23,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from ..config import EXTERNAL_DIR, INTERIM_DIR, SECRETS
@@ -93,43 +94,78 @@ def make_client():
     )
 
 
-def fetch_month(
-    forecast_type: str, year: int, month: int, config: dict[str, Any], client=None
-) -> Path:
-    """Retrieve one type/month if not present. Returns the file path."""
-    path = target_path(forecast_type, year, month, config)
-    if _opens_cleanly(path):
-        logger.info("%s/%s already present", path.parent.name, path.name)
-        return path
+def sites_parquet_path(product_type: str, year: int, month: int, config: dict[str, Any]) -> Path:
+    return output_dir(config) / f"{product_type}_sites" / f"{year}-{month:02d}.parquet"
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".part")
-    client = client or make_client()
-    logger.info("ECDS request: tigge %s %d-%02d", TYPE_LABELS[forecast_type], year, month)
-    try:
+
+def month_present(product_type: str, year: int, month: int, config: dict[str, Any]) -> bool:
+    """A month counts as present once its site extract exists (the GRIB may have been deleted)."""
+    return sites_parquet_path(product_type, year, month, config).exists() or _opens_cleanly(
+        target_path(product_type, year, month, config)
+    )
+
+
+def _located_sites() -> pd.DataFrame:
+    from ..config import GEO_DIR
+
+    sites = pd.read_parquet(GEO_DIR / "sites_geo.parquet")
+    return sites[sites["latitude"].notna() & sites["longitude"].notna()][
+        ["site_code", "latitude", "longitude"]
+    ].reset_index(drop=True)
+
+
+def fetch_month(
+    product_type: str, year: int, month: int, config: dict[str, Any], client=None
+) -> Path:
+    """Retrieve one type/month, extract the sites, and drop the GRIB unless configured to keep it.
+
+    Perturbed-member GRIBs are ~1 GB a month; the site extract of the same
+    month is a small parquet. Keeping only the extract is what makes the full
+    archive fit on disk. Returns the site-extract path.
+    """
+    out_parquet = sites_parquet_path(product_type, year, month, config)
+    if out_parquet.exists():
+        logger.info("%s/%s already extracted", product_type, out_parquet.name)
+        return out_parquet
+
+    path = target_path(product_type, year, month, config)
+    if not _opens_cleanly(path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_name(path.name + ".part")
+        client = client or make_client()
+        logger.info("ECDS request: tigge %s %d-%02d", product_type, year, month)
         client.retrieve(
-            config["dataset"], build_request(forecast_type, year, month, config), str(tmp)
+            config["dataset"], build_request(product_type, year, month, config), str(tmp)
         )
-    except Exception as exc:
-        message = str(exc).lower()
-        if "licence" in message or "license" in message or "403" in message:
+        if not _opens_cleanly(tmp):
+            tmp.unlink(missing_ok=True)
             raise RuntimeError(
-                f"ECDS refused the request - is the TIGGE licence accepted at {TIGGE_DATASET_URL}? ({exc})"
-            ) from exc
-        raise
-    if not _opens_cleanly(tmp):
-        tmp.unlink(missing_ok=True)
-        raise RuntimeError(f"TIGGE download for {forecast_type} {year}-{month:02d} is unreadable")
-    tmp.replace(path)
-    logger.info("Wrote %s/%s (%.1f MB)", path.parent.name, path.name, path.stat().st_size / 1e6)
-    return path
+                f"TIGGE download for {product_type} {year}-{month:02d} is unreadable"
+            )
+        tmp.replace(path)
+        logger.info("Wrote %s/%s (%.1f MB)", product_type, path.name, path.stat().st_size / 1e6)
+
+    frame = extract_sites_fast(path, _located_sites())
+    out_parquet.parent.mkdir(parents=True, exist_ok=True)
+    frame.to_parquet(out_parquet, index=False, compression="zstd")
+    logger.info(
+        "Extracted %s/%s (%s rows, %.1f MB)",
+        product_type,
+        out_parquet.name,
+        f"{len(frame):,}",
+        out_parquet.stat().st_size / 1e6,
+    )
+    if product_type not in config.get("keep_grib_for", ["cf"]):
+        path.unlink(missing_ok=True)
+        logger.info("Deleted %s/%s to save disk", product_type, path.name)
+    return out_parquet
 
 
 def fetch_all(config: dict[str, Any], forecast_types: list[str] | None = None) -> list[Path]:
     """Every (type, month) in the config, a couple of data-store jobs at a time. Resumable."""
     types = forecast_types or list(config["forecast_types"])
     jobs = [(t, y, m) for t in types for (y, m) in month_range(config["start"], config["end"])]
-    pending = [j for j in jobs if not _opens_cleanly(target_path(*j, config))]
+    pending = [j for j in jobs if not month_present(*j, config)]
     logger.info(
         "%d of %d type-months present; requesting %d",
         len(jobs) - len(pending),
@@ -137,7 +173,7 @@ def fetch_all(config: dict[str, Any], forecast_types: list[str] | None = None) -
         len(pending),
     )
 
-    done = [target_path(*j, config) for j in jobs if j not in pending]
+    done = [sites_parquet_path(*j, config) for j in jobs if j not in pending]
     failures = []
     client = make_client()
     with ThreadPoolExecutor(max_workers=int(config.get("max_workers", 2))) as pool:
@@ -163,59 +199,153 @@ def fetch_all(config: dict[str, Any], forecast_types: list[str] | None = None) -
 _DROP = ("latitude", "longitude", "surface", "heightAboveGround", "expver", "step")
 
 
+def nearest_grid_indices(
+    lat_grid: np.ndarray, lon_grid: np.ndarray, lats: np.ndarray, lons: np.ndarray
+) -> np.ndarray:
+    """Index of the nearest grid point for each site on a 1-D (unstructured) grid.
+
+    ECDS serves TIGGE on the model's native reduced grid rather than a regular
+    lat/lon box, so cfgrib exposes one ``values`` dimension with latitude and
+    longitude as coordinates along it. Distances use an equirectangular
+    approximation, fine at this scale.
+    """
+    lon_grid = ((np.asarray(lon_grid) + 180.0) % 360.0) - 180.0
+    lat_grid = np.asarray(lat_grid)
+    out = np.empty(len(lats), dtype=int)
+    for i, (la, lo) in enumerate(zip(lats, lons, strict=True)):
+        dlat = np.deg2rad(lat_grid - la)
+        dlon = np.deg2rad(lon_grid - lo) * np.cos(np.deg2rad(la))
+        out[i] = int(np.argmin(dlat**2 + dlon**2))
+    return out
+
+
 def extract_sites(path: Path, sites: pd.DataFrame) -> pd.DataFrame:
     """Nearest-grid-point values per site, long over (run_time, step, member).
 
-    cfgrib carries the run in ``time`` and the lead in ``step``; ``number`` is
-    present for perturbed members and becomes 0 for the control.
+    Handles both a regular lat/lon grid and ECDS's reduced grid. The control
+    run carries a single member 0; perturbed members are 1-50.
     """
     import xarray as xr
 
     with _open_grib_merged(path) as ds:
-        lon = ds["longitude"]
-        site_lon = sites["longitude"].to_numpy()
-        if float(lon.max()) > 180:
-            site_lon = (site_lon + 360) % 360
-        picked = ds.sel(
-            latitude=xr.DataArray(sites["latitude"].to_numpy(), dims="site"),
-            longitude=xr.DataArray(site_lon, dims="site"),
-            method="nearest",
-        ).assign_coords(site=("site", sites["site_code"].to_numpy()))
+        if "values" in ds.dims:
+            idx = nearest_grid_indices(
+                ds["latitude"].values,
+                ds["longitude"].values,
+                sites["latitude"].to_numpy(),
+                sites["longitude"].to_numpy(),
+            )
+            picked = ds.isel(values=xr.DataArray(idx, dims="site"))
+            picked = picked.drop_vars([c for c in ("latitude", "longitude") if c in picked.coords])
+        else:
+            lon = ds["longitude"]
+            site_lon = sites["longitude"].to_numpy()
+            if float(lon.max()) > 180:
+                site_lon = (site_lon + 360) % 360
+            picked = ds.sel(
+                latitude=xr.DataArray(sites["latitude"].to_numpy(), dims="site"),
+                longitude=xr.DataArray(site_lon, dims="site"),
+                method="nearest",
+            )
+            picked = picked.drop_vars([c for c in ("latitude", "longitude") if c in picked.coords])
+        picked = picked.assign_coords(site=("site", sites["site_code"].to_numpy()))
         frame = picked.to_dataframe().reset_index()
 
     frame = frame.rename(columns={"site": "site_code", "number": "member", "time": "run_time"})
     frame["run_time"] = pd.to_datetime(frame["run_time"], utc=True)
-    if "valid_time" in frame.columns:
-        frame["valid_time"] = pd.to_datetime(frame["valid_time"], utc=True)
-    else:
-        frame["valid_time"] = frame["run_time"] + pd.to_timedelta(frame["step"])
-    frame["step_hours"] = (pd.to_timedelta(frame["step"]) / pd.Timedelta(hours=1)).astype(int)
-    frame = frame.drop(columns=[c for c in _DROP if c in frame.columns])
+    step = pd.to_timedelta(frame["step"])
+    frame["valid_time"] = frame["run_time"] + step
+    frame["step_hours"] = (step / pd.Timedelta(hours=1)).astype(int)
+    if "member" not in frame.columns:
+        frame["member"] = 0
+    frame = frame.drop(columns=[c for c in (*_DROP, "step") if c in frame.columns])
     keys = ["site_code", "run_time", "valid_time", "step_hours", "member"]
-    return frame[keys + [c for c in frame.columns if c not in keys]]
+    values = [c for c in frame.columns if c not in keys]
+    frame[values] = frame[values].astype("float32")
+    frame["member"] = frame["member"].astype("int16")
+    frame["step_hours"] = frame["step_hours"].astype("int16")
+    return frame[keys + values]
+
+
+#: ecCodes short names -> the cfgrib-style names used everywhere else.
+_SHORTNAME_ALIASES = {"2t": "t2m", "2d": "d2m", "10u": "u10", "10v": "v10"}
+
+
+def extract_sites_fast(path: Path, sites: pd.DataFrame) -> pd.DataFrame:
+    """Same output as :func:`extract_sites`, decoded directly with ecCodes.
+
+    cfgrib costs tens of milliseconds per message; a perturbed month holds
+    ~480k messages of 739 points each. Reading the messages in a loop and
+    keeping only the site indices is two orders of magnitude faster.
+    """
+    import eccodes
+
+    lats = sites["latitude"].to_numpy()
+    lons = sites["longitude"].to_numpy()
+    site_codes = sites["site_code"].to_numpy()
+    idx = None
+    records: dict[tuple, dict[str, np.ndarray]] = {}
+
+    with path.open("rb") as fh:
+        while True:
+            gid = eccodes.codes_grib_new_from_file(fh)
+            if gid is None:
+                break
+            try:
+                if idx is None:
+                    idx = nearest_grid_indices(
+                        eccodes.codes_get_array(gid, "latitudes"),
+                        eccodes.codes_get_array(gid, "longitudes"),
+                        lats,
+                        lons,
+                    )
+                key = (
+                    int(eccodes.codes_get(gid, "dataDate")),
+                    int(eccodes.codes_get(gid, "dataTime")),
+                    int(eccodes.codes_get(gid, "endStep")),
+                    int(eccodes.codes_get(gid, "perturbationNumber"))
+                    if eccodes.codes_is_defined(gid, "perturbationNumber")
+                    else 0,
+                )
+                name = eccodes.codes_get(gid, "shortName")
+                name = _SHORTNAME_ALIASES.get(name, name)
+                values = eccodes.codes_get_values(gid)[idx].astype("float32")
+                missing = eccodes.codes_get(gid, "missingValue")
+                values[values == missing] = np.nan
+                records.setdefault(key, {})[name] = values
+            finally:
+                eccodes.codes_release(gid)
+
+    rows = []
+    for (date, time, step, member), fields in records.items():
+        run_time = pd.Timestamp(f"{date:08d}T{time:04d}", tz="UTC")
+        frame = pd.DataFrame(fields, index=site_codes)
+        frame.insert(0, "site_code", site_codes)
+        frame.insert(1, "run_time", run_time)
+        frame.insert(2, "valid_time", run_time + pd.Timedelta(hours=step))
+        frame.insert(3, "step_hours", np.int16(step))
+        frame.insert(4, "member", np.int16(member))
+        rows.append(frame)
+    out = pd.concat(rows, ignore_index=True)
+    keys = ["site_code", "run_time", "valid_time", "step_hours", "member"]
+    return out[keys + sorted(c for c in out.columns if c not in keys)]
 
 
 def build_forecast_sites(config: dict[str, Any], sites: pd.DataFrame) -> Path:
-    """Extract every downloaded month (both types) into one parquet under interim/."""
-    located = sites[sites["latitude"].notna() & sites["longitude"].notna()]
+    """Concatenate every month's site extract (both types) into one parquet under interim/."""
     paths = sorted(
-        p
-        for t in config["forecast_types"]
-        for p in (output_dir(config) / TYPE_LABELS[t]).glob("*.grib")
-        if not p.name.endswith(".part")
+        p for t in config["types"] for p in (output_dir(config) / f"{t}_sites").glob("*.parquet")
     )
     if not paths:
         raise FileNotFoundError(
-            f"No TIGGE files under {output_dir(config)}. Run fetch-tigge first."
+            f"No site extracts under {output_dir(config)}. Run fetch-tigge first."
         )
-    frames = []
-    for path in paths:
-        logger.info("Extracting %s/%s", path.parent.name, path.name)
-        frames.append(extract_sites(path, located))
-    out = pd.concat(frames, ignore_index=True).drop_duplicates(
-        ["site_code", "run_time", "step_hours", "member"]
+    out = pd.concat([pd.read_parquet(p) for p in paths], ignore_index=True)
+    out = (
+        out.drop_duplicates(["site_code", "run_time", "step_hours", "member"])
+        .sort_values(["site_code", "run_time", "member", "step_hours"])
+        .reset_index(drop=True)
     )
-    out = out.sort_values(["site_code", "run_time", "member", "step_hours"]).reset_index(drop=True)
     out_path = INTERIM_DIR / "forecast_tigge_ens.parquet"
     out.to_parquet(out_path, index=False, compression="zstd")
     logger.info(

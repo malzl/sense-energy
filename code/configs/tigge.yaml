@@ -54,3 +54,7 @@ max_workers: 2
 
 # Under code/data/external/
 output_subdir: weather/tigge_ens
+
+# GRIBs are deleted after site extraction except for these types; perturbed
+# months are ~1 GB each and only the site extract is needed downstream.
+keep_grib_for: [cf]
