@@ -1,42 +1,55 @@
 # ECMWF IFS ENS historical forecasts from the TIGGE archive, via the ECMWF
-# Web API (needs ECMWF_API_* in .env and the TIGGE licence accepted at
-# http://apps.ecmwf.int/datasets/licences/tigge). TIGGE is for research use.
+# Data Store (ECDS, https://ecds.ecmwf.int - same software and client as the
+# Copernicus CDS). Needs ECDS_API_URL / ECDS_API_KEY in .env and the TIGGE
+# licence accepted on the ECDS dataset page. Research use, 48 h delay.
+#
+# The old Public Datasets Web API (apps.ecmwf.int) was decommissioned on
+# 2026-05-27; TIGGE lives only here now.
 #
 # This is the true historical FORECAST ensemble: 50 perturbed members + control,
-# every run since 2006, 0.5 deg, 6-hourly steps. It is what a day-ahead model
-# would actually have seen, unlike ERA5 (what happened) - see ADR 0003.
+# every run since 2006, 0.5 deg, 6-hourly. It is what a day-ahead model would
+# actually have seen, unlike ERA5 (what happened) - see ADR 0003.
 
-dataset: tigge
-origin: ecmf
-expver: prod
+dataset: tigge-forecasts
+origin: ecmwf
+level_type: single_level
 
 start: "2022-12"
 end: "2026-05"
 
 # Runs and lead times. 00z+12z with 0-72 h covers day-ahead and two-day-ahead
-# issuance; TIGGE goes to 360 h if needed.
-times: ["00:00:00", "12:00:00"]
-steps: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+# issuance; the archive goes to 384 h.
+times: ["00:00", "12:00"]
+leadtime_hours: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
 
-# cf = control (member 0), pf = perturbed members 1-50.
-types: [cf, pf]
-members: "1/to/50"
+# One request per type-month. control_forecast = member 0, perturbed_forecast
+# = members 1-50 (all members come back; there is no member selector).
+forecast_types: [control_forecast, perturbed_forecast]
 
-# GRIB parameter ids in the TIGGE surface table.
-#   167 2t   168 2d   165 10u   166 10v   134 sp   235 skt
-#   228228 tp (accumulated)   228144 sf (accumulated)   228164 tcc
-#   176 ssr  177 str  (NET surface radiation in TIGGE, not downward)
-#   123 10fg6 (max gust in previous 6 h)
-params: [167, 168, 165, 166, 134, 235, 228228, 228144, 228164, 176, 177, 123]
+# ECDS variable names for the single-level TIGGE set.
+variables:
+  - 2_m_temperature
+  - 2_m_dewpoint_temperature
+  - maximum_2_m_temperature_in_the_last_6_hours
+  - minimum_2_m_temperature_in_the_last_6_hours
+  - 10_m_u_component_of_wind
+  - 10_m_v_component_of_wind
+  - surface_pressure
+  - skin_temperature
+  - total_precipitation                 # accumulated from run start
+  - snow_fall_water_equivalent          # accumulated from run start
+  - total_cloud_cover
+  - surface_net_solar_radiation         # NET, not downward as in ERA5; accumulated
+  - surface_net_thermal_radiation       # NET; accumulated
+  - sunshine_duration                   # accumulated
 
-grid: "0.5/0.5"
-# N/W/S/E - same box as ERA5 and AIFS.
-area: "55/-5/50/2"
+# [North, West, South, East] - same box as ERA5 and AIFS.
+area: [55.0, -5.0, 50.0, 2.0]
 
-# MARS output format. netcdf is converted server-side; grib is the fallback.
-format: netcdf
+# ECDS serves GRIB only.
+data_format: grib
 
-# Concurrent MARS requests; the public queue allows few.
+# Concurrent data-store jobs; the queue throttles per user.
 max_workers: 2
 
 # Under code/data/external/

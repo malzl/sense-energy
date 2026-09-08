@@ -254,3 +254,31 @@ def test_harvest_exits_when_another_instance_holds_the_lock(tmp_path, monkeypatc
     )
     assert forecasts.harvest_available(cfg) == []
     holder.close()
+
+
+# ---------------------------------------------------------------- TIGGE ---
+
+
+def test_tigge_request_matches_the_ecds_schema():
+    from sense_energy.config import load_config
+    from sense_energy.data import tigge
+
+    cfg = load_config("code/configs/tigge.yaml")
+    req = tigge.build_request("perturbed_forecast", 2024, 2, cfg)
+    assert req["origin"] == "ecmwf" and req["level_type"] == "single_level"
+    assert req["forecast_type"] == "perturbed_forecast"
+    assert req["day"][-1] == "29" and req["time"] == ["00:00", "12:00"]
+    assert req["leadtime_hour"][0] == "0" and req["leadtime_hour"][-1] == "72"
+    assert req["data_format"] == "grib" and req["area"] == [55.0, -5.0, 50.0, 2.0]
+    assert "2_m_temperature" in req["variable"]
+    with pytest.raises(KeyError):
+        tigge.build_request("pf", 2024, 2, cfg)
+
+
+def test_tigge_type_months_cover_the_window():
+    from sense_energy.config import load_config
+    from sense_energy.data import tigge, weather
+
+    cfg = load_config("code/configs/tigge.yaml")
+    assert len(cfg["forecast_types"]) * len(weather.month_range(cfg["start"], cfg["end"])) == 84
+    assert tigge.target_path("control_forecast", 2023, 1, cfg).name == "2023-01.grib"

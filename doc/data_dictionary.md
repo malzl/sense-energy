@@ -293,9 +293,11 @@ subscription.
 
 ## Forecasts (historical): `code/data/external/weather/tigge_ens/` → `interim/forecast_tigge_ens.parquet`
 
-ECMWF IFS ENS from the **TIGGE** archive via the ECMWF Web API. Research use
-under the TIGGE terms. `sense-energy fetch-tigge` (resumable, one MARS request
-per type-month) then `sense-energy build-tigge`.
+ECMWF IFS ENS from the **TIGGE** archive via the **ECMWF Data Store (ECDS)**,
+which replaced the Public Datasets Web API for TIGGE on 2026-05-27. Research
+use under the TIGGE licence (CC BY-NC 4.0 for the ECMWF origin), 48 h delay.
+`sense-energy fetch-tigge` (resumable, one data-store request per type-month;
+GRIB only) then `sense-energy build-tigge`. Needs an ECDS token in `.env`.
 
 This is *what the forecast said* for every day of the training window — the
 counterpart to ERA5 (*what happened*). A day-ahead model backtested on this,
@@ -308,16 +310,19 @@ not on ERA5, sees the accuracy it would really have had.
 | Members | 51: `cf` control = member 0, `pf` = 1–50 |
 | Grid | 0.5°, same area as ERA5 |
 
-| Parameter id | Short name | Units | Notes |
+| ECDS variable | Short name | Units | Notes |
 |---|---|---|---|
-| 167 / 168 | `t2m` / `d2m` | K | |
-| 165 / 166 | `u10` / `v10` | m s⁻¹ | |
-| 134 | `sp` | Pa | |
-| 235 | `skt` | K | |
-| 228228 / 228144 | `tp` / `sf` | m | **accumulated from run start** |
-| 228164 | `tcc` | 0–1 | |
-| 176 / 177 | `ssr` / `str` | J m⁻² | **net** surface radiation in TIGGE (ERA5 gives *downward*) — not directly comparable |
-| 123 | `10fg6` | m s⁻¹ | max gust over the preceding 6 h |
+| `2_m_temperature` / `2_m_dewpoint_temperature` | `t2m` / `d2m` | K | |
+| `maximum_/minimum_2_m_temperature_in_the_last_6_hours` | `mx2t6` / `mn2t6` | K | over the preceding 6 h |
+| `10_m_u/v_component_of_wind` | `u10` / `v10` | m s⁻¹ | |
+| `surface_pressure` | `sp` | Pa | |
+| `skin_temperature` | `skt` | K | |
+| `total_precipitation` / `snow_fall_water_equivalent` | `tp` / `sf` | m | **accumulated from run start** |
+| `total_cloud_cover` | `tcc` | 0–1 | |
+| `surface_net_solar_radiation` / `surface_net_thermal_radiation` | `ssr` / `str` | J m⁻² | **net** in TIGGE (ERA5 gives *downward*) — not directly comparable; accumulated |
+| `sunshine_duration` | `sund` | s | accumulated |
+
+No wind-gust field exists in the TIGGE single-level set.
 
 Output columns mirror `forecast_aifs_ens.parquet`: `site_code`, `run_time`,
 `valid_time`, `step_hours`, `member`, then the variables.

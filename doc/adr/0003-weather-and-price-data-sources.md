@@ -50,10 +50,10 @@ What each candidate source can actually provide:
   before anything else if forecast-based evaluation matters.
 - **Amendment 2026-09-08:** true historical forecast ensembles are now pulled
   from TIGGE (IFS ENS, 51 members, 0.5 deg, 6-hourly, from 2006) via the ECMWF
-  Web API - `sense-energy fetch-tigge`. This becomes the *forecast-at-issue-time*
-  series for the training window; ERA5 remains the truth series and AIFS-ENS the
-  operational feed. The account needs the Web API key from
-  https://api.ecmwf.int/v1/key/ and the TIGGE licence accepted; a username and
-  password alone drive neither.
+  Data Store (ECDS) - `sense-energy fetch-tigge`. This becomes the
+  *forecast-at-issue-time* series for the training window; ERA5 remains the
+  truth series and AIFS-ENS the operational feed. The Public Datasets Web API
+  that used to serve TIGGE was decommissioned on 2026-05-27; ECDS needs its own
+  token (ECDS profile page) and the TIGGE licence accepted on the dataset page.
 - Agile rates are known from the afternoon of D-1. A forecast issued earlier
   that day cannot use them; check the issue time before adding the feature.

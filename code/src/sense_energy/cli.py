@@ -112,9 +112,14 @@ def fetch_prices_cmd(config_path: str) -> None:
 
 @cli.command("fetch-tigge")
 @click.option("--config", "config_path", default="code/configs/tigge.yaml", show_default=True)
-@click.option("--type", "types", multiple=True, help="cf and/or pf; default both.")
+@click.option(
+    "--type",
+    "types",
+    multiple=True,
+    help="control_forecast and/or perturbed_forecast; default both.",
+)
 def fetch_tigge_cmd(config_path: str, types: tuple[str, ...]) -> None:
-    """Pull IFS ENS historical forecasts from TIGGE via the ECMWF Web API. Resumable."""
+    """Pull IFS ENS historical forecasts from TIGGE via the ECMWF Data Store. Resumable."""
     from .data.tigge import fetch_all
 
     paths = fetch_all(load_config(config_path), list(types) or None)

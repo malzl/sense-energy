@@ -52,5 +52,5 @@ CKAN API; `sense-energy build-neso` tidies them into `interim/`.
 
 ## `external/weather/tigge_ens/`
 
-IFS ENS historical forecasts from TIGGE, one NetCDF per type-month.
-`sense-energy fetch-tigge` (needs the ECMWF Web API key and the TIGGE licence).
+IFS ENS historical forecasts from TIGGE via the ECMWF Data Store, one GRIB per
+type-month. `sense-energy fetch-tigge` (needs an ECDS token and the TIGGE licence).
