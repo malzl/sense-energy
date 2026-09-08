@@ -33,3 +33,13 @@ only this file and the `.gitkeep` placeholders are tracked.
 Boundary layers and geocoded site centroids, fetched by `sense-energy fetch-geo`.
 Git-ignored like the rest of the tree. Contents and licensing are documented in
 [doc/data_dictionary.md](../../doc/data_dictionary.md#geography-codedatageo).
+
+## `external/weather/`
+
+| Path | Source | Fetched by |
+|---|---|---|
+| `era5/reanalysis/`, `era5/ensemble_members/` | ERA5 via CDS, one NetCDF per month | `sense-energy fetch-weather` (resumable) |
+| `aifs_ens/` | ECMWF AIFS-ENS open data, one NetCDF per run | `sense-energy harvest-forecasts` (**daily**) |
+
+Both are git-ignored. The AIFS archive only exists from the day the harvester
+starts running - it cannot be backfilled.

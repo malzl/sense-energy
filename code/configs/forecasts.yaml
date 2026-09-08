@@ -1,0 +1,28 @@
+# ECMWF AIFS-ENS harvester (ECMWF open data, CC BY 4.0 - attribute ECMWF).
+#
+# Open data keeps only the last ~4 days of runs, so this is a standing harvest
+# job, not a one-off pull: run it daily (cron) and it collects every run not
+# yet on disk. There is no historical AIFS archive before 2025 anywhere.
+
+model: aifs-ens
+resolution: 0p25
+stream: enfo
+
+# Runs to keep. All four (00/06/12/18) exist; two cover day-ahead use and halve
+# the download.
+run_times: ["00", "12"]
+
+# Lead times in hours. 0-72h covers day-ahead and two-day-ahead issuance.
+steps: [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72]
+
+# cf = control (member 0), pf = 50 perturbed members.
+types: [cf, pf]
+
+# ECMWF short names. All exist in the AIFS-ENS surface set.
+params: [2t, 2d, tcc, lcc, tp, sf, 10u, 10v, ssrd, strd, sp, skt]
+
+# [North, West, South, East] - same box as ERA5.
+area: [55.0, -5.0, 50.0, 2.0]
+
+# Under code/data/external/
+output_subdir: weather/aifs_ens

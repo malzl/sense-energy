@@ -52,8 +52,8 @@ def load_config(path: str | Path) -> dict[str, Any]:
 class Secrets:
     """Credentials read from the environment. Empty strings mean 'not configured'."""
 
-    weather_api_key: str = os.getenv("WEATHER_API_KEY", "")
-    weather_api_base_url: str = os.getenv("WEATHER_API_BASE_URL", "")
+    cdsapi_url: str = os.getenv("CDSAPI_URL", "https://cds.climate.copernicus.eu/api")
+    cdsapi_key: str = os.getenv("CDSAPI_KEY", "")
     mlflow_tracking_uri: str = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
 
 

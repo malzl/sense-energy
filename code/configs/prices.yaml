@@ -1,0 +1,30 @@
+# GB electricity price signals.
+#
+# GB left EU day-ahead market coupling in January 2021, and the ENTSO-E REST
+# API is not reachable in any case, so prices come from GB sources:
+#
+# octopus_agile : Octopus Energy's Agile tariff. Its half-hourly unit rates are
+#                 a published, deterministic transform of the N2EX day-ahead
+#                 hourly auction, released the afternoon before delivery. It is
+#                 the only free GB signal that is genuinely KNOWN BEFOREHAND -
+#                 but it is a retail rate (regional, capped), not the wholesale
+#                 price itself. Regional: 14 GSP groups A-P (no I or O).
+# elexon_mid    : Elexon Market Index Data - APX and N2EX volume-weighted
+#                 prices per settlement period. Ex-post; a wholesale REFERENCE
+#                 for evaluation, never a feature.
+
+start: "2022-12-01"
+end: "2026-05-31"
+
+octopus:
+  # Products are chained: each was on sale for a window, and older ones keep
+  # publishing rates afterwards. All listed are pulled and stored with their
+  # product code; canonical selection prefers the product on sale that day.
+  products: [AGILE-18-02-21, AGILE-FLEX-22-11-25, AGILE-23-12-06, AGILE-24-04-03, AGILE-24-10-01]
+  regions: [A, B, C, D, E, F, G, H, J, K, L, M, N, P]
+  page_size: 1500
+  pause_seconds: 0.15
+
+elexon:
+  dataset: MID
+  window_days: 7

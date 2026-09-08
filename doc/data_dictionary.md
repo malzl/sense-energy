@@ -186,3 +186,104 @@ before extending this to anything site-level.
 - **141 of the 146 sites with demand data are mappable**; 134 appear on the map,
   the rest having no non-outlier electricity readings.
 - Every located site is in **England** — consistent with an NHS England source.
+
+---
+
+## Weather: `code/data/external/weather/era5/` → `interim/weather_*.parquet`
+
+ERA5 from the Copernicus Climate Data Store (`reanalysis-era5-single-levels`).
+Licence: Copernicus, free with attribution. Pulled by `sense-energy fetch-weather`,
+one NetCDF per product-month; extracted by `sense-energy build-weather`.
+Why reanalysis rather than forecasts: [ADR 0003](adr/0003-weather-and-price-data-sources.md).
+
+| Product | Grid | Cadence | Members | File |
+|---|---|---|---|---|
+| `reanalysis` | 0.25° | hourly | 1 (member 0) | `weather_reanalysis.parquet` |
+| `ensemble_members` | 0.5° | 3-hourly | 10 (EDA) | `weather_ensemble_members.parquet` |
+
+Area `[55, -5, 50, 2]` (N, W, S, E) covers every located site. Site values are
+the nearest grid point to the postcode centroid.
+
+| Column | Units | Notes |
+|---|---|---|
+| `site_code`, `datetime` (UTC), `member` | | member 0 = deterministic |
+| `t2m` | K | 2 m temperature. Subtract 273.15 |
+| `d2m` | K | 2 m dewpoint → relative humidity |
+| `tcc`, `lcc` | 0–1 | total / low cloud cover |
+| `tp` | m | total precipitation, **accumulated over the previous hour** (3 h for EDA) |
+| `sf` | m water equivalent | snowfall, accumulated |
+| `u10`, `v10` | m s⁻¹ | wind components; speed = √(u²+v²) |
+| `i10fg` | m s⁻¹ | instantaneous 10 m gust |
+| `ssrd` | J m⁻² | surface solar radiation down, accumulated; ÷3600 → W m⁻² mean |
+| `strd` | J m⁻² | surface thermal radiation down, accumulated |
+| `sp` | Pa | surface pressure |
+
+⚠️ The new CDS delivers a zip holding one NetCDF per step type when a request
+mixes instantaneous and accumulated variables, even with
+`download_format: unarchived`. `weather.open_download` merges them.
+
+## Forecasts: `code/data/external/weather/aifs_ens/` → `interim/forecast_aifs_ens.parquet`
+
+ECMWF AIFS-ENS from ECMWF open data, **CC BY 4.0 - "Contains ECMWF open data"**.
+Harvested by `sense-energy harvest-forecasts`, which must run **daily**: the
+archive holds ~4 days and there is no historical AIFS before 2025. One NetCDF
+per run, `YYYYMMDDTHHz.nc`, dims `(step, number, latitude, longitude)`.
+
+| | |
+|---|---|
+| Runs kept | 00z, 12z (06z/18z exist) |
+| Lead times | 0–72 h, 6-hourly (configurable to 360 h) |
+| Members | 51: `number` 0 = control (`cf`), 1–50 = perturbed (`pf`) |
+| Grid | 0.25°, same area as ERA5 |
+
+| Column | Units | Notes |
+|---|---|---|
+| `site_code`, `run_time`, `valid_time`, `step_hours`, `member` | UTC | `valid_time = run_time + step` |
+| `t2m`, `d2m`, `skt` | K | |
+| `tcc`, `lcc` | % | **percent here, fraction in ERA5** |
+| `tp`, `sf` | kg m⁻² (= mm) | **accumulated from run start**, not per step; difference consecutive steps |
+| `ssrd`, `strd` | J m⁻² | accumulated from run start |
+| `u10`, `v10` | m s⁻¹ | |
+| `sp` | Pa | |
+
+On members: AIFS-ENS samples its members from a diffusion model with
+EDA-perturbed initial conditions rather than perturbing model physics, but the
+data are 50 perturbed fields plus a control per parameter and step.
+
+## Prices: `interim/prices_*.parquet`
+
+Built by `sense-energy fetch-prices`. Rationale in
+[ADR 0003](adr/0003-weather-and-price-data-sources.md).
+
+### `prices_agile.parquet` - the day-ahead-known signal
+
+Octopus Energy Agile import tariff, half-hourly, 14 GSP regions. A published,
+deterministic transform of the N2EX day-ahead hourly auction (multiplier +
+peak adder, capped), released the afternoon of D-1. Retail p/kWh, **not**
+wholesale £/MWh. One row per (`region`, `datetime`) from the product on sale
+that day; `prices_agile_all_products.parquet` holds every product.
+
+| Column | Notes |
+|---|---|
+| `datetime`, `valid_to` | UTC, 30-min |
+| `product` | which Agile product supplied the rate - products differ in caps, so a change is a step |
+| `region` | GSP group A–P (no I, O). Sites carry `gsp_group` in `sites_geo.parquet` |
+| `rate_exc_vat`, `rate_inc_vat` | p/kWh |
+
+Product chain over the window: `AGILE-FLEX-22-11-25` (to 2023-12-11) →
+`AGILE-23-12-06` (to 2024-04-02) → `AGILE-24-04-03` (to 2024-09-30) →
+`AGILE-24-10-01`. `AGILE-18-02-21` keeps publishing throughout and is the
+fallback.
+
+### `prices_elexon_mid.parquet` - ex-post wholesale reference
+
+Elexon Market Index Data: APX (`APXMIDP`) and N2EX (`N2EXMIDP`) volume-weighted
+price and volume per settlement period, £/MWh. Published after delivery -
+**evaluation only, never a feature**.
+
+### Not available
+
+ENTSO-E day-ahead prices for GB (`10YGB----------A`): none published since GB
+left EU market coupling in January 2021, and the REST host answers 404 for
+every zone at the time of writing. Nord Pool's data portal requires a
+subscription.

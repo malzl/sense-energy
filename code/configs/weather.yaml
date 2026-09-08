@@ -1,0 +1,41 @@
+# ERA5 weather pull from the Copernicus Climate Data Store.
+#
+# Why ERA5 and not ECMWF's 51-member ENS forecasts: ENS is not served by CDS
+# (it lives in MARS/TIGGE behind a separate ECMWF licence). ERA5 is the
+# reanalysis - the best estimate of what the weather actually was - and its
+# "ensemble_members" product is the 10-member Ensemble of Data Assimilations,
+# which carries genuine analysis uncertainty. See doc/adr/0003.
+
+dataset: reanalysis-era5-single-levels
+
+# Inclusive month range; matches the interim demand table.
+start: "2022-12"
+end: "2026-05"
+
+# [North, West, South, East]. All sites sit in 50.5-54.3N, -4.2-1.4E; padded
+# and snapped to the 0.5 deg EDA grid.
+area: [55.0, -5.0, 50.0, 2.0]
+
+# reanalysis      : deterministic, 0.25 deg, hourly
+# ensemble_members: 10 members,     0.5 deg,  3-hourly
+product_types: [reanalysis, ensemble_members]
+
+variables:
+  - 2m_temperature                        # t2m  - the primary driver
+  - 2m_dewpoint_temperature               # d2m  - humidity via dewpoint
+  - total_cloud_cover                     # tcc
+  - low_cloud_cover                       # lcc  - drives daylight/solar gain more than tcc
+  - total_precipitation                   # tp   - accumulated
+  - snowfall                              # sf   - accumulated
+  - 10m_u_component_of_wind               # u10  - wind -> infiltration losses
+  - 10m_v_component_of_wind               # v10
+  - instantaneous_10m_wind_gust           # i10fg
+  - surface_solar_radiation_downwards     # ssrd - solar gain, on-site PV; accumulated
+  - surface_thermal_radiation_downwards   # strd - night-time radiative loss; accumulated
+  - surface_pressure                      # sp
+
+# Concurrent CDS jobs. The CDS queue throttles per user; more is not faster.
+max_workers: 3
+
+# Under code/data/external/
+output_subdir: weather/era5
