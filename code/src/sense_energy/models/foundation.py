@@ -63,7 +63,9 @@ def timesfm_predict(model, series: list[np.ndarray], horizon: int):
             kwargs[name] = horizon
             break
     first = next(n for n in params if n not in ("self",))
-    return fn(**{first: series}, **kwargs)
+    out = fn(**{first: series}, **kwargs)
+    # predict_batch is lazy: nothing runs until the iterator is consumed.
+    return list(out) if hasattr(out, "__next__") else out
 
 
 def tabpfn_ts_checkpoint() -> str:
