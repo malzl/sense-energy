@@ -166,6 +166,43 @@ def build_processed_cmd(config_path: str) -> None:
     click.echo(f"{len(record.files)} files written; manifest at doc/data_manifest.md")
 
 
+@cli.command("build-neso-covariates")
+@click.option(
+    "--config", "config_path", default="code/configs/neso_covariates.yaml", show_default=True
+)
+def build_neso_covariates_cmd(config_path: str) -> None:
+    """Half-hourly NESO covariates (actuals and day-ahead-known) and static FES site attributes."""
+    from .data.neso_covariates import build
+
+    out = build(load_config(config_path))
+    click.echo(f"{out['halfhourly']}\n{out['site']}\n{len(out['columns'])} columns")
+
+
+@cli.command("build-mobility")
+def build_mobility_cmd() -> None:
+    """Tidy the ESC mobile-visitation dataset (one trust, 2024) into interim/."""
+    from .data.mobility import build
+
+    for name, path in build().items():
+        click.echo(f"{name:<10} {path}")
+
+
+@cli.command("gpu-check")
+@click.option("--n-series", default=256, show_default=True)
+def gpu_check_cmd(n_series: int) -> None:
+    """Show CUDA devices and benchmark each foundation model on the selected GPU."""
+    from .compute import gpu_inventory, select_device
+    from .models.foundation import benchmark
+
+    for d in gpu_inventory():
+        click.echo(f"{d.device}: {d.name}  free {d.free_gb:.1f}/{d.total_gb:.1f} GB  bf16={d.bf16}")
+    device = select_device()
+    for r in benchmark(n_series=n_series, device=device):
+        click.echo(
+            f"{r.model:<26} {r.device:<8} {r.n_series:>4} series x {r.context} ctx -> {r.horizon} steps: {r.seconds:6.2f} s  ({r.series_per_second:7.1f} series/s)"
+        )
+
+
 @cli.command("build-features")
 @click.option("--config", "config_path", default="code/configs/features.yaml", show_default=True)
 def build_features_cmd(config_path: str) -> None:

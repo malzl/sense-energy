@@ -1,0 +1,25 @@
+# NESO covariates at half-hourly cadence on the demand grid, plus static
+# per-site FES attributes. Column suffixes say when a value is knowable:
+#   _actual : ex-post outturn - only usable lagged
+#   _da     : known by the day-ahead cutoff below
+# Everything is UTC, period start, kWh-free (MW and % only).
+
+grid_start: "2022-12-01"
+grid_end: "2026-05-31"
+
+# "Known beforehand" is defined as: issued no later than this UTC hour on the
+# day before the target day. 16:00 matches when Agile prices are published.
+day_ahead_cutoff_hour_utc: 16
+
+# Cardinal-point demand forecasts to keep, by days ahead (daily peak/trough).
+cardinal_horizons_days: [1, 2, 7, 14]
+
+# Generation-mix columns (MW) and shares (%) to carry as ex-post covariates.
+generation_mix_mw: [GAS, COAL, NUCLEAR, WIND, WIND_EMB, HYDRO, IMPORTS, BIOMASS, SOLAR, STORAGE, GENERATION]
+generation_mix_pct: [RENEWABLE_perc, FOSSIL_perc, WIND_perc, SOLAR_perc, GAS_perc, NUCLEAR_perc]
+
+# Static per-site attributes from the FES regional breakdown (latest published).
+fes_year: 2024
+fes_base_year: 2024
+fes_target_year: 2030
+fes_pathways: {EE: electric_engagement, HT: holistic_transition, HE: hydrogen_evolution}

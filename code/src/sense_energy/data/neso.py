@@ -109,6 +109,36 @@ MANIFEST: dict[str, tuple[str, str, Path]] = {
         r"Embedded Solar and Wind Forecast Archive {y}",
         TABLES_DIR,
     ),
+    "demand_forecast_day_ahead_historic.csv": (
+        "1-day-ahead-demand-forecast",
+        r"^Historic Day Ahead Demand Forecasts$",
+        TABLES_DIR,
+    ),
+    "demand_forecast_2day_ahead_historic.csv": (
+        "2-day-ahead-demand-forecast",
+        r"^Historic",
+        TABLES_DIR,
+    ),
+    "demand_forecast_7day_ahead_historic.csv": (
+        "7-day-ahead-national-forecast",
+        r"^Historic 7 Day Ahead",
+        TABLES_DIR,
+    ),
+    "demand_forecast_2_14day_historic.csv": (
+        "2-14-days-ahead-national-demand-forecast",
+        r"^Historic",
+        TABLES_DIR,
+    ),
+    "demand_forecast_day_ahead_performance.csv": (
+        "day-ahead-half-hourly-demand-forecast-performance",
+        r".",
+        TABLES_DIR,
+    ),
+    "generation_mix_halfhourly.csv": (
+        "historic-generation-mix",
+        r"^Historic GB Generation Mix$",
+        TABLES_DIR,
+    ),
     "gsp_regions_20260209.zip": (
         "gis-boundaries-for-gb-grid-supply-points",
         r"^GSP Regions 20260209$",

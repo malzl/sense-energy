@@ -54,3 +54,8 @@ CKAN API; `sense-energy build-neso` tidies them into `interim/`.
 
 IFS ENS historical forecasts from TIGGE via the ECMWF Data Store, one GRIB per
 type-month. `sense-energy fetch-tigge` (needs an ECDS token and the TIGGE licence).
+
+## `external/esc_mobility/`
+
+ESC / Oxford Partnership mobile visitation data for the Royal Devon sites (2024),
+licensed for research only — see `doc/data_governance.md`. Git-ignored.

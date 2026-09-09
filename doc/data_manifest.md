@@ -1,6 +1,6 @@
 # Data manifest - processed demand datasets
 
-Generated 2026-09-08T11:46:18+00:00 by `sense-energy build-processed` at commit `06583cd`.
+Generated 2026-09-09T09:13:47+00:00 by `sense-energy build-processed` at commit `618da4f`.
 Regenerate with `make processed`; this file and `code/data/processed/manifest.json` are written by the build and should not be edited by hand.
 
 ## Lineage
@@ -71,23 +71,27 @@ Conventions: timestamps are UTC period *starts* on a common 30-minute grid; unit
    - days_skipped: `{'too_sparse': 34590, 'gap_over_24h': 110, 'no_neighbours': 2055}`
    - series_flagged_heavily_imputed: `['1100050353005']`
 
-7. **elec: site totals**
+7. **elec: inactive meters excluded from totals**
+   - min_member_coverage: `0.1`
+   - meters: `['1030071208238', '1200010097523', '1419581430000', '2200030368412', '2200032196710', '2200042744540', '2200043162436']`
+
+8. **elec: site totals**
    - sites: `134`
    - rule: `total = sum of meters only where every active meter has a value (observed or imputed); else NaN`
-   - raw_complete_share: `0.8374`
-   - imputed_complete_share: `0.84`
+   - raw_complete_share: `0.8566`
+   - imputed_complete_share: `0.8603`
 
-8. **elec: trust totals**
+9. **elec: trust totals**
    - trusts: `24`
    - rule: `total = sum of sites only where every active site has a value; else NaN`
-   - raw_complete_share: `0.6464`
-   - imputed_complete_share: `0.6467`
+   - raw_complete_share: `0.734`
+   - imputed_complete_share: `0.7457`
 
-9. **gas: meter frame**
+10. **gas: meter frame**
    - meters: `56`
    - outliers_set_missing: `6`
 
-10. **gas: profile-KNN imputation at meter level**
+11. **gas: profile-KNN imputation at meter level**
    - method: `profile_knn`
    - k: `5`
    - window_weeks: `8`
@@ -102,17 +106,21 @@ Conventions: timestamps are UTC period *starts* on a common 30-minute grid; unit
    - days_skipped: `{'too_sparse': 46534, 'gap_over_24h': 738, 'no_neighbours': 1776}`
    - series_flagged_heavily_imputed: `[]`
 
-11. **gas: site totals**
+12. **gas: inactive meters excluded from totals**
+   - min_member_coverage: `0.1`
+   - meters: `['13542103', '1643806708', '7678762807', '81755703', '9330756405', '9382951702']`
+
+13. **gas: site totals**
    - sites: `21`
    - rule: `total = sum of meters only where every active meter has a value (observed or imputed); else NaN`
-   - raw_complete_share: `0.182`
-   - imputed_complete_share: `0.1872`
+   - raw_complete_share: `0.186`
+   - imputed_complete_share: `0.1917`
 
-12. **gas: trust totals**
+14. **gas: trust totals**
    - trusts: `10`
    - rule: `total = sum of sites only where every active site has a value; else NaN`
-   - raw_complete_share: `0.1211`
-   - imputed_complete_share: `0.1239`
+   - raw_complete_share: `0.1495`
+   - imputed_complete_share: `0.1603`
 
 ## Imputation method
 
@@ -123,11 +131,11 @@ Profile-KNN within each series (Peppanen et al. 2016). Each UTC day is a 48-slot
 | energy/level | series (raw) | series (imputed) | periods | raw cells present | imputed cells present | median coverage in span | mean imputed share |
 |---|---|---|---|---|---|---|---|
 | elec/meter | 170 | 169 | 59,952 | 82.9% | 83.2% | 100.0% | 0.40% |
-| elec/site | 134 | 133 | 59,952 | 83.7% | 84.0% | 100.0% | 0.26% |
-| elec/trust | 24 | 23 | 59,952 | 64.6% | 64.7% | 98.5% | 0.35% |
+| elec/site | 134 | 133 | 59,952 | 85.7% | 86.0% | 100.0% | 0.26% |
+| elec/trust | 24 | 23 | 59,952 | 73.4% | 74.6% | 98.4% | 0.35% |
 | gas/meter | 56 | 56 | 59,952 | 31.3% | 32.1% | 79.6% | 0.79% |
-| gas/site | 21 | 21 | 59,952 | 18.2% | 18.7% | 51.1% | 0.61% |
-| gas/trust | 10 | 10 | 59,952 | 12.1% | 12.4% | 40.5% | 0.49% |
+| gas/site | 21 | 21 | 59,952 | 18.6% | 19.2% | 51.1% | 0.61% |
+| gas/trust | 10 | 10 | 59,952 | 14.9% | 16.0% | 39.4% | 0.49% |
 
 ## Files
 
@@ -143,22 +151,22 @@ Profile-KNN within each series (Peppanen et al. 2016). Each UTC day is a 48-slot
 | `elec/meter/long_imputed.parquet` | 8,433,140 | 4 | 15.21 | `774a3755970e` |
 | `elec/meter/series_index.parquet` | 170 | 23 | 0.03 | `b9b8178b71f2` |
 | `elec/meter/series_index.csv` | 170 | 23 | 0.05 | `3094899a14c7` |
-| `elec/site/wide_raw.parquet` | 59,952 | 134 | 8.51 | `b09005072062` |
-| `elec/site/wide_raw.csv` | 59,952 | 134 | 53.93 | `a68a4a0c8db4` |
-| `elec/site/wide_imputed.parquet` | 59,952 | 133 | 8.66 | `d3cfe462671d` |
-| `elec/site/wide_imputed.csv` | 59,952 | 133 | 53.65 | `a63c2ed27085` |
-| `elec/site/long_raw.parquet` | 6,727,091 | 3 | 12.56 | `50f4a3322cc9` |
-| `elec/site/long_imputed.parquet` | 6,698,130 | 4 | 12.7 | `4e0494453d28` |
-| `elec/site/series_index.parquet` | 134 | 19 | 0.02 | `dc2dd8423e2f` |
-| `elec/site/series_index.csv` | 134 | 19 | 0.04 | `af396c16e11a` |
-| `elec/trust/wide_raw.parquet` | 59,952 | 24 | 4.08 | `b73b2b8757d0` |
-| `elec/trust/wide_raw.csv` | 59,952 | 24 | 10.21 | `2979797b2927` |
-| `elec/trust/wide_imputed.parquet` | 59,952 | 23 | 4.13 | `7518ed98263f` |
-| `elec/trust/wide_imputed.csv` | 59,952 | 23 | 9.89 | `4066dbaf25cc` |
-| `elec/trust/long_raw.parquet` | 930,080 | 3 | 4.43 | `c893a4fccee5` |
-| `elec/trust/long_imputed.parquet` | 891,719 | 4 | 4.38 | `8e031de3cd1d` |
-| `elec/trust/series_index.parquet` | 24 | 16 | 0.01 | `db5881d297f7` |
-| `elec/trust/series_index.csv` | 24 | 16 | 0.01 | `63baefc19344` |
+| `elec/site/wide_raw.parquet` | 59,952 | 134 | 9.18 | `0e5b3c105906` |
+| `elec/site/wide_raw.csv` | 59,952 | 134 | 55.13 | `664ed3fc0810` |
+| `elec/site/wide_imputed.parquet` | 59,952 | 133 | 9.39 | `569b4f4abcfe` |
+| `elec/site/wide_imputed.csv` | 59,952 | 133 | 54.91 | `7c7b8e46b9d3` |
+| `elec/site/long_raw.parquet` | 6,881,456 | 3 | 13.34 | `6781a1647989` |
+| `elec/site/long_imputed.parquet` | 6,859,825 | 4 | 13.54 | `f5dfb3040884` |
+| `elec/site/series_index.parquet` | 134 | 19 | 0.02 | `905ed8ca3c28` |
+| `elec/site/series_index.csv` | 134 | 19 | 0.04 | `2d25bac5afe9` |
+| `elec/trust/wide_raw.parquet` | 59,952 | 24 | 4.69 | `a93ac21f7c31` |
+| `elec/trust/wide_raw.csv` | 59,952 | 24 | 11.17 | `653c8b8ed19e` |
+| `elec/trust/wide_imputed.parquet` | 59,952 | 23 | 4.83 | `35ea144abda8` |
+| `elec/trust/wide_imputed.csv` | 59,952 | 23 | 10.92 | `d20a8a9b2a7f` |
+| `elec/trust/long_raw.parquet` | 1,056,066 | 3 | 5.08 | `c93c2c8f4e4f` |
+| `elec/trust/long_imputed.parquet` | 1,028,290 | 4 | 5.12 | `f7c3c622e1b9` |
+| `elec/trust/series_index.parquet` | 24 | 16 | 0.01 | `73df946619a5` |
+| `elec/trust/series_index.csv` | 24 | 16 | 0.01 | `2c319bca604c` |
 | `gas/meter/wide_raw.parquet` | 59,952 | 56 | 2.01 | `036dc5bf069e` |
 | `gas/meter/wide_raw.csv` | 59,952 | 56 | 12.24 | `9879651ae154` |
 | `gas/meter/wide_imputed.parquet` | 59,952 | 56 | 2.24 | `5ec889087f46` |
@@ -167,22 +175,22 @@ Profile-KNN within each series (Peppanen et al. 2016). Each UTC day is a 48-slot
 | `gas/meter/long_imputed.parquet` | 1,076,661 | 4 | 2.63 | `e9deba87a018` |
 | `gas/meter/series_index.parquet` | 56 | 23 | 0.02 | `bd46e5999286` |
 | `gas/meter/series_index.csv` | 56 | 23 | 0.02 | `03ee3f18416a` |
-| `gas/site/wide_raw.parquet` | 59,952 | 21 | 0.99 | `6556edc4cdb2` |
-| `gas/site/wide_raw.csv` | 59,952 | 21 | 4.45 | `4b50046dc5ce` |
-| `gas/site/wide_imputed.parquet` | 59,952 | 21 | 1.06 | `af78ed862305` |
-| `gas/site/wide_imputed.csv` | 59,952 | 21 | 4.5 | `a43504e7eb3b` |
-| `gas/site/long_raw.parquet` | 229,077 | 3 | 1.01 | `9fce431942e2` |
-| `gas/site/long_imputed.parquet` | 235,684 | 4 | 1.06 | `7702b3a500de` |
-| `gas/site/series_index.parquet` | 21 | 19 | 0.02 | `7ace241dcf9c` |
-| `gas/site/series_index.csv` | 21 | 19 | 0.01 | `0900adaa7738` |
-| `gas/trust/wide_raw.parquet` | 59,952 | 10 | 0.65 | `23ad873b3c47` |
-| `gas/trust/wide_raw.csv` | 59,952 | 10 | 2.71 | `83394f486cbe` |
-| `gas/trust/wide_imputed.parquet` | 59,952 | 10 | 0.66 | `14e6d0c40957` |
-| `gas/trust/wide_imputed.csv` | 59,952 | 10 | 2.73 | `e788672f04f8` |
-| `gas/trust/long_raw.parquet` | 72,625 | 3 | 0.5 | `7b130cbc7b25` |
-| `gas/trust/long_imputed.parquet` | 74,280 | 4 | 0.52 | `914d128bd3fd` |
-| `gas/trust/series_index.parquet` | 10 | 16 | 0.01 | `ab4da0ef2380` |
-| `gas/trust/series_index.csv` | 10 | 16 | 0.0 | `175dd06268d5` |
+| `gas/site/wide_raw.parquet` | 59,952 | 21 | 1.02 | `53449b759217` |
+| `gas/site/wide_raw.csv` | 59,952 | 21 | 4.49 | `c854ca4f073e` |
+| `gas/site/wide_imputed.parquet` | 59,952 | 21 | 1.09 | `b51b8bf333de` |
+| `gas/site/wide_imputed.csv` | 59,952 | 21 | 4.54 | `00a19e657b23` |
+| `gas/site/long_raw.parquet` | 234,154 | 3 | 1.04 | `2d30a301944f` |
+| `gas/site/long_imputed.parquet` | 241,294 | 4 | 1.1 | `7ce70c71764e` |
+| `gas/site/series_index.parquet` | 21 | 19 | 0.02 | `f48f65678e2d` |
+| `gas/site/series_index.csv` | 21 | 19 | 0.01 | `32a6707a8819` |
+| `gas/trust/wide_raw.parquet` | 59,952 | 10 | 0.71 | `94cbdd010bf4` |
+| `gas/trust/wide_raw.csv` | 59,952 | 10 | 2.85 | `ea4c13ee99f7` |
+| `gas/trust/wide_imputed.parquet` | 59,952 | 10 | 0.79 | `819ce7096d1f` |
+| `gas/trust/wide_imputed.csv` | 59,952 | 10 | 2.89 | `21bc00355ab5` |
+| `gas/trust/long_raw.parquet` | 89,648 | 3 | 0.61 | `c28137a859b7` |
+| `gas/trust/long_imputed.parquet` | 96,125 | 4 | 0.71 | `ebbe39ebb9ed` |
+| `gas/trust/series_index.parquet` | 10 | 16 | 0.01 | `b8d9eb09c71b` |
+| `gas/trust/series_index.csv` | 10 | 16 | 0.0 | `8159e04cef41` |
 
 ## Known limitations
 

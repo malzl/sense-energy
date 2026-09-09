@@ -200,18 +200,25 @@ def to_wide(
     return wide
 
 
-def aggregate_wide(wide: pd.DataFrame, mapping: pd.Series) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Sum columns by group; a total is NaN unless every member is present.
+def aggregate_wide(
+    wide: pd.DataFrame, mapping: pd.Series, min_member_coverage: float = 0.1
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Sum columns by group; a total is NaN unless every *active* member is present.
 
-    Returns the totals and, per group, the number of members.
+    A member is active when at least ``min_member_coverage`` of its values are
+    present in the window. Without that floor, a meter that reported for a few
+    weeks and then died would block its site's total for the whole window (the
+    Royal Devon & Exeter site lost all of 2024 to a 1 %-coverage meter).
+    Returns the totals and, per group, the number of active members.
     """
     groups = mapping.reindex(wide.columns)
     totals = {}
     n_members = {}
     for gid, cols in groups.groupby(groups).groups.items():
         block = wide[list(cols)]
-        # members that have no data at all in the window are not "missing" - they never existed here
-        active = block.columns[block.notna().any()]
+        active = block.columns[block.notna().mean() >= min_member_coverage]
+        if len(active) == 0:
+            active = block.columns[block.notna().any()]
         block = block[active]
         complete = block.notna().all(axis=1)
         s = block.sum(axis=1, min_count=1).where(complete)
@@ -462,8 +469,15 @@ def build(config: dict[str, Any]) -> BuildRecord:
         # ---- site and trust totals: only when every active member has a value
         if "site" in config["levels"] or "trust" in config["levels"]:
             mapping_site = meta.set_index("series_id")["site_code"]
-            site_raw, n_site = aggregate_wide(wide_raw, mapping_site)
-            site_imp, _ = aggregate_wide(wide_imp[keep_imp], mapping_site)
+            min_cov = float(config.get("min_member_coverage", 0.1))
+            inactive = [c for c in wide_raw.columns if wide_raw[c].notna().mean() < min_cov]
+            site_raw, n_site = aggregate_wide(wide_raw, mapping_site, min_cov)
+            site_imp, _ = aggregate_wide(wide_imp[keep_imp], mapping_site, min_cov)
+            record.step(
+                f"{energy}: inactive meters excluded from totals",
+                min_member_coverage=min_cov,
+                meters=inactive,
+            )
             site_flag_frac = (flags.T.groupby(mapping_site).mean().T).reindex(
                 columns=site_imp.columns
             )
@@ -501,8 +515,8 @@ def build(config: dict[str, Any]) -> BuildRecord:
             )
 
             mapping_trust = site_meta_frame.set_index("series_id")["trust_id"]
-            trust_raw, n_trust = aggregate_wide(site_raw, mapping_trust)
-            trust_imp, _ = aggregate_wide(site_imp, mapping_trust)
+            trust_raw, n_trust = aggregate_wide(site_raw, mapping_trust, min_cov)
+            trust_imp, _ = aggregate_wide(site_imp, mapping_trust, min_cov)
             trust_flag_frac = (
                 site_flag_frac.T.groupby(mapping_trust.reindex(site_flag_frac.columns)).mean().T
             ).reindex(columns=trust_imp.columns)

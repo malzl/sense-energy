@@ -26,3 +26,6 @@ area: [55.0, -5.0, 50.0, 2.0]
 
 # Under code/data/external/
 output_subdir: weather/aifs_ens
+
+# Parallel step downloads per run (open data allows a few connections per client).
+download_workers: 4

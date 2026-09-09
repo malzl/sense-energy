@@ -41,3 +41,15 @@ infrastructure). Treat it as confidential.
 | `code/data/` (local) | Full source data |
 | Git remote | Code and docs only |
 | Shared drives / cloud | Per the data sharing agreement — TBD |
+
+
+## Third-party licensed datasets
+
+| Dataset | Provider / licence | Terms that bind us |
+|---|---|---|
+| Aggregate mobile data visitation for UK campus (2024, Royal Devon sites) | The Oxford Partnership via ESC SENSE, EULA ESC3888-3.0 | research use only; no re-identification; access-controlled storage; delete on expiry and confirm within 30 days if asked; outputs must carry the Oxford Partnership attribution (see data dictionary); outputs may be published, the dataset may not be redistributed |
+| ERA5 (Copernicus CDS) | Copernicus licence | attribution |
+| TIGGE (ECMWF, ECDS) | CC BY-NC 4.0 | non-commercial; attribution |
+| AIFS-ENS (ECMWF open data) | CC BY 4.0 | "Contains ECMWF open data" |
+| NESO data portal | NESO Open Data Licence | "Contains NESO open data" |
+| ONS boundaries | OGL v3 | "Contains OS data © Crown copyright and database right" |

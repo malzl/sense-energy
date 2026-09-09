@@ -23,6 +23,7 @@ import warnings
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from ..config import EXTERNAL_DIR, INTERIM_DIR
@@ -95,6 +96,64 @@ def _open_grib_merged(path: Path):
     return xr.merge(cleaned, compat="no_conflicts", join="outer")
 
 
+def _read_grib_cropped(path: Path, area: list[float]):
+    """Decode a regular-grid GRIB with ecCodes directly and crop to ``area``.
+
+    cfgrib decodes every global field into xarray before any crop; on 51
+    members x 12 parameters that is minutes per step. Reading the messages
+    with ecCodes and slicing the flat array to the box takes seconds.
+    """
+    import eccodes
+    import xarray as xr
+
+    north, west, south, east = area
+    fields: dict[str, dict[int, np.ndarray]] = {}
+    lat = lon = None
+    rows = cols = None
+    with path.open("rb") as fh:
+        while True:
+            gid = eccodes.codes_grib_new_from_file(fh)
+            if gid is None:
+                break
+            try:
+                if lat is None:
+                    ni, nj = eccodes.codes_get(gid, "Ni"), eccodes.codes_get(gid, "Nj")
+                    lat0, dlat = (
+                        eccodes.codes_get(gid, "latitudeOfFirstGridPointInDegrees"),
+                        eccodes.codes_get(gid, "jDirectionIncrementInDegrees"),
+                    )
+                    lon0, dlon = (
+                        eccodes.codes_get(gid, "longitudeOfFirstGridPointInDegrees"),
+                        eccodes.codes_get(gid, "iDirectionIncrementInDegrees"),
+                    )
+                    scan_neg_j = eccodes.codes_get(gid, "jScansPositively") == 0
+                    lats = (
+                        lat0 - np.arange(nj) * dlat if scan_neg_j else lat0 + np.arange(nj) * dlat
+                    )
+                    lons = ((lon0 + np.arange(ni) * dlon) + 180.0) % 360.0 - 180.0
+                    rows = np.flatnonzero((lats <= north) & (lats >= south))
+                    cols = np.flatnonzero((lons >= west) & (lons <= east))
+                    lat, lon = lats[rows], lons[cols]
+                name = eccodes.codes_get(gid, "shortName")
+                name = {"2t": "t2m", "2d": "d2m", "10u": "u10", "10v": "v10"}.get(name, name)
+                number = (
+                    int(eccodes.codes_get(gid, "perturbationNumber"))
+                    if eccodes.codes_get(gid, "dataType") == "pf"
+                    else 0
+                )
+                values = eccodes.codes_get_values(gid).reshape(nj, ni)
+                fields.setdefault(name, {})[number] = values[np.ix_(rows, cols)].astype("float32")
+            finally:
+                eccodes.codes_release(gid)
+    members = sorted({m for v in fields.values() for m in v})
+    data = {
+        name: (("number", "latitude", "longitude"), np.stack([grid[m] for m in members]))
+        for name, grid in fields.items()
+        if set(grid) == set(members)
+    }
+    return xr.Dataset(data, coords={"number": members, "latitude": lat, "longitude": lon})
+
+
 def _crop(ds, area: list[float]):
     north, west, south, east = area
     lon = ds["longitude"]
@@ -121,36 +180,48 @@ def harvest_run(date: str, time: str, config: dict[str, Any]) -> Path:
     work = out.with_suffix(".work")
     work.mkdir(parents=True, exist_ok=True)
 
+    from concurrent.futures import ThreadPoolExecutor
+
+    def fetch(step: int) -> Path:
+        grib = work / f"{step:03d}h.grib2"
+        client.retrieve(
+            date=date,
+            time=int(time),
+            stream=config["stream"],
+            type=list(config["types"]),
+            step=step,
+            param=list(config["params"]),
+            target=str(grib),
+        )
+        return grib
+
     per_step = []
     try:
-        for step in config["steps"]:
-            grib = work / f"{step:03d}h.grib2"
-            logger.info(
-                "AIFS-ENS %sT%sz step %dh: fetching %d params x %s",
-                date,
-                time,
-                step,
-                len(config["params"]),
-                config["types"],
-            )
-            client.retrieve(
-                date=date,
-                time=int(time),
-                stream=config["stream"],
-                type=list(config["types"]),
-                step=step,
-                param=list(config["params"]),
-                target=str(grib),
-            )
-            ds = _crop(_open_grib_merged(grib), config["area"]).load()
-            ds = ds.drop_vars(
-                [c for c in ("time", "valid_time") if c in ds.coords], errors="ignore"
-            )
+        steps = list(config["steps"])
+        logger.info(
+            "AIFS-ENS %sT%sz: fetching %d steps x %d params x %s, %d in parallel",
+            date,
+            time,
+            len(steps),
+            len(config["params"]),
+            config["types"],
+            int(config.get("download_workers", 4)),
+        )
+        with ThreadPoolExecutor(max_workers=int(config.get("download_workers", 4))) as pool:
+            gribs = list(pool.map(fetch, steps))
+        for step, grib in zip(steps, gribs, strict=True):
+            try:
+                ds = _read_grib_cropped(grib, config["area"])
+            except Exception as exc:  # noqa: BLE001 - fall back to cfgrib on anything unexpected
+                logger.warning("ecCodes read failed for step %d (%s); using cfgrib", step, exc)
+                ds = _crop(_open_grib_merged(grib), config["area"]).load()
+                ds = ds.drop_vars(
+                    [c for c in ("time", "valid_time") if c in ds.coords], errors="ignore"
+                )
             per_step.append(
                 ds.expand_dims(step=[pd.Timedelta(hours=step)]) if "step" not in ds.dims else ds
             )
             grib.unlink(missing_ok=True)
-
         run = xr.concat(per_step, dim="step").sortby("number")
         # Any scalar level coordinate that survived the per-group drop is noise.
         run = run.drop_vars([c for c in run.coords if c not in run.dims], errors="ignore")

@@ -24,6 +24,11 @@ imputation:
   level_scaling: true          # scale neighbours to the day's observed level
   max_imputed_fraction_per_series: 0.10   # above this a series is flagged and left out of wide_imputed
 
+# A meter/site counts as an active member of its site/trust total only if at
+# least this share of its values is present; below it, it is excluded from the
+# total (and listed in the manifest) rather than blocking it.
+min_member_coverage: 0.10
+
 # Series in the wide matrices need at least this share of the global grid observed
 # (raw) or observed+imputed (imputed). 0 keeps everything and leaves NaN columns.
 min_coverage_for_wide: 0.0
