@@ -55,7 +55,7 @@ def build_request(
     if forecast_type not in TYPE_LABELS:
         raise KeyError(f"forecast_type must be one of {sorted(TYPE_LABELS)}, got '{forecast_type}'")
     days_in_month = pd.Period(f"{year}-{month:02d}").days_in_month
-    return {
+    request = {
         "origin": config.get("origin", "ecmwf"),
         "level_type": config.get("level_type", "single_level"),
         "forecast_type": forecast_type,
@@ -68,6 +68,10 @@ def build_request(
         "area": list(config["area"]),
         "data_format": config.get("data_format", "grib"),
     }
+    if forecast_type == "perturbed_forecast" and config.get("members"):
+        # Not in the published ECDS schema; forwarded to MARS on a best-effort basis.
+        request["number"] = str(config["members"])
+    return request
 
 
 def _opens_cleanly(path: Path) -> bool:

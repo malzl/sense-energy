@@ -268,7 +268,9 @@ def test_tigge_request_matches_the_ecds_schema():
     assert req["origin"] == "ecmwf" and req["level_type"] == "single_level"
     assert req["forecast_type"] == "perturbed_forecast"
     assert req["day"][-1] == "29" and req["time"] == ["00:00", "12:00"]
-    assert req["leadtime_hour"][0] == "0" and req["leadtime_hour"][-1] == "72"
+    assert req["leadtime_hour"][0] == "0" and req["leadtime_hour"][-1] == "48"
+    assert req["number"] == "1/to/10"  # best-effort member selection, perturbed only
+    assert "number" not in tigge.build_request("control_forecast", 2024, 2, cfg)
     assert req["data_format"] == "grib" and req["area"] == [55.0, -5.0, 50.0, 2.0]
     assert "2_m_temperature" in req["variable"]
     with pytest.raises(KeyError):
