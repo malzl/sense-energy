@@ -59,3 +59,8 @@ type-month. `sense-energy fetch-tigge` (needs an ECDS token and the TIGGE licenc
 
 ESC / Oxford Partnership mobile visitation data for the Royal Devon sites (2024),
 licensed for research only — see `doc/data_governance.md`. Git-ignored.
+
+## `external/weather/ifs_ens/`
+
+IFS ENS (51 members) site extracts from the AWS mirror of ECMWF open data, one
+parquet per run. `sense-energy harvest-ifs-ens --until-complete` (resumable).

@@ -48,6 +48,12 @@ What each candidate source can actually provide:
   the question.
 - The AIFS archive only exists from the day the cron job starts. Schedule it
   before anything else if forecast-based evaluation matters.
+- **Amendment 2026-09-10:** ECDS serves TIGGE perturbed members at 9–18 h per
+  month from tape. The 51-member IFS ENS is also on the AWS mirror of ECMWF open
+  data from 18 Jan 2023 as plain S3 with per-message indexes, so it is now the
+  primary perturbed source (`harvest-ifs-ens`, days not weeks). TIGGE keeps
+  running for the control run and for Dec 2022 – 17 Jan 2023 coverage. Dewpoint and
+  radiation only exist in that stream from 2024-03-06; cloud cover is absent throughout.
 - **Amendment 2026-09-08:** true historical forecast ensembles are now pulled
   from TIGGE (IFS ENS, 51 members, 0.5 deg, 6-hourly, from 2006) via the ECMWF
   Data Store (ECDS) - `sense-energy fetch-tigge`. This becomes the

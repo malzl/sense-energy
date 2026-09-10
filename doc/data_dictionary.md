@@ -462,3 +462,34 @@ reliance any reader may give to it."*
 **How it can be used**: as an observed occupancy proxy for a three-site case
 study in 2024 — not as a forecasting feature (footfall is not known ahead of
 time unless forecast itself), and not estate-wide (one trust).
+
+
+---
+
+## Forecasts (historical, 51 members): `code/data/external/weather/ifs_ens/sites/` → `interim/forecast_ifs_ens/YYYY-MM.parquet`
+
+ECMWF IFS ENS from the **AWS mirror of ECMWF open data** (CC BY 4.0,
+"Contains ECMWF open data"), harvested by `sense-energy harvest-ifs-ens`:
+each ensemble step's `.index` gives every message's byte offset, so only the
+wanted parameters and members are fetched by HTTP range (32 connections),
+decoded with ecCodes, cropped to the site box and reduced to the nearest grid
+point per site. One parquet per run; `build-ifs-ens` concatenates by month.
+
+| | |
+|---|---|
+| Period | 18 Jan 2023 → (the mirror's first day); 00z and 12z |
+| Members | **51**: `member` 0 = control, 1–50 perturbed |
+| Lead times | 0–48 h, 6-hourly (3-hourly exists to 144 h) |
+| Grid | **0.4°** to 28 Feb 2024 (`grid = 0p4`), **0.25°** from 29 Feb 2024 (`grid = 0p25`) |
+| Parameters | `t2m d2m u10 v10 tp ssrd strd sp` (K, m s⁻¹, m accumulated, J m⁻² accumulated, Pa) |
+
+⚠️ **Dewpoint and radiation (`d2m ssrd strd`) exist only from 2024-03-06.** Before
+that the ensemble stream carried `2t 10u 10v tp sp` plus fields we do not keep
+(`msl skt` and upper-air) — so those three columns are absent for
+2023-01-18 → 2024-03-06, independent of the grid change. No cloud cover exists in
+the open-data ensemble at all. Columns: `site_code, run_time, valid_time,
+step_hours, member, grid` + parameters.
+
+Relationship to TIGGE: same model family; TIGGE control (42 months, 14
+variables) and TIGGE perturbed (10 members, still being served by ECDS)
+remain; this source supplies the full 51-member spread from Jan 2023.

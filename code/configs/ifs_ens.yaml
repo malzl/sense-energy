@@ -1,0 +1,31 @@
+# ECMWF IFS ENS (51 members) from the AWS mirror of ECMWF open data.
+# CC BY 4.0 - "Contains ECMWF open data". Plain S3: per-message .index files
+# let us fetch exactly our parameters and members by HTTP byte range, so the
+# archive (Jan 2023 onward) comes down in days rather than weeks - see ADR 0003.
+#
+# Grid changes on the mirror: 0.4 deg until Feb 2024 ("0p4-beta"), 0.25 deg
+# after. Nearest-point extraction absorbs it; the extract records which.
+
+bucket: https://ecmwf-forecasts.s3.eu-central-1.amazonaws.com
+
+start: "2023-01-18"     # first date on the mirror
+end: "2026-05-31"
+run_times: ["00", "12"]
+
+# Lead times in hours (6-hourly to match TIGGE and the AIFS harvester;
+# 3-hourly exists to 144 h).
+steps: [0, 6, 12, 18, 24, 30, 36, 42, 48]
+
+# ECMWF short names in the open-data ensemble. No cloud cover exists in this
+# stream; ssrd (downward solar) is the demand-relevant proxy.
+params: [2t, 2d, 10u, 10v, tp, ssrd, strd, sp]
+
+# [North, West, South, East]
+area: [55.0, -5.0, 50.0, 2.0]
+
+# Parallel HTTP range requests per step, and decode processes per run.
+download_workers: 32
+decode_workers: 6
+
+# Under code/data/external/
+output_subdir: weather/ifs_ens

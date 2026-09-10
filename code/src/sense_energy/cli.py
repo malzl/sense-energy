@@ -209,6 +209,30 @@ def gpu_check_cmd(n_series: int) -> None:
         )
 
 
+@cli.command("harvest-ifs-ens")
+@click.option("--config", "config_path", default="code/configs/ifs_ens.yaml", show_default=True)
+@click.option(
+    "--until-complete", is_flag=True, help="Keep re-passing until every run is extracted."
+)
+def harvest_ifs_ens_cmd(config_path: str, until_complete: bool) -> None:
+    """Harvest IFS ENS (51 members) from the AWS mirror of ECMWF open data, by byte range. Resumable."""
+    from .data.ifs_ens import harvest
+
+    click.echo(
+        f"{harvest(load_config(config_path), until_complete=until_complete)} runs skipped or failed"
+    )
+
+
+@cli.command("build-ifs-ens")
+@click.option("--config", "config_path", default="code/configs/ifs_ens.yaml", show_default=True)
+def build_ifs_ens_cmd(config_path: str) -> None:
+    """Concatenate IFS ENS run extracts into monthly interim parquet files."""
+    from .data.ifs_ens import build_forecast_sites
+
+    for path in build_forecast_sites(load_config(config_path)):
+        click.echo(path)
+
+
 @cli.command("build-features")
 @click.option("--config", "config_path", default="code/configs/features.yaml", show_default=True)
 def build_features_cmd(config_path: str) -> None:
