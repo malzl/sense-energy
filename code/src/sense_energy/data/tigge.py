@@ -381,7 +381,9 @@ def extract_sites_fast(path: Path, sites: pd.DataFrame) -> pd.DataFrame:
 def build_forecast_sites(config: dict[str, Any], sites: pd.DataFrame) -> Path:
     """Concatenate every month's site extract (both types) into one parquet under interim/."""
     paths = sorted(
-        p for t in config["types"] for p in (output_dir(config) / f"{t}_sites").glob("*.parquet")
+        p
+        for t in config["forecast_types"]
+        for p in (output_dir(config) / f"{t}_sites").glob("*.parquet")
     )
     if not paths:
         raise FileNotFoundError(
