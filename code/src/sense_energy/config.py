@@ -23,7 +23,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CODE_DIR = PROJECT_ROOT / "code"
 DOC_DIR = PROJECT_ROOT / "doc"
 
-DATA_DIR = Path(os.getenv("SENSE_DATA_DIR", CODE_DIR / "data")).resolve()
+# A relative SENSE_DATA_DIR is taken relative to the repository root, never the
+# working directory: cron and other launchers do not start in the repo.
+_data_dir_setting = Path(os.getenv("SENSE_DATA_DIR", str(CODE_DIR / "data")))
+DATA_DIR = (
+    _data_dir_setting if _data_dir_setting.is_absolute() else PROJECT_ROOT / _data_dir_setting
+).resolve()
 RAW_DIR = DATA_DIR / "raw"
 EXTERNAL_DIR = DATA_DIR / "external"
 INTERIM_DIR = DATA_DIR / "interim"
