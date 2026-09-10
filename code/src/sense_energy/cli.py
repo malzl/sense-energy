@@ -214,13 +214,24 @@ def gpu_check_cmd(n_series: int) -> None:
 @click.option(
     "--until-complete", is_flag=True, help="Keep re-passing until every run is extracted."
 )
-def harvest_ifs_ens_cmd(config_path: str, until_complete: bool) -> None:
+@click.option(
+    "--start",
+    default=None,
+    help="Override the config start date (YYYY-MM-DD) so several processes can split the range.",
+)
+@click.option("--end", default=None, help="Override the config end date (YYYY-MM-DD).")
+def harvest_ifs_ens_cmd(
+    config_path: str, until_complete: bool, start: str | None, end: str | None
+) -> None:
     """Harvest IFS ENS (51 members) from the AWS mirror of ECMWF open data, by byte range. Resumable."""
     from .data.ifs_ens import harvest
 
-    click.echo(
-        f"{harvest(load_config(config_path), until_complete=until_complete)} runs skipped or failed"
-    )
+    config = load_config(config_path)
+    if start:
+        config["start"] = start
+    if end:
+        config["end"] = end
+    click.echo(f"{harvest(config, until_complete=until_complete)} runs skipped or failed")
 
 
 @cli.command("build-ifs-ens")
