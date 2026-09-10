@@ -170,7 +170,7 @@ def fetch_month(
 def missing_months(
     config: dict[str, Any], product_types: list[str] | None = None
 ) -> list[tuple[str, int, int]]:
-    types = product_types or list(config["types"])
+    types = product_types or list(config["forecast_types"])
     return [
         (t, y, m)
         for t in types
