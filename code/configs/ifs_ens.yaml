@@ -24,7 +24,7 @@ params: [2t, 2d, 10u, 10v, tp, ssrd, strd, sp]
 area: [55.0, -5.0, 50.0, 2.0]
 
 # Parallel HTTP range requests per step, and decode processes per run.
-download_workers: 32
+download_workers: 64
 decode_workers: 6
 
 # Under code/data/external/
