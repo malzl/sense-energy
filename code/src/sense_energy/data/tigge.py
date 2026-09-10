@@ -167,6 +167,47 @@ def fetch_month(
     return out_parquet
 
 
+def missing_months(
+    config: dict[str, Any], product_types: list[str] | None = None
+) -> list[tuple[str, int, int]]:
+    types = product_types or list(config["types"])
+    return [
+        (t, y, m)
+        for t in types
+        for (y, m) in month_range(config["start"], config["end"])
+        if not month_present(t, y, m, config)
+    ]
+
+
+def fetch_until_complete(
+    config: dict[str, Any],
+    product_types: list[str] | None = None,
+    pause_seconds: int = 900,
+    max_passes: int = 200,
+) -> list[Path]:
+    """Repeat passes until every type-month has its site extract.
+
+    ECDS occasionally loses a job (404 on its URL after hours in the queue);
+    a pass skips such months and the next pass re-requests them. Designed for
+    an unattended multi-week run under nohup.
+    """
+    import time as _time
+
+    done: list[Path] = []
+    for n in range(1, max_passes + 1):
+        pending = missing_months(config, product_types)
+        if not pending:
+            logger.info("All type-months present after %d pass(es)", n - 1)
+            return done
+        logger.info("Pass %d: %d type-months missing", n, len(pending))
+        done = fetch_all(config, product_types)
+        if missing_months(config, product_types):
+            logger.info("Pass %d ended with months missing; pausing %d s", n, pause_seconds)
+            _time.sleep(pause_seconds)
+    logger.error("Gave up after %d passes", max_passes)
+    return done
+
+
 def fetch_all(config: dict[str, Any], forecast_types: list[str] | None = None) -> list[Path]:
     """Every (type, month) in the config, a couple of data-store jobs at a time. Resumable."""
     types = forecast_types or list(config["forecast_types"])

@@ -118,11 +118,17 @@ def fetch_prices_cmd(config_path: str) -> None:
     multiple=True,
     help="control_forecast and/or perturbed_forecast; default both.",
 )
-def fetch_tigge_cmd(config_path: str, types: tuple[str, ...]) -> None:
+@click.option(
+    "--until-complete",
+    is_flag=True,
+    help="Keep passing (with a pause) until every month is extracted.",
+)
+def fetch_tigge_cmd(config_path: str, types: tuple[str, ...], until_complete: bool) -> None:
     """Pull IFS ENS historical forecasts from TIGGE via the ECMWF Data Store. Resumable."""
-    from .data.tigge import fetch_all
+    from .data.tigge import fetch_all, fetch_until_complete
 
-    paths = fetch_all(load_config(config_path), list(types) or None)
+    run = fetch_until_complete if until_complete else fetch_all
+    paths = run(load_config(config_path), list(types) or None)
     click.echo(f"{len(paths)} type-months present")
 
 
