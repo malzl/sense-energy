@@ -1,0 +1,56 @@
+# Proof-of-concept day-ahead forecasting experiment.
+# Every modelling assumption lives here; nothing is hard-coded in the code.
+
+name: poc_dayahead_elec_site
+energy: elec
+level: site
+
+# Forecast issue time: local clock on the day before the target day. 16:30 is
+# after Agile prices (~16:00) and NESO's day-ahead forecast (~09:45) publish.
+issue_time_local: "16:30"
+timezone: Europe/London
+
+# Half-hourly data assumed available up to the issue time (0 = no lag). Set
+# 48 to emulate next-day settlement delivery.
+data_lag_periods: 0
+
+# Periods
+train_start: "2023-06-01"
+train_end: "2025-05-31"
+test_start: "2025-06-01"
+test_end: "2026-05-08"
+origin_stride_days: 5        # one test origin every 5 days rotates the weekday
+
+# Site selection
+min_history_days: 365        # observed before test_start
+min_coverage_train: 0.85     # share of half-hours observed in the train period
+min_coverage_test: 0.85
+exclude_heavily_imputed: true
+
+# Which models to run (registry names)
+models: [seasonal_naive, profile_quantiles, chronos2, timesfm3, lightgbm, lightgbm_era5, lightgbm_ifs]
+
+# Quantile grid reported for probabilistic models
+quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+context_periods: 2016        # 6 weeks of half-hours for zero-shot models
+profile_weeks: 8             # weeks of same-slot history for the profile baseline
+
+lightgbm:
+  train_origin_stride_days: 1
+  valid_last_days: 60
+  n_estimators: 2000
+  learning_rate: 0.03
+  num_leaves: 127
+  min_child_samples: 100
+  subsample: 0.8
+  colsample_bytree: 0.8
+  early_stopping_rounds: 100
+  quantiles: [0.1, 0.5, 0.9]
+  n_jobs: 32
+
+weather:
+  ifs_run_time: "00"          # run of D-1 used for the forecast-weather variant
+  ifs_members_for_mean: all   # ensemble mean/std features from all 51
+
+outputs_dir: code/reports/poc

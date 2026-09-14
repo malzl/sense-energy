@@ -112,20 +112,48 @@ DATASET_NAMES = {
 }
 
 #: Display names for this project's candidate methods, in the fixed order used
-#: in every figure. Keys match MODEL_REGISTRY in models/train.py.
+#: in every figure. Keys are the experiment/model registry names.
 METHOD_NAMES = {
     "seasonal_naive": "Seasonal naive",
     "profile_mean": "Profile mean",
+    "profile_quantiles": "Profile quantiles",
     "ridge": "Ridge",
     "lightgbm": "LightGBM",
+    "lightgbm_era5": "LightGBM + ERA5",
+    "lightgbm_ifs": "LightGBM + IFS ENS",
+    "chronos2": "Chronos-2",
+    "timesfm3": "TimesFM 3.0",
+    "tabpfn_ts": "TabPFN-TS",
 }
 METHOD_ORDER = list(METHOD_NAMES.values())
 
 METHOD_ROLES = {
     "Seasonal naive": "simple_baseline",
     "Profile mean": "simple_baseline",
+    "Profile quantiles": "simple_baseline",
     "Ridge": "classical_model",
     "LightGBM": "specialist_model",
+    "LightGBM + ERA5": "specialist_model",
+    "LightGBM + IFS ENS": "specialist_model",
+    "Chronos-2": "foundation_model",
+    "TimesFM 3.0": "foundation_model",
+    "TabPFN-TS": "pfn",
+}
+
+#: When several methods share a role inside one figure they need distinct
+#: colours; these are fixed per method from the Okabe-Ito slots, never
+#: assigned by appearance order. Baselines stay grey.
+METHOD_COLORS = {
+    "Seasonal naive": "#7A7A7A",
+    "Profile mean": "#B8B8B8",
+    "Profile quantiles": "#B8B8B8",
+    "Ridge": "#56B4E9",
+    "LightGBM": "#009E73",
+    "LightGBM + ERA5": "#E69F00",
+    "LightGBM + IFS ENS": "#D55E00",
+    "Chronos-2": "#0072B2",
+    "TimesFM 3.0": "#56B4E9",
+    "TabPFN-TS": "#CC79A7",
 }
 
 #: Generic lead times for half-hourly demand; fixed, never reordered by result.
@@ -147,11 +175,10 @@ QUANTITY_LABELS = {
 
 
 def method_color(method: str) -> str:
-    """Colour for a method name via its conceptual role."""
-    role = METHOD_ROLES.get(method)
-    if role is None:
-        raise KeyError(f"'{method}' has no role in style.py - add it there, not in the script")
-    return ROLE_COLORS[role]
+    """Fixed colour for a method name (see METHOD_COLORS)."""
+    if method not in METHOD_COLORS:
+        raise KeyError(f"'{method}' has no colour in style.py - add it there, not in the script")
+    return METHOD_COLORS[method]
 
 
 def ordered(methods: Sequence[str]) -> list[str]:
@@ -259,6 +286,7 @@ def style_axis(
 
 def add_bottom_legend(
     ax,
+    lowercase: bool = True,
     ncol: int | None = None,
     anchor_y: float = -0.22,
     bottom: float = 0.30,
@@ -276,7 +304,10 @@ def add_bottom_legend(
         handles, labels = ax.get_legend_handles_labels()
     if not handles:
         return None
-    labels = [lab[:1].lower() + lab[1:] if lab and not lab[:2].isupper() else lab for lab in labels]
+    if lowercase:  # descriptive entries are lowercase; pass lowercase=False for product names
+        labels = [
+            lab[:1].lower() + lab[1:] if lab and not lab[:2].isupper() else lab for lab in labels
+        ]
     ncol = ncol or len(handles)
     legend = ax.legend(
         handles,

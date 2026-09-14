@@ -244,6 +244,24 @@ def build_ifs_ens_cmd(config_path: str) -> None:
         click.echo(path)
 
 
+@cli.command("run-poc")
+@click.option(
+    "--config", "config_path", default="code/configs/experiments/poc.yaml", show_default=True
+)
+@click.option(
+    "--model", "models", multiple=True, help="Model(s) to run; default: all in the config."
+)
+@click.option("--score-only", is_flag=True, help="Only re-score the forecasts already on disk.")
+def run_poc_cmd(config_path: str, models: tuple[str, ...], score_only: bool) -> None:
+    """Run the day-ahead proof of concept and print pooled scores."""
+    from .experiments.runner import run_models, score_all
+
+    config = load_config(config_path)
+    if not score_only:
+        run_models(config, list(models) or list(config["models"]))
+    click.echo(score_all(config).round(3).to_string(index=False))
+
+
 @cli.command("build-features")
 @click.option("--config", "config_path", default="code/configs/features.yaml", show_default=True)
 def build_features_cmd(config_path: str) -> None:

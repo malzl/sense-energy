@@ -62,6 +62,8 @@ def timesfm_predict(model, series: list[np.ndarray], horizon: int):
         if name in params:
             kwargs[name] = horizon
             break
+    if "return_quantiles" in params:
+        kwargs["return_quantiles"] = True
     first = next(n for n in params if n not in ("self",))
     out = fn(**{first: series}, **kwargs)
     # predict_batch is lazy: nothing runs until the iterator is consumed.

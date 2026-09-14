@@ -59,7 +59,8 @@ def test_every_method_has_a_role_and_fixed_order_never_reorders_by_value():
 def test_method_names_cover_the_model_registry():
     from sense_energy.models.train import MODEL_REGISTRY
 
-    assert set(style.METHOD_NAMES) == set(MODEL_REGISTRY)
+    assert set(MODEL_REGISTRY) <= set(style.METHOD_NAMES)
+    assert set(style.METHOD_ROLES) == set(style.METHOD_COLORS) == set(style.METHOD_ORDER)
 
 
 def test_bottom_legend_is_outside_below_and_borderless():
