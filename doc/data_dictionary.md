@@ -490,6 +490,11 @@ that the ensemble stream carried `2t 10u 10v tp sp` plus fields we do not keep
 the open-data ensemble at all. Columns: `site_code, run_time, valid_time,
 step_hours, member, grid` + parameters.
 
+**Mirror gaps**: 13 runs are absent from the AWS mirror altogether — 26 Apr
+12z → 30 Apr 2023 (9 runs) and 1 → 2 May 2023 (4 runs); no source can fill
+them except TIGGE. Other runs occasionally answer `503 Slow Down` (S3
+throttling); the harvester backs off and re-passes until they land.
+
 Relationship to TIGGE: same model family; TIGGE control (42 months, 14
 variables) and TIGGE perturbed (10 members, still being served by ECDS)
 remain; this source supplies the full 51-member spread from Jan 2023.
