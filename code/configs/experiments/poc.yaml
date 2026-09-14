@@ -79,6 +79,10 @@ tabpfn:
   workers_per_gpu: 1
   chunk_origins: 2           # origins per checkpointed chunk
 
+reconciliation:              # hierarchical reconciliation of point forecasts
+  warmup_origins: 8          # origins whose errors seed the variance-based methods; all methods scored after
+  share_days: 28             # window for top-down / middle-out proportions
+
 lightgbm:
   train_origin_stride_days: 1
   valid_last_days: 60

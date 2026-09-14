@@ -272,6 +272,22 @@ def run_poc_cmd(
     click.echo(score_all(config).round(3).to_string(index=False))
 
 
+@cli.command("poc-reconcile")
+@click.option(
+    "--config", "config_path", default="code/configs/experiments/poc.yaml", show_default=True
+)
+@click.option("--model", "models", multiple=True, required=True, help="Base-forecast model(s).")
+@click.option("--method", "methods", multiple=True, help="Reconciliation method(s); default all.")
+def poc_reconcile_cmd(config_path: str, models: tuple[str, ...], methods: tuple[str, ...]) -> None:
+    """Reconcile the per-level base forecasts of a model and score every level."""
+    from .experiments.reconciliation import run
+
+    out = run(load_config(config_path), list(models), list(methods) or None)
+    out = out[out["model"].isin(models)]
+    table = out.pivot_table(index=["model", "method"], columns="level", values="nmae")
+    click.echo((table[["meter", "site", "trust", "region", "total"]] * 100).round(2).to_string())
+
+
 @cli.command("poc-hierarchy")
 @click.option(
     "--config", "config_path", default="code/configs/experiments/poc.yaml", show_default=True

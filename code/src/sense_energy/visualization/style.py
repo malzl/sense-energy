@@ -182,6 +182,40 @@ VARIANT_LINESTYLES = {"none": "-", "ERA5": "--", "IFS ENS": ":"}
 METHOD_MARKERS = {m: VARIANT_MARKERS[method_variant(m)] for m in METHOD_ORDER}
 METHOD_LINESTYLES = {m: VARIANT_LINESTYLES[method_variant(m)] for m in METHOD_ORDER}
 
+#: Reconciliation approaches (hierarchical forecasting), fixed order, names and
+#: Okabe-Ito colours; "base" is the unreconciled direct forecast (reference).
+RECONCILIATION_NAMES = {
+    "base": "Base (direct)",
+    "bottom_up": "Bottom-up",
+    "top_down": "Top-down",
+    "middle_out": "Middle-out (trust)",
+    "ols": "OLS",
+    "wls_struct": "WLS (structural)",
+    "wls_var": "WLS (variance)",
+    "mint_shrink": "MinT (shrinkage)",
+}
+RECONCILIATION_ORDER = list(RECONCILIATION_NAMES.values())
+RECONCILIATION_COLORS = {
+    "Base (direct)": "#000000",
+    "Bottom-up": "#7A7A7A",
+    "Top-down": "#B8B8B8",
+    "Middle-out (trust)": "#56B4E9",
+    "OLS": "#E69F00",
+    "WLS (structural)": "#009E73",
+    "WLS (variance)": "#0072B2",
+    "MinT (shrinkage)": "#D55E00",
+}
+RECONCILIATION_LINESTYLES = {
+    "Base (direct)": "--",
+    "Bottom-up": "-",
+    "Top-down": "-",
+    "Middle-out (trust)": "-",
+    "OLS": "-",
+    "WLS (structural)": "-",
+    "WLS (variance)": "-",
+    "MinT (shrinkage)": "-",
+}
+
 #: Generic lead times for half-hourly demand; fixed, never reordered by result.
 HORIZON_ORDER_HOURS = [0.5, 1, 3, 6, 12, 24, 48, 168]
 
