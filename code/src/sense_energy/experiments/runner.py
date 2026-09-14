@@ -13,6 +13,14 @@ from . import poc
 logger = get_logger(__name__)
 
 
+def weather_of(name: str) -> str:
+    """``<model>_era5`` / ``<model>_ifs`` variants carry weather covariates; else none."""
+    for suffix in ("era5", "ifs"):
+        if name.endswith("_" + suffix):
+            return suffix
+    return "none"
+
+
 def run_models(config: dict[str, Any], models: list[str]) -> dict[str, pd.DataFrame]:
     panel = poc.load_panel(config)
     origins = poc.make_origins(
@@ -22,17 +30,26 @@ def run_models(config: dict[str, Any], models: list[str]) -> dict[str, pd.DataFr
     produced = {}
     for name in models:
         t0 = time.time()
+        weather = weather_of(name)
         if name in ("seasonal_naive", "profile_quantiles", "baselines"):
             fc = poc.run_baselines(panel, origins, config)
             fname = "baselines"
-        elif name == "chronos2":
+        elif name == "sarima":
+            from .sarima import run_sarima
+
+            fc, fname = run_sarima(panel, origins, config), name
+        elif name.startswith("chronos2"):
             from .zero_shot import run_chronos2
 
-            fc, fname = run_chronos2(panel, origins, config), name
-        elif name == "timesfm3":
+            fc, fname = run_chronos2(panel, origins, config, weather=weather), name
+        elif name.startswith("timesfm3"):
             from .zero_shot import run_timesfm3
 
-            fc, fname = run_timesfm3(panel, origins, config), name
+            fc, fname = run_timesfm3(panel, origins, config, weather=weather), name
+        elif name.startswith("tabpfn_ts"):
+            from .tabpfn_ts import run_tabpfn_ts
+
+            fc, fname = run_tabpfn_ts(panel, origins, config, weather=weather), name
         elif name.startswith("lightgbm"):
             from .gbm import run_lightgbm
 
@@ -48,7 +65,11 @@ def run_models(config: dict[str, Any], models: list[str]) -> dict[str, pd.DataFr
 def score_all(config: dict[str, Any]) -> pd.DataFrame:
     panel = poc.load_panel(config)
     out_dir = poc.outputs_dir(config)
-    frames = [pd.read_parquet(p) for p in sorted(out_dir.glob("forecasts_*.parquet"))]
+    frames = [
+        pd.read_parquet(p)
+        for p in sorted(out_dir.glob("forecasts_*.parquet"))
+        if not p.name.endswith(".partial.parquet")
+    ]
     fc = pd.concat(frames, ignore_index=True)
     per, pooled, by_lead = poc.score(fc, panel, list(config["quantiles"]))
     per.to_csv(out_dir / "scores_per_site.csv", index=False)

@@ -28,13 +28,56 @@ min_coverage_test: 0.85
 exclude_heavily_imputed: true
 
 # Which models to run (registry names)
-models: [seasonal_naive, profile_quantiles, chronos2, timesfm3, lightgbm, lightgbm_era5, lightgbm_ifs]
+models:
+  - seasonal_naive
+  - profile_quantiles
+  - sarima
+  - chronos2
+  - chronos2_era5
+  - chronos2_ifs
+  - timesfm3
+  - timesfm3_era5
+  - timesfm3_ifs
+  - tabpfn_ts
+  - tabpfn_ts_era5
+  - tabpfn_ts_ifs
+  - lightgbm
+  - lightgbm_era5
+  - lightgbm_ifs
+# "<model>_era5" / "<model>_ifs": the known-ahead covariates (calendar, Agile
+# price, NESO day-ahead forecasts) plus weather from ERA5 at the target time
+# (perfect weather, an upper bound) or the 00z IFS ENS run of D-1 (forecast).
+# site_limit: 3               # debug: keep only the first n selected sites
 
 # Quantile grid reported for probabilistic models
 quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 context_periods: 2016        # 6 weeks of half-hours for zero-shot models
 profile_weeks: 8             # weeks of same-slot history for the profile baseline
+
+sarima:                      # dynamic harmonic regression, one fit per site and origin
+  order: [1, 0, 1]
+  seasonal_order: [0, 1, 1, 48]
+  weekly_fourier_k: 3        # harmonics of the 336-period week as regressors
+  transform: log
+  refit: origin              # origin: re-estimate at every origin (warm start); site: filter only
+  init_weeks: 8              # training-period window for the per-site warm-start fit
+  maxiter: 50
+  maxiter_refit: 30
+  n_jobs: 36
+
+covariates:                  # known-ahead covariates for the foundation-model variants
+  calendar: true
+  price: true
+  neso: true
+  weather_vars: [t2m, d2m, wind]   # radiation excluded: IFS accumulated vs ERA5 hourly
+
+tabpfn:
+  n_estimators: 8
+  context_periods: 2016
+  gpus: all                  # or a list of CUDA device ids
+  workers_per_gpu: 1
+  chunk_origins: 2           # origins per checkpointed chunk
 
 lightgbm:
   train_origin_stride_days: 1

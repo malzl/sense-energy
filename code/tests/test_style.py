@@ -89,3 +89,19 @@ def test_fixed_horizon_order_and_labels():
     assert style.HORIZON_ORDER_HOURS == [0.5, 1, 3, 6, 12, 24, 48, 168]
     assert style.QUANTITY_LABELS["coverage"] == "Coverage (%, target 80)"
     assert np.all([label[0].isupper() for label in style.QUANTITY_LABELS.values()])
+
+
+def test_variants_share_their_family_colour_and_get_fixed_markers():
+    assert style.method_family("LightGBM + IFS ENS") == "LightGBM"
+    assert style.method_variant("Chronos-2 + ERA5") == "ERA5"
+    assert style.method_variant("SARIMA") == "none"
+    for m in style.METHOD_ORDER:
+        assert style.method_color(m) == style.FAMILY_COLORS[style.method_family(m)]
+        assert style.method_marker(m) == style.VARIANT_MARKERS[style.method_variant(m)]
+        assert style.method_linestyle(m) == style.VARIANT_LINESTYLES[style.method_variant(m)]
+    assert (
+        style.method_marker("TimesFM 3.0") == "o"
+        and style.method_marker("TimesFM 3.0 + IFS ENS") == "^"
+    )
+    assert style.METHOD_COLORS["TabPFN-TS"] == style.ROLE_COLORS["pfn"]
+    assert style.METHOD_ROLES["SARIMA"] == "classical_model"

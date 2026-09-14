@@ -112,49 +112,75 @@ DATASET_NAMES = {
 }
 
 #: Display names for this project's candidate methods, in the fixed order used
-#: in every figure. Keys are the experiment/model registry names.
+#: in every figure. Keys are the experiment/model registry names. A method's
+#: "+ ERA5" / "+ IFS ENS" variants add the known-ahead covariates (calendar,
+#: Agile price, NESO day-ahead forecasts) with perfect (reanalysis) or forecast
+#: (00z IFS ENS run of D-1) weather.
 METHOD_NAMES = {
     "seasonal_naive": "Seasonal naive",
     "profile_mean": "Profile mean",
     "profile_quantiles": "Profile quantiles",
     "ridge": "Ridge",
+    "sarima": "SARIMA",
     "lightgbm": "LightGBM",
     "lightgbm_era5": "LightGBM + ERA5",
     "lightgbm_ifs": "LightGBM + IFS ENS",
     "chronos2": "Chronos-2",
+    "chronos2_era5": "Chronos-2 + ERA5",
+    "chronos2_ifs": "Chronos-2 + IFS ENS",
     "timesfm3": "TimesFM 3.0",
+    "timesfm3_era5": "TimesFM 3.0 + ERA5",
+    "timesfm3_ifs": "TimesFM 3.0 + IFS ENS",
     "tabpfn_ts": "TabPFN-TS",
+    "tabpfn_ts_era5": "TabPFN-TS + ERA5",
+    "tabpfn_ts_ifs": "TabPFN-TS + IFS ENS",
 }
 METHOD_ORDER = list(METHOD_NAMES.values())
 
-METHOD_ROLES = {
+
+def method_family(method: str) -> str:
+    """'LightGBM + IFS ENS' -> 'LightGBM'."""
+    return method.split(" + ")[0]
+
+
+def method_variant(method: str) -> str:
+    """'LightGBM + IFS ENS' -> 'IFS ENS'; a plain method -> 'none'."""
+    return method.split(" + ")[1] if " + " in method else "none"
+
+
+FAMILY_ROLES = {
     "Seasonal naive": "simple_baseline",
     "Profile mean": "simple_baseline",
     "Profile quantiles": "simple_baseline",
     "Ridge": "classical_model",
+    "SARIMA": "classical_model",
     "LightGBM": "specialist_model",
-    "LightGBM + ERA5": "specialist_model",
-    "LightGBM + IFS ENS": "specialist_model",
     "Chronos-2": "foundation_model",
     "TimesFM 3.0": "foundation_model",
     "TabPFN-TS": "pfn",
 }
+METHOD_ROLES = {m: FAMILY_ROLES[method_family(m)] for m in METHOD_ORDER}
 
-#: When several methods share a role inside one figure they need distinct
-#: colours; these are fixed per method from the Okabe-Ito slots, never
-#: assigned by appearance order. Baselines stay grey.
-METHOD_COLORS = {
+#: Colour = model family, one fixed Okabe-Ito slot each (the two foundation
+#: models cannot share the role colour, so TimesFM takes the reddish-purple
+#: slot). Covariate variants share their family's colour and differ by marker
+#: (points) or line style (lines): plain / + ERA5 / + IFS ENS. Baselines grey.
+FAMILY_COLORS = {
     "Seasonal naive": "#7A7A7A",
     "Profile mean": "#B8B8B8",
     "Profile quantiles": "#B8B8B8",
     "Ridge": "#56B4E9",
+    "SARIMA": "#56B4E9",
     "LightGBM": "#009E73",
-    "LightGBM + ERA5": "#E69F00",
-    "LightGBM + IFS ENS": "#D55E00",
     "Chronos-2": "#0072B2",
-    "TimesFM 3.0": "#56B4E9",
-    "TabPFN-TS": "#CC79A7",
+    "TimesFM 3.0": "#CC79A7",
+    "TabPFN-TS": "#D55E00",
 }
+METHOD_COLORS = {m: FAMILY_COLORS[method_family(m)] for m in METHOD_ORDER}
+VARIANT_MARKERS = {"none": "o", "ERA5": "s", "IFS ENS": "^"}
+VARIANT_LINESTYLES = {"none": "-", "ERA5": "--", "IFS ENS": ":"}
+METHOD_MARKERS = {m: VARIANT_MARKERS[method_variant(m)] for m in METHOD_ORDER}
+METHOD_LINESTYLES = {m: VARIANT_LINESTYLES[method_variant(m)] for m in METHOD_ORDER}
 
 #: Generic lead times for half-hourly demand; fixed, never reordered by result.
 HORIZON_ORDER_HOURS = [0.5, 1, 3, 6, 12, 24, 48, 168]
@@ -179,6 +205,16 @@ def method_color(method: str) -> str:
     if method not in METHOD_COLORS:
         raise KeyError(f"'{method}' has no colour in style.py - add it there, not in the script")
     return METHOD_COLORS[method]
+
+
+def method_marker(method: str) -> str:
+    """Fixed marker for a method: plain 'o', + ERA5 's', + IFS ENS '^'."""
+    return METHOD_MARKERS[method]
+
+
+def method_linestyle(method: str) -> str:
+    """Fixed line style for a method: plain solid, + ERA5 dashed, + IFS ENS dotted."""
+    return METHOD_LINESTYLES[method]
 
 
 def ordered(methods: Sequence[str]) -> list[str]:

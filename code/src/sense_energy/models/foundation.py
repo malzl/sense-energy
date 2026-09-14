@@ -40,24 +40,44 @@ def load_chronos2(device: str | None = None):
     return pipe
 
 
-def load_timesfm3(device: str | None = None, max_context: int = 1024, max_horizon: int = 48):
+def load_timesfm3(
+    device: str | None = None,
+    max_context: int = 1024,
+    max_horizon: int = 48,
+    per_core_batch_size: int = 32,
+):
     """TimesFM 3.0 through its forecaster wrapper, placed on the GPU explicitly."""
     import timesfm
 
     device = device or select_device()
     configure_torch()
     model = timesfm.TimesFM3Forecaster.from_pretrained(TIMESFM3, device=device)
-    logger.info("TimesFM 3.0 forecaster on %s", device)
+    cfg = getattr(model, "config", None)
+    if cfg is not None and hasattr(cfg, "per_core_batch_size"):
+        try:  # the forecaster's default is 4 series per forward pass
+            cfg.per_core_batch_size = int(per_core_batch_size)
+        except (AttributeError, TypeError):
+            import dataclasses
+
+            model.config = dataclasses.replace(cfg, per_core_batch_size=int(per_core_batch_size))
+    logger.info(
+        "TimesFM 3.0 forecaster on %s (%d series per forward pass)",
+        device,
+        getattr(model.config, "per_core_batch_size", 0),
+    )
     return model
 
 
-def timesfm_predict(model, series: list[np.ndarray], horizon: int):
-    """Call the 3.0 forecaster whatever its exact argument names are."""
+def timesfm_predict(model, series: list[np.ndarray], horizon: int, **extra):
+    """Call the 3.0 forecaster whatever its exact argument names are; ``extra`` (e.g.
+    ``past_future_covariates``, ``padding_mode``) is passed through when supported."""
     import inspect
 
     fn = model.predict_batch if hasattr(model, "predict_batch") else model.predict
     params = inspect.signature(fn).parameters
-    kwargs = {}
+    kwargs = {k: v for k, v in extra.items() if k in params}
+    if dropped := set(extra) - set(kwargs):
+        raise TypeError(f"TimesFM predict does not accept {sorted(dropped)}")
     for name in ("horizon", "prediction_length", "forecast_horizon"):
         if name in params:
             kwargs[name] = horizon

@@ -33,9 +33,7 @@ for m in MODELS:
     tl = d["target"].dt.tz_convert("Europe/London")
     c = style.method_color(display(m))
     ax.fill_between(tl, d["q10"] * 2, d["q90"] * 2, color=c, alpha=style.BAND_ALPHA, linewidth=0)
-    ax.plot(
-        tl, d["q50"] * 2, color=c, linewidth=style.LINEWIDTH["secondary"], label=display(m).lower()
-    )
+    ax.plot(tl, d["q50"] * 2, color=c, linewidth=style.LINEWIDTH["secondary"], label=display(m))
 ax.set_xlabel(
     f"Local time, {pd.Timestamp(day).tz_convert('Europe/London') + pd.Timedelta(days=1):%d %b %Y}"
 )

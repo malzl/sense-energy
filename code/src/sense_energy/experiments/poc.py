@@ -103,6 +103,9 @@ def select_sites(panel: Panel, config: dict[str, Any]) -> list[str]:
         ):
             continue
         keep.append(s)
+    limit = config.get("site_limit")
+    if limit:
+        keep = keep[: int(limit)]
     logger.info("%d of %d sites selected", len(keep), panel.y_raw.shape[1])
     return keep
 
