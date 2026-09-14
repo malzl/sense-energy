@@ -203,6 +203,17 @@ def reconcile_origin(
 def run(
     config: dict[str, Any], models: list[str], methods: list[str] | None = None
 ) -> pd.DataFrame:
+    """Reconcile and score every model. BLAS is capped at a few threads: the matrices
+    are small and forty spinning threads on a busy machine are pathologically slow."""
+    from threadpoolctl import threadpool_limits
+
+    with threadpool_limits(int(config.get("reconciliation", {}).get("blas_threads", 4))):
+        return _run(config, models, methods)
+
+
+def _run(
+    config: dict[str, Any], models: list[str], methods: list[str] | None = None
+) -> pd.DataFrame:
     methods = methods or METHODS
     spec = config.get("reconciliation", {})
     warmup = int(spec.get("warmup_origins", 8))
