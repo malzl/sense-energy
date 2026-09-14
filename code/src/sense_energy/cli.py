@@ -252,14 +252,47 @@ def build_ifs_ens_cmd(config_path: str) -> None:
     "--model", "models", multiple=True, help="Model(s) to run; default: all in the config."
 )
 @click.option("--score-only", is_flag=True, help="Only re-score the forecasts already on disk.")
-def run_poc_cmd(config_path: str, models: tuple[str, ...], score_only: bool) -> None:
+@click.option(
+    "--level",
+    default=None,
+    type=click.Choice(["meter", "site", "trust", "region", "total"]),
+    help="Hierarchy level (default: the config's); outputs go to <outputs_dir>_<level>.",
+)
+def run_poc_cmd(
+    config_path: str, models: tuple[str, ...], score_only: bool, level: str | None
+) -> None:
     """Run the day-ahead proof of concept and print pooled scores."""
     from .experiments.runner import run_models, score_all
 
     config = load_config(config_path)
+    if level:
+        config["level"] = level
     if not score_only:
         run_models(config, list(models) or list(config["models"]))
     click.echo(score_all(config).round(3).to_string(index=False))
+
+
+@cli.command("poc-hierarchy")
+@click.option(
+    "--config", "config_path", default="code/configs/experiments/poc.yaml", show_default=True
+)
+@click.option(
+    "--level",
+    "levels",
+    multiple=True,
+    type=click.Choice(["site", "trust", "region", "total"]),
+    help="Levels to build bottom-up forecasts for (default: all with lower-level forecasts).",
+)
+def poc_hierarchy_cmd(config_path: str, levels: tuple[str, ...]) -> None:
+    """Bottom-up forecasts from the level below and a summary table across all levels."""
+    from .experiments.hierarchy import bottom_up, summary
+
+    config = load_config(config_path)
+    for lvl in levels or ("site", "trust", "region", "total"):
+        bottom_up(config, lvl)
+    out = summary(config)
+    cols = ["level", "kind", "model", "sites", "nmae", "crps_q", "coverage_80"]
+    click.echo(out[[c for c in cols if c in out.columns]].round(3).to_string(index=False))
 
 
 @cli.command("build-features")

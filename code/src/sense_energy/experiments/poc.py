@@ -44,10 +44,21 @@ class Panel:
     dow: np.ndarray  # 0=Mon (local)
     sites: list[str] = field(default_factory=list)
     site_meta: pd.DataFrame | None = None
+    level: str = "site"
+    #: series -> {site_code: demand weight}; the sites whose price/weather stand for a series
+    members: dict[str, dict[str, float]] | None = None
+
+
+AGGREGATE_LEVELS = ("trust", "region", "total")
 
 
 def load_panel(config: dict[str, Any]) -> Panel:
-    base = PROCESSED_DIR / config["energy"] / config["level"]
+    level = str(config.get("level", "site"))
+    if level in AGGREGATE_LEVELS:
+        from .hierarchy import aggregate_panel
+
+        return aggregate_panel(load_panel({**config, "level": "site"}), level, config)
+    base = PROCESSED_DIR / config["energy"] / level
     y_raw = pd.read_parquet(base / "wide_raw.parquet")
     y_imp = pd.read_parquet(base / "wide_imputed.parquet")
     y_raw.index = pd.to_datetime(y_raw.index, utc=True)
@@ -67,34 +78,44 @@ def load_panel(config: dict[str, Any]) -> Panel:
     panel.sites = select_sites(panel, config)
     idx = pd.read_parquet(base / "series_index.parquet").set_index("series_id")
     panel.site_meta = idx.reindex(panel.sites)
+    panel.level = level
+    if level == "meter":
+        panel.members = {m: {str(idx.loc[m, "site_code"]): 1.0} for m in panel.sites}
+    else:
+        panel.members = {s: {s: 1.0} for s in panel.sites}
     return panel
+
+
+def coverage_ok(col: pd.Series, index: pd.DatetimeIndex, config: dict[str, Any]) -> bool:
+    """The PoC's selection rule for one series: observed share in the train and test
+    windows and enough history before the test window."""
+    tr = (index >= pd.Timestamp(config["train_start"], tz="UTC")) & (
+        index <= pd.Timestamp(config["train_end"], tz="UTC") + pd.Timedelta(days=1)
+    )
+    te = (index >= pd.Timestamp(config["test_start"], tz="UTC")) & (
+        index <= pd.Timestamp(config["test_end"], tz="UTC") + pd.Timedelta(days=1)
+    )
+    if (
+        col[tr].notna().mean() < config["min_coverage_train"]
+        or col[te].notna().mean() < config["min_coverage_test"]
+    ):
+        return False
+    first = col.first_valid_index()
+    return (
+        first is not None
+        and (pd.Timestamp(config["test_start"], tz="UTC") - first).days
+        >= config["min_history_days"]
+    )
 
 
 def select_sites(panel: Panel, config: dict[str, Any]) -> list[str]:
     """Sites with enough observed history and enough observed test data."""
     idx = pd.read_parquet(
-        PROCESSED_DIR / config["energy"] / config["level"] / "series_index.parquet"
+        PROCESSED_DIR / config["energy"] / config.get("level", "site") / "series_index.parquet"
     ).set_index("series_id")
-    tr = (panel.index >= pd.Timestamp(config["train_start"], tz="UTC")) & (
-        panel.index <= pd.Timestamp(config["train_end"], tz="UTC") + pd.Timedelta(days=1)
-    )
-    te = (panel.index >= pd.Timestamp(config["test_start"], tz="UTC")) & (
-        panel.index <= pd.Timestamp(config["test_end"], tz="UTC") + pd.Timedelta(days=1)
-    )
     keep = []
     for s in panel.y_raw.columns:
-        col = panel.y_raw[s]
-        if (
-            col[tr].notna().mean() < config["min_coverage_train"]
-            or col[te].notna().mean() < config["min_coverage_test"]
-        ):
-            continue
-        first = col.first_valid_index()
-        if (
-            first is None
-            or (pd.Timestamp(config["test_start"], tz="UTC") - first).days
-            < config["min_history_days"]
-        ):
+        if not coverage_ok(panel.y_raw[s], panel.index, config):
             continue
         if (
             config.get("exclude_heavily_imputed", True)
@@ -295,8 +316,12 @@ def score(
     return per, pooled, by_lead
 
 
-def outputs_dir(config: dict[str, Any]) -> Path:
+def outputs_dir(config: dict[str, Any], level: str | None = None) -> Path:
+    """``outputs_dir`` for the site level; ``<outputs_dir>_<level>`` for any other level."""
     d = PROJECT_ROOT / config.get("outputs_dir", "code/reports/poc")
+    level = level or str(config.get("level", "site"))
+    if level != "site":
+        d = d.with_name(f"{d.name}_{level}")
     d.mkdir(parents=True, exist_ok=True)
     return d
 

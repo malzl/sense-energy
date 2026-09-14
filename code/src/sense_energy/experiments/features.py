@@ -93,21 +93,56 @@ def demand_block(panel: Panel, o: Origin, site: str) -> tuple[pd.DataFrame, floa
 
 
 class Covariates:
-    """Target-time covariates precomputed on the panel grid, so a block is an array slice."""
+    """Target-time covariates precomputed on the panel grid, so a block is an array slice.
+
+    A series' price and weather are those of its member sites (``panel.members``):
+    the site itself at site level, the meter's site at meter level, and the
+    demand-weighted mean over the sites of a trust / region / the nation above.
+    Categorical statics come from the largest member, floor area is summed.
+    """
 
     def __init__(self, config: dict[str, Any], panel: Panel):
         self.config = config
         self.panel = panel
-        self.sites = panel.sites
+        self.sites = panel.sites  # series ids at this level
+        self.members = panel.members or {s: {s: 1.0} for s in self.sites}
+        self.member_sites = sorted({m for d in self.members.values() for m in d})
         geo = pd.read_parquet(GEO_DIR / "sites_geo.parquet").set_index("site_code")
-        self.site_region = geo["gsp_group"].reindex(self.sites)
-        self.site_static = geo[["organisation_type", "site_gross_internal_area"]].reindex(
-            self.sites
+        # weight matrix (member sites x series), columns sum to one
+        W = pd.DataFrame(0.0, index=self.member_sites, columns=self.sites)
+        for s, d in self.members.items():
+            for m, w in d.items():
+                W.loc[m, s] = w
+        self.W = W.to_numpy(dtype="float64") / np.maximum(W.to_numpy().sum(axis=0), 1e-12)
+        largest = {s: max(d, key=d.get) for s, d in self.members.items()}
+        self.member_region = geo["gsp_group"].reindex(self.member_sites)
+        self.site_region = pd.Series(
+            [geo["gsp_group"].get(largest[s]) for s in self.sites], index=self.sites
+        )
+        gia = geo["site_gross_internal_area"]
+        self.site_static = pd.DataFrame(
+            {
+                "organisation_type": [geo["organisation_type"].get(largest[s]) for s in self.sites],
+                "site_gross_internal_area": [
+                    float(np.nansum([gia.get(m, np.nan) for m in d])) if d else np.nan
+                    for d in (self.members[s] for s in self.sites)
+                ],
+            },
+            index=self.sites,
         )
         self._price = None
         self._neso = None
         self._era5 = None
         self._ifs: dict[str, dict] = {}
+
+    def _weighted(self, X: np.ndarray) -> np.ndarray:
+        """(T x member sites) -> (T x series) weighted means, ignoring missing members."""
+        ok = np.isfinite(X)
+        num = np.where(ok, X, 0.0) @ self.W
+        den = ok.astype("float64") @ self.W
+        with np.errstate(invalid="ignore", divide="ignore"):
+            out = num / den
+        return np.where(den > 0, out, np.nan).astype("float32")
 
     # -- prices: (T x S) matrix on the panel grid --------------------------
     @property
@@ -121,9 +156,9 @@ class Covariates:
             )
             cols = [
                 wide[r].to_numpy() if r in wide.columns else np.full(len(wide), np.nan)
-                for r in self.site_region
+                for r in self.member_region
             ]
-            self._price = np.stack(cols, axis=1).astype("float32")
+            self._price = self._weighted(np.stack(cols, axis=1).astype("float64"))
         return self._price
 
     # -- NESO day-ahead-known: (T x k) on the panel grid ---------------------
@@ -154,23 +189,23 @@ class Covariates:
                 INTERIM_DIR / "weather_reanalysis.parquet",
                 columns=["site_code", "datetime", "t2m", "ssrd", "u10", "v10", "d2m"],
             )
-            w = w[w["site_code"].isin(self.sites)]
+            w = w[w["site_code"].isin(self.member_sites)]
             w["wind"] = np.hypot(w["u10"], w["v10"])
             w["t2m"] -= 273.15
             w["d2m"] -= 273.15
             grid = self.panel.index.asi8
-            out = {
-                v: np.full((len(grid), len(self.sites)), np.nan, dtype="float32")
+            per_site = {
+                v: np.full((len(grid), len(self.member_sites)), np.nan, dtype="float64")
                 for v in self.ERA5_VARS
             }
-            for j, s in enumerate(self.sites):
+            for j, s in enumerate(self.member_sites):
                 g = w[w["site_code"] == s].sort_values("datetime")
                 if g.empty:
                     continue
                 x = g["datetime"].to_numpy().astype("datetime64[ns]").astype("int64")
                 for v in self.ERA5_VARS:
-                    out[v][:, j] = np.interp(grid, x, g[v].to_numpy())
-            self._era5 = out
+                    per_site[v][:, j] = np.interp(grid, x, g[v].to_numpy())
+            self._era5 = {v: self._weighted(per_site[v]) for v in self.ERA5_VARS}
         return self._era5
 
     # -- IFS ENS forecast weather: per (site, run) 6-hourly aggregates ----------
@@ -199,7 +234,7 @@ class Covariates:
                 for c in wanted:  # the 0.4-degree era lacks dewpoint and radiation
                     if c not in f.columns:
                         f[c] = np.nan
-                f = f[f["site_code"].isin(self.sites)]
+                f = f[f["site_code"].isin(self.member_sites)]
                 f["wind"] = np.hypot(f["u10"], f["v10"])
                 g = f.groupby(["site_code", "run_time", "valid_time"], observed=True)
                 agg = pd.DataFrame(
@@ -228,7 +263,9 @@ class Covariates:
             self._ifs[ym] = table
         return self._ifs[ym]
 
-    def ifs_block(self, site: str, o: Origin, targets_ns: np.ndarray) -> dict[str, np.ndarray]:
+    def _ifs_site_block(
+        self, site: str, o: Origin, targets_ns: np.ndarray
+    ) -> dict[str, np.ndarray]:
         run_day = pd.Timestamp(o.target_day) - pd.Timedelta(days=1)
         run_time = pd.Timestamp(
             f"{run_day:%Y-%m-%d}T{self.config['weather']['ifs_run_time']}:00", tz="UTC"
@@ -250,6 +287,24 @@ class Covariates:
                 else np.full(n, np.nan, dtype="float32")
             )
         out["f_t2m_daymean"] = np.full(n, np.float32(np.nanmean(out["f_t2m_mean"])))
+        return out
+
+    def ifs_block(self, series: str, o: Origin, targets_ns: np.ndarray) -> dict[str, np.ndarray]:
+        """IFS ENS features for a series: its site's block, or the demand-weighted mean
+        over its member sites (missing members ignored)."""
+        members = self.members.get(series, {series: 1.0})
+        if len(members) == 1:
+            return self._ifs_site_block(next(iter(members)), o, targets_ns)
+        blocks = [(w, self._ifs_site_block(m, o, targets_ns)) for m, w in members.items()]
+        ws = np.array([w for w, _ in blocks], dtype="float64")[:, None]
+        out = {}
+        for key in blocks[0][1]:
+            vals = np.stack([b[key].astype("float64") for _, b in blocks])
+            ok = np.isfinite(vals)
+            den = (ok * ws).sum(axis=0)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                num = np.where(ok, vals * ws, 0.0).sum(axis=0) / den
+            out[key] = np.where(den > 0, num, np.nan).astype("float32")
         return out
 
 

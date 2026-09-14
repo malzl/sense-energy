@@ -58,10 +58,18 @@ def worker(device: str, ckpt: str, n_estimators: int, quantiles: list[float], it
     """Fit-and-predict every item on one device with one regressor."""
     import warnings
 
+    import torch
     from tabpfn import TabPFNRegressor
+    from threadpoolctl import threadpool_limits
 
     warnings.simplefilter("ignore")
+    torch.set_num_threads(2)  # the work is on the GPU; leave the cores to the CPU models
     reg = TabPFNRegressor(model_path=ckpt, device=device, n_estimators=int(n_estimators))
+    with threadpool_limits(2):
+        return _predict_items(reg, quantiles, items)
+
+
+def _predict_items(reg, quantiles: list[float], items: list) -> list:
     out = []
     for key, X, y, Xf in items:
         reg.fit(X, y)
