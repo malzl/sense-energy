@@ -289,6 +289,92 @@ class Covariates:
         out["f_t2m_daymean"] = np.full(n, np.float32(np.nanmean(out["f_t2m_mean"])))
         return out
 
+    # -- IFS ENS per member: (site, run) -> valid times, member ids, var -> (members x steps)
+    MEMBER_VARS = ("t2m", "d2m", "wind")
+
+    def _ifs_members_month(self, ym: str) -> dict:
+        if not hasattr(self, "_ifs_members"):
+            self._ifs_members: dict[str, dict] = {}
+        if ym not in self._ifs_members:
+            p = INTERIM_DIR / "forecast_ifs_ens" / f"{ym}.parquet"
+            table: dict = {}
+            if p.exists():
+                import pyarrow.parquet as pq
+
+                wanted = [
+                    "site_code",
+                    "run_time",
+                    "valid_time",
+                    "member",
+                    "t2m",
+                    "u10",
+                    "v10",
+                    "d2m",
+                ]
+                present = set(pq.read_schema(p).names)
+                f = pd.read_parquet(p, columns=[c for c in wanted if c in present])
+                for c in wanted:
+                    if c not in f.columns:
+                        f[c] = np.nan
+                f = f[f["site_code"].isin(self.member_sites)]
+                f["wind"] = np.hypot(f["u10"], f["v10"])
+                f["t2m"] -= 273.15
+                f["d2m"] -= 273.15
+                for (s, r), block in f.groupby(["site_code", "run_time"], observed=True):
+                    piv = {
+                        v: block.pivot_table(index="member", columns="valid_time", values=v)
+                        for v in self.MEMBER_VARS
+                    }
+                    valid = piv["t2m"].columns
+                    table[(s, r)] = (
+                        valid.to_numpy().astype("datetime64[ns]").astype("int64"),
+                        piv["t2m"].index.to_numpy(),
+                        {
+                            v: piv[v].reindex(columns=valid).to_numpy(dtype="float64")
+                            for v in self.MEMBER_VARS
+                        },
+                    )
+            self._ifs_members[ym] = table
+        return self._ifs_members[ym]
+
+    def ifs_members(self, series: str, o: Origin, targets_ns: np.ndarray) -> dict[str, np.ndarray]:
+        """Per-member forecast weather at the targets for a series: var -> (members x targets),
+        demand-weighted over member sites; NaN where the run is missing."""
+        members = self.members.get(series, {series: 1.0})
+        run_day = pd.Timestamp(o.target_day) - pd.Timedelta(days=1)
+        run_time = pd.Timestamp(
+            f"{run_day:%Y-%m-%d}T{self.config['weather']['ifs_run_time']}:00", tz="UTC"
+        )
+        table = self._ifs_members_month(f"{run_day:%Y-%m}")
+        acc: dict[str, list] = {v: [] for v in self.MEMBER_VARS}
+        ws = []
+        for site, w in members.items():
+            entry = table.get((site, run_time))
+            if entry is None:
+                continue
+            x, _, cols = entry
+            ws.append(w)
+            for v in self.MEMBER_VARS:
+                arr = cols[v]
+                out = np.full((arr.shape[0], len(targets_ns)), np.nan)
+                for m in range(arr.shape[0]):
+                    ok = np.isfinite(arr[m])
+                    if ok.sum() >= 2:
+                        out[m] = np.interp(targets_ns, x[ok], arr[m][ok])
+                acc[v].append(out)
+        if not ws:
+            return {}
+        wv = np.array(ws)[:, None, None]
+        result = {}
+        for v in self.MEMBER_VARS:
+            stack = np.stack(acc[v])  # sites x members x targets
+            ok = np.isfinite(stack)
+            den = (ok * wv).sum(axis=0)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                num = np.where(ok, stack * wv, 0.0).sum(axis=0) / den
+            result[v] = np.where(den > 0, num, np.nan)
+        return result
+
     def ifs_block(self, series: str, o: Origin, targets_ns: np.ndarray) -> dict[str, np.ndarray]:
         """IFS ENS features for a series: its site's block, or the demand-weighted mean
         over its member sites (missing members ignored)."""

@@ -79,6 +79,9 @@ tabpfn:
   workers_per_gpu: 1
   chunk_origins: 2           # origins per checkpointed chunk
 
+ensemble:                    # one Chronos-2 run per IFS ENS member (chronos2_ifs_members)
+  members: 51
+
 reconciliation:              # hierarchical reconciliation of point forecasts
   warmup_origins: 8          # origins whose errors seed the variance-based methods; all methods scored after
   share_days: 28             # window for top-down / middle-out proportions

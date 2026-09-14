@@ -121,6 +121,22 @@ class CovariateWindows:
         self.n_windows += 1
         return {n: clean(x) for n, x in past.items()}, {n: clean(x) for n, x in future.items()}
 
+    def member_weather(self, o: Origin, j: int, site: str, H: int) -> dict[str, np.ndarray]:
+        """Future weather per IFS member: var -> (members x H), persistence where missing."""
+        T = len(self.panel.index)
+        fut = np.clip(np.arange(o.origin_pos + 1, o.origin_pos + 1 + H), 0, T - 1)
+        back = np.clip(fut - 48 * np.ceil((fut - o.origin_pos) / 48).astype(int), 0, T - 1)
+        raw = self.cov.ifs_members(site, o, self.panel.index[fut].asi8)
+        out = {}
+        for v in self.weather_vars:
+            arr = raw.get(v)
+            if arr is None:
+                arr = np.full((1, H), np.nan)
+            fallback = self.per_site[v][back, j]
+            arr = np.where(np.isfinite(arr), arr, fallback[None, :])
+            out[v] = np.stack([clean(row) for row in arr])
+        return out
+
 
 def covariate_inputs(
     panel: Panel,

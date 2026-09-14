@@ -126,8 +126,9 @@ def _shrink_cov(R: np.ndarray) -> np.ndarray:
     sd = np.where(sd > 0, sd, 1.0)
     X = Rc / sd
     corr = X.T @ X / n
-    # variance of the correlation estimates (off-diagonal)
-    var_corr = ((X[:, :, None] * X[:, None, :]) ** 2).sum(axis=0) / n**2 - corr**2 / n
+    # variance of the correlation estimates (off-diagonal): sum_k (x_ki x_kj)^2 = (X^2)' (X^2)
+    X2 = X**2
+    var_corr = (X2.T @ X2) / n**2 - corr**2 / n
     off = ~np.eye(p, dtype=bool)
     lam = (
         float(np.clip(var_corr[off].sum() / (corr[off] ** 2).sum(), 0.0, 1.0)) if off.any() else 0.0
@@ -216,7 +217,7 @@ def run(
         Y = h.y.reindex(targets_all).to_numpy(dtype="float64")  # rows x n
         errors_hist: list[np.ndarray] = []
         results = {mth: [] for mth in methods}
-        scored_rows = []
+        scored = np.zeros(len(Yhat), dtype=bool)
         for k, o in enumerate(origins):
             mask = Yhat.index.get_level_values("origin") == o
             yh = Yhat.to_numpy(dtype="float64")[mask]
@@ -225,13 +226,12 @@ def run(
             shares = recent_shares(h, opos, share_days)
             past = np.concatenate(errors_hist) if errors_hist else None
             if k >= warmup:
-                scored_rows.append(mask)
+                scored |= mask
                 for mth in methods:
                     results[mth].append(reconcile_origin(mth, yh, h, shares, past))
             complete = np.isfinite(y).all(axis=1)
             if complete.any():
                 errors_hist.append(yh[complete] - y[complete])
-        scored = np.concatenate(scored_rows)
         y_s = Y[scored]
         y_mean = np.nanmean(y_s, axis=0)
         for mth in methods:

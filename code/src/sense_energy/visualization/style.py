@@ -128,6 +128,8 @@ METHOD_NAMES = {
     "chronos2": "Chronos-2",
     "chronos2_era5": "Chronos-2 + ERA5",
     "chronos2_ifs": "Chronos-2 + IFS ENS",
+    "chronos2_ifs_ctrl": "Chronos-2 + IFS control",
+    "chronos2_ifs_members": "Chronos-2 + IFS members",
     "timesfm3": "TimesFM 3.0",
     "timesfm3_era5": "TimesFM 3.0 + ERA5",
     "timesfm3_ifs": "TimesFM 3.0 + IFS ENS",
@@ -177,8 +179,14 @@ FAMILY_COLORS = {
     "TabPFN-TS": "#D55E00",
 }
 METHOD_COLORS = {m: FAMILY_COLORS[method_family(m)] for m in METHOD_ORDER}
-VARIANT_MARKERS = {"none": "o", "ERA5": "s", "IFS ENS": "^"}
-VARIANT_LINESTYLES = {"none": "-", "ERA5": "--", "IFS ENS": ":"}
+VARIANT_MARKERS = {"none": "o", "ERA5": "s", "IFS ENS": "^", "IFS control": "v", "IFS members": "D"}
+VARIANT_LINESTYLES = {
+    "none": "-",
+    "ERA5": "--",
+    "IFS ENS": ":",
+    "IFS control": "-.",
+    "IFS members": ":",
+}
 METHOD_MARKERS = {m: VARIANT_MARKERS[method_variant(m)] for m in METHOD_ORDER}
 METHOD_LINESTYLES = {m: VARIANT_LINESTYLES[method_variant(m)] for m in METHOD_ORDER}
 

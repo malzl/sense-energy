@@ -15,9 +15,9 @@ logger = get_logger(__name__)
 
 def weather_of(name: str) -> str:
     """``<model>_era5`` / ``<model>_ifs`` variants carry weather covariates; else none."""
-    for suffix in ("era5", "ifs"):
+    for suffix in ("era5", "ifs", "ifs_members", "ifs_ctrl"):
         if name.endswith("_" + suffix):
-            return suffix
+            return "era5" if suffix == "era5" else "ifs"
     return "none"
 
 
@@ -38,6 +38,10 @@ def run_models(config: dict[str, Any], models: list[str]) -> dict[str, pd.DataFr
             from .sarima import run_sarima
 
             fc, fname = run_sarima(panel, origins, config), name
+        elif name == "chronos2_ifs_members":
+            from .ensemble import run_chronos2_members
+
+            fc, fname = run_chronos2_members(panel, origins, config), name
         elif name.startswith("chronos2"):
             from .zero_shot import run_chronos2
 
