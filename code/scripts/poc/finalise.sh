@@ -8,7 +8,8 @@ PY=.venv/bin/python
 log() { echo "$(date '+%F %T') | $*"; }
 running() { ps -eo args | grep -qE "^/home/malzn/sense-energy/.venv/bin/python3 .venv/bin/sense-energy --log-level INFO $1"; }
 wait_for() { while running "$1"; do sleep 120; done; log "finished: $1"; }
-wait_script() { while pgrep -f "$1" > /dev/null; do sleep 120; done; log "finished: $1"; }
+# anchored on the interpreter so a shell whose command line merely mentions the script never matches
+wait_script() { while ps -eo args | grep -qE "^/bin/bash .*$1"; do sleep 120; done; log "finished: $1"; }
 step() { log "== $1"; shift; "$@" && log "ok" || log "FAILED (exit $?)"; }
 
 log "finaliser started; waiting for running jobs"
