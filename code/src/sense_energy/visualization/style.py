@@ -224,6 +224,24 @@ RECONCILIATION_LINESTYLES = {
     "MinT (shrinkage)": "-",
 }
 
+#: Categorical colours for data-driven groups (clusters), Okabe-Ito in a fixed
+#: sequence; cluster 0 is always the first colour.
+CLUSTER_COLORS = [
+    "#0072B2",
+    "#E69F00",
+    "#009E73",
+    "#D55E00",
+    "#CC79A7",
+    "#56B4E9",
+    "#F0E442",
+    "#7A7A7A",
+]
+
+
+def cluster_color(i: int) -> str:
+    return CLUSTER_COLORS[int(i) % len(CLUSTER_COLORS)]
+
+
 #: Generic lead times for half-hourly demand; fixed, never reordered by result.
 HORIZON_ORDER_HOURS = [0.5, 1, 3, 6, 12, 24, 48, 168]
 

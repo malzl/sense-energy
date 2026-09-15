@@ -288,6 +288,36 @@ def poc_reconcile_cmd(config_path: str, models: tuple[str, ...], methods: tuple[
     click.echo((table[["meter", "site", "trust", "region", "total"]] * 100).round(2).to_string())
 
 
+@cli.command("fetch-nhs-activity")
+def fetch_nhs_activity_cmd() -> None:
+    """Public NHS activity statistics (A&E monthly, AmbSYS, KH03 beds) as trust covariates."""
+    from .data.nhs_activity import fetch_all
+
+    out = fetch_all()
+    click.echo(
+        out[
+            ["organisation_name", "ods_code", "n_sites", "in_ae", "in_ambsys", "in_kh03"]
+        ].to_string(index=False)
+    )
+
+
+@cli.command("cluster-demand")
+@click.option("--energy", "energies", multiple=True, default=("elec", "gas"), show_default=True)
+@click.option(
+    "--level", "levels", multiple=True, default=("meter", "site", "trust"), show_default=True
+)
+@click.option("--k-max", default=8, show_default=True)
+def cluster_demand_cmd(energies: tuple[str, ...], levels: tuple[str, ...], k_max: int) -> None:
+    """Shape-based clustering of demand series per energy type and level."""
+    from .analysis.clustering import run
+
+    for energy in energies:
+        for level in levels:
+            out = run(energy, level, {"k_max": k_max})
+            if out:
+                click.echo(f"{energy}/{level}: {len(out['table'])} series, k={out['best_k']}")
+
+
 @cli.command("poc-hierarchy")
 @click.option(
     "--config", "config_path", default="code/configs/experiments/poc.yaml", show_default=True

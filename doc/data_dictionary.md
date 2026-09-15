@@ -498,3 +498,14 @@ throttling); the harvester backs off and re-passes until they land.
 Relationship to TIGGE: same model family; TIGGE control (42 months, 14
 variables) and TIGGE perturbed (10 members, still being served by ECDS)
 remain; this source supplies the full 51-member spread from Jan 2023.
+
+## Public NHS activity statistics (`interim/nhs_activity_*.parquet`)
+
+Pulled by `sense-energy fetch-nhs-activity` from the NHS England statistics site (see `doc/external_activity_data.md`).
+
+| File | Key | Content |
+|---|---|---|
+| `nhs_activity_ae_monthly.parquet` | `ods_code`, `period` (month start) | A&E attendances by department type, booked appointments, 4-hour breaches, 4–12 h and 12 h+ waits from decision to admit, emergency admissions via A&E and other; provider level, Apr 2023 – Mar 2026 |
+| `nhs_activity_ambsys_monthly.parquet` | `ods_code`, `period` | Ambulance Systems Indicators (A0–A139: calls, incidents by category, response-time mean/90th, hear-and-treat, see-and-treat), per ambulance service, Aug 2017 – Aug 2026 |
+| `nhs_activity_kh03_quarterly.parquet` | `ods_code`, `sector`, `snapshot` (quarter end) | overnight beds available and occupied, occupancy rate, 2001 – Jun 2024 |
+| `nhs_activity_trusts.parquet` | `organisation_name` | the demand panel's trusts with their ODS code (site-code prefix or name match), AmbSYS code for ambulance services, and flags for presence in each source |
