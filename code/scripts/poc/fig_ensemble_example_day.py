@@ -1,4 +1,4 @@
-"""One site, one target day: the 51 member medians of Chronos-2 driven by each IFS ENS member
+"""The largest site, on its target day with the widest member spread: the 51 member medians of Chronos-2 driven by each IFS ENS member
 (grey), the mixture's median and 80% band, and the observed demand. One plot."""
 
 import matplotlib.dates as mdates
@@ -16,9 +16,11 @@ members["target"] = pd.to_datetime(members["target"], utc=True)
 members["origin"] = pd.to_datetime(members["origin"], utc=True)
 mix = forecasts(MODEL)
 mix["origin"] = pd.to_datetime(mix["origin"], utc=True)
-# the site-day with the widest member spread relative to mean demand (weather matters most)
-spread = members.groupby(["site_code", "origin"])["median"].agg(lambda s: s.std() / s.mean())
-SITE, DAY = spread.idxmax()
+# the largest site in the experiment, on the origin where its member spread is widest
+site_mean = members.groupby("site_code")["median"].mean()
+SITE = site_mean.idxmax()
+spread = members[members["site_code"] == SITE].groupby("origin")["median"].std()
+DAY = spread.idxmax()
 mm = members[(members["site_code"] == SITE) & (members["origin"] == DAY)]
 mx = mix[(mix["site_code"] == SITE) & (mix["origin"] == DAY)].sort_values("target")
 y = pd.read_parquet(PROCESSED_DIR / "elec" / "site" / "wide_raw.parquet", columns=[SITE])

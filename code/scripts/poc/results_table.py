@@ -18,7 +18,7 @@ for m in ordered_models(pooled.index):
             cov="–" if m == NAIVE else f"{100 * r['coverage_80']:.0f}",
             ms=100 * r["mae_skill_vs_naive_median"],
             cs=100 * r["crps_skill_vs_naive_median"],
-            beat=100 * beat.get(m, 0.0),
+            beat=100 * beat.get(m, 0.0) if m != NAIVE else 0.0,
         )
     )
 header = (
