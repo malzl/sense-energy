@@ -176,7 +176,10 @@ def harvest_run(date: str, time: str, config: dict[str, Any]) -> Path:
         logger.info("%s already harvested", out.name)
         return out
 
-    client = Client(source="ecmwf", model=config["model"], resol=config["resolution"])
+    # "ecmwf" throttles with HTTP 429; the AWS/Azure/Google mirrors carry the same files
+    client = Client(
+        source=str(config.get("source", "aws")), model=config["model"], resol=config["resolution"]
+    )
     work = out.with_suffix(".work")
     work.mkdir(parents=True, exist_ok=True)
 

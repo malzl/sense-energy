@@ -4,6 +4,9 @@
 # job, not a one-off pull: run it daily (cron) and it collects every run not
 # yet on disk. There is no historical AIFS archive before 2025 anywhere.
 
+# Download source: ecmwf | aws | azure | google. The ECMWF portal rate-limits
+# (HTTP 429 from 27 Sep 2026); the AWS mirror has the same rolling archive.
+source: aws
 model: aifs-ens
 resolution: 0p25
 stream: enfo
