@@ -32,6 +32,7 @@ def nhs_regions():
         g = g.to_crs(epsg=4326)
     name_col = next(c for c in g.columns if c.upper().endswith("NM"))
     g["region_id"] = g[name_col].map(_region_id)
+    g["geometry"] = g.geometry.simplify(0.004, preserve_topology=True)
     return g
 
 

@@ -16,6 +16,7 @@ jobs = [
     ("fig_cluster_pca.py", []),
     ("fig_cluster_composition.py", []),
     ("fig_cluster_map.py", []),
+    ("fig_cluster_map.py", ["4"]),
     ("fig_cluster_skill.py", []),
     ("fig_cluster_dendrogram.py", []),
     ("fig_cluster_descriptors.py", []),

@@ -1,0 +1,25 @@
+\begin{tabular}{lrrrrr}
+\toprule
+Method & nMAE (\%) & CRPS & Coverage (\%) & CRPS skill (\%) & Sites better than naive (\%) \\
+\midrule
+Seasonal naive & 18.5 & 12.93 & -- & -- & -- \\
+Profile quantiles & 18.3 & 9.99 & 60 & 23 & 64 \\
+SARIMA & 18.9 & 9.24 & 82 & 17 & 53 \\
+\addlinespace[3pt]
+LightGBM & 13.4 & 6.41 & 74 & 41 & 97 \\
+LightGBM + ERA5 & 12.8 & 6.16 & 73 & 44 & 97 \\
+LightGBM + IFS ENS & 13.1 & 6.27 & 73 & 43 & 97 \\
+\addlinespace[3pt]
+Chronos-2 & 12.2 & 5.37 & 76 & 45 & 99 \\
+Chronos-2 + ERA5 & \textbf{11.5} & 5.14 & 76 & 48 & 99 \\
+Chronos-2 + IFS ENS & \textbf{11.5} & \textbf{5.13} & 75 & 48 & 99 \\
+\addlinespace[3pt]
+TimesFM 3.0 & 12.4 & 5.46 & 81 & 44 & 99 \\
+TimesFM 3.0 + ERA5 & 11.6 & 5.32 & 81 & 48 & 99 \\
+TimesFM 3.0 + IFS ENS & 11.7 & 5.35 & 81 & 48 & 99 \\
+\addlinespace[3pt]
+TabPFN-TS & 14.1 & 6.68 & 76 & 38 & 98 \\
+TabPFN-TS + ERA5 & 12.0 & 5.71 & 77 & 47 & 99 \\
+TabPFN-TS + IFS ENS & 12.1 & 5.74 & 77 & 46 & 99 \\
+\bottomrule
+\end{tabular}

@@ -106,14 +106,18 @@ def site_points() -> pd.DataFrame:
     ]
 
 
-def england():
+def england(simplify: float = 0.004):
+    """England outline; ``simplify`` (degrees, ~400 m) keeps vector figures small."""
     import geopandas as gpd
 
     countries = gpd.read_file(GEO_DIR / "countries_uk.geojson")
     name_col = next(
         c for c in countries.columns if c.upper().startswith("CTRY") and c.upper().endswith("NM")
     )
-    return countries[countries[name_col].eq("England")]
+    eng = countries[countries[name_col].eq("England")].copy()
+    if simplify:
+        eng["geometry"] = eng.geometry.simplify(simplify, preserve_topology=True)
+    return eng
 
 
 def daily_temperature_and_demand(energy: str) -> pd.DataFrame:

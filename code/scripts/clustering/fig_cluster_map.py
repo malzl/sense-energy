@@ -1,13 +1,27 @@
 """Electricity sites on the England map coloured by profile cluster, marker area proportional
 to mean demand. One plot."""
 
+import sys
+
 import numpy as np
-from _common import OUT, clusters
+import pandas as pd
+from _common import OUT, RESULTS, clusters
 
 from sense_energy.eda import common as C
 from sense_energy.visualization import style
 
+K = (
+    int(sys.argv[1]) if len(sys.argv) > 1 else None
+)  # optional: a k other than the silhouette choice
 table = clusters("elec", "site")
+suffix = ""
+if K is not None:  # same size-ordered cluster ids as fig_cluster_profiles.py
+    lab = pd.read_csv(RESULTS / "elec_site_labels_all_k.csv").set_index("series_id")[f"k{K}"]
+    order = (
+        table["mean_kw"].reindex(lab.index).groupby(lab).mean().sort_values(ascending=False).index
+    )
+    table = table.assign(cluster=lab.map({o: n for n, o in enumerate(order)}).reindex(table.index))
+    suffix = f"_k{K}"
 pts = C.site_points().merge(table[["cluster", "mean_kw"]], left_on="site_code", right_index=True)
 area = 8 + 160 * pts["mean_kw"] / pts["mean_kw"].max()
 
@@ -24,6 +38,14 @@ for i in sorted(pts["cluster"].unique()):
         linewidth=style.MARKER_EDGE,
         alpha=0.85,
         zorder=3,
+    )
+    ax.scatter(  # legend entry at one fixed size
+        [],
+        [],
+        s=30,
+        color=style.cluster_color(i),
+        edgecolor="white",
+        linewidth=style.MARKER_EDGE,
         label=f"cluster {i} (n = {len(d)})",
     )
 minx, miny, maxx, maxy = C.england().total_bounds
@@ -31,9 +53,9 @@ ax.set_xlim(minx - 0.2, maxx + 0.2)
 ax.set_ylim(miny - 0.1, maxy + 0.1)
 ax.set_aspect(1 / np.cos(np.deg2rad(53)))
 ax.set_axis_off()
-style.add_bottom_legend(ax, anchor_y=-0.02, bottom=0.12, ncol=3)
+style.add_bottom_legend(ax, anchor_y=-0.02, bottom=0.14, ncol=2)
 style.save_figure(
     fig,
-    OUT / "cluster_map_elec_site",
+    OUT / f"cluster_map_elec_site{suffix}",
     data=pts[["site_code", "latitude", "longitude", "cluster", "mean_kw"]],
 )
