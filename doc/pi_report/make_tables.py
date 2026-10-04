@@ -45,6 +45,8 @@ main = [
     "chronos2", "chronos2_era5", "chronos2_ifs",
     "timesfm3", "timesfm3_era5", "timesfm3_ifs",
     "tabpfn_ts", "tabpfn_ts_era5", "tabpfn_ts_ifs",
+    "tirex2", "tirex2_era5", "tirex2_ifs",
+    "t0beta", "t0beta_era5", "t0beta_ifs",
 ]  # fmt: skip
 best_nmae = pooled.loc[main, "nmae"].min()
 best_crps = pooled.loc[main, "crps_q"].min()
@@ -79,7 +81,7 @@ write(
     ],
     rows,
     "lrrrrr",
-    rules={3, 6, 9, 12},
+    rules={3, 6, 9, 12, 15, 18},
 )
 
 # --- 2. weather ensemble ---------------------------------------------------
