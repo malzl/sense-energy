@@ -93,7 +93,7 @@ external_models:             # zero-shot models that live in their own Python 3.
     env: {CUDA_HOME: /usr/local/cuda-12.5}
   t0beta:
     python: /home/malzn/site-agent/.venv-t0/bin/python
-    batch_size: 256
+    batch_size: 64              # 14 covariates x 2,078 steps: 256 needs 28 GB; the worker halves on OOM
     bf16: true                  # ~15 % faster, median change 0.06 % of demand
 
 ensemble:                    # one Chronos-2 run per IFS ENS member (chronos2_ifs_members)

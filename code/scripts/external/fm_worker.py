@@ -75,17 +75,28 @@ def run_t0beta(
         torch.no_grad(),
         torch.autocast("cuda", dtype=torch.bfloat16, enabled=bf16 and torch.cuda.is_available()),
     ):
-        for s in range(0, len(ctx), batch_size):
+        s = 0
+        while s < len(ctx):
             x = torch.tensor(ctx[s : s + batch_size], dtype=torch.float32, device=device)
             kw = {}
             if cov is not None:
                 kw["future_covariates"] = torch.tensor(
                     cov[s : s + batch_size], dtype=torch.float32, device=device
                 )
-            pred = model.predict(
-                x, horizon=horizon, quantile_levels=[float(v) for v in levels], **kw
-            )
+            try:
+                pred = model.predict(
+                    x, horizon=horizon, quantile_levels=[float(v) for v in levels], **kw
+                )
+            except torch.OutOfMemoryError:  # covariates multiply the memory: halve and retry
+                if batch_size <= 8:
+                    raise
+                batch_size //= 2
+                del x, kw
+                torch.cuda.empty_cache()
+                print(f"t0beta: out of memory, batch size now {batch_size}", flush=True)
+                continue
             out.append(pred.quantiles.float().cpu().numpy())
+            s += batch_size
     return np.concatenate(out), np.asarray(levels, dtype=float)
 
 
