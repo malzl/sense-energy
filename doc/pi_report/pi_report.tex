@@ -63,16 +63,16 @@ The target is the half-hourly electricity demand of 91 NHS sites in England, tho
 Scores use observed readings only. nMAE is the mean absolute error divided by the site's mean demand. CRPS, in kWh per half hour, scores the whole predictive distribution on nine quantiles. Coverage is the share of observations inside the nominal 80\,\% interval. Skill is the relative improvement over seasonal naive, the value one week earlier.
 
 \section{Accuracy at site level}
-\begin{figblock}\centering\tablefont
-\input{tables/site_results}
-\captionof{table}{Day-ahead results pooled over 91 sites and 69 forecast days. ``+ ERA5'' adds the known-ahead covariates with reanalysis weather, which is perfect weather; ``+ IFS ENS'' uses the weather forecast available at issue time. CRPS skill is the median across sites. Best values in bold.}
-\end{figblock}
-
 LightGBM and the five foundation models improve on seasonal naive by 38 to 48\,\% in CRPS. Chronos-2 and TimesFM~3.0 lead with demand history alone; T0-beta sits with TimesFM and TiRex-2 just behind LightGBM with weather. The covariates lift every family, TabPFN-TS most because its own features carry no weather, and TiRex-2 and T0-beta least. SARIMA, refitted at every forecast day, is no more accurate than naive on the median site: it does well on large regular sites and fails on small erratic ones.
 
 \begin{figblock}
 \pair{crps_skill_by_method}{covariate_gain}
 \captionof{figure}{Left: CRPS skill against seasonal naive for each method. Right: change in CRPS skill from adding covariates, paired per site against the same model without them. Markers show the median across sites and lines the interquartile range. Circles are models without covariates, squares use reanalysis weather and triangles forecast weather; the inverted triangle and the diamond are Chronos-2 with the control member and with all 51 members.}
+\end{figblock}
+
+\begin{figblock}\centering\tablefont
+\input{tables/site_results}
+\captionof{table}{Day-ahead results pooled over 91 sites and 69 forecast days. ``+ ERA5'' adds the known-ahead covariates with reanalysis weather, which is perfect weather; ``+ IFS ENS'' uses the weather forecast available at issue time. CRPS skill is the median across sites. Best values in bold.}
 \end{figblock}
 
 \section{Probabilistic quality and the weather ensemble}
@@ -86,7 +86,7 @@ TimesFM~3.0 and T0-beta are calibrated, with 79 to 81\,\% of observations inside
 Running Chronos-2 once per ensemble member and mixing the 51 resulting distributions gives the same scores as using the ensemble mean or the control member. Member forecasts differ by 0.6\,\% of mean demand on the median site-day, far less than the width of the model's own interval. The spread is nonetheless informative: the error of the forecast rises from 3\,\% to 30\,\% of mean demand between the lowest and highest tenth of spread.
 
 \begin{figblock}
-\pair[0.86]{calibration}{ensemble_spread_skill}
+\pair[0.8]{calibration}{ensemble_spread_skill}
 \captionof{figure}{Left: observed frequency below each predicted quantile, pooled over sites and periods; the dashed diagonal is perfect calibration. Right: error of the member-mean forecast against the spread of the 51 member medians, in tenths of the spread distribution.}
 \end{figblock}
 
@@ -94,12 +94,12 @@ Running Chronos-2 once per ensemble member and mixing the 51 resulting distribut
 Errors are largest on the working-day plateau, between 09:00 and 16:00, and smallest at night. Skill is positive almost everywhere on the map and is highest at the large acute sites. Regional totals range from 2.8\,\% nMAE in the East of England to 15.5\,\% in the South West. The two weakest regions are each dominated by one large site with days on which recorded demand halves.
 
 \begin{figblock}
-\pair[0.9]{nmae_by_hour}{map_site_skill}
+\pair[0.84]{nmae_by_hour}{map_site_skill}
 \captionof{figure}{Left: normalised error by local time of the target day for the models without covariates and the baselines. Right: CRPS skill of Chronos-2 with forecast weather at each site, with marker area proportional to mean demand.}
 \end{figblock}
 
 \begin{figblock}
-\begin{center}\includegraphics[width=0.66\textwidth]{example_day}\end{center}
+\begin{center}\includegraphics[width=0.58\textwidth]{example_day}\end{center}
 \captionof{figure}{The largest site on one target day: observed demand with the predictive medians and 80\,\% intervals of Chronos-2 and of LightGBM with forecast weather.}
 \end{figblock}
 
@@ -121,7 +121,7 @@ Direct forecasts at different levels do not add up. Reconciliation maps them to 
 Weighted least squares with variance scaling keeps the accuracy of the meter and site forecasts and gives the best trust, regional and national figures. Summing site forecasts is nearly as good. Approaches that ignore the very different sizes of the series, or that split a total by recent shares, make the meter and site forecasts two to four times worse. The full-covariance method is held back by the short error history available for 218 series.
 
 \begin{figblock}
-\pair{nmae_by_level}{reconciliation}
+\pair[0.9]{nmae_by_level}{reconciliation}
 \captionof{figure}{Left: normalised error of direct forecasts at each level. Right: normalised error at each level after each reconciliation approach, for Chronos-2 with forecast weather.}
 \end{figblock}
 
@@ -134,7 +134,7 @@ Sites were grouped by the shape of their average weekday and weekend profile. Ap
 \end{figblock}
 
 \begin{figblock}
-\pair[0.9]{cluster_profiles_elec_site_k4}{cluster_map_elec_site_k4}
+\pair[0.84]{cluster_profiles_elec_site_k4}{cluster_map_elec_site_k4}
 \captionof{figure}{Left: average daily profile of each group, weekdays solid and weekends dashed, relative to the site's mean demand. Right: sites coloured by group, with marker area proportional to mean demand.}
 \end{figblock}
 
