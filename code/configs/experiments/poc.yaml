@@ -41,6 +41,12 @@ models:
   - tabpfn_ts
   - tabpfn_ts_era5
   - tabpfn_ts_ifs
+  - tirex2
+  - tirex2_era5
+  - tirex2_ifs
+  - t0beta
+  - t0beta_era5
+  - t0beta_ifs
   - lightgbm
   - lightgbm_era5
   - lightgbm_ifs
@@ -78,6 +84,17 @@ tabpfn:
   gpus: all                  # or a list of CUDA device ids
   workers_per_gpu: 1
   chunk_origins: 2           # origins per checkpointed chunk
+
+external_models:             # zero-shot models that live in their own Python 3.11 environments
+  tirex2:
+    python: /home/malzn/fm-playground/code/envs/tirex2/bin/python
+    batch_size: 256             # ~20 contexts/s on an A100; bf16 brings nothing for the sLSTM kernel
+    path_prepend: [/usr/local/cuda-12.5/bin]   # nvcc for the FlashRNN kernel (built once, cached)
+    env: {CUDA_HOME: /usr/local/cuda-12.5}
+  t0beta:
+    python: /home/malzn/site-agent/.venv-t0/bin/python
+    batch_size: 256
+    bf16: true                  # ~15 % faster, median change 0.06 % of demand
 
 ensemble:                    # one Chronos-2 run per IFS ENS member (chronos2_ifs_members)
   members: 51

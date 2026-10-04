@@ -136,6 +136,12 @@ METHOD_NAMES = {
     "tabpfn_ts": "TabPFN-TS",
     "tabpfn_ts_era5": "TabPFN-TS + ERA5",
     "tabpfn_ts_ifs": "TabPFN-TS + IFS ENS",
+    "tirex2": "TiRex-2",
+    "tirex2_era5": "TiRex-2 + ERA5",
+    "tirex2_ifs": "TiRex-2 + IFS ENS",
+    "t0beta": "T0-beta",
+    "t0beta_era5": "T0-beta + ERA5",
+    "t0beta_ifs": "T0-beta + IFS ENS",
 }
 METHOD_ORDER = list(METHOD_NAMES.values())
 
@@ -160,6 +166,8 @@ FAMILY_ROLES = {
     "Chronos-2": "foundation_model",
     "TimesFM 3.0": "foundation_model",
     "TabPFN-TS": "pfn",
+    "TiRex-2": "foundation_model",
+    "T0-beta": "foundation_model",
 }
 METHOD_ROLES = {m: FAMILY_ROLES[method_family(m)] for m in METHOD_ORDER}
 
@@ -177,6 +185,8 @@ FAMILY_COLORS = {
     "Chronos-2": "#0072B2",
     "TimesFM 3.0": "#CC79A7",
     "TabPFN-TS": "#D55E00",
+    "TiRex-2": "#E69F00",  # the orange slot is free in this project
+    "T0-beta": "#000000",  # last free slot; never plot it next to an observed series
 }
 METHOD_COLORS = {m: FAMILY_COLORS[method_family(m)] for m in METHOD_ORDER}
 VARIANT_MARKERS = {"none": "o", "ERA5": "s", "IFS ENS": "^", "IFS control": "v", "IFS members": "D"}

@@ -50,6 +50,11 @@ def run_models(config: dict[str, Any], models: list[str]) -> dict[str, pd.DataFr
             from .zero_shot import run_timesfm3
 
             fc, fname = run_timesfm3(panel, origins, config, weather=weather), name
+        elif name.startswith(("tirex2", "t0beta")):
+            from .external import run_external
+
+            base = "tirex2" if name.startswith("tirex2") else "t0beta"
+            fc, fname = run_external(panel, origins, config, base, weather=weather), name
         elif name.startswith("tabpfn_ts"):
             from .tabpfn_ts import run_tabpfn_ts
 
