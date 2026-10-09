@@ -30,6 +30,8 @@ figures from `code/scripts/poc/`. Third pass, 4 October 2026 (adds TiRex-2 and T
 | LightGBM | 13.4 | 7.68 | 6.41 | 74 | +26.3 | +41.3 | 97 |
 | LightGBM + ERA5 | 12.8 | 7.38 | 6.16 | 73 | +29.5 | +44.1 | 97 |
 | LightGBM + IFS ENS | 13.1 | 7.50 | 6.27 | 73 | +28.7 | +42.6 | 97 |
+| LightGBM + IFS ENS, no site ID | 13.1 | 7.39 | 6.20 | 75 | +27.4 | +41.8 | 98 |
+| LightGBM + IFS ENS + ERIC | 13.0 | 7.32 | 6.15 | 75 | +28.0 | +42.7 | 98 |
 | Chronos-2 | 12.2 | 6.46 | 5.37 | 76 | +29.7 | +45.2 | 99 |
 | Chronos-2 + ERA5 | 11.5 | 6.03 | 5.14 | 76 | +34.5 | +48.5 | 99 |
 | Chronos-2 + IFS ENS | 11.5 | 6.02 | 5.13 | 75 | +34.3 | +48.0 | 99 |
@@ -56,6 +58,7 @@ Seasonal naive is a point forecast: its coverage is undefined and its CRPS equal
 - **Forecast weather is as good as perfect weather at day-ahead range**: the IFS ENS variants match the ERA5 variants to within 0.1 pt for every family. The 0.25° nearest-grid weather is the same for hospitals in one city (242 of 275 sites share a cell with another), which limits what any weather covariate can add.
 - **The weather ensemble adds nothing to the day-ahead distribution**: control member, ensemble mean and the 51-member mixture score identically (nMAE 11.5 %, CRPS 5.13–5.14). Member medians differ by 0.6 % of mean demand on the median site-day (90th percentile 2.3 %), far below the model's own quantile width. The member spread is nevertheless a strong *error indicator*: MAE of the member mean rises from 3 % to 30 % of mean demand across spread deciles (`ensemble_spread_skill`).
 - **TiRex-2 and T0-beta (run zero-shot in their own environments) land behind Chronos-2 and TimesFM 3.0**: T0-beta 12.4 % nMAE plain and 12.3 % with covariates, calibrated at 79 %; TiRex-2 13.2 % plain and 12.8 % with covariates, slightly wide at 83–84 %. Both gain less from covariates (0.1–0.4 pt) than the other families. In the hierarchy they follow the same pattern: direct national error 8.0–8.5 %, 7.3 % after bottom-up or variance-scaled WLS reconciliation.
+- **LightGBM does not need the site identity**: without it, or with eleven ERIC building descriptors in its place, nMAE stays at 13.0–13.1 % while CRPS improves (6.27 → 6.15) and the 80 % interval widens towards nominal (73 → 75 %); see `doc/estates_analysis.md`.
 - **SARIMA (dynamic harmonic regression) is a weak point forecaster here**: better than naive in pooled MAE at every lead, but worse on the site-averaged nMAE (18.9 %) because it fails on small, erratic sites; its wide Gaussian bands reach 82 % coverage by width, not skill. 61 % of the 6,279 warm-started refits converged within 30 iterations. A stationary specification (daily and weekly Fourier terms, no seasonal differencing) is the fix to try before drawing conclusions.
 - **Calibration**: TimesFM 3.0 is calibrated (81 %), Chronos-2 slightly narrow (75–76 %), LightGBM narrow (73 %), TabPFN-TS 77 %. Per-site recalibration is the cheapest CRPS gain available.
 - Error peaks at 21 h lead (≈ 13:30 on D, the daytime plateau) for every method.

@@ -8,13 +8,21 @@ import numpy as np
 import pandas as pd
 
 from ..logging_utils import get_logger
-from .features import CATEGORICAL, Covariates, _holiday_set, build_rows
+from .features import Covariates, _holiday_set, build_rows
 from .poc import Origin, Panel, forecast_frame, make_origins
 
 logger = get_logger(__name__)
 
 NON_FEATURES = {"y", "origin", "target", "scale"}
-VARIANT_WEATHER = {"lightgbm": "none", "lightgbm_era5": "era5", "lightgbm_ifs": "ifs"}
+VARIANT_WEATHER = {
+    "lightgbm": "none",
+    "lightgbm_era5": "era5",
+    "lightgbm_ifs": "ifs",
+    "lightgbm_ifs_noid": "ifs",  # no site identity
+    "lightgbm_ifs_eric": "ifs",  # ERIC building descriptors instead of site identity
+}
+VARIANT_NO_ID = {"lightgbm_ifs_noid", "lightgbm_ifs_eric"}
+VARIANT_ERIC = {"lightgbm_ifs_eric"}
 
 
 def _fit_quantile(
@@ -44,7 +52,7 @@ def _fit_quantile(
         X,
         y,
         eval_set=[(Xv, yv)],
-        categorical_feature=[c for c in CATEGORICAL if c in X.columns],
+        categorical_feature=[c for c in X.columns if str(X[c].dtype) == "category"],
         callbacks=[lgb.early_stopping(int(params["early_stopping_rounds"]), verbose=False)],
     )
     return model
@@ -74,10 +82,18 @@ def run_lightgbm(
         len(panel.sites),
         weather,
     )
-    train = build_rows(panel, train_origins, cov, weather, hol).dropna(subset=["y"])
+    extra = None
+    if variant in VARIANT_ERIC:
+        from .features import eric_statics
+
+        extra = eric_statics(panel)
+    train = build_rows(panel, train_origins, cov, weather, hol, extra_static=extra).dropna(
+        subset=["y"]
+    )
     cutoff = train["origin"].max() - pd.Timedelta(days=int(params.get("valid_last_days", 60)))
     fit, val = train[train["origin"] <= cutoff], train[train["origin"] > cutoff]
-    features = [c for c in train.columns if c not in NON_FEATURES]
+    drop = NON_FEATURES | ({"site_code"} if variant in VARIANT_NO_ID else set())
+    features = [c for c in train.columns if c not in drop]
     logger.info(
         "%s: %s fit rows, %s validation rows, %d features",
         variant,
@@ -93,7 +109,7 @@ def run_lightgbm(
         )
         logger.info("%s: q%.2f best iteration %d", variant, a, models[a].best_iteration_ or 0)
 
-    test = build_rows(panel, test_origins, cov, weather, hol, with_target=False)
+    test = build_rows(panel, test_origins, cov, weather, hol, with_target=False, extra_static=extra)
     preds = {a: models[a].predict(test[features]) * test["scale"].to_numpy() for a in fit_quantiles}
     # Interpolate the fitted quantiles onto the reporting grid (linear in tau)
     fitted = np.stack([preds[a] for a in fit_quantiles], axis=1)  # N x F

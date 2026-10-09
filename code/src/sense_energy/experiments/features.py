@@ -394,6 +394,35 @@ class Covariates:
         return out
 
 
+ERIC_STATICS = [
+    "site_type",
+    "gia_m2",
+    "heated_volume_m3",
+    "mean_build_year",
+    "led_pct",
+    "chp_units",
+    "heat_pumps",
+    "solar_generated_kwh",
+    "elec_kwh_per_m2",
+    "gas_to_elec",
+    "single_rooms_ensuite",
+]
+
+
+def eric_statics(panel: Panel) -> pd.DataFrame:
+    """ERIC 2023/24 descriptors per series (the largest member site for aggregates).
+    Financial year 2023/24 ends before the test window, so nothing leaks."""
+    eric = pd.read_parquet(INTERIM_DIR / "eric_2023_24_site.parquet").drop_duplicates("site_code")
+    eric = eric.set_index("site_code")[ERIC_STATICS]
+    members = panel.members or {s: {s: 1.0} for s in panel.sites}
+    largest = {s: max(d, key=d.get) for s, d in members.items()}
+    out = eric.reindex([largest[s] for s in panel.sites])
+    out.index = panel.sites
+    out = out.add_prefix("eric_")
+    out["eric_site_type"] = out["eric_site_type"].fillna("unknown").astype(str)
+    return out
+
+
 def build_rows(
     panel: Panel,
     origins: list[Origin],
@@ -401,8 +430,10 @@ def build_rows(
     weather: str,
     hol: set,
     with_target: bool = True,
+    extra_static: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """The full feature table for a set of origins, vectorised across sites per origin."""
+    """The full feature table for a set of origins, vectorised across sites per origin.
+    ``extra_static`` (index = series id) adds per-series static columns."""
     sites = panel.sites
     S = len(sites)
     Y = panel.y_imp[sites].to_numpy(dtype="float32")  # T x S
@@ -468,6 +499,10 @@ def build_rows(
         frame["gia"] = cov.site_static["site_gross_internal_area"].to_numpy(dtype="float32")[
             np.repeat(site_idx, n)
         ]
+        if extra_static is not None:
+            ex = extra_static.reindex(sites)
+            for c in ex.columns:
+                frame[c] = ex[c].to_numpy()[np.repeat(site_idx, n)]
         frame["origin"] = o.origin_time
         frame["target"] = np.tile(panel.index[tp].to_numpy(), S)
         if with_target:
@@ -477,4 +512,7 @@ def build_rows(
     out["target"] = pd.to_datetime(out["target"], utc=True)
     for c in CATEGORICAL:
         out[c] = out[c].astype("category")
+    for c in out.columns:
+        if out[c].dtype == object and c not in ("origin", "target"):
+            out[c] = out[c].astype("category")
     return out

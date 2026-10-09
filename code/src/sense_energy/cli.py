@@ -301,6 +301,21 @@ def fetch_nhs_activity_cmd() -> None:
     )
 
 
+@cli.command("estates-analysis")
+def estates_analysis_cmd() -> None:
+    """ERIC 2023/24 and KH03 beds: meter coverage flags, heat-pump headroom, intensity."""
+    from .analysis.estates import run
+
+    out = run()
+    click.echo(out["flags"]["coverage_flag"].value_counts().to_string())
+    h, e = out["headroom_main"], out["england"]
+    click.echo(out["headroom"]["headroom_status"].value_counts().to_string())
+    click.echo(
+        f"heat-pump headroom: {int((h['util_hp'] > 1).sum())} of {len(h)} panel sites exceed "
+        f"capacity; England {float((e['util_hp'] > 1).mean()):.0%} of {len(e)} sites"
+    )
+
+
 @cli.command("cluster-demand")
 @click.option("--energy", "energies", multiple=True, default=("elec", "gas"), show_default=True)
 @click.option(

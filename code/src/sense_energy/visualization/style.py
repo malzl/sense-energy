@@ -125,6 +125,8 @@ METHOD_NAMES = {
     "lightgbm": "LightGBM",
     "lightgbm_era5": "LightGBM + ERA5",
     "lightgbm_ifs": "LightGBM + IFS ENS",
+    "lightgbm_ifs_noid": "LightGBM + IFS ENS, no site ID",
+    "lightgbm_ifs_eric": "LightGBM + IFS ENS + ERIC",
     "chronos2": "Chronos-2",
     "chronos2_era5": "Chronos-2 + ERA5",
     "chronos2_ifs": "Chronos-2 + IFS ENS",
@@ -153,7 +155,7 @@ def method_family(method: str) -> str:
 
 def method_variant(method: str) -> str:
     """'LightGBM + IFS ENS' -> 'IFS ENS'; a plain method -> 'none'."""
-    return method.split(" + ")[1] if " + " in method else "none"
+    return " + ".join(method.split(" + ")[1:]) if " + " in method else "none"
 
 
 FAMILY_ROLES = {
@@ -189,13 +191,23 @@ FAMILY_COLORS = {
     "T0-beta": "#000000",  # last free slot; never plot it next to an observed series
 }
 METHOD_COLORS = {m: FAMILY_COLORS[method_family(m)] for m in METHOD_ORDER}
-VARIANT_MARKERS = {"none": "o", "ERA5": "s", "IFS ENS": "^", "IFS control": "v", "IFS members": "D"}
+VARIANT_MARKERS = {
+    "none": "o",
+    "ERA5": "s",
+    "IFS ENS": "^",
+    "IFS control": "v",
+    "IFS members": "D",
+    "IFS ENS, no site ID": "X",
+    "IFS ENS + ERIC": "P",
+}
 VARIANT_LINESTYLES = {
     "none": "-",
     "ERA5": "--",
     "IFS ENS": ":",
     "IFS control": "-.",
     "IFS members": ":",
+    "IFS ENS, no site ID": "-.",
+    "IFS ENS + ERIC": "-.",
 }
 METHOD_MARKERS = {m: VARIANT_MARKERS[method_variant(m)] for m in METHOD_ORDER}
 METHOD_LINESTYLES = {m: VARIANT_LINESTYLES[method_variant(m)] for m in METHOD_ORDER}
@@ -251,6 +263,26 @@ CLUSTER_COLORS = [
 def cluster_color(i: int) -> str:
     return CLUSTER_COLORS[int(i) % len(CLUSTER_COLORS)]
 
+
+#: Meter-coverage check against ERIC 2023/24 (doc/estates_analysis.md); fixed names and colours.
+COVERAGE_FLAG_NAMES = {
+    "ok": "whole site metered",
+    "partial_supply": "partial supply",
+    "aggregate_supply": "aggregate supply",
+    "chp_mismatch": "on-site CHP",
+    "meter_gaps": "meter gaps",
+}
+COVERAGE_FLAG_COLORS = {
+    "whole site metered": "#009E73",
+    "partial supply": "#D55E00",
+    "aggregate supply": "#E69F00",
+    "on-site CHP": "#CC79A7",
+    "meter gaps": "#B8B8B8",
+}
+#: Electrification scenario: today's demand and demand with all gas heat from heat pumps.
+SCENARIO_COLORS = {"today": "#7A7A7A", "with heat pumps": "#D55E00"}
+#: Grid headroom classes: peak over available capacity.
+HEADROOM_CLASSES = {"below 80 %": "#009E73", "80 to 100 %": "#E69F00", "above capacity": "#D55E00"}
 
 #: Generic lead times for half-hourly demand; fixed, never reordered by result.
 HORIZON_ORDER_HOURS = [0.5, 1, 3, 6, 12, 24, 48, 168]

@@ -509,3 +509,16 @@ Pulled by `sense-energy fetch-nhs-activity` from the NHS England statistics site
 | `nhs_activity_ambsys_monthly.parquet` | `ods_code`, `period` | Ambulance Systems Indicators (A0–A139: calls, incidents by category, response-time mean/90th, hear-and-treat, see-and-treat), per ambulance service, Aug 2017 – Aug 2026 |
 | `nhs_activity_kh03_quarterly.parquet` | `ods_code`, `sector`, `snapshot` (quarter end) | overnight beds available and occupied, occupancy rate, 2001 – Jun 2024 |
 | `nhs_activity_trusts.parquet` | `organisation_name` | the demand panel's trusts with their ODS code (site-code prefix or name match), AmbSYS code for ambulance services, and flags for presence in each source |
+
+## ERIC 2023/24 and KH03 occupied beds (`interim/eric_*`, `interim/kh03_*`)
+
+Source archives (ESC extracts) unpacked in `external/eric/` and `external/nhs_beds/`; built by `sense-energy estates-analysis` (loaders `data/eric.py`, `data/nhs_beds.py`). Analysis and figures: `doc/estates_analysis.md`.
+
+| File | Key | Content |
+|---|---|---|
+| `eric_2023_24_site.parquet` | `site_code` | ERIC 2023/24 (1 Apr 2023 – 31 Mar 2024), 2,869 English NHS sites: total electricity as the sum of the five consumption components (`elec_kwh`; the headline field is filled for ~5 % of sites and kept as `elec_headline_kwh`), gas, oil, steam, hot water, renewable heat, solar generated, maximum demand (kW), available capacity (kVA), floor area, heated volume, floor-area-weighted mean construction year, LED coverage, heat pumps, CHP units, old boilers, EV charge points, single rooms, high/significant-risk backlog, site type and tenure, postcode centroid (`latitude`, `longitude`, postcodes.io), intensities (`elec_kwh_per_m2`, `gas_kwh_per_m2`, `gas_to_elec`) |
+| `eric_2023_24_trust.parquet` | `trust_code` | the trust-level ERIC table as published (210 trusts) |
+| `eric_2023_24_postcodes.parquet` | `postcode` | postcode centroid cache for the ERIC sites |
+| `kh03_occupied_by_sector.parquet` | `ods_code`, `quarter_end`, `sector` | average occupied beds per quarter, `overnight` and `day_only`, sectors general & acute / maternity / mental illness / learning disabilities; 2001 (overnight) or 2010 (day only) to June 2024 |
+| `kh03_occupied_by_specialty.parquet` | `ods_code`, `quarter_end`, `specialty` | the same by 78 treatment-specialty codes, 2010 – June 2024 |
+| `site_coverage_flags.parquet` | `site_code` | metered vs ERIC electricity 2023/24 per panel site: `coverage_flag` (`ok`, `partial_supply`, `aggregate_supply`, `chp_mismatch`, `meter_gaps`, `no_eric`), `energy_ratio`, `peak_ratio` |
