@@ -1,3 +1,5 @@
+# vendored third-party code stays as published
+exclude: ^code/third_party/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

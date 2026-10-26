@@ -1,11 +1,11 @@
 """Empirical coverage of the nominal 80% interval per method, median and IQR across sites. One plot."""
 
-from _common import NAIVE, OUT, dot_iqr, iqr_rows, ordered_models, per_site
+from _common import NAIVE, OUT, dot_iqr, iqr_rows, per_site, shown
 
 from sense_energy.visualization import style
 
 per = per_site()
-models = [m for m in ordered_models(per["model"].unique()) if m != NAIVE]  # no interval
+models = [m for m in shown(per["model"].unique()) if m != NAIVE]  # no interval
 frame = iqr_rows(per, "coverage_80", models, scale=100)
 
 fig, ax = style.figure(style.SINGLE_COLUMN)

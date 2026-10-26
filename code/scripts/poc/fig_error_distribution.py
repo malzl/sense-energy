@@ -1,12 +1,12 @@
 """Distribution of the signed point-forecast error as a share of mean demand, per method
 (boxes: IQR, whiskers 5-95%), pooled over sites, origins and half-hours. One plot."""
 
-from _common import OUT, boxes, display, joined, ordered_models
+from _common import OUT, boxes, display, joined, shown
 
 from sense_energy.visualization import style
 
 f = joined()
-models = ordered_models(f["model"].unique())
+models = shown(f["model"].unique())
 methods = [display(m) for m in models]
 groups = [f.loc[f["model"] == m, "err"].to_numpy() * 100 for m in models]
 

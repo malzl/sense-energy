@@ -1,12 +1,12 @@
 """Sharpness: mean width of the 80% interval as a share of mean demand, median and IQR across sites. One plot."""
 
-from _common import NAIVE, OUT, dot_iqr, iqr_rows, ordered_models, per_site
+from _common import NAIVE, OUT, dot_iqr, iqr_rows, per_site, shown
 
 from sense_energy.visualization import style
 
 per = per_site()
 per["width_share"] = per["width_80"] / per["y_mean"]
-models = [m for m in ordered_models(per["model"].unique()) if m != NAIVE]
+models = [m for m in shown(per["model"].unique()) if m != NAIVE]
 frame = iqr_rows(per, "width_share", models)
 
 fig, ax = style.figure(style.SINGLE_COLUMN)

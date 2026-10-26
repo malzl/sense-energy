@@ -65,6 +65,7 @@ where = ["code/src"]
 
 [tool.ruff]
 line-length = 100
+extend-exclude = ["code/third_party"]
 target-version = "py311"
 src = ["code/src", "code/tests"]
 

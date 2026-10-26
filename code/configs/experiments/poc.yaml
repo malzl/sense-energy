@@ -85,6 +85,28 @@ tabpfn:
   workers_per_gpu: 1
   chunk_origins: 2           # origins per checkpointed chunk
 
+tnp:                         # transformer neural processes (vendored gridded-tnp code), meta-trained on the train window
+  context_periods: 2016      # six weeks of half-hours, as the foundation models
+  embed_dim: 128
+  num_heads: 8
+  head_dim: 16
+  num_layers: 5
+  num_latents: 128           # PT-TNP pseudo-tokens
+  grid_spacing_periods: 2    # gridded TNP: one pseudo-token per hour over context and horizon
+  window_tokens: 168         # SWIN window of one week of hourly tokens, shifted by half
+  top_k_ctot: 8              # grid tokens each target attends to
+  batch_size: 32
+  lr: 5.0e-4
+  weight_decay: 1.0e-4
+  max_steps: 20000
+  warmup_steps: 500
+  eval_every: 1000
+  patience: 5
+  valid_last_days: 60
+  grad_clip: 0.5
+  min_noise: 0.001
+  seed: 0
+
 external_models:             # zero-shot models that live in their own Python 3.11 environments
   tirex2:
     python: /home/malzn/fm-playground/code/envs/tirex2/bin/python

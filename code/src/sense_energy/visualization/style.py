@@ -144,6 +144,15 @@ METHOD_NAMES = {
     "t0beta": "T0-beta",
     "t0beta_era5": "T0-beta + ERA5",
     "t0beta_ifs": "T0-beta + IFS ENS",
+    "tnp": "TNP",
+    "tnp_era5": "TNP + ERA5",
+    "tnp_ifs": "TNP + IFS ENS",
+    "pttnp": "PT-TNP",
+    "pttnp_era5": "PT-TNP + ERA5",
+    "pttnp_ifs": "PT-TNP + IFS ENS",
+    "gtnp": "Gridded TNP",
+    "gtnp_era5": "Gridded TNP + ERA5",
+    "gtnp_ifs": "Gridded TNP + IFS ENS",
 }
 METHOD_ORDER = list(METHOD_NAMES.values())
 
@@ -170,6 +179,9 @@ FAMILY_ROLES = {
     "TabPFN-TS": "pfn",
     "TiRex-2": "foundation_model",
     "T0-beta": "foundation_model",
+    "TNP": "pfn",  # meta-learned in-context regressors, like prior-fitted networks
+    "PT-TNP": "pfn",
+    "Gridded TNP": "pfn",
 }
 METHOD_ROLES = {m: FAMILY_ROLES[method_family(m)] for m in METHOD_ORDER}
 
@@ -189,6 +201,11 @@ FAMILY_COLORS = {
     "TabPFN-TS": "#D55E00",
     "TiRex-2": "#E69F00",  # the orange slot is free in this project
     "T0-beta": "#000000",  # last free slot; never plot it next to an observed series
+    # Okabe-Ito is exhausted: the neural-process family takes Paul Tol's colour-blind-safe
+    # "muted" wine, purple and teal (exception recorded here, not in the scripts)
+    "TNP": "#882255",
+    "PT-TNP": "#AA4499",
+    "Gridded TNP": "#44AA99",
 }
 METHOD_COLORS = {m: FAMILY_COLORS[method_family(m)] for m in METHOD_ORDER}
 VARIANT_MARKERS = {

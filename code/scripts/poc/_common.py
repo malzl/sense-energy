@@ -36,6 +36,15 @@ def plain(keys) -> list[str]:
     return [k for k in ordered_models(keys) if style.method_variant(display(k)) == "none"]
 
 
+def shown(keys) -> list[str]:
+    """Methods for the per-method dot plots, fixed order: each model's plain and
+    forecast-weather (IFS ENS) versions plus the baselines and LightGBM ablations.
+    Reanalysis (ERA5) and single-member variants stay in the covariate-gain figure
+    and the results table, which keeps the dot plots legible."""
+    drop = ("_era5", "_ifs_ctrl", "_ifs_members")
+    return [k for k in ordered_models(keys) if not k.endswith(drop)]
+
+
 def per_site() -> pd.DataFrame:
     return pd.read_csv(RESULTS / "scores_per_site.csv")
 

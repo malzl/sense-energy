@@ -5,8 +5,8 @@
 # yet on disk. There is no historical AIFS archive before 2025 anywhere.
 
 # Download source: ecmwf | aws | azure | google. The ECMWF portal rate-limits
-# (HTTP 429 from 27 Sep 2026); the AWS mirror has the same rolling archive.
-source: aws
+# (HTTP 429 from 27 Sep 2026) and the AWS mirror throttles with HTTP 503 (25 Oct 2026); the Azure mirror carries the same rolling archive.
+source: azure
 model: aifs-ens
 resolution: 0p25
 stream: enfo

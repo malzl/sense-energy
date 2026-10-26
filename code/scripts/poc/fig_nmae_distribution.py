@@ -1,11 +1,11 @@
 """Distribution across sites of the normalised MAE per method (boxes: IQR, whiskers 5-95%). One plot."""
 
-from _common import OUT, boxes, display, ordered_models, per_site
+from _common import OUT, boxes, display, per_site, shown
 
 from sense_energy.visualization import style
 
 per = per_site()
-models = ordered_models(per["model"].unique())
+models = shown(per["model"].unique())
 methods = [display(m) for m in models]
 groups = [per.loc[per["model"] == m, "nmae"].dropna().to_numpy() * 100 for m in models]
 

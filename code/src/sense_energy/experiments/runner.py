@@ -50,6 +50,10 @@ def run_models(config: dict[str, Any], models: list[str]) -> dict[str, pd.DataFr
             from .zero_shot import run_timesfm3
 
             fc, fname = run_timesfm3(panel, origins, config, weather=weather), name
+        elif name.split("_")[0] in ("tnp", "pttnp", "gtnp"):
+            from .tnp_forecast import run_tnp
+
+            fc, fname = run_tnp(panel, origins, config, name), name
         elif name.startswith(("tirex2", "t0beta")):
             from .external import run_external
 
