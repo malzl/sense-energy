@@ -471,6 +471,26 @@ def build_dec_cmd(no_fetch: bool) -> None:
     )
 
 
+@cli.command("build-epc")
+@click.option("--no-fetch", is_flag=True, help="Rebuild from the cached certificates only.")
+def build_epc_cmd(no_fetch: bool) -> None:
+    """Non-domestic EPCs at every site postcode: fetch (cached), flatten, aggregate."""
+    from .data.dec import build_epc
+
+    certs, sites = build_epc(fetch=not no_fetch)
+    click.echo(f"{len(certs)} EPCs; {int((sites['epc_buildings'] > 0).sum())} sites with an EPC")
+
+
+@cli.command("heat-causal-ml")
+def heat_causal_ml_cmd() -> None:
+    """R-learner and causal forest on the heat response, cross-fitted by site."""
+    from .analysis.heat_causal_ml import run
+
+    s = run()["summary"]
+    for k in ("observables", "observables + signature"):
+        click.echo(f"{k}: forest {s[k]['forest']}")
+
+
 @cli.command("heat-drivers")
 def heat_drivers_cmd() -> None:
     """What moves the heat slope: sunshine, time of day, the week, moderators, a typology."""

@@ -155,3 +155,20 @@ carries 27 % of the site's import and Great Western 2 % (partial supplies), Roya
 than the ERIC site). Three returns are unit errors (Norfolk and Norwich reports 2.4 MWh from a 1 MW
 unit, Cromer a unit with no output, Great Western 0.4 GWh from 1 MW). Table:
 `code/reports/chp/generation_2024_25.csv`.
+
+## 7. Year-on-year changes and the steps in the meter
+
+`analysis/estates_changes.py` (`eric_changes.csv`, `demand_steps.csv`, figure `eric_changes`).
+Of the 109 panel sites in both returns, 45 report a change from 2023/24 to
+2024/25: LED coverage up by ten points or more at 35, solar generation appearing at
+5 and growing by half or more at 2, heat pumps installed at
+4 and added to at 2, CHP units changing at 2. The
+returns give the year, not the date; a PELT changepoint search on each site's daily demand (log,
+net of its day-of-week pattern, penalty six times the robust day-to-day variance times log n,
+segments of at least 28 days, steps of at least 15 %) gives the candidates: 1103 steps across the
+panel, 539 within a quarter of the 2024/25 year. 32 of the changed sites
+without CHP have such a step; the small sites that went to full LED show level drops of 15 to
+40 % (Tribune House, Cheadle Hospital, Malton, Longton), the CHP sites' steps are plant switching
+and are flagged rather than used. The median absolute change in returned annual electricity is
+9.2 %. These dated changes are the treatments for the next event studies; they also say
+that the 2023/24 descriptors (LED share above all) are a year stale for a third of the panel.

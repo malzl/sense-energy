@@ -20,9 +20,11 @@ VARIANT_WEATHER = {
     "lightgbm_ifs": "ifs",
     "lightgbm_ifs_noid": "ifs",  # no site identity
     "lightgbm_ifs_eric": "ifs",  # ERIC building descriptors instead of site identity
+    "lightgbm_ifs_heat": "ifs",  # + daily heat features, station-corrected Tmax, extended calendar
 }
 VARIANT_NO_ID = {"lightgbm_ifs_noid", "lightgbm_ifs_eric"}
 VARIANT_ERIC = {"lightgbm_ifs_eric"}
+VARIANT_HEAT = {"lightgbm_ifs_heat"}
 
 
 def _fit_quantile(
@@ -87,9 +89,10 @@ def run_lightgbm(
         from .features import eric_statics
 
         extra = eric_statics(panel)
-    train = build_rows(panel, train_origins, cov, weather, hol, extra_static=extra).dropna(
-        subset=["y"]
-    )
+    heat = variant in VARIANT_HEAT
+    train = build_rows(
+        panel, train_origins, cov, weather, hol, extra_static=extra, heat=heat
+    ).dropna(subset=["y"])
     cutoff = train["origin"].max() - pd.Timedelta(days=int(params.get("valid_last_days", 60)))
     fit, val = train[train["origin"] <= cutoff], train[train["origin"] > cutoff]
     drop = NON_FEATURES | ({"site_code"} if variant in VARIANT_NO_ID else set())
@@ -109,7 +112,9 @@ def run_lightgbm(
         )
         logger.info("%s: q%.2f best iteration %d", variant, a, models[a].best_iteration_ or 0)
 
-    test = build_rows(panel, test_origins, cov, weather, hol, with_target=False, extra_static=extra)
+    test = build_rows(
+        panel, test_origins, cov, weather, hol, with_target=False, extra_static=extra, heat=heat
+    )
     preds = {a: models[a].predict(test[features]) * test["scale"].to_numpy() for a in fit_quantiles}
     # Interpolate the fitted quantiles onto the reporting grid (linear in tau)
     fitted = np.stack([preds[a] for a in fit_quantiles], axis=1)  # N x F

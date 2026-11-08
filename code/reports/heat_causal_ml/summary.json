@@ -1,0 +1,146 @@
+{
+  "sites": 83,
+  "rows": 99181,
+  "observables": {
+    "r_learner": {
+      "sites": 80,
+      "corr": -0.113,
+      "calibration_slope": -0.142,
+      "sd_cate_pct": 3.96,
+      "sd_true_slope_pct": 4.23,
+      "share_true_variance_recovered": -0.017
+    },
+    "forest": {
+      "sites": 80,
+      "corr": 0.212,
+      "calibration_slope": 0.187,
+      "sd_cate_pct": 5.66,
+      "sd_true_slope_pct": 4.23,
+      "share_true_variance_recovered": 0.241
+    },
+    "placebo_r_learner": {
+      "sites": 80,
+      "corr": -0.059,
+      "calibration_slope": -0.066,
+      "sd_cate_pct": 4.42,
+      "sd_true_slope_pct": 4.23,
+      "share_true_variance_recovered": -0.005
+    },
+    "forest_top_covariates": {
+      "night_day_ratio": 0.259,
+      "winter_summer_ratio": 0.118,
+      "log_mean_kw": 0.095,
+      "gas_to_elec": 0.089,
+      "summer_tmax": 0.082,
+      "log_density": 0.047,
+      "weekend_ratio": 0.034,
+      "log_dec_elec_kwh_m2": 0.027
+    },
+    "forest_mean_effect_pct": 1.73,
+    "calendar": [
+      {
+        "modifier": "is_weekend",
+        "value": 0.0,
+        "effect_pct": 1.695229851298705
+      },
+      {
+        "modifier": "is_weekend",
+        "value": 1.0,
+        "effect_pct": 1.8178426274559023
+      },
+      {
+        "modifier": "holiday",
+        "value": 0.0,
+        "effect_pct": 1.7294925178335914
+      },
+      {
+        "modifier": "holiday",
+        "value": 1.0,
+        "effect_pct": 1.7294925178335914
+      },
+      {
+        "modifier": "school_summer",
+        "value": 0.0,
+        "effect_pct": 1.7339666387996346
+      },
+      {
+        "modifier": "school_summer",
+        "value": 1.0,
+        "effect_pct": 1.6940858460523998
+      }
+    ],
+    "sites_significant_positive": 35,
+    "sites_significant_negative": 15
+  },
+  "observables + signature": {
+    "r_learner": {
+      "sites": 80,
+      "corr": 0.208,
+      "calibration_slope": 0.284,
+      "sd_cate_pct": 3.66,
+      "sd_true_slope_pct": 4.23,
+      "share_true_variance_recovered": 0.181
+    },
+    "forest": {
+      "sites": 80,
+      "corr": 0.217,
+      "calibration_slope": 0.192,
+      "sd_cate_pct": 5.65,
+      "sd_true_slope_pct": 4.23,
+      "share_true_variance_recovered": 0.247
+    },
+    "placebo_r_learner": {
+      "sites": 80,
+      "corr": -0.015,
+      "calibration_slope": -0.016,
+      "sd_cate_pct": 4.81,
+      "sd_true_slope_pct": 4.23,
+      "share_true_variance_recovered": -0.003
+    },
+    "forest_top_covariates": {
+      "sun_day": 0.437,
+      "heat_afternoon_excess": 0.151,
+      "night_day_ratio": 0.07,
+      "summer_tmax": 0.049,
+      "winter_summer_ratio": 0.041,
+      "log_mean_kw": 0.03,
+      "urban_city_and_town": 0.023,
+      "gas_to_elec": 0.021
+    },
+    "forest_mean_effect_pct": 1.73,
+    "calendar": [
+      {
+        "modifier": "is_weekend",
+        "value": 0.0,
+        "effect_pct": 1.7215515648047297
+      },
+      {
+        "modifier": "is_weekend",
+        "value": 1.0,
+        "effect_pct": 1.760715304131244
+      },
+      {
+        "modifier": "holiday",
+        "value": 0.0,
+        "effect_pct": 1.7321145722553781
+      },
+      {
+        "modifier": "holiday",
+        "value": 1.0,
+        "effect_pct": 1.7321145722553781
+      },
+      {
+        "modifier": "school_summer",
+        "value": 0.0,
+        "effect_pct": 1.7356207608307306
+      },
+      {
+        "modifier": "school_summer",
+        "value": 1.0,
+        "effect_pct": 1.7042147564454646
+      }
+    ],
+    "sites_significant_positive": 34,
+    "sites_significant_negative": 15
+  }
+}

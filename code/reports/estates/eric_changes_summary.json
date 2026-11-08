@@ -1,0 +1,17 @@
+{
+  "sites_in_both_returns": 109,
+  "changes": {
+    "solar_new": 5,
+    "solar_grew": 2,
+    "heat_pumps_new": 4,
+    "heat_pumps_more": 2,
+    "led_up_10pts": 35,
+    "chp_changed": 2
+  },
+  "sites_with_any_change": 45,
+  "changed_sites_with_a_step_in_window": 43,
+  "changed_non_chp_sites_with_a_step_in_window": 32,
+  "steps_total": 1103,
+  "steps_in_window": 539,
+  "median_abs_elec_change_pct": 9.2
+}

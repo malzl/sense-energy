@@ -15,6 +15,7 @@ ARGS = {
     "fig_hourly_by_use.py": ["cold", "hot"],
     "fig_heat_blocks.py": ["cdd20", "solar_kwh_m2"],
     "fig_heat_moderators.py": ["categorical", "continuous"],
+    "fig_cate_vs_slope.py": ["observables", "signature"],
 }
 runs = [(s, a) for s in scripts for a in ARGS.get(s.name, [None])]
 for script, arg in runs:

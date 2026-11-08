@@ -33,6 +33,8 @@ dependencies = [
     "joblib>=1.4",
     "pyfixest>=0.30",   # high-dimensional fixed-effect regressions (weather response)
     "openpyxl>=3.1",    # ERIC / NHS Digital Excel workbooks
+    "econml>=0.15",     # causal forests and orthogonal learners (heat response)
+    "ruptures>=1.1",    # changepoints (installation events in site demand)
 ]
 
 [project.optional-dependencies]

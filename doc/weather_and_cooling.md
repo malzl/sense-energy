@@ -511,6 +511,12 @@ newer ones link an advisory report with the assessor's recommendations.
   direction, but the fallers' certificates name gas. Their warm-night fall is the auxiliaries and
   hot water of gas heating and electric spot heating, not electric space heating as the main
   system.
+- **The non-domestic EPCs do not pool with the DECs.** The same API gives 1,581 EPCs at the site
+  postcodes (`sense-energy build-epc`, `epc_sites.parquet`), which would cover 8 of the 16 sites
+  without a DEC. Their building-environment field is a design classification from the SBEM
+  assessment: 34 % of EPCs at these postcodes are "Air Conditioning" against 1 % of DECs, and
+  filling the eight sites from EPCs flips the environment result (joint p from < 0.001 to 0.86).
+  The EPC fields are kept as a separate table, not as moderators.
 - **The recommendations are the "opportunities".** 115 advisory reports linked to the current
   certificates carry 1,552 recommendations: fabric 335, controls 322, heating 284, renewables 214,
   cooling 170 (163 of them short payback: review the air-conditioning strategy, stop heating and
@@ -518,3 +524,43 @@ newer ones link an advisory report with the assessor's recommendations.
   78 (`dec_recommendations`). They are stored per site as counts and building shares by theme
   (`rec_*` in `dec_sites.parquet`) and are available as features or clustering inputs; 27 of the 83
   sites here have a report, too few for a moderator yet.
+
+### 8.8 Causal machine learning on the heat response (`cate_vs_slope_observables`, `cate_vs_slope_signature`, `cate_importance`)
+
+`sense-energy heat-causal-ml` (`analysis/heat_causal_ml.py`, tables in `code/reports/heat_causal_ml/`).
+The same panel (83 sites, 99,181 site-days) is put to two orthogonal learners. Log demand,
+the heat dose and the controls (cold dose, sunshine) are demeaned on specification B's fixed
+effects by alternating projections and the controls partialled out, so the learners see only the
+within-site, within-month, within-day variation the regressions used. An R-learner (LightGBM on
+the residual ratio, weighted by the squared residual dose) and an econml causal forest (ridge
+nuisance models, honest trees) are cross-fitted over five site folds, so every site's effect comes
+from a model that never saw it. Covariates: the estates, context and DEC descriptors of section 8.4
+plus three calendar modifiers (weekend, bank holiday, school summer); a second run adds the site's
+diurnal signature. A placebo shuffles the site covariates across sites.
+
+- **The forest recovers a quarter of the heterogeneity from observables; the linear moderators
+  recovered none.** Out of fold, the forest's site effects correlate 0.21 with the
+  fixed-effect slopes and recover 24 % of their true
+  between-site variance (calibration slope 0.19: the learned effects are
+  spread 5.7 points against a true 4.2, so they are
+  over-dispersed and should be shrunk before use). The R-learner with observables alone finds
+  nothing (-0.11); with the signature it reaches 0.21 and
+  18 %. The placebo sits at -0.06 and
+  -0.01.
+- **What the forest splits on** is the load shape and the climate, not the estates fields: the
+  night/day ratio (0.26 of importance), the winter/summer
+  ratio, size, the gas ratio and the summer maximum; with the signature in, the daytime sunshine
+  slope takes 0.44 and the afternoon excess 0.15.
+  The DEC fields do not enter the top splits.
+- **The calendar does not modify the heat response.** With site x weekday effects already in, the
+  forest's effect is 1.70 % per °C on weekdays and 1.82 at weekends,
+  and identical on bank holidays and in the school summer holiday. The weekend difference of
+  section 8.2 is a percentage effect on a lower baseline, not a different response.
+- **Who the forest gets right.** 35 sites have a learned effect significantly above zero
+  and 15 below; the large risers are recovered, the fallers are not (the forest
+  places most of them near zero): their heating tail has no observable to split on.
+
+The mean learned effect is 1.73 % per °C, an unweighted site-day average against
+the regression's pooled +1.1; the difference is the weighting. Next in this thread: shrink the
+forest effects (empirical Bayes against the fixed-effect slopes), and use the dated ERIC changes
+(section 7 of `estates_analysis.md`) as staggered treatments for installation effects.

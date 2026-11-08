@@ -552,6 +552,10 @@ def dec_descriptors(index: pd.Index, gia_m2: pd.Series | None = None) -> pd.Data
     else:
         d = pd.read_parquet(path).drop_duplicates("site_code").set_index("site_code")
         out = d.reindex(index)[cols].copy()
+    out["cert_source"] = np.where(out["dec_buildings"].fillna(0) > 0, "DEC", None)
+    # The non-domestic EPCs are kept apart: their "air conditioning" environment is a design
+    # classification (a third of EPCs against one in a hundred DECs), so pooling the two
+    # registers changes what the environment variable means. ``epc_sites.parquet`` carries them.
     has = out["dec_buildings"].fillna(0) > 0
     out.loc[~has, cols[1:]] = np.nan
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -827,6 +831,7 @@ def run() -> dict:
                     "dec_main_environment",
                     "dec_ac_class",
                     "dec_coverage",
+                    "cert_source",
                 ]
             ]
         )
@@ -905,6 +910,7 @@ def run() -> dict:
         "block_pooled_heat_pct": block_pooled(blocks, "cdd20"),
         "block_pooled_sun_pct": block_pooled(blocks, SUN),
         "dec_sites": int((f["dec_buildings"].fillna(0) > 0).sum()),
+        "cert_source_counts": f["cert_source"].value_counts().to_dict(),
         "dec_ac_class_counts": f["dec_ac_class"].value_counts().to_dict(),
         "dec_median_coverage": (
             round(float(f["dec_coverage"].median()), 2) if f["dec_coverage"].notna().any() else None
@@ -918,7 +924,7 @@ def run() -> dict:
             r["set"]: (round(float(r["r2_true"]), 3), int(r["sites"])) for _, r in ve.iterrows()
         },
     }
-    (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2))
+    (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     logger.info("heat drivers: %s", json.dumps(summary)[:600])
     return {
         "terms": terms,

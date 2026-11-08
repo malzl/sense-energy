@@ -367,6 +367,14 @@ The heat slope is taken apart on the same panel with a site-specific sunshine te
 \captionof{figure}{Left: each site's heat slope net of sunshine against the floor share its Display Energy Certificates record as air-conditioned, coloured by the dominant building environment; presence is near-binary and uninformative, the environment class is not. Right: the 1,552 recommendations in the 115 advisory reports linked to current certificates, by theme and payback class.}
 \end{figblock}
 
+\subsection{Causal machine learning}
+On the same residualised panel, an R-learner and an econml causal forest, cross-fitted over site folds so no site's effect is predicted by a model that saw it, search the covariate space for the heat response (Figure~\ref{fig:cate}). The forest's out-of-fold site effects correlate 0.21 with the fixed-effect slopes and recover 24\,\% of their true between-site variance from observables alone, where the linear moderators recovered none; a placebo with shuffled covariates gives $-0.06$. The forest splits on the load shape (night/day and winter/summer ratios), size and the summer maximum, not on the estates or certificate fields; with the site's diurnal signature added, the daytime sunshine slope takes 44\,\% of the importance. Calendar modifiers (weekend, bank holiday, school summer) do not change the effect. The learned effects are over-dispersed (calibration slope 0.19) and the fallers sit near zero: their heating tail has nothing to split on.
+
+\begin{figblock}
+\pair[0.9]{cate_vs_slope_observables}{cate_importance}
+\captionof{figure}{Left: each site's causal-forest heat effect, out of fold with its 95\,\% interval, against its fixed-effect heat slope net of sunshine. Right: causal-forest feature importance for both covariate sets.}\label{fig:cate}
+\end{figblock}
+
 \section{Estates returns}
 ERIC 2023/24 reports electricity, gas, floor area, connection capacity and building characteristics for 2,869 English NHS sites.
 
@@ -377,12 +385,18 @@ ERIC 2023/24 reports electricity, gas, floor area, connection capacity and build
 
 \begin{itemize}
 \item \textbf{Energy intensity} rises from 56\,kWh/m$^2$ at non-inpatient sites to 80 in mental health, 87 in community hospitals, 112 in general acute and 146 in specialist acute hospitals. Acute trusts use a median 63\,kWh per occupied bed-day, and floor area explains trust electricity better than beds.
+\item \textbf{Two returns, one year apart.} ERIC 2024/25 reports a change at 45 of the 109 panel sites in both returns: LED coverage up ten points or more at 35, solar generation new at 5, heat pumps installed at 4. A changepoint search on each site's daily demand supplies candidate dates; 32 of the changed sites without CHP show a step within a quarter of the reporting year, the small sites that went to full LED by 15 to 40\,\% down. These are dated treatments for the next event studies, and a warning that the 2023/24 descriptors are a year stale for a third of the panel.
 \item \textbf{Heat-pump headroom.} Gas heating replaced by air-source heat pumps (seasonal COP 2.55), added half-hour by half-hour to observed demand, puts 13 of 31 panel sites above their available capacity and raises their annual electricity by a median 77\,\%. Scaled to England with the panel's coincidence factor, 48\,\% of 631 gas-heated sites exceed capacity, including 68\,\% of general acute hospitals.
 \end{itemize}
 
 \begin{figblock}
 \pair[0.92]{meter_vs_eric}{headroom_by_type}
 \captionof{figure}{Left: annual metered electricity against ERIC electricity per site, coloured by meter check. Right: share of English sites above available capacity today and with heat pumps, by site type.}
+\end{figblock}
+
+\begin{figblock}
+\begin{center}\includegraphics[width=0.46\textwidth]{eric_changes}\end{center}
+\captionof{figure}{Sites without CHP that report a change between the two returns: the change in LED coverage against the largest step in daily demand within a quarter of the 2024/25 year; new solar and new heat pumps marked.}
 \end{figblock}
 
 \section{Public activity data linked to the trusts}

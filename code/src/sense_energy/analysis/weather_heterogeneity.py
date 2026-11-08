@@ -463,7 +463,7 @@ def run() -> dict:
         "joint_model_p": round(float(joint["p_joint"].iloc[0]), 3),
         "joint_model_sites": int(joint["sites"].iloc[0]),
     }
-    (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2))
+    (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     logger.info("heterogeneity: %s", summary["random_effects"])
     return {
         "slopes": slopes,

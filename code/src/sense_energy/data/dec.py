@@ -74,6 +74,10 @@ ENVIRONMENT_ORDER = (
 )
 ELECTRIC_FUELS = ("Grid Supplied Electricity", "Grid Displaced Electricity", "Electricity")
 ADVISORY_DIR = DEC_DIR / "advisory"
+EPC_SEARCH_DIR = DEC_DIR / "epc_search"
+EPC_CERT_DIR = DEC_DIR / "epc_certificates"
+#: Non-domestic EPCs are valid for ten years; a building whose latest is older is dropped.
+EPC_SINCE = pd.Timestamp("2016-01-01")
 PAYBACKS = ("short", "medium", "long", "other")
 #: Recommendation themes by keyword in the recommendation text (a recommendation can carry
 #: several themes).
@@ -132,15 +136,17 @@ def _request(path: str, params: dict[str, Any] | None = None) -> dict:
     raise RuntimeError(f"gave up on {path}")
 
 
-def search_postcode(postcode: str, refresh: bool = False) -> list[dict]:
-    """Every DEC registered at a postcode (cached)."""
-    SEARCH_DIR.mkdir(parents=True, exist_ok=True)
-    cache = SEARCH_DIR / f"{postcode}.json"
+def search_postcode(postcode: str, refresh: bool = False, kind: str = "display") -> list[dict]:
+    """Every certificate of ``kind`` (``display`` for DECs, ``non-domestic`` for EPCs) registered
+    at a postcode (cached)."""
+    directory = SEARCH_DIR if kind == "display" else EPC_SEARCH_DIR
+    directory.mkdir(parents=True, exist_ok=True)
+    cache = directory / f"{postcode}.json"
     if cache.exists() and not refresh:
         return json.loads(cache.read_text())
     rows, page = [], 1
     while True:
-        d = _request("/api/display/search", {"postcode": postcode, "current_page": page})
+        d = _request(f"/api/{kind}/search", {"postcode": postcode, "current_page": page})
         rows.extend(d.get("data") or [])
         pagination = d.get("pagination") or {}
         if not pagination.get("nextPage"):
@@ -172,23 +178,27 @@ def site_postcodes() -> pd.DataFrame:
     return sites.dropna(subset=["postcode_norm"]).reset_index(drop=True)
 
 
-def fetch_all(refresh: bool = False) -> pd.DataFrame:
+def fetch_all(refresh: bool = False, kind: str = "display") -> pd.DataFrame:
     """Search every site postcode and fetch every certificate found; returns the search rows."""
+    directory = CERT_DIR if kind == "display" else EPC_CERT_DIR
     sites = site_postcodes()
     rows = []
     for i, pc in enumerate(sorted(sites["postcode_norm"].unique())):
-        for r in search_postcode(pc, refresh):
+        for r in search_postcode(pc, refresh, kind):
             rows.append({**r, "postcode_norm": pc})
         if i % 25 == 0:
-            logger.info("searched %d postcodes, %d certificates so far", i + 1, len(rows))
+            logger.info("%s: searched %d postcodes, %d certificates so far", kind, i + 1, len(rows))
     found = pd.DataFrame(rows)
-    logger.info("%d certificates at %d postcodes", len(found), found["postcode_norm"].nunique())
-    for i, number in enumerate(found["certificateNumber"].unique()):
-        fetch_certificate(number, refresh)
+    if found.empty:
+        return found
+    logger.info(
+        "%s: %d certificates at %d postcodes", kind, len(found), found["postcode_norm"].nunique()
+    )
+    numbers = found["certificateNumber"].unique()
+    for i, number in enumerate(numbers):
+        fetch_certificate(number, refresh, directory)
         if i % 200 == 0:
-            logger.info(
-                "fetched %d of %d certificates", i + 1, found["certificateNumber"].nunique()
-            )
+            logger.info("%s: fetched %d of %d certificates", kind, i + 1, len(numbers))
     return found
 
 
@@ -266,6 +276,8 @@ def flatten(d: dict) -> dict:
         "ac_estimated_output": ac.get("ac_estimated_output"),
         "ac_inspection_commissioned": ac.get("ac_inspection_commissioned"),
         "operational_rating": _num(this.get("energy_rating", d.get("operational_rating"))),
+        "asset_rating": _num(d.get("asset_rating")),
+        "assessment_type": d.get("assessment_type"),
         "electricity_co2": _num(this.get("electricity_co2")),
         "heating_co2": _num(this.get("heating_co2")),
         "renewables_co2": _num(this.get("renewables_co2")),
@@ -284,9 +296,10 @@ def flatten(d: dict) -> dict:
     }
 
 
-def certificates_table() -> pd.DataFrame:
+def certificates_table(directory=None) -> pd.DataFrame:
+    directory = CERT_DIR if directory is None else directory
     rows = []
-    for path in sorted(CERT_DIR.glob("*.json")):
+    for path in sorted(directory.glob("*.json")) if directory.exists() else []:
         d = json.loads(path.read_text())
         if not d:
             continue
@@ -402,7 +415,7 @@ def _wshare(mask: pd.Series, w: pd.Series) -> float:
     return float((w * mask).sum() / w.sum()) if w.sum() > 0 else np.nan
 
 
-def aggregate_sites(latest: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
+def aggregate_sites(latest: pd.DataFrame, sites: pd.DataFrame, prefix: str = "dec") -> pd.DataFrame:
     """Floor-area-weighted site summaries of the latest certificate per building."""
     rows = []
     for _, s in sites.iterrows():
@@ -462,7 +475,10 @@ def aggregate_sites(latest: pd.DataFrame, sites: pd.DataFrame) -> pd.DataFrame:
                 b["environment"].eq(env), w
             )
         rows.append(row)
-    return pd.DataFrame(rows)
+    out = pd.DataFrame(rows)
+    if prefix != "dec":
+        out = out.rename(columns={c: prefix + c[3:] for c in out.columns if c.startswith("dec_")})
+    return out
 
 
 def _wmean(x: pd.Series, w: pd.Series) -> float:
@@ -500,5 +516,29 @@ def build(
         int((out["dec_ac_buildings"].fillna(0) > 0).sum()),
         len(recs),
         int(recs["advisory_number"].nunique()) if not recs.empty else 0,
+    )
+    return certs, out
+
+
+def build_epc(
+    fetch: bool = True, since: pd.Timestamp | None = EPC_SINCE
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Non-domestic EPCs at the site postcodes: the asset-rated buildings DECs do not cover
+    (leased premises, new builds), with the same HVAC fields. Outputs
+    ``interim/epc_certificates.parquet`` and ``interim/epc_sites.parquet`` (``epc_*`` columns)."""
+    if fetch:
+        fetch_all(kind="non-domestic")
+    certs = certificates_table(EPC_CERT_DIR)
+    INTERIM_DIR.mkdir(parents=True, exist_ok=True)
+    certs.to_parquet(INTERIM_DIR / "epc_certificates.parquet", index=False)
+    latest = latest_per_building(certs, since=since) if not certs.empty else certs
+    out = aggregate_sites(latest, site_postcodes(), prefix="epc")
+    out.to_parquet(INTERIM_DIR / "epc_sites.parquet", index=False)
+    logger.info(
+        "EPC: %d certificates, %d current buildings, %d of %d sites with an EPC at the postcode",
+        len(certs),
+        len(latest),
+        int((out["epc_buildings"] > 0).sum()),
+        len(out),
     )
     return certs, out

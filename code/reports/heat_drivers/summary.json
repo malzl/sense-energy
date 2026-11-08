@@ -141,6 +141,9 @@
     "evening (18\u201324)": -0.46
   },
   "dec_sites": 67,
+  "cert_source_counts": {
+    "DEC": 67
+  },
   "dec_ac_class_counts": {
     "mostly air-conditioned": 51,
     "no air conditioning": 16

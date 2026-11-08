@@ -15,6 +15,7 @@ serves sites from 1 kW to 3 MW.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 import holidays
@@ -34,7 +35,9 @@ def _holiday_set(years: range) -> set:
     return {np.datetime64(d, "D") for d in holidays.UK(subdiv="ENG", years=years)}
 
 
-def calendar_block(panel: Panel, o: Origin, hol: set) -> pd.DataFrame:
+def calendar_block(panel: Panel, o: Origin, hol: set, extended: bool = False) -> pd.DataFrame:
+    """Calendar features at the target times; ``extended`` adds the school summer holiday, the
+    Christmas period, the next-day holiday flag and the distance to the nearest bank holiday."""
     tp = o.target_pos
     dates = panel.local_date[tp]
     frame = pd.DataFrame(
@@ -54,7 +57,70 @@ def calendar_block(panel: Panel, o: Origin, hol: set) -> pd.DataFrame:
         }
     )
     frame["is_holiday_prev"] = np.isin(dates - np.timedelta64(1, "D"), list(hol)).astype("int8")
+    if extended:
+        local = panel.local[tp]
+        md = local.month.to_numpy() * 100 + local.day.to_numpy()
+        frame["school_summer"] = ((md >= 721) & (md <= 831)).astype("int8")
+        frame["christmas"] = ((md >= 1224) | (md <= 101)).astype("int8")
+        frame["is_holiday_next"] = np.isin(dates + np.timedelta64(1, "D"), list(hol)).astype("int8")
+        hol_arr = np.array(sorted(hol), dtype="datetime64[D]")
+        days = dates.astype("datetime64[D]")
+        nxt = np.searchsorted(hol_arr, days, side="left")
+        prv = np.clip(nxt - 1, 0, len(hol_arr) - 1)
+        nxt = np.clip(nxt, 0, len(hol_arr) - 1)
+        to_next = (hol_arr[nxt] - days).astype("timedelta64[D]").astype(int)
+        since_prev = (days - hol_arr[prv]).astype("timedelta64[D]").astype(int)
+        frame["days_to_holiday"] = np.clip(to_next, 0, 14).astype("int8")
+        frame["days_since_holiday"] = np.clip(since_prev, 0, 14).astype("int8")
     return frame
+
+
+@lru_cache(maxsize=1)
+def station_bias() -> pd.Series:
+    """Per site: mean daily-maximum temperature of the nearest stations minus ERA5's, on common
+    May-September days (``weather_daily_isd`` against ``weather_daily``); zero where no station."""
+    try:
+        era = pd.read_parquet(
+            INTERIM_DIR / "weather_daily.parquet", columns=["site_code", "date", "t_max"]
+        )
+        isd = pd.read_parquet(
+            INTERIM_DIR / "weather_daily_isd.parquet", columns=["site_code", "date", "t_max"]
+        )
+    except FileNotFoundError:
+        return pd.Series(dtype=float)
+    m = era.merge(isd, on=["site_code", "date"], suffixes=("_era5", "_isd"))
+    m = m[m["date"].dt.month.isin([5, 6, 7, 8, 9])]
+    return (m["t_max_isd"] - m["t_max_era5"]).groupby(m["site_code"]).mean()
+
+
+def heat_block(block: dict, sites: list[str], n: int, local_hours: np.ndarray) -> dict:
+    """Daily aggregates of the forecast weather for the target day, per site: maximum, minimum
+    and evening (18:00 on) temperature, the station-corrected maximum, degree terms, hot-day
+    flags and the day's solar radiation (kWh/m2, from the accumulated IFS field)."""
+    S = len(sites)
+    t = block["f_t2m_mean"].reshape(S, n)
+    rad = block["f_ssrd_mean"].reshape(S, n)
+    bias = station_bias().reindex(sites).fillna(0.0).to_numpy(dtype="float32")
+    eve = local_hours >= 18
+    with np.errstate(all="ignore"):
+        tmax = np.nanmax(t, axis=1)
+        tmin = np.nanmin(t, axis=1)
+        tmean = np.nanmean(t, axis=1)
+        teve = np.nanmean(np.where(eve[None, :], t, np.nan), axis=1)
+        daysum = (np.nanmax(rad, axis=1) - np.nanmin(rad, axis=1)) / 3.6e6
+    tmax_bc = tmax + bias
+    out = {
+        "f_t2m_daymax": tmax,
+        "f_t2m_daymin": tmin,
+        "f_t2m_eve": teve,
+        "f_t2m_daymax_bc": tmax_bc,
+        "f_cdd20": np.maximum(tmean - 20.0, 0.0),
+        "f_hdd14": np.maximum(14.0 - tmean, 0.0),
+        "f_hot25": (tmax_bc >= 25.0).astype("float32"),
+        "f_hot28": (tmax_bc >= 28.0).astype("float32"),
+        "f_ssrd_daysum": daysum,
+    }
+    return {k: np.repeat(np.asarray(v, dtype="float32"), n) for k, v in out.items()}
 
 
 def demand_block(panel: Panel, o: Origin, site: str) -> tuple[pd.DataFrame, float]:
@@ -431,9 +497,11 @@ def build_rows(
     hol: set,
     with_target: bool = True,
     extra_static: pd.DataFrame | None = None,
+    heat: bool = False,
 ) -> pd.DataFrame:
     """The full feature table for a set of origins, vectorised across sites per origin.
-    ``extra_static`` (index = series id) adds per-series static columns."""
+    ``extra_static`` (index = series id) adds per-series static columns; ``heat`` adds the
+    extended calendar and, with IFS weather, the daily heat features of ``heat_block``."""
     sites = panel.sites
     S = len(sites)
     Y = panel.y_imp[sites].to_numpy(dtype="float32")  # T x S
@@ -443,7 +511,7 @@ def build_rows(
     for o in origins:
         tp, op = o.target_pos, o.origin_pos
         n = len(tp)
-        cal = calendar_block(panel, o, hol)
+        cal = calendar_block(panel, o, hol, extended=heat)
         # site-level scale from the last 28 days
         with np.errstate(all="ignore"):
             scale = np.nanmean(Y[max(0, op - 48 * 28 + 1) : op + 1], axis=0)
@@ -490,6 +558,8 @@ def build_rows(
             parts = [cov.ifs_block(s, o, targets_ns) for s in sites]
             for c in parts[0]:
                 block[c] = np.concatenate([p[c] for p in parts])
+            if heat:
+                block.update(heat_block(block, sites, n, panel.local[tp].hour.to_numpy()))
         frame = pd.DataFrame(block)
         frame["site_code"] = np.repeat(np.array(sites), n)
         frame["organisation_type"] = cov.site_static["organisation_type"].to_numpy()[
