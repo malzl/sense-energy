@@ -119,6 +119,13 @@ Errors are largest on the working-day plateau, between 09:00 and 16:00, and smal
 \captionof{figure}{The largest site on one target day: observed demand with the predictive medians and 80\,\% intervals of Chronos-2 and of LightGBM with forecast weather.}
 \end{figblock}
 
+\paragraph{Hot days.} Scored by the kind of target day (ERA5 daily maximum at or above 28\,$^\circ$C, 214 site-days; 25--28, 234; other June--September, 1816; daily mean at or below 2\,$^\circ$C, 73), every model errs about half a point more on the hottest days than on other summer days and three to four points more on the coldest. It is not the weather forecast: LightGBM with realised ERA5 weather is no better on 28\,$^\circ$C days than with the IFS forecast (12.8 against 12.8\,\% nMAE), while without weather it loses 1.4 points. The gap is in how the models use heat; Section~\ref{sec:weather} prescribes the features (daily maximum and evening temperature, station-corrected maxima, the day's solar radiation, the school and Christmas calendar).%HEATVARIANT%
+
+\begin{figblock}
+\begin{center}\includegraphics[width=0.62\textwidth]{forecast_heat_days}\end{center}
+\captionof{figure}{Day-ahead error by the kind of target day, site mean, test window June 2025 to May 2026; models ordered by their error on days at or above 28\,$^\circ$C.}\label{fig:heatdays}
+\end{figblock}
+
 \section{Hierarchy and reconciliation}
 The data form an exact hierarchy: meters sum to sites, sites to trusts, trusts to NHS regions and regions to the national total of the 91 sites. Forecasting each level directly becomes more accurate with aggregation.
 

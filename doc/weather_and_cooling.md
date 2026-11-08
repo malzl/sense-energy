@@ -564,3 +564,29 @@ The mean learned effect is 1.73 % per °C, an unweighted site-day average agains
 the regression's pooled +1.1; the difference is the weighting. Next in this thread: shrink the
 forest effects (empirical Bayes against the fixed-effect slopes), and use the dated ERIC changes
 (section 7 of `estates_analysis.md`) as staggered treatments for installation effects.
+
+## 9. Does any of this reach the day-ahead forecasts? (`forecast_heat_days`)
+
+`analysis/forecast_heat_days.py` scores every model's test-window forecasts (June 2025 to May 2026)
+by the kind of target day: ERA5 daily maximum at or above 28 °C (214 site-days), 25–28 °C
+(235), other June–September days (1816), daily mean at or below 2 °C (73) and
+the rest (3917); nMAE per site as in the main experiment, then the site mean.
+
+| Model | 28 °C and above | 25–28 °C | other summer | at or below 2 °C | rest of year |
+|---|---|---|---|---|---|
+| LightGBM + IFS | 12.8 | 12.3 | 12.2 | 16.0 | 13.4 |
+| LightGBM + ERA5 (perfect weather) | 12.8 | 12.4 | 12.0 | 15.5 | 13.1 |
+| LightGBM, no weather | 14.3 | 13.1 | 12.4 | 16.2 | 13.7 |
+| Chronos-2 + IFS | 11.5 | 13.8 | 11.0 | 14.2 | 11.6 |
+| TimesFM-3 + IFS | 11.6 | 13.4 | 11.2 | 15.9 | 11.8 |
+| TabPFN-TS + IFS | 12.2 | 13.6 | 11.2 | 19.9 | 12.3 |
+
+- **Hot days are harder, by about half a point.** Every model errs more on 28 °C+ days than on
+  other summer days; the cold days (at or below 2 °C) are harder still, by three to four points.
+- **It is not the weather forecast.** LightGBM with realised ERA5 weather does no better on the
+  hottest days than with the IFS forecast (12.8 against 12.8), and without
+  weather at all it loses 1.4 points. The gap is in how the models use heat, which
+  is why the heat work prescribes the features: daily maximum and evening temperature rather than
+  the hourly series, the station correction of the hottest days, the day's solar radiation, and
+  the calendar (school summer holiday, Christmas, distance to a bank holiday) which the baseline set
+  carried only as weekday and bank-holiday flags.

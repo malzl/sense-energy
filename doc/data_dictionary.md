@@ -677,3 +677,23 @@ are missed and a shared postcode can bring in a neighbour's buildings; `heat_dri
 | `heat_causal_ml/cate_site.csv` | site × covariate set | learned heat effects per site (`tau_rlearner`, `tau_forest` with `tau_forest_lo/hi`), the fixed-effect slope (`slope_fe`, `slope_fe_se`), `set` = observables or observables + signature |
 | `heat_causal_ml/importance_*.csv` | covariate | causal-forest feature importance per covariate set |
 | `heat_causal_ml/summary.json` | — | agreement of the learned effects with the regression slopes (correlation, calibration slope, share of true variance recovered), placebo with shuffled covariates, calendar modifier effects |
+
+## JEPA site embeddings: `code/reports/jepa/`
+
+`sense-energy train-jepa` (`experiments/jepa.py`) and `sense-energy jepa-probe` (`analysis/jepa_probe.py`).
+A joint-embedding predictive architecture trained on the half-hourly panel: 28-day windows of one
+site's demand tokenised by day (48 half-hours scaled by the site's trailing 28-day mean, weekday
+one-hot, season), seven target days per window (a block of four and three singles) whose
+embeddings under an EMA target encoder the predictor must produce from the remaining 21 days;
+smooth-L1 loss in embedding space plus a VICReg variance term.
+
+| File | Grain | Contents |
+|---|---|---|
+| `site_embeddings.parquet` | site | `e0..e{d-1}`: mean target-encoder embedding of the site's valid days; `s_e0..`: the same over June–September; `days` embedded |
+| `day_embeddings.parquet` | site × local day | the embedding of every valid day (from non-overlapping full windows; the tail window averaged where it overlaps) |
+| `surprise.parquet` | site × local day | latent prediction error of the day when it alone is held out of its window: a learned anomaly / regime score |
+| `chronos_embeddings.parquet` | site | mean-pooled Chronos-2 encoder states of the site's hourly demand over twelve 14-day windows spread through the history, level-normalised (the foundation-model comparison) |
+| `probe.csv` | target × representation × probe model | out-of-fold `r2_oof`, `corr` and `share_true_variance` (DerSimonian-Laird) of the fixed-effect heat, cold and sunshine slopes predicted from each representation (JEPA, JEPA June–September, Chronos-2, observables, diurnal signature, combinations) by a ridge probe and by TabPFN, five site folds, repeated |
+| `probe_classification.csv` | target × representation | out-of-fold accuracy of building use and DEC environment from each representation, against the majority class |
+| `clusters.csv` | representation | k-means (k = 4) on each representation: adjusted Rand index against the demand-shape clusters and the share of heat-slope variance cluster membership explains |
+| `jepa.pt`, `train_log.csv`, `summary.json`, `probe_summary.json` | — | weights and configuration, training curve (loss, embedding SD), headline numbers |

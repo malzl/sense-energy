@@ -491,6 +491,30 @@ def heat_causal_ml_cmd() -> None:
         click.echo(f"{k}: forest {s[k]['forest']}")
 
 
+@cli.command("train-jepa")
+@click.option("--steps", default=4000, show_default=True)
+@click.option("--device", default=None, help="cuda:0, cuda:1 or cpu (default: first GPU)")
+def train_jepa_cmd(steps: int, device: str | None) -> None:
+    """Self-supervised day/site embeddings of the demand panel (JEPA); embeddings and surprise."""
+    from .experiments.jepa import run
+
+    s = run({"steps": steps}, device)["summary"]
+    click.echo(
+        f"JEPA: {s['sites']} sites, {s['days_embedded']} days embedded, final loss {s['final_loss']:.4f}"
+    )
+
+
+@cli.command("jepa-probe")
+@click.option("--device", default=None)
+def jepa_probe_cmd(device: str | None) -> None:
+    """Probe the JEPA, Chronos-2 and descriptor representations of each site for the heat slope."""
+    from .analysis.jepa_probe import run
+
+    s = run(device)["summary"]
+    for k, v in s["heat_share_true_variance"].items():
+        click.echo(f"{k}: share of true heat variance {v:.2f}")
+
+
 @cli.command("heat-drivers")
 def heat_drivers_cmd() -> None:
     """What moves the heat slope: sunshine, time of day, the week, moderators, a typology."""
