@@ -128,3 +128,30 @@ normaliser, not a forecasting covariate.
 `bed_day_intensity`, `beds_vs_demand`, `heat_model`, `heat_pump_week`, `headroom_panel`,
 `headroom_england`, `headroom_by_type`, `headroom_map` (PDF + PNG + data CSV, master figure
 specification).
+
+## 5. Sites with on-site CHP
+
+`sense-energy chp-profile` (`analysis/chp.py`, tables in `code/reports/chp/`, figure
+`chp_variability`). The 24 sites with fossil-fuel CHP carry 70 % of the panel's electricity; their
+meters record grid import (demand minus CHP output). Against the five acute hospitals without CHP
+their weekday import varies 3.6 times as much from day to day (median CV 36 % against 10 %), 9 % of
+their weekdays sit more than 30 % above the surrounding 21-weekday median (none at acute sites
+without CHP), and Chronos-2 + IFS ENS errs 16.2 % against 3.8 % nMAE with the same skill over
+seasonal naive. Their meter-to-ERIC ratios span 0.39 – 1.08 (10th – 90th percentile). Grid import
+at one non-CHP acute site, Trafford General, halves from spring 2025 (about 410 to 215 kW), which
+points to generation or a supply change after ERIC 2023/24.
+
+**What the CHP sites really use (`chp_generation`, ERIC 2024/25).** The 2024/25 return, published
+16 October 2025 and loaded as `interim/eric_2024_25_site.parquet` (`sense-energy build-eric`), adds
+fields the 2023/24 collection did not have: the CHP's electrical and thermal output, its gas input,
+electricity purchased from CHP, exported electricity and heat, and the unit sizes in kW. For 20 of
+the 24 CHP sites the return is internally plausible (capacity factor 0.05–1.05); for them the implied
+site demand (import + CHP output − exports) is 23.3 MW on average against 9.2 MW of grid import, so
+the import meters see 40 % of what these sites use. CHP covers a median 50 % of a site's electricity
+(University Hospital Coventry 76 %, Royal Preston 78 %, Wythenshawe 68 %) at a median capacity factor
+of 0.70; thermal output is 0.25–1.75 times electrical. Our metered import over the same year matches
+the returned import at most sites (ratio 0.95–1.06), and names the exceptions: our Wythenshawe meter
+carries 27 % of the site's import and Great Western 2 % (partial supplies), Royal Devon 159 % (more
+than the ERIC site). Three returns are unit errors (Norfolk and Norwich reports 2.4 MWh from a 1 MW
+unit, Cromer a unit with no output, Great Western 0.4 GWh from 1 MW). Table:
+`code/reports/chp/generation_2024_25.csv`.

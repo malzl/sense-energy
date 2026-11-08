@@ -80,3 +80,7 @@ htmlcov/
 Thumbs.db
 .idea/
 .vscode/
+
+# model weights and run logs under reports are build products
+code/reports/poc/tnp_models/
+code/reports/**/*.log

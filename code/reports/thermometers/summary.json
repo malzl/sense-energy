@@ -1,0 +1,205 @@
+{
+  "thermometers": [
+    "ERA5",
+    "ERA5-Land",
+    "stations"
+  ],
+  "common_site_days": 269419,
+  "panel_site_days": {
+    "ERA5": 106425,
+    "ERA5-Land": 106425,
+    "stations": 106425
+  },
+  "agreement_medians": {
+    "ERA5": {
+      "bias_mean_c": 0.074,
+      "rmse_mean_c": 0.624,
+      "rmse_max_c": 0.942,
+      "anomaly_corr": 0.989,
+      "anomaly_rmse_c": 0.438
+    },
+    "ERA5-Land": {
+      "bias_mean_c": -0.117,
+      "rmse_mean_c": 0.724,
+      "rmse_max_c": 1.261,
+      "anomaly_corr": 0.98,
+      "anomaly_rmse_c": 0.564
+    }
+  },
+  "effects_pct_per_c": {
+    "ERA5 | A | hdd14": [
+      1.34,
+      1.07,
+      1.62
+    ],
+    "ERA5 | A | cdd20": [
+      2.49,
+      1.4,
+      3.58
+    ],
+    "ERA5 | B | hdd14": [
+      1.07,
+      0.69,
+      1.44
+    ],
+    "ERA5 | B | cdd20": [
+      1.68,
+      0.34,
+      3.03
+    ],
+    "ERA5 | D | hdd14": [
+      1.11,
+      0.74,
+      1.48
+    ],
+    "ERA5 | D | cdd20": [
+      1.97,
+      0.63,
+      3.31
+    ],
+    "ERA5-Land | A | hdd14": [
+      1.36,
+      1.08,
+      1.64
+    ],
+    "ERA5-Land | A | cdd20": [
+      2.74,
+      1.65,
+      3.85
+    ],
+    "ERA5-Land | B | hdd14": [
+      1.02,
+      0.65,
+      1.38
+    ],
+    "ERA5-Land | B | cdd20": [
+      1.97,
+      0.73,
+      3.22
+    ],
+    "ERA5-Land | D | hdd14": [
+      1.06,
+      0.71,
+      1.41
+    ],
+    "ERA5-Land | D | cdd20": [
+      2.31,
+      1.08,
+      3.56
+    ],
+    "stations | A | hdd14": [
+      1.3,
+      1.03,
+      1.56
+    ],
+    "stations | A | cdd20": [
+      2.36,
+      1.37,
+      3.35
+    ],
+    "stations | B | hdd14": [
+      1.08,
+      0.79,
+      1.38
+    ],
+    "stations | B | cdd20": [
+      1.41,
+      0.23,
+      2.61
+    ],
+    "stations | D | hdd14": [
+      1.09,
+      0.79,
+      1.39
+    ],
+    "stations | D | cdd20": [
+      1.69,
+      0.51,
+      2.88
+    ]
+  },
+  "neighbours_only_pct_per_c": {
+    "ERA5 | A | hdd14_nb": [
+      1.35,
+      1.07,
+      1.63
+    ],
+    "ERA5 | A | cdd20_nb": [
+      2.93,
+      1.79,
+      4.08
+    ],
+    "ERA5 | B | hdd14_nb": [
+      1.36,
+      0.84,
+      1.88
+    ],
+    "ERA5 | B | cdd20_nb": [
+      3.47,
+      1.24,
+      5.76
+    ],
+    "ERA5-Land | A | hdd14_nb": [
+      1.37,
+      1.09,
+      1.66
+    ],
+    "ERA5-Land | A | cdd20_nb": [
+      3.06,
+      1.86,
+      4.27
+    ],
+    "ERA5-Land | B | hdd14_nb": [
+      1.27,
+      0.73,
+      1.81
+    ],
+    "ERA5-Land | B | cdd20_nb": [
+      3.36,
+      1.16,
+      5.61
+    ],
+    "stations | A | hdd14_nb": [
+      1.31,
+      1.03,
+      1.58
+    ],
+    "stations | A | cdd20_nb": [
+      2.72,
+      1.6,
+      3.85
+    ],
+    "stations | B | hdd14_nb": [
+      1.07,
+      0.55,
+      1.59
+    ],
+    "stations | B | cdd20_nb": [
+      2.81,
+      0.63,
+      5.04
+    ]
+  },
+  "hot30_pct": {
+    "ERA5 | B": [
+      -1.64,
+      -4.74,
+      1.56
+    ],
+    "ERA5-Land | B": [
+      0.92,
+      -3.2,
+      5.21
+    ],
+    "stations | B": [
+      0.26,
+      -2.98,
+      3.6
+    ]
+  },
+  "leads_joint_p": {
+    "ERA5": 0.031,
+    "ERA5-Land": 0.0,
+    "stations": 0.114
+  }
+}

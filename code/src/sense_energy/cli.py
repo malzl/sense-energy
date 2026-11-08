@@ -193,6 +193,41 @@ def build_mobility_cmd() -> None:
         click.echo(f"{name:<10} {path}")
 
 
+@cli.command("fetch-isd")
+@click.option("--year", "years", multiple=True, type=int, help="Years to pull; default 2022-2026.")
+def fetch_isd_cmd(years: tuple[int, ...]) -> None:
+    """NOAA ISD hourly station files for the stations nearest the sites (open data, no key)."""
+    from .data import isd
+
+    sites = pd.read_parquet(GEO_DIR / "sites_geo.parquet").dropna(subset=["latitude", "longitude"])
+    cand = isd.candidates(sites, isd.station_table())
+    ids = sorted(cand["station_id"].unique())
+    click.echo(f"{len(ids)} stations serve {cand['site_code'].nunique()} sites")
+    click.echo(str(isd.fetch(list(years) or list(range(2022, 2027)), ids)))
+
+
+@cli.command("build-isd")
+def build_isd_cmd() -> None:
+    """Station hourly table, nearest-station hourly series per site and the ISD daily table."""
+    from .data.isd import build
+
+    out = build()
+    click.echo(f"{len(out):,} site-days, {out['site_code'].nunique()} sites")
+
+
+@cli.command("build-weather-daily")
+@click.option(
+    "--product", default="reanalysis", show_default=True, help="interim/weather_<product>.parquet"
+)
+@click.option("--suffix", default="", help="Output interim/weather_daily<suffix>.parquet")
+def build_weather_daily_cmd(product: str, suffix: str) -> None:
+    """Daily degree days, hot hours, humidity, solar, wind, rain and snow per site from ERA5."""
+    from .data.weather_daily import build
+
+    out = build(product=product, suffix=suffix)
+    click.echo(f"{len(out):,} site-days, {out['site_code'].nunique()} sites")
+
+
 @cli.command("gpu-check")
 @click.option("--n-series", default=256, show_default=True)
 def gpu_check_cmd(n_series: int) -> None:
@@ -314,6 +349,141 @@ def estates_analysis_cmd() -> None:
         f"heat-pump headroom: {int((h['util_hp'] > 1).sum())} of {len(h)} panel sites exceed "
         f"capacity; England {float((e['util_hp'] > 1).mean()):.0%} of {len(e)} sites"
     )
+
+
+@cli.command("cooling-analysis")
+def cooling_analysis_cmd() -> None:
+    """Per-site electricity response to cooling degree days (month fixed effects, HAC)."""
+    from .analysis.cooling import run
+
+    s = run()["summary"]
+    for group in ("no_chp", "chp"):
+        g = s[group]
+        click.echo(
+            f"{group}: {g['sites']} sites, median {g['cdd_pct_q10_q50_q90'][1]} % per degC day, "
+            f"{g['significant_positive']} significantly positive"
+        )
+
+
+@cli.command("weather-events")
+def weather_events_cmd() -> None:
+    """Catalogue heatwaves, cold spells, high wind, heavy rain and snow at the sites (ERA5)."""
+    from .analysis.weather_events import run
+
+    s = run()["summary"]
+    click.echo(f"national events: {s['national_events']}")
+    click.echo(f"site events: {s['site_events']}")
+
+
+@cli.command("weather-response")
+def weather_response_cmd() -> None:
+    """Nonlinear demand response to temperature (binned, fixed effects), by hour, persistence."""
+    from .analysis.weather_response import run
+
+    s = run()["summary"]
+    click.echo(f"{s['site_days']:,} site-days; sites {s['sites']}")
+    for k, v in s["pct_ci"].items():
+        if "daily mean" in k:
+            click.echo(f"{k}: {v[0]:+.1f} % [{v[1]:+.1f}, {v[2]:+.1f}]")
+
+
+@cli.command("chp-profile")
+def chp_profile_cmd() -> None:
+    """How sites with fossil-fuel CHP differ: import volatility, jump days, forecast error."""
+    from .analysis.chp import run
+
+    click.echo(run()["summary"].round(3).to_string(index=False))
+
+
+@cli.command("weather-causal")
+@click.option("--n-perm", default=200, show_default=True, help="Randomisation-inference draws.")
+def weather_causal_cmd(n_perm: int) -> None:
+    """Quasi-experimental weather effects: nested fixed effects, stacked event studies, placebos."""
+    from .analysis.weather_causal import run
+
+    s = run(n_perm=n_perm)["summary"]
+    for k, v in s["twfe_pct_per_degree"].items():
+        if k.startswith("no CHP"):
+            click.echo(f"{k}: {v[0]:+.2f} % per degC [{v[1]:+.2f}, {v[2]:+.2f}]")
+    for r in s["event_per_degree"]:
+        click.echo(
+            f"{r['type']} | {r['group']}: ATT {r['demand_att_pct']:+.1f} %, {r['pct_per_c']:+.2f} % per degC"
+        )
+    click.echo(f"randomisation p: { {k: v['p_two_sided'] for k, v in s['randomisation'].items()} }")
+
+
+@cli.command("thermometers")
+def thermometers_cmd() -> None:
+    """Compare site thermometers (ERA5, ERA5-Land, stations) and re-estimate the weather effects."""
+    from .analysis.thermometers import run
+
+    s = run()["summary"]
+    click.echo(f"{s['common_site_days']:,} common site-days; agreement {s['agreement_medians']}")
+    for k, v in s["effects_pct_per_c"].items():
+        if "| D |" in k:
+            click.echo(f"{k}: {v[0]:+.2f} [{v[1]:+.2f}, {v[2]:+.2f}]")
+
+
+@cli.command("weather-heterogeneity")
+def weather_heterogeneity_cmd() -> None:
+    """Site-level cold and heat slopes, their true spread, moderators and hour-of-day by use."""
+    from .analysis.weather_heterogeneity import run
+
+    s = run()["summary"]
+    for dose, r in s["random_effects"].items():
+        click.echo(
+            f"{dose}: pooled {r['pooled_pct']:+.2f} % per degC, true SD between sites {r['tau_pct']:.2f}, "
+            f"I2 {r['i2']:.2f}; {r['sites_significant_positive']} sites > 0, {r['sites_significant_negative']} < 0"
+        )
+    click.echo(f"moderator joint p: {s['moderator_joint_p']}")
+
+
+@cli.command("build-site-context")
+def build_site_context_cmd() -> None:
+    """Rural-urban class, LSOA population density and REPD solar schemes for every site."""
+    from .data.site_context import build
+
+    out = build()
+    click.echo(out["urban"].value_counts(dropna=False).to_string())
+
+
+@cli.command("build-eric")
+@click.option("--year", default="2024_25", show_default=True, help="2023_24 or 2024_25")
+def build_eric_cmd(year: str) -> None:
+    """Load an ERIC collection (site and trust tables) into interim/eric_<year>_*.parquet."""
+    from .data.eric import build
+
+    site, trust = build(year=year)
+    click.echo(f"ERIC {year}: {len(site)} sites, {len(trust)} trusts")
+
+
+@cli.command("build-dec")
+@click.option(
+    "--no-fetch", is_flag=True, help="Rebuild the tables from the cached certificates only."
+)
+def build_dec_cmd(no_fetch: bool) -> None:
+    """Display Energy Certificates at every site postcode: fetch (cached), flatten, aggregate."""
+    from .data.dec import build
+
+    certs, sites = build(fetch=not no_fetch)
+    click.echo(
+        f"{len(certs)} certificates; {int((sites['dec_buildings'] > 0).sum())} sites with a DEC"
+    )
+
+
+@cli.command("heat-drivers")
+def heat_drivers_cmd() -> None:
+    """What moves the heat slope: sunshine, time of day, the week, moderators, a typology."""
+    from .analysis.heat_drivers import run
+
+    s = run()["summary"]
+    tau = s["tau_pct"]
+    click.echo(
+        f"heat slope: true SD between sites {tau['plain']:.2f} -> "
+        f"{tau['sunshine_controlled']:.2f} points with site sunshine terms"
+    )
+    click.echo(f"types: {s['types']}")
+    click.echo(f"variance explained: {s['variance_explained']}")
 
 
 @cli.command("cluster-demand")

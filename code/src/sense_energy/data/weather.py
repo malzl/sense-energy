@@ -33,13 +33,17 @@ from ..logging_utils import get_logger
 
 logger = get_logger(__name__)
 
-#: Hour-of-day strings each product accepts. EDA is archived 3-hourly.
+#: Hour-of-day strings each product accepts. EDA is archived 3-hourly. ``land`` is
+#: ERA5-Land (``reanalysis-era5-land``): hourly, 0.1 deg, land points only, and its
+#: requests carry no ``product_type``.
 TIMES: dict[str, list[str]] = {
     "reanalysis": [f"{h:02d}:00" for h in range(24)],
     "ensemble_members": [f"{h:02d}:00" for h in range(0, 24, 3)],
     "ensemble_mean": [f"{h:02d}:00" for h in range(0, 24, 3)],
     "ensemble_spread": [f"{h:02d}:00" for h in range(0, 24, 3)],
+    "land": [f"{h:02d}:00" for h in range(24)],
 }
+NO_PRODUCT_TYPE = {"land"}
 
 #: CDS variable name -> NetCDF short name, for the extracted site table.
 SHORT_NAMES: dict[str, str] = {
@@ -72,7 +76,7 @@ def build_request(
         raise KeyError(f"Unknown product_type '{product_type}'. Known: {sorted(TIMES)}")
     days_in_month = pd.Period(f"{year}-{month:02d}").days_in_month
     return {
-        "product_type": [product_type],
+        **({} if product_type in NO_PRODUCT_TYPE else {"product_type": [product_type]}),
         "variable": list(config["variables"]),
         "year": [str(year)],
         "month": [f"{month:02d}"],
@@ -214,11 +218,33 @@ def fetch_all(config: dict[str, Any], product_types: list[str] | None = None) ->
 # --------------------------------------------------------------------------- #
 
 
-def extract_sites(nc_path: Path, sites: pd.DataFrame) -> pd.DataFrame:
+def nearest_valid_points(ds, site_lat: np.ndarray, site_lon: np.ndarray, var: str):
+    """Coordinates of the nearest grid point with data for each site. ERA5-Land has no
+    values over the sea, so a coastal site's nearest point can be empty; this walks to
+    the nearest land point instead (great-circle distance on the grid)."""
+    time_dim = "valid_time" if "valid_time" in ds.dims else "time"
+    valid = ds[var].isel({time_dim: 0}).notnull().to_numpy()  # noqa: PD004 - xarray, not pandas
+    glat, glon = np.meshgrid(ds["latitude"].to_numpy(), ds["longitude"].to_numpy(), indexing="ij")
+    glat, glon = glat[valid], glon[valid]
+    la, lo = np.radians(site_lat), np.radians(site_lon)
+    ga, go = np.radians(glat), np.radians(glon)
+    a = (
+        np.sin((la[:, None] - ga[None, :]) / 2) ** 2
+        + np.cos(la)[:, None] * np.cos(ga)[None, :] * np.sin((lo[:, None] - go[None, :]) / 2) ** 2
+    )
+    nearest = np.argmin(a, axis=1)
+    return glat[nearest], glon[nearest]
+
+
+def extract_sites(
+    nc_path: Path, sites: pd.DataFrame, valid_only: str | None = None
+) -> pd.DataFrame:
     """Nearest-grid-point values for each site, as a long table.
 
     Output columns: ``site_code``, ``datetime`` (UTC), ``member`` (0 for the
-    deterministic product), plus one column per variable short name.
+    deterministic product), plus one column per variable short name. With
+    ``valid_only`` set to a variable name, the nearest grid point *with data* in
+    that variable is used (land-only products).
     """
     import xarray as xr
 
@@ -227,11 +253,14 @@ def extract_sites(nc_path: Path, sites: pd.DataFrame) -> pd.DataFrame:
         lon = ds["longitude"]
         # CDS serves area subsets as -180..180; guard the 0..360 case anyway.
         site_lon = sites["longitude"].to_numpy()
+        site_lat = sites["latitude"].to_numpy()
         if float(lon.max()) > 180:
             site_lon = np.where(site_lon < 0, site_lon + 360, site_lon)
+        if valid_only:
+            site_lat, site_lon = nearest_valid_points(ds, site_lat, site_lon, valid_only)
 
         picked = ds.sel(
-            latitude=xr.DataArray(sites["latitude"].to_numpy(), dims="site"),
+            latitude=xr.DataArray(site_lat, dims="site"),
             longitude=xr.DataArray(site_lon, dims="site"),
             method="nearest",
         )
@@ -262,10 +291,11 @@ def build_weather_sites(
             f"No NetCDF files under {output_dir(config) / product_type}. Run fetch-weather first."
         )
 
+    valid_only = "t2m" if product_type in NO_PRODUCT_TYPE else None
     frames = []
     for path in paths:
         logger.info("Extracting %s", path.name)
-        frames.append(extract_sites(path, located))
+        frames.append(extract_sites(path, located, valid_only=valid_only))
     out = pd.concat(frames, ignore_index=True).sort_values(["site_code", "member", "datetime"])
     out = out.drop_duplicates(["site_code", "member", "datetime"], keep="last").reset_index(
         drop=True

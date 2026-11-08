@@ -12,7 +12,10 @@ project uses and makes them numeric:
 * building: gross internal floor area, heated volume, a floor-area-weighted mean
   construction year from the age-profile bands, LED coverage, backlog cost;
 * technology: heat pumps, fossil-fuel CHP units, gas boilers older than 10 years,
-  EV charge points; site type, tenure, single bedrooms.
+  EV charge points; site type, tenure, single bedrooms;
+* overheating: the number of occasions on which an occupied ward or clinical area
+  exceeded 26 degC and triggered a risk assessment (field S16_07), the one estates
+  field that speaks to cooling; trust-owned and third-party solar consumed on site.
 
 Output: ``interim/eric_2023_24_site.parquet`` and ``interim/eric_2023_24_trust.parquet``.
 """
@@ -30,6 +33,26 @@ logger = get_logger(__name__)
 ERIC_DIR = EXTERNAL_DIR / "eric"
 STEM = "energy_systems_catapult.estates_returns_information_collection_eric_2023_24.eric_2023_24_"
 FY_START, FY_END = "2023-04-01", "2024-04-01"  # half-open, local calendar
+#: The collections held: the ESC extract of 2023/24 and the NHS England files of 2024/25
+#: (published 16 October 2025, latin-1 encoded, with new CHP, export and floor-area fields).
+YEARS = {
+    "2023_24": {
+        "dir": ERIC_DIR,
+        "files": {k: f"{STEM}{k}_data.csv" for k in ("site", "trust", "pfi")},
+        "encoding": "utf-8",
+        "fy": ("2023-04-01", "2024-04-01"),
+    },
+    "2024_25": {
+        "dir": EXTERNAL_DIR / "eric_2024_25",
+        "files": {
+            "site": "ERIC_-_2024_25_-_Site_data.csv",
+            "trust": "ERIC_-_2024_25_-_Trust_data.csv",
+            "pfi": "ERIC_-_2024_25_-_PFI_data.csv",
+        },
+        "encoding": "latin-1",
+        "fy": ("2024-04-01", "2025-04-01"),
+    },
+}
 
 ELEC_COMPONENTS = [
     "Electricity - green electricity consumed (kWh)",
@@ -55,12 +78,29 @@ NUMERIC = {
     "old_boilers_large": "Number of primary heating gas boilers older than 10 years (100kW and above) (No.)",
     "old_boilers_small": "Number of primary heating gas boilers older than 10 years (less than 100kW) (No.)",
     "ev_charge_points": "Electric vehicle charging points (No.)",
+    "solar_consumed_kwh": "Electricity - trust owned solar consumed (kWh)",
+    "third_party_solar_kwh": "Electricity - third party owned solar consumed (kWh)",
+    "overheating_occurrences": "Overheating occurrences triggering a risk assessment (No.)",
     "single_rooms_ensuite": "Single bedrooms for patients with en-suite facilities (No.)",
     "single_rooms_other": "Single bedrooms for patients without en-suite facilities (No.)",
     "backlog_high_risk_gbp": "Cost to eradicate high risk backlog (£)",
     "backlog_significant_risk_gbp": "Cost to eradicate significant risk backlog (£)",
+    # 2024/25 additions (missing in 2023/24)
+    "occupied_floor_area_m2": "Occupied floor area (m²)",
+    "chp_elec_output_kwh": "Electrical energy output of CHP system/s (kWh)",
+    "chp_thermal_output_kwh": "Thermal energy output of CHP system/s (kWh)",
+    "chp_gas_input_kwh": "Fossil energy (Gas) input to CHP system/s (kWh)",
+    "chp_other_input_kwh": "Fossil energy (Other) input to CHP system/s (kWh)",
+    "chp_elec_purchased_kwh": "Electricity purchased from CHP consumed (kWh)",
+    "chp_thermal_purchased_kwh": "Thermal energy purchased from CHP consumed (kWh)",
+    "chp_thermal_wasted_kwh": "Thermal energy discharged to waste (kWh)",
+    "exported_elec_kwh": "Exported electricity (kWh)",
+    "exported_thermal_kwh": "Exported thermal energy (kWh)",
+    "chp_elec_kw": "CHP unit/s size - electrical (kW)",
+    "chp_thermal_kw": "CHP unit/s size - thermal (kW)",
 }
 AGE_BANDS = {  # band -> representative construction year
+    "Age profile - 2025 to 2034 (%)": 2029.5,  # 2024/25 only
     "Age profile - 2015 to 2024 (%)": 2019.5,
     "Age profile - 2005 to 2014 (%)": 2009.5,
     "Age profile - 1995 to 2004 (%)": 1999.5,
@@ -83,16 +123,37 @@ def _num(s: pd.Series) -> pd.Series:
     )
 
 
+def normalise_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    """Column names as in the 2023/24 extract: the 2024/25 files are latin-1 and carry the pound
+    and squared signs as replacement characters, and whitespace varies."""
+    import re
+
+    def fix(c: str) -> str:
+        c = c.replace("\ufffd", "£").replace("Â", "").replace("Ã‚", "")
+        return re.sub(r"\s+", " ", c).strip()
+
+    return frame.rename(columns={c: fix(c) for c in frame.columns})
+
+
 def mean_build_year(frame: pd.DataFrame) -> pd.Series:
     """Floor-area-weighted mean construction year from the ERIC age-profile bands."""
-    w = pd.concat([_num(frame[c]).rename(c) for c in AGE_BANDS], axis=1)
+    bands = {c: y for c, y in AGE_BANDS.items() if c in frame.columns}
+    w = pd.concat([_num(frame[c]).rename(c) for c in bands], axis=1)
     total = w.sum(axis=1, min_count=1)
-    years = (w * pd.Series(AGE_BANDS)).sum(axis=1, min_count=1)
+    years = (w * pd.Series(bands)).sum(axis=1, min_count=1)
     return (years / total).where(total > 0)
 
 
-def load_site(path=None) -> pd.DataFrame:
-    raw = pd.read_csv(path or ERIC_DIR / f"{STEM}site_data.csv", low_memory=False)
+def _path(kind: str, year: str):
+    y = YEARS[year]
+    return y["dir"] / y["files"][kind]
+
+
+def load_site(path=None, year: str = "2023_24") -> pd.DataFrame:
+    raw = pd.read_csv(
+        path or _path("site", year), low_memory=False, encoding=YEARS[year]["encoding"]
+    )
+    raw = normalise_columns(raw)
     out = pd.DataFrame(
         {
             "site_code": raw["Site Code"].astype(str).str.strip(),
@@ -108,9 +169,11 @@ def load_site(path=None) -> pd.DataFrame:
     )
     parts = pd.concat([_num(raw[c]) for c in ELEC_COMPONENTS], axis=1)
     out["elec_kwh"] = parts.sum(axis=1, min_count=1)
-    out["elec_headline_kwh"] = _num(raw["Electrical energy consumption (KWh)"])
+    headline = "Electrical energy consumption (KWh)"  # dropped from the 2024/25 collection
+    out["elec_headline_kwh"] = _num(raw[headline]) if headline in raw else np.nan
     for name, col in NUMERIC.items():
-        out[name] = _num(raw[col])
+        out[name] = _num(raw[col]) if col in raw else np.nan
+    out["collection"] = year.replace("_", "/")
     out["mean_build_year"] = mean_build_year(raw)
     out["fossil_heat_kwh"] = out[["gas_kwh", "oil_kwh"]].sum(axis=1, min_count=1)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -120,8 +183,11 @@ def load_site(path=None) -> pd.DataFrame:
     return out
 
 
-def load_trust(path=None) -> pd.DataFrame:
-    raw = pd.read_csv(path or ERIC_DIR / f"{STEM}trust_data.csv", low_memory=False)
+def load_trust(path=None, year: str = "2023_24") -> pd.DataFrame:
+    raw = pd.read_csv(
+        path or _path("trust", year), low_memory=False, encoding=YEARS[year]["encoding"]
+    )
+    raw = normalise_columns(raw)
     out = raw.rename(columns={"Trust Code": "trust_code", "Trust Name": "trust_name"})
     out["trust_code"] = out["trust_code"].astype(str).str.strip()
     return out
@@ -146,15 +212,16 @@ def locate(site: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def build(geocode: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
-    site, trust = load_site(), load_trust()
+def build(geocode: bool = True, year: str = "2023_24") -> tuple[pd.DataFrame, pd.DataFrame]:
+    site, trust = load_site(year=year), load_trust(year=year)
     if geocode:
         site = locate(site)
     INTERIM_DIR.mkdir(parents=True, exist_ok=True)
-    site.to_parquet(INTERIM_DIR / "eric_2023_24_site.parquet", index=False)
-    trust.to_parquet(INTERIM_DIR / "eric_2023_24_trust.parquet", index=False)
+    site.to_parquet(INTERIM_DIR / f"eric_{year}_site.parquet", index=False)
+    trust.to_parquet(INTERIM_DIR / f"eric_{year}_trust.parquet", index=False)
     logger.info(
-        "ERIC 2023/24: %d sites (%d with electricity, %d with max demand and capacity), %d trusts",
+        "ERIC %s: %d sites (%d with electricity, %d with max demand and capacity), %d trusts",
+        year.replace("_", "/"),
         len(site),
         int((site["elec_kwh"] > 0).sum()),
         int(((site["max_demand_kw"] > 0) & (site["capacity_kva"] > 0)).sum()),

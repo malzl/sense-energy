@@ -1,0 +1,26 @@
+# ERA5-Land from the Copernicus Climate Data Store: the land-surface reanalysis at
+# 0.1 deg (about 9 km), hourly, driven by ERA5 - a finer thermometer for the sites
+# than ERA5's 0.25 deg cells (coasts, cities). Same credentials as weather.yaml.
+#
+# Only the thermometer variables: ERA5-Land accumulates fluxes from 00 UTC of the
+# day rather than hourly, so solar and rain stay with ERA5. The grid has no values
+# over the sea; extraction takes the nearest land point.
+
+dataset: reanalysis-era5-land
+
+start: "2022-12"
+end: "2026-05"
+
+# [North, West, South, East]; all sites sit in 50.5-54.3N, -4.2-1.4E.
+area: [55.0, -5.0, 50.0, 2.0]
+
+product_types: [land]
+
+variables:
+  - 2m_temperature                        # t2m
+  - 2m_dewpoint_temperature               # d2m
+  - surface_pressure                      # sp  - for the enthalpy term of the daily table
+
+max_workers: 3
+
+output_subdir: weather/era5_land

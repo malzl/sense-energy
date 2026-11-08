@@ -298,6 +298,169 @@ COVERAGE_FLAG_COLORS = {
 }
 #: Electrification scenario: today's demand and demand with all gas heat from heat pumps.
 SCENARIO_COLORS = {"today": "#7A7A7A", "with heat pumps": "#D55E00"}
+#: Extreme-weather event types (analysis/weather_events.py); fixed order and colours.
+WEATHER_EVENT_ORDER = ("heatwave", "cold spell", "snow", "heavy rain", "high wind")
+WEATHER_EVENT_COLORS = {
+    "heatwave": "#D55E00",
+    "cold spell": "#0072B2",
+    "snow": "#56B4E9",
+    "heavy rain": "#009E73",
+    "high wind": "#7A7A7A",
+}
+#: Sites with and without fossil-fuel CHP (grid import vs demand); CHP matches the coverage flag.
+CHP_NAMES = {False: "no on-site CHP", True: "on-site CHP"}
+CHP_COLORS = {"no on-site CHP": "#0072B2", "on-site CHP": "#CC79A7"}
+#: Site groups of the CHP comparison (analysis/chp.py).
+CHP_GROUP_ORDER = ("on-site CHP", "acute, no CHP", "other sites")
+CHP_GROUP_COLORS = {"on-site CHP": "#CC79A7", "acute, no CHP": "#0072B2", "other sites": "#7A7A7A"}
+#: Site groups of the weather-response analysis (analysis/weather_response.py).
+SITE_GROUP_ORDER = ("inpatient", "outpatient", "on-site CHP")
+SITE_GROUP_COLORS = {"inpatient": "#0072B2", "outpatient": "#56B4E9", "on-site CHP": "#CC79A7"}
+#: Quasi-experimental weather designs (analysis/weather_causal.py): the two temperature doses
+#: take the cold-spell and heatwave colours; specifications in the order they nest.
+DOSE_NAMES = {"hdd14": "cold: per °C below 14 °C", "cdd20": "hot: per °C above 20 °C"}
+DOSE_COLORS = {"hdd14": "#0072B2", "cdd20": "#D55E00"}
+SPEC_ORDER = ("A", "B", "C", "D")
+SPEC_COLORS = {"A": "#7A7A7A", "B": "#0072B2", "C": "#56B4E9", "D": "#D55E00"}
+SPEC_NAMES = {
+    "A": "site × month",
+    "B": "+ date",
+    "C": "+ region × date",
+    "D": "B + weather",
+}
+EXTREME_DAY_NAMES = {"hot28": "28–30 °C day", "hot30": "30 °C+ day"}
+EXTREME_DAY_COLORS = {"hot28": "#E69F00", "hot30": "#D55E00"}
+SPATIAL_SERIES_COLORS = {"temperature anomaly": "#0072B2", "demand residual, spec B": "#7A7A7A"}
+#: Site thermometers (analysis/thermometers.py): the 25 km grid is the baseline grey.
+THERMOMETER_ORDER = ("ERA5", "ERA5-Land", "stations")
+THERMOMETER_NAMES = {
+    "ERA5": "ERA5 (25 km grid)",
+    "ERA5-Land": "ERA5-Land (9 km grid)",
+    "stations": "Met Office stations",
+}
+THERMOMETER_COLORS = {"ERA5": "#7A7A7A", "ERA5-Land": "#0072B2", "stations": "#D55E00"}
+#: Building-use groups of the heterogeneity analysis (analysis/weather_heterogeneity.py).
+USE_ORDER = (
+    "inpatient, acute",
+    "inpatient, community",
+    "mental health",
+    "non-inpatient",
+    "support",
+)
+USE_COLORS = {
+    "inpatient, acute": "#0072B2",
+    "inpatient, community": "#56B4E9",
+    "mental health": "#009E73",
+    "non-inpatient": "#E69F00",
+    "support": "#7A7A7A",
+}
+MODERATOR_ORDER = (
+    "building use",
+    "demand-shape cluster",
+    "trust type",
+    "site size (log mean kW)",
+    "mean build year",
+    "summer mean daily maximum (°C)",
+    "gas / electricity ratio",
+    "LED share (%)",
+)
+# --- what moves heat (analysis/heat_drivers.py) ---------------------------
+TERM_NAMES = {"hdd14": "cold", "cdd20": "heat", "solar_kwh_m2": "sunshine"}
+TERM_COLORS = {"hdd14": "#0072B2", "cdd20": "#D55E00", "solar_kwh_m2": "#E69F00"}
+HEAT_TYPE_ORDER = (
+    "rises with heat",
+    "rises with heat, falls with sunshine",
+    "falls with sunshine only",
+    "falls with heat",
+    "neither",
+)
+HEAT_TYPE_COLORS = {
+    "rises with heat": "#D55E00",
+    "rises with heat, falls with sunshine": "#CC79A7",
+    "falls with sunshine only": "#E69F00",
+    "falls with heat": "#0072B2",
+    "neither": "#7A7A7A",
+}
+HEAT_SIGN_ORDER = ("rises with heat", "falls with heat", "neither")
+HEAT_SIGN_COLORS = {
+    "rises with heat": "#D55E00",
+    "falls with heat": "#0072B2",
+    "neither": "#7A7A7A",
+}
+BLOCK_ORDER = ("night (00–06)", "morning (06–12)", "afternoon (12–18)", "evening (18–24)")
+BLOCK_COLORS = {
+    "night (00–06)": "#0072B2",
+    "morning (06–12)": "#56B4E9",
+    "afternoon (12–18)": "#D55E00",
+    "evening (18–24)": "#CC79A7",
+}
+URBAN_ORDER = ("major conurbation", "minor conurbation", "city and town", "rural")
+URBAN_COLORS = {
+    "major conurbation": "#D55E00",
+    "minor conurbation": "#E69F00",
+    "city and town": "#0072B2",
+    "rural": "#009E73",
+}
+HEAT_MODERATOR_CATEGORICAL = (
+    "building use",
+    "air conditioning (DEC)",
+    "building environment (DEC)",
+    "urban form",
+    "tenure",
+    "heat pumps (ERIC)",
+    "overheating reported (ERIC)",
+    "solar generation (ERIC)",
+)
+HEAT_MODERATOR_CONTINUOUS = (
+    "air-conditioned floor share (DEC)",
+    "cooled floor share, AC or mixed mode (DEC)",
+    "electric-heating floor share (DEC)",
+    "building electricity (log kWh/m², DEC)",
+    "operational rating (DEC)",
+    "population density (log)",
+    "electricity intensity (log kWh/m²)",
+    "peak demand (W/m²)",
+    "night / day ratio",
+    "weekend / weekday ratio",
+    "winter / summer ratio",
+    "site size (log mean kW)",
+    "mean build year",
+    "gas / electricity ratio",
+    "summer mean daily maximum (°C)",
+)
+VARIANCE_SET_ORDER = (
+    "site sunshine term",
+    "building use",
+    "urban form and density",
+    "estates descriptors",
+    "load shape",
+    "all descriptors",
+    "cooling plant (DEC)",
+    "heating and intensity (DEC)",
+    "all descriptors and DEC",
+    "diurnal signature",
+)
+DEC_ENV_ORDER = (
+    "air conditioning",
+    "mixed mode",
+    "heating, mechanical ventilation",
+    "heating, natural ventilation",
+    "unconditioned",
+)
+DEC_ENV_COLORS = {
+    "air conditioning": "#D55E00",
+    "mixed mode": "#E69F00",
+    "heating, mechanical ventilation": "#56B4E9",
+    "heating, natural ventilation": "#0072B2",
+    "unconditioned": "#7A7A7A",
+}
+
+PERSISTENCE_NAMES = {
+    "hot_day2": "hot day 2",
+    "hot_day3plus": "hot day 3+",
+    "cold_day2": "cold day 2",
+    "cold_day3plus": "cold day 3+",
+}
 #: Grid headroom classes: peak over available capacity.
 HEADROOM_CLASSES = {"below 80 %": "#009E73", "80 to 100 %": "#E69F00", "above capacity": "#D55E00"}
 

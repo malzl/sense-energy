@@ -1,0 +1,46 @@
+{
+  "primary_measure": "cdd_15_5",
+  "window": [
+    "2022-12-01",
+    "2026-05-08"
+  ],
+  "no_chp": {
+    "sites": 107,
+    "cdd_pct_q10_q50_q90": [
+      -1.72,
+      0.78,
+      3.87
+    ],
+    "demand_weighted_cdd_pct": 1.39,
+    "significant_positive": 51,
+    "significant_negative": 21
+  },
+  "chp": {
+    "sites": 21,
+    "cdd_pct_q10_q50_q90": [
+      1.73,
+      3.94,
+      10.38
+    ],
+    "demand_weighted_cdd_pct": 5.99,
+    "significant_positive": 14,
+    "significant_negative": 2
+  },
+  "best_base": {
+    "cdd_15_5": 80,
+    "cdd_22": 28,
+    "cdd_18": 20
+  },
+  "summer_r2_median": {
+    "t_mean": 0.08,
+    "t_max": 0.086,
+    "cdd_15_5": 0.079,
+    "cdd_18": 0.065,
+    "cdd_22": 0.04,
+    "cdd_dm_18": 0.046,
+    "h_mean": 0.065,
+    "tw_max": 0.064,
+    "td_mean": 0.043,
+    "solar_kwh_m2": 0.047
+  }
+}

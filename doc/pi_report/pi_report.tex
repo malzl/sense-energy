@@ -7,6 +7,7 @@
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{xcolor}
 \usepackage[font=small,labelfont=bf,skip=4pt]{caption}
 \usepackage{titlesec}
@@ -23,10 +24,12 @@
 \setlength{\parskip}{5pt}
 \titleformat{\section}{\large\bfseries\color{accent}}{\thesection}{0.6em}{}
 \titlespacing*{\section}{0pt}{10pt}{3pt}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
 \setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=2pt,parsep=0pt}
 \pagestyle{fancy}\fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
-\fancyfoot[L]{\footnotesize\color{muted}SENSE energy: day-ahead demand forecasting for NHS sites}
+\fancyfoot[L]{\footnotesize\color{muted}SENSE energy: energy demand of NHS sites}
 \fancyfoot[R]{\footnotesize\color{muted}\thepage}
 \newcommand{\tablefont}{\small\renewcommand{\arraystretch}{1.08}}
 \newsavebox{\figa}\newsavebox{\figb}
@@ -41,38 +44,51 @@
 \raggedbottom
 \begin{document}
 
-{\LARGE\bfseries\color{accent} Day-ahead energy demand forecasting\\[2pt] for NHS sites}\\[4pt]
-{\large Results to date}\hfill{\color{muted}SENSE energy \textbullet\ 4 October 2026}
+{\LARGE\bfseries\color{accent} Energy demand of NHS sites:\\[2pt] forecasting, structure and weather response}\\[4pt]
+{\large Results to date}\hfill{\color{muted}SENSE energy \textbullet\ 5 November 2026}
 \vspace{2pt}\hrule\vspace{6pt}
 
 \begin{tcolorbox}[colback=soft,colframe=soft,boxrule=0pt,arc=2pt,left=6pt,right=6pt,top=5pt,bottom=5pt]
 \textbf{Key results}
 \begin{itemize}
 \item Half-hourly electricity demand of an NHS site can be forecast a day ahead with a normalised error of \textbf{11.5\,\%}, against 18.5\,\% for seasonal naive. The gain holds on 99\,\% of sites.
-\item \textbf{Foundation models used without any training on NHS data lead}: Chronos-2, TimesFM~3.0 and T0-beta beat a trained LightGBM model and SARIMA; TiRex-2 matches LightGBM with weather.
-\item Known-ahead covariates (calendar, price, grid forecasts, weather) improve every model family by about 0.7 points. \textbf{Forecast weather is as good as perfect weather} at this range.
-\item The 51-member weather ensemble does not change the demand distribution, but its spread identifies the days with the largest errors.
-\item Reconciling forecasts across the hierarchy gives coherent numbers from meter to national level and lowers the national error from 8.0\,\% to \textbf{6.8\,\%}.
-\item Sites fall into three demand shapes set by their function, not by the type of trust. Electricity demand changes by only 1 to 2\,\% per degree.
+\item \textbf{Foundation models used without any training on NHS data lead.} Transformer neural processes trained on the panel itself reach 13.7\,\%, behind LightGBM at 13.1\,\%. Building descriptors from the estates returns can replace a site's identity in LightGBM without loss.
+\item Known-ahead covariates improve every model family by about 0.7 points, and \textbf{forecast weather is as good as perfect weather} at this range. Reconciling across the hierarchy lowers the national error from 8.0 to \textbf{6.8\,\%}.
+\item \textbf{24 sites with on-site CHP carry 70\,\% of demand.} Their meters record grid import, which switches with the CHP: day-to-day variability is 36\,\% against 10\,\% at acute hospitals without CHP, and forecast error 16.2\,\% against 3.8\,\%.
+\item \textbf{Demand responds nonlinearly to temperature.} It is flat for daily means between 14 and 20\,$^\circ$C, 25 to 32\,\% higher below $-2$\,$^\circ$C, and rises ever faster with heat: 8 to 10\,\% on days whose maximum reaches 30\,$^\circ$C and 14 to 18\,\% at 32\,$^\circ$C and above. Hot days move demand into the evening: $+23$\,\% at 19:00.
+\item The electricity record contains \textbf{85 extreme-weather events} at national scale. Cold spells raise demand by a median 6.7\,\%, heatwaves by 4.2\,\%, and at inpatient sites a heatwave's third day costs 2.6\,\% more than its temperature alone.
+\item \textbf{The weather effects hold up as quasi-experiments.} With every national and regional day shock removed, a degree of cold still adds 1.1\,\% and a degree of heat 1.5 to 2\,\% (about 3\,\% per degree of a regionally hot day); reassigning weather between sites at random produces such effects 0 and 6 times in 200, and an independent thermometer, the nearest Met Office station, gives the same slopes. Days reaching 30\,$^\circ$C carry no extra demand beyond their temperature.
+\item \textbf{The average slope hides the sites.} Every site's own cold and heat slope, with sampling noise removed, shows real variation: the cold slope runs from about zero to $+3$\,\% per $^\circ$C across sites, the heat slope from $-4$ to $+7$, with 39 sites that fall on hot days against 48 that rise. Cold has a structure, and it is the heating fuel: acute hospitals, which heat with gas, barely respond ($+0.05$\,\% per $^\circ$C), every other building use adds 1.2 to 1.4 points, and a one-SD higher gas-to-electricity ratio removes 0.45. Nothing in the estates returns explains the heat slope.
+\item The estates returns confirm the annual meter totals of 65 sites exactly. Replacing gas heating with heat pumps would push \textbf{48\,\% of 631 gas-heated English sites}, and 68\,\% of acute hospitals, above their grid connection.
 \end{itemize}
 \end{tcolorbox}
 
+\section{Data}
+The Energy Systems Catapult extract covers 284 NHS sites. Half the sites have half-hourly electricity metering, and a small group of large acute hospitals dominates total demand.
+
+\begin{figblock}\centering\tablefont
+\input{tables/data}
+\captionof{table}{The data at a glance. Demand figures are site means over the full record.}
+\end{figblock}
+
 \section{Experiment}
-The target is the half-hourly electricity demand of 91 NHS sites in England, those with at least 85\,\% of readings observed and a year of history, drawn from 134 sites and 24 trusts. Each forecast is issued at 16:30 local time and covers the 48 half-hours of the following day. The test window runs from June 2025 to May 2026 with 69 forecast days that rotate through the weekdays, giving 6,279 site-days.
+The forecasting target is the half-hourly electricity demand of 91 NHS sites in England, those with at least 85\,\% of readings observed and a year of history. Each forecast is issued at 16:30 local time and covers the 48 half-hours of the following day. The test window runs from June 2025 to May 2026 with 69 forecast days that rotate through the weekdays, giving 6,279 site-days.
 
 Scores use observed readings only. nMAE is the mean absolute error divided by the site's mean demand. CRPS, in kWh per half hour, scores the whole predictive distribution on nine quantiles. Coverage is the share of observations inside the nominal 80\,\% interval. Skill is the relative improvement over seasonal naive, the value one week earlier.
 
 \section{Accuracy at site level}
 LightGBM and the five foundation models improve on seasonal naive by 38 to 48\,\% in CRPS. Chronos-2 and TimesFM~3.0 lead with demand history alone; T0-beta sits with TimesFM and TiRex-2 just behind LightGBM with weather. The covariates lift every family, TabPFN-TS most because its own features carry no weather, and TiRex-2 and T0-beta least. SARIMA, refitted at every forecast day, is no more accurate than naive on the median site: it does well on large regular sites and fails on small erratic ones.
 
+Transformer neural processes (TNP, pseudo-token TNP and gridded TNP), trained across sites and forecast days of the panel's training years, reach 13.7 to 14.6\,\% nMAE. That places them behind LightGBM and every foundation model, with intervals that are too wide (85 to 87\,\% coverage), and covariates do not improve them. Replacing LightGBM's site identifier with ERIC building descriptors (floor area, age, CHP, heat pumps, energy intensity) keeps its accuracy and improves CRPS from 6.27 to 6.15. That is a route to forecasting sites with no meter history.
+
 \begin{figblock}
 \pair{crps_skill_by_method}{covariate_gain}
-\captionof{figure}{Left: CRPS skill against seasonal naive for each method. Right: change in CRPS skill from adding covariates, paired per site against the same model without them. Markers show the median across sites and lines the interquartile range. Circles are models without covariates, squares use reanalysis weather and triangles forecast weather; the inverted triangle and the diamond are Chronos-2 with the control member and with all 51 members.}
+\captionof{figure}{Left: CRPS skill against seasonal naive for each method. Right: change in CRPS skill from adding covariates, paired per site against the same model without them. Markers show the median across sites and lines the interquartile range.}
 \end{figblock}
 
 \begin{figblock}\centering\tablefont
 \input{tables/site_results}
-\captionof{table}{Day-ahead results pooled over 91 sites and 69 forecast days. ``+ ERA5'' adds the known-ahead covariates with reanalysis weather, which is perfect weather; ``+ IFS ENS'' uses the weather forecast available at issue time. CRPS skill is the median across sites. Best values in bold.}
+\captionof{table}{Day-ahead results pooled over 91 sites and 69 forecast days. ``+ ERA5'' adds the known-ahead covariates with reanalysis weather, which is perfect weather; ``+ IFS ENS'' uses the weather forecast available at issue time. ``no site ID'' and ``+ ERIC'' drop the site identifier, the latter adding building descriptors from the estates returns. TNP rows are transformer neural processes trained on the panel. CRPS skill is the median across sites. Best values in bold.}
 \end{figblock}
 
 \section{Probabilistic quality and the weather ensemble}
@@ -91,11 +107,11 @@ Running Chronos-2 once per ensemble member and mixing the 51 resulting distribut
 \end{figblock}
 
 \section{When and where errors occur}
-Errors are largest on the working-day plateau, between 09:00 and 16:00, and smallest at night. Skill is positive almost everywhere on the map and is highest at the large acute sites. Regional totals range from 2.8\,\% nMAE in the East of England to 15.5\,\% in the South West. The two weakest regions are each dominated by one large site with days on which recorded demand halves.
+Errors are largest on the working-day plateau, between 09:00 and 16:00, and smallest at night. Skill is positive almost everywhere on the map and is highest at the large acute sites. Regional totals range from 2.8\,\% nMAE in the East of England to 15.5\,\% in the South West. The two weakest regions are dominated by large CHP sites, Royal Devon \& Exeter with 64\,\% of the South West and Royal Preston and North Manchester in the North West, whose recorded demand halves on some days.
 
 \begin{figblock}
 \pair[0.84]{nmae_by_hour}{map_site_skill}
-\captionof{figure}{Left: normalised error by local time of the target day for the models without covariates and the baselines. Right: CRPS skill of Chronos-2 with forecast weather at each site, with marker area proportional to mean demand.}
+\captionof{figure}{Left: normalised error by local time of the target day. Right: CRPS skill of Chronos-2 with forecast weather at each site, with marker area proportional to mean demand.}
 \end{figblock}
 
 \begin{figblock}
@@ -141,9 +157,233 @@ Sites were grouped by the shape of their average weekday and weekend profile. Ap
 \begin{itemize}
 \item \textbf{Function sets the shape, not the type of trust.} Mental health, acute and community trusts all have sites in every group. Inpatient community hospitals are round-the-clock; administration buildings, treatment centres and outpatient departments follow the working day.
 \item \textbf{Shape follows size.} Round-the-clock sites are the largest and office-like sites the smallest, and the latter vary twice as much from day to day.
-\item \textbf{Electricity is barely weather-sensitive.} Demand rises by 1 to 2\,\% per degree of cooling in every group. Gas meters show winter demand three to seven times summer demand.
 \item \textbf{Trusts form two branches}: eight with a marked working-day cycle and thirteen with flatter profiles.
 \end{itemize}
+
+\section{Sites with on-site CHP}
+Twenty-four sites, most of them general acute hospitals, run gas-fired combined heat and power. Their meters record grid import, which is the building's demand minus the CHP's output. The CHP runs, trips, is serviced or is turned down for reasons unrelated to the building, so the series carries a second, hidden driver. York Hospital, for example, imported more than 1.8 times its median on 95 weekdays between June 2024 and May 2025, most of them from January to May 2025.
+
+\begin{figblock}\centering\tablefont
+\resizebox{\textwidth}{!}{\input{tables/chp}}
+\captionof{table}{Sites with on-site CHP against acute hospitals without CHP and all other sites; medians per group. Load factor is mean over 99th-percentile import. Jump days are weekdays more than 30\,\% above the median of the surrounding 21 weekdays. nMAE and CRPS skill are for Chronos-2 with forecast weather on the scored sites. The last column is the change in demand per cooling degree day (Section~\ref{sec:weather}).}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{Acute hospitals without CHP are the most predictable sites} in the panel (3.8\,\% nMAE). Skill against seasonal naive is the same in every group, so the extra error at CHP sites comes from CHP switching that weather and calendar cannot predict.
+\item \textbf{CHP sites cannot be checked against the estates returns}: their annual meter-to-ERIC ratio spans 0.39 to 1.08 (10th to 90th percentile), against 0.90 to 1.10 elsewhere.
+\item \textbf{CHP drives the totals}: trust, regional and national series, and their year-on-year swings, largely follow CHP operation. Half-hourly CHP generation would turn import back into demand.
+\item \textbf{ERIC 2024/25 shows what sits behind the meter.} The 2024/25 return (published October 2025, inside our sample) adds each site's CHP electrical output, exports and unit size. On the 20 CHP sites with a plausible return, implied demand (import + CHP output $-$ exports) is 23.3\,MW against 9.2\,MW of grid import: the meters see 40\,\% of what these sites use. CHP covers a median 50\,\% of a site's electricity (up to 78\,\% at Royal Preston) at a median capacity factor of 0.70. Our metered import matches the returned import at most sites (0.95--1.06) and names the partial supplies: Wythenshawe (27\,\%) and Great Western (2\,\%).
+\end{itemize}
+
+\begin{figblock}
+\begin{center}\includegraphics[width=0.4\textwidth]{chp_variability}\end{center}
+\captionof{figure}{Day-to-day variability of weekday import per site (coefficient of variation of daily means), by group. Black bars mark the group medians.}
+\end{figblock}
+
+\begin{figblock}\centering
+\includegraphics[width=0.92\textwidth]{figures/chp_generation.pdf}
+\captionof{figure}{What the CHP sites use, April 2024 to March 2025: grid import as returned to ERIC (what our meters record) and the CHP's output net of exports, stacked to the implied site demand; the tick is our metered import over the same year. Hollow bars: returns with an implausible capacity factor.}
+\end{figblock}
+
+\section{Weather and demand}\label{sec:weather}
+\subsection{Response to temperature}
+Daily demand at each site is compared with a 14--16\,$^\circ$C day of the same month at the same site, after removing day-of-week, bank-holiday, Christmas and school-holiday effects. The comparison uses 140,326 site-days, December 2022 to May 2026, with temperature in 2\,$^\circ$C bands so that the shape of the response is not assumed. Intervals are 95\,\%, clustered by week.
+
+\begin{figblock}\centering\tablefont
+\input{tables/temperature_response}
+\captionof{table}{Change in daily electricity demand (\%) against a 14--16\,$^\circ$C day of the same month, with 95\,\% intervals. Number of sites in brackets. Inpatient and outpatient groups exclude CHP sites.}
+\end{figblock}
+
+\begin{figblock}
+\pair{temperature_response_curve}{temperature_response_hourly}
+\captionof{figure}{Left: change in daily demand against daily mean temperature, by site group, with 95\,\% intervals; the open-ended bands are drawn at $-3$ and 25\,$^\circ$C. Right: the same for each hour of the day at inpatient sites without CHP.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{A hockey stick, not a line.} Demand is flat between 14 and 20\,$^\circ$C and rises by 1.5 to 2\,\% per degree below that. Above 20\,$^\circ$C it rises ever faster: $+2.6$, $+6.3$ and $+10.0$\,\% in successive bands at inpatient sites. A single cooling-degree-day slope understates the hot tail, and a day below $-2$\,$^\circ$C still costs 2.5 times as much as a day above 24\,$^\circ$C.
+\item \textbf{Hot days move demand into the evening.} On days above 24\,$^\circ$C inpatient demand at 19:00 is 23\,\% higher, while midday hours change little; on 22--24\,$^\circ$C days they are 8 to 9\,\% lower. Cold days lift every hour by a similar 22 to 29\,\%. The evening shift lands on the 17:00--20:00 system peak.
+\item \textbf{Heat accumulates.} Beyond its own temperature, the second hot day adds 2.1\,\% and the third and later 2.6\,\% at inpatient sites; long cold spells add 2.5 to 3.0\,\% from the third day.
+\item \textbf{Other weather}: wind on cold days adds 0.4\,\% per m/s, sunshine lowers demand by 1.0 to 1.6\,\% per kWh/m$^2$ (daylight), and humidity adds nothing beyond temperature.
+\item \textbf{Extreme heat.} On the daily maximum, demand is flat up to 24\,$^\circ$C and then rises by a growing step per band: at inpatient sites $+1.1$\,\% at 24--26\,$^\circ$C, $+2.8$ at 26--28, $+5.3$ at 28--30, $+7.6$ at 30--32 and $+14.2$\,\% [9.9, 18.6] at 32\,$^\circ$C and above; outpatient sites $+10.1$ and $+17.8$\,\%, with daily peaks up 27\,\%. The hottest band rests on 16 inpatient site-days on four dates in 2023--2025.
+\item \textbf{CHP sites are the mirror image}: flat on cold days, when the CHP runs for heat, and 27 to 32\,\% higher on warm days, when it turns down.
+\end{itemize}
+
+\subsection{Extreme-weather events}
+Events were catalogued from hourly ERA5 at the 275 located sites with official definitions where they exist. An event counts at national scale when at least 5\,\% of sites are affected at once. The catalogue recovers the named storms of 2023--2025, Storm Babet's rain, the four heatwaves of summer 2025 and the cold spells of December 2022, January 2024 and January 2025. The record-breaking heat of late May 2026, 35.1\,$^\circ$C at Kew, falls just after the electricity record ends.
+
+\begin{figblock}\centering\tablefont
+\input{tables/events}
+\captionof{table}{Extreme-weather events, December 2022 to May 2026. ``In record'' counts events within the electricity record. ``Site events'' counts runs at individual sites. Demand is the median change on event days against the same weekday one and two weeks either side, over events with at least 20 site-days of data.}
+\end{figblock}
+
+\begin{figblock}
+\begin{center}\includegraphics[width=0.98\textwidth]{weather_event_timeline}\end{center}
+\captionof{figure}{Events at national scale by type; bar height is the share of sites affected. The dashed line marks the end of the electricity record.}
+\end{figblock}
+
+\begin{figblock}
+\begin{center}\includegraphics[width=0.46\textwidth]{weather_event_demand}\end{center}
+\captionof{figure}{Demand on event days against the same weekday one and two weeks either side, one point per national event.}
+\end{figblock}
+
+\subsection{Causal estimates}
+Weather is assigned by nature, but exposure is not: southern and urban sites run warmer and are more often acute hospitals. Every design here absorbs that with site-level fixed effects and differs in which time-varying confounders it removes. Two doses, the two arms of the hockey stick: degrees of daily mean below 14\,$^\circ$C (cold) and above 20\,$^\circ$C (heat). Sites without CHP; 95\,\% intervals two-way clustered by site and date.
+
+\begin{figblock}\centering\tablefont
+\input{tables/causal_specs}
+\captionof{table}{Effect of a degree of cold and of heat on daily demand (\%) under nested fixed effects. A: site $\times$ month, site $\times$ weekday and calendar controls; B: with date effects, so only the day's cross-site temperature gradient identifies the effect; C: region $\times$ date effects; D (``B + weather''): B with the day's sunshine, wind and rain. SD is the dose variation left after the fixed effects.}
+\end{figblock}
+
+Date effects remove everything common to all sites on a day; what remains is how much warmer or colder one site was than the others, relative to its own month: a difference-in-differences with a continuous dose. They also remove 94\,\% of the identifying variation, because the panel is one weather system. The cold effect is unchanged by them; the heat effect halves and loses precision, then recovers once sunshine is held fixed, since hot days are sunny and sunshine lowers lighting demand.
+
+\begin{figblock}
+\pair[0.9]{causal_response_mean}{causal_response_tmax}
+\captionof{figure}{Treatment-response curves at sites without CHP under specification A (site $\times$ month), B (with date effects) and D (B with sunshine, wind and rain): daily demand against the daily mean (left, reference 14--16\,$^\circ$C) and the daily maximum (right, reference 18--20\,$^\circ$C), with 95\,\% intervals clustered by site and date.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{causal_specs}{causal_event_study}
+\captionof{figure}{Left: the two effects across the specifications of the table. Right: stacked event-study difference-in-differences for heatwaves and cold spells, sites inside a national event against clean controls, by day from the national onset; reference five or more days before.}
+\end{figblock}
+
+\begin{figblock}\centering\tablefont
+\input{tables/causal_events}
+\captionof{table}{Stacked event studies. Treated sites are inside a site-level event, controls have none within ten days; the temperature column is how much hotter or colder the treated sites were on event days, demand the matching difference in demand, and the last columns the ratio and the $p$-value of the pre-event coefficients.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{No anticipation, no rebound.} Pre-event coefficients are flat ($p = 0.16$ and $0.71$) and demand returns to its baseline after the event. The design's weakness is its dose: during a national event the clean controls are still hot or cold, only 1.1 to 1.2\,$^\circ$C less so, so the expected gap of 1.5 to 2\,\% sits inside intervals several times wider than the fixed-effect estimates'. The point estimates agree with the table above.
+\item \textbf{Randomisation.} Reassigning whole weather series between sites at random, 200 times, yields a cold effect as large as the observed one 0 times and a heat effect as large 6 times.
+\item \textbf{Leads.} Tomorrow's temperature, given today's and the past week's, carries a small heat coefficient ($+0.45$\,\% per $^\circ$C, jointly $p = 0.02$) and nothing for cold. It survives a control for the same evening's temperature, so it is either anticipation (heat-health alerts go out a day or two ahead) or measurement error in the site's grid-point temperature letting adjacent days proxy for the true value. The lag structure is otherwise clean: largest the same day, carrying into the next, nil after that.
+\item \textbf{Extreme days.} A day whose maximum reaches 30\,$^\circ$C carries $-1.5$\,\% $[-4.3, +1.3]$ beyond what its mean temperature implies: no extra kick, if anything a shortfall against a linear extrapolation, which is what cooling plant at its limit would look like. Demand keeps rising through 30\,$^\circ$C at about 1.2\,\% per degree of daily maximum.
+\item \textbf{Space.} Temperature anomalies correlate 0.998 between sites within 25\,km and 0.89 at 200 to 400\,km; after date effects the demand residuals correlate 0.01 at every distance, so no regional shock is left to confound. Given a site's own temperature, its neighbours' (30 to 150\,km) adds nothing for cold; for heat the two are too alike to split, and only their sum, about 2.8\,\% per degree of a regionally hot day, is well determined. Standard errors clustered by region $\times$ week or by ICB are no larger than the two-way ones used.
+\item \textbf{The thermometer is not the problem.} Re-estimated on the 106,425 site-days where ERA5, ERA5-Land (9\,km) and the nearest Met Office station (NOAA ISD, median 13.5\,km, hourly) all report, the three give the same slopes: cold $+1.06$ to $+1.11$\,\% per $^\circ$C on every thermometer, heat $+1.69$ (station), $+1.97$ (ERA5) and $+2.31$ (ERA5-Land), each inside the others' intervals. The station, independent of any reanalysis, agrees with ERA5 on the day-to-day anomalies to 0.44\,$^\circ$C; the finer ERA5-Land agrees less well (0.56\,$^\circ$C), because its land-only tiles lose the sea's moderation at coastal sites. The lead halves with the station reading (joint $p = 0.11$), and ERA5's one weakness is the hottest days, which it reads 1.3\,$^\circ$C too cool.
+\end{itemize}
+
+\begin{figblock}
+\pair[0.9]{causal_lags}{causal_randomisation}
+\captionof{figure}{Left: distributed-lag and placebo-lead coefficients of the two doses (negative lags are tomorrow's and the next day's temperature). Right: the two effects when weather series are reassigned between sites at random, 200 times, against the observed estimates (vertical lines).}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{temperature_response_tmax}{causal_extreme}
+\captionof{figure}{Left: daily demand against the daily maximum temperature, relative to an 18--20\,$^\circ$C day of the same month, with bands to 30--32 and 32\,$^\circ$C and above. Right: extra demand on 28--30 and 30\,$^\circ$C+ days beyond the linear heat dose, across the specifications.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{map_thermometer_network}{map_thermometer_error_era5}
+\captionof{figure}{Left: the sites and the 46 Met Office stations that serve as their independent thermometer, each site joined to its nearest station (median 13\,km). Right: where ERA5's 25\,km grid point agrees with that station on the day-to-day temperature anomaly and where it does not; the worst sites sit on the Norfolk, Suffolk and south coasts, where a cell straddles sea.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{map_hot_day_bias}{map_heatwave_exposure}
+\captionof{figure}{Left: how much too cool ERA5 reads the hottest days at each site (its daily maximum minus the station's, on days the station reached 28\,$^\circ$C; median $-0.9$\,$^\circ$C, coastal sites to $-4$). Right: the identifying variation of the heat effect on the ground: each site's hottest daily maximum of summer 2025 by the station thermometer, from 28\,$^\circ$C on the Pennines and the coasts to 33.6\,$^\circ$C in London.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{thermometer_agreement}{thermometer_effects}
+\captionof{figure}{Left: for each site, the error of ERA5's day-to-day temperature anomaly against the nearest Met Office station, by station distance. Right: the cold and heat effects (specification D) with ERA5 and with the station as the thermometer, on the site-days both cover.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{causal_spatial}{weather_persistence}
+\captionof{figure}{Left: correlation between pairs of sites of their day-to-day temperature anomalies and of their demand residuals after date effects, by distance. Right: extra demand on the second and later consecutive hot or cold day beyond that day's own temperature.}
+\end{figblock}
+
+\begin{figblock}\centering\tablefont
+\input{tables/causal_spatial_lag}
+\captionof{table}{The neighbour placebo: effects (\%) of a site's own doses and of the mean doses of the sites 30 to 150\,km away, and of the neighbours' doses alone.}
+\end{figblock}
+
+\subsection{Who responds}
+One regression with the doses interacted with every site gives each site its own cold and heat slope; a random-effects decomposition separates the true spread between sites from sampling noise, and empirical-Bayes shrinkage gives each site a posterior slope for ranking and mapping. Sites without CHP, date effects included.
+
+\begin{figblock}
+\pair[0.9]{site_slopes_hdd14}{site_slopes_cdd20}
+\captionof{figure}{Every site's cold (left) and heat (right) slope: the raw estimate with its 95\,\% interval in grey, the shrunk posterior as a point coloured by building use, sites ordered by posterior. Dashed lines at zero and at the pooled slope.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{The spread is real.} Both slopes vary far more between sites than their standard errors allow ($I^2 = 0.99$). The true between-site SD is 1.3 points for cold around a mean of $+1.1$\,\% per $^\circ$C, and 3.9 points for heat around $+1.0$: 82 sites rise significantly on cold days and 8 fall; 48 rise on hot days and 39 fall. ``The heat effect'' averages over sites that differ in sign, and a site's cold and heat slopes are only weakly related (correlation 0.2).
+\item \textbf{Cold is about the heating fuel.} Building use moderates the cold slope (joint $p < 0.001$): against acute inpatient hospitals at $+0.05$\,\% per $^\circ$C, community inpatient, mental-health and non-inpatient sites add 1.2 to 1.4 points. The gas-to-electricity ratio is the one continuous moderator that survives jointly: one SD more gas removes 0.45 points ($p = 0.003$). Electricity responds to cold where heat is electric; a site that moves from gas to heat pumps should expect a cold slope of $+1$ to $+1.5$\,\% per $^\circ$C.
+\item \textbf{Heat is unexplained.} None of the eight moderators (use, cluster, trust type, size, build year, climate, gas ratio, LED share) predicts the heat slope, alone or jointly. The large real dispersion rests on something the estates returns do not record, most plausibly whether a site has cooling plant and how it is controlled; that is the strongest case for asking trusts for plant data.
+\item \textbf{By hour.} On cold days, non-inpatient, mental-health and community inpatient sites run 15 to 30\,\% above a 15\,$^\circ$C day through the whole day; the five acute hospitals rise 6 to 8\,\%, gas carrying their heating. On hot days, mental-health and non-inpatient sites are flat until midday and climb to $+12$ to $+15$\,\% at 17:00--19:00, the evening shift group by group.
+\end{itemize}
+
+\begin{figblock}
+\pair[0.9]{moderators}{hourly_by_use_cold}
+\captionof{figure}{Left: what moderates the slopes: each moderator's interaction with the cold and heat dose, categorical levels against their reference and continuous moderators per SD, with 95\,\% intervals. Right: hour-of-day demand on days below 2\,$^\circ$C against a 15\,$^\circ$C day, by building use.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{map_site_slopes_hdd14}{map_site_slopes_cdd20}
+\captionof{figure}{Each site's shrunk cold (left) and heat (right) slope on the map. The cold slope is small at the acute hospitals and large at the outpatient and mental-health estate; the heat slope changes sign between neighbouring sites.}
+\end{figblock}
+
+\subsection{What moves heat}
+The heat slope is taken apart on the same panel with a site-specific sunshine term (ERA5 surface solar radiation), the demand of each six-hour block of the day and of the weekend, and the heat dose split into hot afternoons (daily maximum above 24\,$^\circ$C) and warm nights (daily minimum above 12\,$^\circ$C). Two open datasets join the moderators: the ONS rural-urban class and Census 2021 density of every site postcode, and the DESNZ Renewable Energy Planning Database; two ERIC fields not used before, overheating occurrences in clinical areas and solar consumed on site. Sites flagged for meter gaps are left out (24; they owned the tails of the previous section, Bridlington at $-15$\,\% per $^\circ$C among them), leaving 83.
+
+\begin{figblock}
+\pair[0.9]{heat_sunshine_control}{heat_night_day}
+\captionof{figure}{Left: each site's heat slope against temperature alone and net of a site sunshine term; the daylight saving masks some cooling (pooled $+0.6 \to +1.1$\,\% per $^\circ$C) but leaves the spread, and 22 sites still fall with heat. Right: the dose split in two, per site: cooling plant lives in the upper right (hot afternoons, and warm nights too), the fallers in the lower left, responding as much to warm nights as to hot afternoons.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{Sunshine is real but is not the heat story.} 55 of 83 sites import less on sunny days at a given temperature, $-0.9$\,\% per kWh/m$^2$ pooled ($-5$\,\% between an overcast and a clear summer day), with the shape of daylight ($-1.4$\,\% in the afternoon block, $+0.2$\,\% at night) and 1.9 points stronger where ERIC records solar generation. The heat and sunshine slopes of a site are unrelated ($r = 0.05$); REPD shows no rooftop solar operational at these sites within the sample (24 schemes, all 2025 applications awaiting construction).
+\item \textbf{Heat is an afternoon phenomenon.} Pooled, $+0.2$\,\% per $^\circ$C at night, $+0.8$ in the morning, $+3.6$ in the afternoon, $+2.1$ in the evening; 32 of the 41 risers have an afternoon block significantly above their night block. Thirteen risers respond significantly less at weekends: plant that runs with the working day.
+\item \textbf{The fallers are a heating tail, not a cooling behaviour.} Risers respond twice as much to hot afternoons as to warm nights (Table~\ref{tab:heat_decomposition}); fallers respond to both equally, and 17 of 22 have a significantly negative warm-night slope. They are small buildings (median 9\,kW against 21\,kW) whose heating, its auxiliaries and water heating are still running in the warm season and switch off when the night is warm: Kelling Hospital runs 50\,kW in winter and 19\,kW in summer. They carry 8\,\% of the demand.
+\item \textbf{Location explains nothing; electrical intensity does.} Urban form (joint $p = 0.92$), population density ($p = 0.38$), building use ($p = 0.35$), build year, heating fuel, LED share: none. Peak demand per m$^2$ ($+0.7$ points per SD, $p = 0.05$), electricity intensity in the joint model ($+1.9$ per SD, $p = 0.001$), tenure ($p = 0.02$) and ERIC solar generation ($+2.0$, $p = 0.01$, a marker of trusts that invest in plant) do. A random-effects meta-regression gives the share of the true between-site variance each descriptor set explains: every estates and context set, nothing ($-8$ to $+6$\,\%); the site's own diurnal signature, 46\,\%. The heat slope is about plant on the site, visible in the shape of its day and absent from the estates return.
+\item \textbf{Types.} 41 sites rise on hot afternoons (74\,\% of metered demand, 25 of them also falling with sunshine), 12 fall with sunshine only, 22 fall with heat, 8 neither; the types are mixed within every region.
+\item \textbf{The Display Energy Certificates confirm the direction and stop short of the size.} Every DEC at the site postcodes was pulled through the MHCLG API (3,266 certificates, 285 current buildings; 67 of the 83 sites have one, certified floor area 1.08 times the ERIC area at the median). ``Air conditioning present'' is true at 51 of 67 sites and separates nothing ($+1.0$ point, $p = 0.46$). The building environment does: the three sites classed as air-conditioned have a heat slope 3.1 points above the naturally ventilated reference ($p < 0.001$), mixed mode 2.1\,\% per $^\circ$C against 1.0, and the cooled floor share adds 0.9 points per SD in the joint model ($p = 0.02$). The register classes most hospital buildings as heated and naturally ventilated while they rise on hot afternoons, and records the plant's size on 19\,\% of recent certificates, so the diurnal signature remains the better measure. The fallers' certificates name gas as the heating fuel: their warm-night fall is the auxiliaries and hot water of gas heating, not electric space heating. The 115 advisory reports linked to current certificates carry 1,552 recommendations (fabric 335, controls 322, heating 284, renewables 214, cooling 170), stored per site by theme as features for later work.
+\end{itemize}
+
+\begin{figblock}\centering\tablefont
+\input{tables/heat_decomposition}
+\captionof{table}{The heat dose split by the sign of the site's daily heat slope: hot afternoons per $^\circ$C of daily maximum above 24\,$^\circ$C, warm nights per $^\circ$C of daily minimum above 12\,$^\circ$C, sunshine per kWh/m$^2$ of daily solar radiation; pooled group $\times$ dose interactions in one specification-B regression on 83 sites without CHP or meter gaps, 95\,\% intervals, with each group's share of the metered demand.}\label{tab:heat_decomposition}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{heat_blocks_heat}{heat_group_decomposition}
+\captionof{figure}{Left: the heat slope by block of the day for the three sign groups (random-effects pooled, 95\,\% intervals). Right: hot afternoon, warm night and sunshine for the same groups.}
+\end{figblock}
+
+\begin{figblock}\centering
+\includegraphics[width=0.92\textwidth]{figures/heat_moderators_continuous.pdf}
+\captionof{figure}{Continuous moderators of the heat slope, per SD of the moderator, one at a time (filled, with the joint $p$ and the number of sites) and in the joint model (open).}
+\end{figblock}
+
+\begin{figblock}\centering
+\includegraphics[width=0.92\textwidth]{figures/heat_moderators_categorical.pdf}
+\captionof{figure}{Categorical moderators of the heat slope against their reference level, with the joint $p$ of each moderator; joint-model estimates as open markers where the term is in it.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{heat_variance_explained}{map_heat_types}
+\captionof{figure}{Left: the share of the true between-site variance of the heat slope explained by each descriptor set, with $\tau$ before and after. Right: every site's type on the map, marker area by mean demand.}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{heat_dec_aircon}{dec_recommendations}
+\captionof{figure}{Left: each site's heat slope net of sunshine against the floor share its Display Energy Certificates record as air-conditioned, coloured by the dominant building environment; presence is near-binary and uninformative, the environment class is not. Right: the 1,552 recommendations in the 115 advisory reports linked to current certificates, by theme and payback class.}
+\end{figblock}
+
+\section{Estates returns}
+ERIC 2023/24 reports electricity, gas, floor area, connection capacity and building characteristics for 2,869 English NHS sites.
+
+\begin{figblock}\centering\tablefont
+\input{tables/eric_flags}
+\captionof{table}{Annual meter totals of the 134 electricity sites against ERIC 2023/24 electricity. On the 65 whole-site matches the median ratio is 1.00.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{Energy intensity} rises from 56\,kWh/m$^2$ at non-inpatient sites to 80 in mental health, 87 in community hospitals, 112 in general acute and 146 in specialist acute hospitals. Acute trusts use a median 63\,kWh per occupied bed-day, and floor area explains trust electricity better than beds.
+\item \textbf{Heat-pump headroom.} Gas heating replaced by air-source heat pumps (seasonal COP 2.55), added half-hour by half-hour to observed demand, puts 13 of 31 panel sites above their available capacity and raises their annual electricity by a median 77\,\%. Scaled to England with the panel's coincidence factor, 48\,\% of 631 gas-heated sites exceed capacity, including 68\,\% of general acute hospitals.
+\end{itemize}
+
+\begin{figblock}
+\pair[0.92]{meter_vs_eric}{headroom_by_type}
+\captionof{figure}{Left: annual metered electricity against ERIC electricity per site, coloured by meter check. Right: share of English sites above available capacity today and with heat pumps, by site type.}
+\end{figblock}
 
 \section{Public activity data linked to the trusts}
 \begin{figblock}\centering\tablefont
@@ -151,6 +391,6 @@ Sites were grouped by the shape of their average weekday and weekend profile. Ap
 \captionof{table}{Public NHS England statistics matched to the 24 trusts by organisation code.}
 \end{figblock}
 
-Public patient activity exists per trust at monthly or quarterly resolution. Daily bed occupancy is published for acute trusts in winter only, and no public series reaches site level.
+Public patient activity exists per trust at monthly or quarterly resolution. Daily bed occupancy is published for acute trusts in winter only, and no public series reaches site level. Quarterly occupied beds do not track trust electricity demand.
 
 \end{document}

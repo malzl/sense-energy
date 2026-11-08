@@ -1,0 +1,218 @@
+{
+  "sites": 83,
+  "tau_pct": {
+    "plain": 3.99,
+    "sunshine_controlled": 4.11
+  },
+  "pooled_pct": {
+    "heat_plain": 0.63,
+    "heat_sunshine_controlled": 1.14,
+    "sunshine_per_kwh_m2": -0.88
+  },
+  "sunshine_tau_pct": 2.08,
+  "sites_falling_on_hot_days": {
+    "plain": 28,
+    "sunshine_controlled": 22,
+    "both": 21
+  },
+  "sites_sunshine_negative_daytime": 55,
+  "sites_sunshine_positive_daytime": 12,
+  "sites_night_sunshine_negative": 17,
+  "mechanisms": {
+    "risers_with_afternoon_cooling": 32,
+    "fallers_with_heating_tail": 17,
+    "risers": 41,
+    "fallers": 22
+  },
+  "group_decomposition_pct": {
+    "daily mean | rises with heat | hdd14": [
+      1.21,
+      0.27
+    ],
+    "daily mean | rises with heat | cdd20": [
+      3.72,
+      0.69
+    ],
+    "daily mean | rises with heat | solar_kwh_m2": [
+      -1.26,
+      0.41
+    ],
+    "daily mean | falls with heat | hdd14": [
+      0.97,
+      0.25
+    ],
+    "daily mean | falls with heat | cdd20": [
+      -2.77,
+      0.66
+    ],
+    "daily mean | falls with heat | solar_kwh_m2": [
+      -1.09,
+      0.25
+    ],
+    "daily mean | neither | hdd14": [
+      0.86,
+      0.35
+    ],
+    "daily mean | neither | cdd20": [
+      1.67,
+      1.2
+    ],
+    "daily mean | neither | solar_kwh_m2": [
+      -0.79,
+      0.51
+    ],
+    "night and day | rises with heat | hdd14": [
+      1.23,
+      0.26
+    ],
+    "night and day | rises with heat | hot_afternoon": [
+      1.45,
+      0.38
+    ],
+    "night and day | rises with heat | warm_night": [
+      0.73,
+      0.25
+    ],
+    "night and day | rises with heat | solar_kwh_m2": [
+      -1.27,
+      0.41
+    ],
+    "night and day | falls with heat | hdd14": [
+      0.92,
+      0.24
+    ],
+    "night and day | falls with heat | hot_afternoon": [
+      -1.24,
+      0.35
+    ],
+    "night and day | falls with heat | warm_night": [
+      -1.18,
+      0.26
+    ],
+    "night and day | falls with heat | solar_kwh_m2": [
+      -1.05,
+      0.25
+    ],
+    "night and day | neither | hdd14": [
+      0.86,
+      0.35
+    ],
+    "night and day | neither | hot_afternoon": [
+      0.51,
+      0.7
+    ],
+    "night and day | neither | warm_night": [
+      0.36,
+      0.25
+    ],
+    "night and day | neither | solar_kwh_m2": [
+      -0.77,
+      0.48
+    ]
+  },
+  "corr_heat_sun": 0.046,
+  "corr_heat_plain_vs_adjusted": 0.895,
+  "types": {
+    "rises with heat": 16,
+    "rises with heat, falls with sunshine": 25,
+    "falls with sunshine only": 12,
+    "falls with heat": 22,
+    "neither": 8
+  },
+  "type_demand_share": {
+    "rises with heat": 0.452,
+    "rises with heat, falls with sunshine": 0.292,
+    "falls with sunshine only": 0.129,
+    "falls with heat": 0.079,
+    "neither": 0.048
+  },
+  "afternoon_peaked_among_risers": 27,
+  "weekday_only": 13,
+  "block_pooled_heat_pct": {
+    "night (00\u201306)": 0.23,
+    "morning (06\u201312)": 0.83,
+    "afternoon (12\u201318)": 3.6,
+    "evening (18\u201324)": 2.11
+  },
+  "block_pooled_sun_pct": {
+    "night (00\u201306)": 0.19,
+    "morning (06\u201312)": -1.09,
+    "afternoon (12\u201318)": -1.41,
+    "evening (18\u201324)": -0.46
+  },
+  "dec_sites": 67,
+  "dec_ac_class_counts": {
+    "mostly air-conditioned": 51,
+    "no air conditioning": 16
+  },
+  "dec_median_coverage": 1.08,
+  "moderator_joint_p": {
+    "air conditioning (DEC)": 0.453,
+    "air-conditioned floor share (DEC)": 0.313,
+    "building electricity (log kWh/m\u00b2, DEC)": 0.148,
+    "building environment (DEC)": 0.0,
+    "building use": 0.345,
+    "cooled floor share, AC or mixed mode (DEC)": 0.344,
+    "electric-heating floor share (DEC)": 0.0,
+    "electricity intensity (log kWh/m\u00b2)": 0.322,
+    "gas / electricity ratio": 0.413,
+    "heat pumps (ERIC)": 0.458,
+    "mean build year": 0.579,
+    "night / day ratio": 0.203,
+    "operational rating (DEC)": 0.267,
+    "overheating reported (ERIC)": 0.128,
+    "peak demand (W/m\u00b2)": 0.051,
+    "population density (log)": 0.375,
+    "site size (log mean kW)": 0.258,
+    "solar generation (ERIC)": 0.012,
+    "summer mean daily maximum (\u00b0C)": 0.908,
+    "tenure": 0.024,
+    "urban form": 0.922,
+    "weekend / weekday ratio": 0.562,
+    "winter / summer ratio": 0.965
+  },
+  "joint_model_p": 0.0,
+  "joint_model_sites": 38,
+  "variance_explained": {
+    "site sunshine term": [
+      -0.062,
+      79
+    ],
+    "building use": [
+      -0.047,
+      78
+    ],
+    "urban form and density": [
+      -0.059,
+      78
+    ],
+    "estates descriptors": [
+      -0.016,
+      40
+    ],
+    "load shape": [
+      0.062,
+      80
+    ],
+    "all descriptors": [
+      -0.077,
+      40
+    ],
+    "cooling plant (DEC)": [
+      0.015,
+      66
+    ],
+    "heating and intensity (DEC)": [
+      -0.032,
+      66
+    ],
+    "all descriptors and DEC": [
+      -0.2,
+      35
+    ],
+    "diurnal signature": [
+      0.46,
+      79
+    ]
+  }
+}

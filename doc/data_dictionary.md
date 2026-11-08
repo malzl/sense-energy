@@ -222,6 +222,115 @@ the nearest grid point to the postcode centroid.
 mixes instantaneous and accumulated variables, even with
 `download_format: unarchived`. `weather.open_download` merges them.
 
+### Daily: `interim/weather_daily.parquet`
+
+Built by `sense-energy build-weather-daily` (`data/weather_daily.py`) from
+`weather_reanalysis.parquet`, nothing fetched. 351,450 rows: 275 sites ×
+1 Dec 2022 → 31 May 2026. One row per (`site_code`, `date`), `date` a
+**Europe/London** calendar day (23 or 25 hours on BST transition days).
+Accumulated fields are dated by the hour they accumulate over.
+
+| Column | Units | Definition |
+|---|---|---|
+| `n_hours` | h | hourly values in the local day |
+| `t_mean`, `t_min`, `t_max` | °C | 2 m temperature |
+| `t_eve` | °C | mean 2 m temperature over local 18:00–23:59, the part of the day a daily mean blurs |
+| `hdd_15_5` | °C day | heating degree days, integration method: mean over hours of max(15.5 − T, 0) |
+| `cdd_15_5`, `cdd_18`, `cdd_22` | °C day | cooling degree days, integration method (CIBSE TM41): mean over hours of max(T − base, 0) |
+| `cdd_dm_15_5`, `cdd_dm_18`, `cdd_dm_22` | °C day | daily-mean method: max(T_mean − base, 0) |
+| `cdd_eurostat` | °C day | Eurostat: T_mean − 21 on days with T_mean > 24 °C (almost always 0 in England) |
+| `hours_ge_25`, `hours_ge_28` | h | hours with T ≥ 25 / 28 °C |
+| `td_mean`, `td_max` | °C | dew point |
+| `rh_mean` | % | relative humidity (Magnus) |
+| `tw_max` | °C | wet-bulb temperature, daily max (Stull 2011) |
+| `h_mean`, `h_max` | kJ kg⁻¹ | moist-air enthalpy (latent + sensible cooling need) |
+| `wind_mean`, `wind_max` | m s⁻¹ | 10 m wind speed |
+| `gust_max` | m s⁻¹ | 10 m gust, daily max |
+| `solar_kwh_m2` | kWh m⁻² | surface solar irradiation |
+| `precip_mm` | mm | total precipitation |
+| `snow_mm_we` | mm water equivalent | snowfall |
+
+ERA5's 0.25° grid smooths urban heat islands, afternoon peaks, convective rain
+and gusts: the hottest site-day here is 34.2 °C against 35.1 °C observed at Kew
+on 26 May 2026. Read the hot, wet and windy tails as lower bounds. Uses:
+[weather_and_cooling.md](weather_and_cooling.md).
+
+## Site thermometers: ERA5-Land and NOAA ISD stations
+
+Two independent measurements of the temperature at each site, for the measurement-error
+question in [weather_and_cooling.md](weather_and_cooling.md#5-quasi-experimental-estimates).
+
+### ERA5-Land: `code/data/external/weather/era5_land/land/` → `interim/weather_land.parquet` → `interim/weather_daily_land.parquet`
+
+CDS `reanalysis-era5-land`, hourly, 0.1° (about 9 km), land points only; `t2m`, `d2m`, `sp`
+(fluxes stay with ERA5: ERA5-Land accumulates them from 00 UTC, not hourly). Pulled by
+`sense-energy fetch-weather --config code/configs/weather_era5_land.yaml --product land`,
+extracted by `build-weather --config ... --product land` to the nearest *land* grid point
+(coastal sites would otherwise land in the sea), and summarised by
+`build-weather-daily --product land --suffix _land` with the same columns as `weather_daily`
+minus solar, rain, snow and wind.
+351,450 site-days for 275 sites. Against the stations its daily mean has an RMSE of 0.72 °C
+(ERA5: 0.62) and its daily maximum 1.26 °C (ERA5: 0.94): the land-only tiles lose the sea's
+moderation at coastal sites, so the finer grid is the *worse* site thermometer. Kept as a check,
+not used as the primary temperature.
+
+### NOAA ISD: `code/data/external/noaa_isd/` → `interim/isd_*.parquet`, `interim/weather_daily_isd.parquet`
+
+NOAA's Integrated Surface Database, the Met Office synoptic and airfield observations as
+exchanged on the WMO network, open data without a key, one CSV per station and year from
+`https://noaa-global-hourly-pds.s3.amazonaws.com/{year}/{USAF}{WBAN}.csv` (`sense-energy
+fetch-isd`, 76 stations, 1.6 GB) plus the station history `isd-history.csv`. The mirror holds
+files to **24 August 2025** (nothing for 2026), so the station thermometer covers 34 of the
+record's 41 months, every summer included. `sense-energy build-isd` writes:
+
+| Table | Grain | Columns |
+|---|---|---|
+| `isd_hourly.parquet` | station × clock hour | `t_c`, `td_c` (°C; `TMP`/`DEW` tenths with quality codes 0, 1, 4, 5, 9; daily/monthly summaries skipped; observations averaged within the hour) |
+| `isd_site_stations.parquet` | site × candidate | the 3 nearest stations within 60 km, ranked |
+| `isd_site_hourly.parquet` | site × hour | the nearest candidate that reported that hour, with `station_id`, `distance_km` |
+| `weather_daily_isd.parquet` | site × local day | `t_mean`, `t_min`, `t_max`, `t_eve`, `n_hours` (≥ 18 required), `distance_km` |
+
+361,260 site-days for 275 sites; station distance median 13.5 km (10th–90th percentile 5.7–29.2 km).
+Against the stations ERA5's daily mean has a bias of +0.06 °C and an RMSE of 0.79 °C, its daily
+maximum an RMSE of 1.18 °C, and on the stations' 30+ °C days it reads 1.3 °C too cool.
+
+## Weather-effect heterogeneity: `code/reports/weather_heterogeneity/`
+
+`sense-energy weather-heterogeneity` (`analysis/weather_heterogeneity.py`), on the sites without
+CHP with the doses and specification B of `weather_causal`.
+
+| File | Grain | Contents |
+|---|---|---|
+| `site_slopes.csv` | site × dose | `slope`, `se` (log points), `slope_pct`, `se_pct`, `posterior` / `posterior_pct` (empirical-Bayes), `shrinkage`, `pooled`, `tau`, `i2`, plus the site descriptors |
+| `site_descriptors.csv` | site | `use` (ERIC site type collapsed to five groups), `cluster` (k = 4 demand shape), `trust_type`, `log_mean_kw`, `mean_build_year`, `summer_tmax`, `gas_to_elec`, `led_pct`, `region` |
+| `moderators.csv` | moderator × dose × level | one-at-a-time dose × moderator interactions, `coef_pct` in percentage points per °C (categorical: against the reference; continuous: per SD), `p_joint` for the moderator |
+| `moderators_joint.csv` | dose × term | the same with building use and all continuous moderators together (87 sites) |
+| `hourly_by_use.csv` | hour × use × band | demand on days below 2 °C and at or above 22 °C against a 14–16 °C day, by building use |
+
+Site-dose slopes whose clustered variance is undefined (three in the current run) are dropped
+from the shrinkage and listed in the log.
+
+## What moves heat: `code/reports/heat_drivers/`
+
+`sense-energy heat-drivers` (`analysis/heat_drivers.py`), on the sites without CHP and without a
+`meter_gaps` coverage flag (see `site_coverage_flags.parquet`), specification B of `weather_causal`.
+Slopes are in log points (`*_pct` columns: × 100).
+
+| File | Grain | Contents |
+|---|---|---|
+| `plain_terms.csv` | site × term | cold (`hdd14`) and heat (`cdd20`) slopes against temperature alone, on this module's sample |
+| `site_terms.csv` | site × term | the same with a site-specific sunshine term (`solar_kwh_m2`, ERA5 surface solar radiation, kWh/m²/day) and a heat × weekend × site term: `cdd20` is the weekday heat slope, `cdd20_weekend` the weekend slope, `cdd20_weekend_diff` their difference |
+| `night_day_terms.csv` | site × term | the heat dose split: `hot_afternoon` (per °C of daily maximum above 24 °C) and `warm_night` (per °C of daily minimum above 12 °C), with cold and sunshine |
+| `block_slopes.csv` | site × block × term | cold, heat and sunshine slopes on the mean demand of each six-hour local block (`block` 0–3: night 00–06, morning, afternoon, evening) |
+| `site_features.csv` | site | everything above side by side (`heat_plain`, `heat`, `sun`, `heat_weekend*`, `heat_b0..3`, `sun_b0..3`, `hot_afternoon`, `warm_night`, each with `_se`), derived `heat_afternoon_excess` (afternoon minus night block), `sun_day` (precision-weighted morning + afternoon), `sun_night`; `type` (rises with heat / rises with heat, falls with sunshine / falls with sunshine only / falls with heat / neither, at 5 %), `sign` (the daily heat slope's sign group), flags `afternoon_peaked`, `weekday_only`, `night_sunshine_negative`, `cooling_afternoon`, `heating_tail`; `use`, `mean_kw`, `region`, `urban`, `overheats`, `solar_eric`, `coverage_flag` |
+| `site_descriptors.csv` | site | the heterogeneity descriptors plus `elec_kwh_per_m2`, `log_elec_per_m2`, `max_demand_kw`, `peak_w_m2`, `heat_pumps` / `heat_pumps_any`, `overheating_occurrences` / `overheats`, `solar_generated_kwh`, `solar_consumed_kwh` / `solar_eric`, `tenure` / `tenure_group`, `urban`, `density_km2` / `log_density`, `repd_solar_mw`, `repd_solar_status`, `night_day_ratio`, `weekend_ratio`, `winter_summer_ratio`, `daily_cv` |
+| `group_decomposition.csv` | model × sign group × term | the three sign groups' pooled slopes, model `daily mean` (cold, heat, sunshine) and `night and day` (cold, hot afternoon, warm night, sunshine) |
+| `moderators_heat.csv` | moderator × term × level | one-at-a-time interactions of cold, heat and sunshine with each moderator (`dose` column), `coef_pct` in percentage points per unit of the term; `p_joint` tests the heat interactions of the moderator |
+| `moderators_heat_joint.csv` | term | building use, urban form, density, electricity intensity, peak W/m², night/day and weekend ratios together |
+| `variance_explained.csv` | descriptor set | random-effects meta-regression of the sunshine-controlled heat slopes: `tau_before_pct`, `tau_after_pct`, `r2_true` (share of the true between-site variance explained; the first row is the sunshine term itself, τ before and after it) |
+| `excluded_sites.csv` | site | the flagged sites left out, with their heat slopes from the heterogeneity run |
+| `summary.json` | — | the headline numbers |
+
 ## Forecasts: `code/data/external/weather/aifs_ens/` → `interim/forecast_aifs_ens.parquet`
 
 ECMWF AIFS-ENS from ECMWF open data, **CC BY 4.0 - "Contains ECMWF open data"**.
@@ -516,9 +625,42 @@ Source archives (ESC extracts) unpacked in `external/eric/` and `external/nhs_be
 
 | File | Key | Content |
 |---|---|---|
-| `eric_2023_24_site.parquet` | `site_code` | ERIC 2023/24 (1 Apr 2023 – 31 Mar 2024), 2,869 English NHS sites: total electricity as the sum of the five consumption components (`elec_kwh`; the headline field is filled for ~5 % of sites and kept as `elec_headline_kwh`), gas, oil, steam, hot water, renewable heat, solar generated, maximum demand (kW), available capacity (kVA), floor area, heated volume, floor-area-weighted mean construction year, LED coverage, heat pumps, CHP units, old boilers, EV charge points, single rooms, high/significant-risk backlog, site type and tenure, postcode centroid (`latitude`, `longitude`, postcodes.io), intensities (`elec_kwh_per_m2`, `gas_kwh_per_m2`, `gas_to_elec`) |
+| `eric_2023_24_site.parquet` | `site_code` | ERIC 2023/24 (1 Apr 2023 – 31 Mar 2024), 2,869 English NHS sites: total electricity as the sum of the five consumption components (`elec_kwh`; the headline field is filled for ~5 % of sites and kept as `elec_headline_kwh`), gas, oil, steam, hot water, renewable heat, solar generated, maximum demand (kW), available capacity (kVA), floor area, heated volume, floor-area-weighted mean construction year, LED coverage, heat pumps, CHP units, old boilers, EV charge points, single rooms, high/significant-risk backlog, overheating occurrences that triggered a risk assessment (clinical areas above 26 °C, field S16_07: `overheating_occurrences`), trust-owned and third-party solar consumed (`solar_consumed_kwh`, `third_party_solar_kwh`), site type and tenure, postcode centroid (`latitude`, `longitude`, postcodes.io), intensities (`elec_kwh_per_m2`, `gas_kwh_per_m2`, `gas_to_elec`) |
 | `eric_2023_24_trust.parquet` | `trust_code` | the trust-level ERIC table as published (210 trusts) |
+| `eric_2024_25_site.parquet`, `eric_2024_25_trust.parquet` | `site_code` / `trust_code` | ERIC 2024/25 (1 Apr 2024 – 31 Mar 2025, published 16 Oct 2025; NHS England files in `external/eric_2024_25/`, latin-1, column names normalised to the 2023/24 spelling), 2,901 sites and 207 trusts, same columns as 2023/24 plus `occupied_floor_area_m2`, `chp_elec_output_kwh`, `chp_thermal_output_kwh`, `chp_gas_input_kwh`, `chp_other_input_kwh`, `chp_elec_purchased_kwh`, `chp_thermal_purchased_kwh`, `chp_thermal_wasted_kwh`, `exported_elec_kwh`, `exported_thermal_kwh`, `chp_elec_kw`, `chp_thermal_kw`, and an age band 2025–2034; the headline `elec_headline_kwh` field was dropped from the collection (missing). `collection` names the year. Built by `sense-energy build-eric --year 2024_25` |
 | `eric_2023_24_postcodes.parquet` | `postcode` | postcode centroid cache for the ERIC sites |
 | `kh03_occupied_by_sector.parquet` | `ods_code`, `quarter_end`, `sector` | average occupied beds per quarter, `overnight` and `day_only`, sectors general & acute / maternity / mental illness / learning disabilities; 2001 (overnight) or 2010 (day only) to June 2024 |
 | `kh03_occupied_by_specialty.parquet` | `ods_code`, `quarter_end`, `specialty` | the same by 78 treatment-specialty codes, 2010 – June 2024 |
 | `site_coverage_flags.parquet` | `site_code` | metered vs ERIC electricity 2023/24 per panel site: `coverage_flag` (`ok`, `partial_supply`, `aggregate_supply`, `chp_mismatch`, `meter_gaps`, `no_eric`), `energy_ratio`, `peak_ratio` |
+
+## Site context: `interim/site_context.parquet`
+
+`sense-energy build-site-context` (`data/site_context.py`), one row per site of `sites.parquet`. Three
+open sources:
+
+| Column(s) | Source | Content |
+|---|---|---|
+| `oa21`, `lsoa21`, `lsoa_name`, `bua`, `ruc11`, `ruc21` | postcodes.io (ONS open data) | 2021 census geographies of the site postcode (output area, LSOA, built-up area) and the rural-urban classification 2011 (output-area codes A1–F2) and 2021; empty for the six terminated postcodes |
+| `urban` | derived | `ruc11` collapsed: major conurbation (A1), minor conurbation (B1), city and town (C1, C2), rural (D–F) |
+| `density_km2` | ONS Census 2021 table TS006 via the Nomis API, `external/ons/census2021_ts006_density_lsoa21.csv` (35,672 LSOAs, England and Wales) | usual residents per km² of the site's LSOA |
+| `repd_solar_schemes`, `repd_solar_mw`, `repd_solar_status`, `repd_solar_operational_mw`, `repd_solar_first_operational`, `repd_battery_mw` | DESNZ Renewable Energy Planning Database, quarterly extract `external/repd/REPD_Publication_Q2_2026.csv` (schemes of 150 kW and above, England) | solar PV and battery schemes at the site's full postcode: count, summed capacity, best planning status, capacity operational by the end of the electricity extract (8 May 2026) and its first operational date. In the Q2 2026 extract 24 sites have a scheme at their postcode and none was operational within the sample: these are the 2025 NHS rooftop-solar applications, awaiting construction |
+
+## Display Energy Certificates: `code/data/external/dec/` → `interim/dec_certificates.parquet`, `interim/dec_sites.parquet`
+
+`sense-energy build-dec` (`data/dec.py`). The MHCLG energy performance of buildings data API
+(`api.get-energy-performance-data.communities.gov.uk`, bearer token `EPB_API_KEY` in `.env`, Open
+Government Licence v3.0): `GET /api/display/search?postcode=` for every site postcode, then
+`GET /api/certificate?certificate_number=` for each certificate found; both cached as JSON under
+`external/dec/search/` and `external/dec/certificates/`, so a rebuild with `--no-fetch` reads the cache.
+Every occupied public building over 250 m² displays a DEC, renewed yearly above 1,000 m²; a hospital
+postcode carries one certificate per building per year, back to 2008.
+
+| File | Grain | Contents |
+|---|---|---|
+| `dec_certificates.parquet` | certificate | flattened record: `certificate_number`, `uprn`, address, `postcode_norm`, `property_type`, `schema_type`, `registration_date`, `nominated_date`, assessment period, `floor_area_m2`, `main_heating_fuel`, `building_environment` and its collapsed `environment` (air conditioning / mixed mode / heating with mechanical or natural ventilation / unconditioned), `hvac_system`, `ac_present` and `ac_yes`, `ac_rated_kw` (missing when the certificate flags the rating unknown), `operational_rating`, metered `electricity_kwh` and `thermal_kwh` (all non-electric fuels, `thermal_fuels`) of the assessment year, `elec_kwh_m2` / `thermal_kwh_m2` and their typical benchmarks, renewables, `electric_heating` (main fuel is grid electricity) |
+| `dec_recommendations.parquet` | recommendation | the advisory report linked from each latest certificate (`related_certificate_number`, newer schemas only): `advisory_number`, `dec_number`, `payback` (short / medium / long / other), `code`, `recommendation` text, `co2_impact`, `themes` (cooling, heating, hot water, lighting, controls, fabric, ventilation, renewables, by keyword), the report's floor area and building environment |
+| `dec_sites.parquet` | site | the latest certificate of each building at the site postcode (buildings keyed by UPRN, else by first address line), aggregated by floor area: `dec_buildings`, `dec_floor_area_m2`, `dec_ac_share` (floor share with air conditioning present), `dec_ac_buildings`, `dec_ac_kw` / `dec_ac_kw_m2` (where rated output is known, `dec_ac_kw_known_share`), `dec_cooled_share` (air conditioning or mixed mode), `dec_mech_vent_share`, `dec_env_*_share` per environment, `dec_main_environment`, `dec_electric_heating_share`, `dec_elec_kwh_m2`, `dec_thermal_kwh_m2`, `dec_operational_rating`, `dec_renewables_electrical`, `dec_electricity_kwh`, `dec_latest_nominated` / `dec_oldest_nominated`, `dec_property_types`, `dec_buildings_ever` (buildings with any certificate, against `dec_buildings` whose latest is from 2019 on), and the recommendation counts `rec_buildings`, `rec_total`, `rec_short_payback`, `rec_<theme>` with `rec_<theme>_building_share` |
+
+Matching is by the site's full postcode, so buildings of a hospital that carry a different postcode
+are missed and a shared postcode can bring in a neighbour's buildings; `heat_drivers` reports
+`dec_coverage`, the DEC floor area over the ERIC gross internal area, as the check.

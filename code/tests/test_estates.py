@@ -23,10 +23,10 @@ def _eric_csv(tmp_path):
         "Post Code": ["AB1 2CD", "EF3 4GH"],
         "Electrical energy consumption (KWh)": ["", "1,000"],
     }
-    for c in eric.ELEC_COMPONENTS:
-        cols[c] = ["1,000", ""]
     for c in eric.NUMERIC.values():
         cols[c] = ["10", "0"]
+    for c in eric.ELEC_COMPONENTS:  # after NUMERIC: the solar components are in both lists
+        cols[c] = ["1,000", ""]
     for c in eric.AGE_BANDS:
         cols[c] = ["0", "0"]
     cols["Age profile - 2015 to 2024 (%)"] = ["50", ""]
@@ -148,3 +148,26 @@ def test_scoring_sensitivity_subsets():
     assert s.loc["verified only", "sites"] == 1 and s.loc["verified only", "nmae"] == pytest.approx(
         0.1
     )
+
+
+def test_eric_loader_normalises_2024_25_columns_and_tolerates_missing_fields(tmp_path):
+    cols = {
+        "Site Code": ["S1"], "Site Name": ["A"], "Trust Code": ["T"], "Trust Name": ["T"],
+        "Trust Type": ["ACUTE"], "Commissioning Region": ["R"], "Site Type": ["General acute hospital"],
+        "Tenure": ["Freehold"], "Post Code": ["E9 6SR"],
+        "Gross internal floor area (m²)": ["2,000"],  # UTF-8 file read as latin-1 by the loader
+        "Electrical  energy output of CHP system/s (kWh)": ["5,000"],  # doubled space
+        "CHP unit/s size - electrical (kW)": ["100"],
+        "Age profile - 2025 to 2034 (%)": ["100"],
+    }  # fmt: skip
+    for c in eric.ELEC_COMPONENTS:
+        cols[c] = ["1,000"]
+    p = tmp_path / "site.csv"
+    pd.DataFrame(cols).to_csv(p, index=False)
+    site = eric.load_site(p, year="2024_25").set_index("site_code")
+    assert site.loc["S1", "gia_m2"] == 2000
+    assert site.loc["S1", "chp_elec_output_kwh"] == 5000 and site.loc["S1", "chp_elec_kw"] == 100
+    assert np.isnan(site.loc["S1", "elec_headline_kwh"])  # dropped from the 2024/25 collection
+    assert np.isnan(site.loc["S1", "heat_pumps"])  # absent column -> missing, not an error
+    assert site.loc["S1", "mean_build_year"] == 2029.5
+    assert site.loc["S1", "collection"] == "2024/25"

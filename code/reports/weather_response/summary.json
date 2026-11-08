@@ -1,0 +1,198 @@
+{
+  "site_days": 140326,
+  "sites": {
+    "inpatient": 43,
+    "on-site CHP": 23,
+    "outpatient": 66
+  },
+  "window": [
+    "2022-12-07",
+    "2026-05-08"
+  ],
+  "reference_bin_c": [
+    14.0,
+    16.0
+  ],
+  "pct_ci": {
+    "inpatient | daily mean | <-2": [
+      24.8,
+      21.3,
+      28.4
+    ],
+    "inpatient | daily mean | 0": [
+      15.9,
+      14.0,
+      17.8
+    ],
+    "inpatient | daily mean | 8": [
+      6.1,
+      5.0,
+      7.2
+    ],
+    "inpatient | daily mean | 20": [
+      2.6,
+      1.5,
+      3.7
+    ],
+    "inpatient | daily mean | 22": [
+      6.3,
+      4.7,
+      7.9
+    ],
+    "inpatient | daily mean | >=24": [
+      10.0,
+      6.5,
+      13.6
+    ],
+    "inpatient | daily peak | <-2": [
+      22.6,
+      18.5,
+      26.9
+    ],
+    "inpatient | daily peak | 0": [
+      14.7,
+      12.6,
+      16.9
+    ],
+    "inpatient | daily peak | 8": [
+      5.7,
+      4.6,
+      6.8
+    ],
+    "inpatient | daily peak | 20": [
+      3.7,
+      2.5,
+      4.8
+    ],
+    "inpatient | daily peak | 22": [
+      7.8,
+      6.1,
+      9.4
+    ],
+    "inpatient | daily peak | >=24": [
+      9.3,
+      4.4,
+      14.4
+    ],
+    "outpatient | daily mean | <-2": [
+      31.5,
+      27.8,
+      35.3
+    ],
+    "outpatient | daily mean | 0": [
+      21.0,
+      19.1,
+      22.9
+    ],
+    "outpatient | daily mean | 8": [
+      7.6,
+      6.3,
+      8.9
+    ],
+    "outpatient | daily mean | 20": [
+      4.6,
+      2.9,
+      6.4
+    ],
+    "outpatient | daily mean | 22": [
+      7.2,
+      5.6,
+      8.8
+    ],
+    "outpatient | daily mean | >=24": [
+      14.8,
+      9.7,
+      20.2
+    ],
+    "outpatient | daily peak | <-2": [
+      31.4,
+      27.2,
+      35.7
+    ],
+    "outpatient | daily peak | 0": [
+      23.1,
+      20.7,
+      25.6
+    ],
+    "outpatient | daily peak | 8": [
+      8.1,
+      6.6,
+      9.6
+    ],
+    "outpatient | daily peak | 20": [
+      6.6,
+      4.6,
+      8.7
+    ],
+    "outpatient | daily peak | 22": [
+      10.1,
+      7.5,
+      12.7
+    ],
+    "outpatient | daily peak | >=24": [
+      17.4,
+      11.0,
+      24.1
+    ],
+    "on-site CHP | daily mean | <-2": [
+      -0.2,
+      -8.5,
+      8.9
+    ],
+    "on-site CHP | daily mean | 0": [
+      0.5,
+      -4.3,
+      5.5
+    ],
+    "on-site CHP | daily mean | 8": [
+      -3.3,
+      -6.2,
+      -0.3
+    ],
+    "on-site CHP | daily mean | 20": [
+      29.5,
+      24.4,
+      34.8
+    ],
+    "on-site CHP | daily mean | 22": [
+      26.6,
+      17.1,
+      36.9
+    ],
+    "on-site CHP | daily mean | >=24": [
+      32.3,
+      11.7,
+      56.8
+    ],
+    "on-site CHP | daily peak | <-2": [
+      9.2,
+      2.6,
+      16.3
+    ],
+    "on-site CHP | daily peak | 0": [
+      0.7,
+      -3.5,
+      5.1
+    ],
+    "on-site CHP | daily peak | 8": [
+      -2.1,
+      -5.0,
+      0.8
+    ],
+    "on-site CHP | daily peak | 20": [
+      27.7,
+      22.3,
+      33.4
+    ],
+    "on-site CHP | daily peak | 22": [
+      27.4,
+      20.6,
+      34.5
+    ],
+    "on-site CHP | daily peak | >=24": [
+      39.2,
+      11.7,
+      73.4
+    ]
+  }
+}

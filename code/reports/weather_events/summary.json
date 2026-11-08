@@ -1,0 +1,41 @@
+{
+  "weather_window": [
+    "2022-12-01",
+    "2026-05-31"
+  ],
+  "electricity_window": [
+    "2022-12-07",
+    "2026-05-08"
+  ],
+  "sites": 275,
+  "national_events": {
+    "high wind": 37,
+    "heavy rain": 19,
+    "cold spell": 14,
+    "snow": 8,
+    "heatwave": 8
+  },
+  "national_events_in_electricity_record": {
+    "high wind": 37,
+    "heavy rain": 19,
+    "cold spell": 14,
+    "snow": 8,
+    "heatwave": 7
+  },
+  "site_events": {
+    "high wind": 5378,
+    "cold spell": 3263,
+    "heavy rain": 1069,
+    "heatwave": 907,
+    "snow": 498
+  },
+  "site_events_at_sites_with_electricity": {
+    "high wind": 2676,
+    "cold spell": 1575,
+    "heavy rain": 517,
+    "heatwave": 443,
+    "snow": 248
+  },
+  "heatwave_national_events_threshold_minus_1c": 8,
+  "heatwave_site_events_threshold_minus_1c": 1445
+}

@@ -1,0 +1,57 @@
+{
+  "sites": 109,
+  "random_effects": {
+    "cdd20": {
+      "sites": 103,
+      "pooled_pct": 0.96,
+      "tau_pct": 3.92,
+      "i2": 0.987,
+      "raw_sd_pct": 5.1,
+      "posterior_q10_q50_q90_pct": [
+        -3.88,
+        0.5,
+        6.95
+      ],
+      "sites_significant_positive": 48,
+      "sites_significant_negative": 39
+    },
+    "hdd14": {
+      "sites": 106,
+      "pooled_pct": 1.14,
+      "tau_pct": 1.3,
+      "i2": 0.992,
+      "raw_sd_pct": 1.38,
+      "posterior_q10_q50_q90_pct": [
+        -0.18,
+        0.69,
+        3.06
+      ],
+      "sites_significant_positive": 82,
+      "sites_significant_negative": 8
+    }
+  },
+  "posterior_median_by_use": {
+    "cdd20 | inpatient, acute": 2.11,
+    "cdd20 | inpatient, community": 0.78,
+    "cdd20 | mental health": -0.3,
+    "cdd20 | non-inpatient": 0.36,
+    "cdd20 | support": 3.21,
+    "hdd14 | inpatient, acute": 0.27,
+    "hdd14 | inpatient, community": 1.05,
+    "hdd14 | mental health": 0.72,
+    "hdd14 | non-inpatient": 0.9,
+    "hdd14 | support": 0.59
+  },
+  "moderator_joint_p": {
+    "LED share (%)": 0.396,
+    "building use": 0.0,
+    "demand-shape cluster": 0.606,
+    "gas / electricity ratio": 0.001,
+    "mean build year": 0.271,
+    "site size (log mean kW)": 0.261,
+    "summer mean daily maximum (\u00b0C)": 0.444,
+    "trust type": 0.041
+  },
+  "joint_model_p": 0.0,
+  "joint_model_sites": 87
+}

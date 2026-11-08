@@ -62,6 +62,7 @@ class Secrets:
     ecds_api_url: str = os.getenv("ECDS_API_URL", "https://ecds.ecmwf.int/api")
     ecds_api_key: str = os.getenv("ECDS_API_KEY", "")
     mlflow_tracking_uri: str = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
+    epb_api_key: str = os.getenv("EPB_API_KEY", "")  # MHCLG energy performance of buildings
 
 
 SECRETS = Secrets()
