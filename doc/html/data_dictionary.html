@@ -1,0 +1,1733 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data dictionary · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html" class="current">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#conventions">Conventions</a>
+  <a class="h2" href="#source-energy-systems-catapult-nhs-energy-consumption-nhs-tr">Source: energy_systems_catapult.nhs_energy_consumption.nhs_trust_consumption_data.parquet</a>
+  <a class="h3" href="#reading-columns">Reading columns</a>
+  <a class="h3" href="#reading-type-the-most-important-column-in-the-file">⚠️ reading_type — the most important column in the file</a>
+  <a class="h3" href="#site-columns-constant-per-site-code-extracted-to-sites-parqu">Site columns (constant per site_code; extracted to sites.parquet)</a>
+  <a class="h3" href="#unused-source-columns">Unused source columns</a>
+  <a class="h2" href="#interim-code-data-interim-consumption-halfhourly-parquet">Interim: code/data/interim/consumption_halfhourly.parquet</a>
+  <a class="h3" href="#cleaning-decisions">Cleaning decisions</a>
+  <a class="h3" href="#known-data-quality-issues">Known data quality issues</a>
+  <a class="h2" href="#interim-code-data-interim-sites-parquet">Interim: code/data/interim/sites.parquet</a>
+  <a class="h2" href="#geography-code-data-geo">Geography: code/data/geo/</a>
+  <a class="h3" href="#boundary-layers">Boundary layers</a>
+  <a class="h3" href="#sites-geo-parquet">sites_geo.parquet</a>
+  <a class="h3" href="#geocoding-outcome">Geocoding outcome</a>
+  <a class="h2" href="#weather-code-data-external-weather-era5-interim-weather-parq">Weather: code/data/external/weather/era5/ → interim/weather_*.parquet</a>
+  <a class="h3" href="#daily-interim-weather-daily-parquet">Daily: interim/weather_daily.parquet</a>
+  <a class="h2" href="#site-thermometers-era5-land-and-noaa-isd-stations">Site thermometers: ERA5-Land and NOAA ISD stations</a>
+  <a class="h3" href="#era5-land-code-data-external-weather-era5-land-land-interim-">ERA5-Land: code/data/external/weather/era5_land/land/ → interim/weather_land.parquet → interim/weather_daily_land.parquet</a>
+  <a class="h3" href="#noaa-isd-code-data-external-noaa-isd-interim-isd-parquet-int">NOAA ISD: code/data/external/noaa_isd/ → interim/isd_*.parquet, interim/weather_daily_isd.parquet</a>
+  <a class="h2" href="#weather-effect-heterogeneity-code-reports-weather-heterogene">Weather-effect heterogeneity: code/reports/weather_heterogeneity/</a>
+  <a class="h2" href="#what-moves-heat-code-reports-heat-drivers">What moves heat: code/reports/heat_drivers/</a>
+  <a class="h2" href="#forecasts-code-data-external-weather-aifs-ens-interim-foreca">Forecasts: code/data/external/weather/aifs_ens/ → interim/forecast_aifs_ens.parquet</a>
+  <a class="h2" href="#prices-interim-prices-parquet">Prices: interim/prices_*.parquet</a>
+  <a class="h3" href="#prices-agile-parquet-the-day-ahead-known-signal">prices_agile.parquet - the day-ahead-known signal</a>
+  <a class="h3" href="#prices-elexon-mid-parquet-ex-post-wholesale-reference">prices_elexon_mid.parquet - ex-post wholesale reference</a>
+  <a class="h3" href="#not-available">Not available</a>
+  <a class="h2" href="#forecasts-historical-code-data-external-weather-tigge-ens-in">Forecasts (historical): code/data/external/weather/tigge_ens/ → interim/forecast_tigge_ens.parquet</a>
+  <a class="h2" href="#neso-code-data-external-neso-code-data-geo-neso-interim-parq">NESO: code/data/external/neso/, code/data/geo/neso/ → interim/*.parquet</a>
+  <a class="h3" href="#future-energy-scenarios-the-quot-data-workbook-quot-sheet-by">Future Energy Scenarios — the &quot;data workbook&quot;, sheet by sheet</a>
+  <a class="h3" href="#national-demand-known-beforehand-covariates">National demand — known-beforehand covariates</a>
+  <a class="h3" href="#gsp-boundaries-sites">GSP boundaries → sites</a>
+  <a class="h2" href="#processed-code-data-processed-see-data-manifest-md">Processed: code/data/processed/ — see data_manifest.md</a>
+  <a class="h2" href="#neso-covariates-interim-neso-covariates-halfhourly-parquet-i">NESO covariates: interim/neso_covariates_halfhourly.parquet, interim/neso_site_covariates.parquet</a>
+  <a class="h2" href="#mobility-esc-the-oxford-partnership-interim-mobility-parquet">Mobility (ESC / The Oxford Partnership): interim/mobility_*.parquet</a>
+  <a class="h2" href="#forecasts-historical-51-members-code-data-external-weather-i">Forecasts (historical, 51 members): code/data/external/weather/ifs_ens/sites/ → interim/forecast_ifs_ens/YYYY-MM.parquet</a>
+  <a class="h2" href="#public-nhs-activity-statistics-interim-nhs-activity-parquet">Public NHS activity statistics (interim/nhs_activity_*.parquet)</a>
+  <a class="h2" href="#eric-2023-24-and-kh03-occupied-beds-interim-eric-interim-kh0">ERIC 2023/24 and KH03 occupied beds (interim/eric_*, interim/kh03_*)</a>
+  <a class="h2" href="#site-context-interim-site-context-parquet">Site context: interim/site_context.parquet</a>
+  <a class="h2" href="#display-energy-certificates-code-data-external-dec-interim-d">Display Energy Certificates: code/data/external/dec/ → interim/dec_certificates.parquet, interim/dec_sites.parquet</a>
+  <a class="h2" href="#next-step-analyses-code-reports-estates-eric-changes-forecas">Next-step analyses: code/reports/estates/eric_changes*, forecast_heat_days/, heat_causal_ml/</a>
+  <a class="h2" href="#jepa-site-embeddings-code-reports-jepa">JEPA site embeddings: code/reports/jepa/</a>
+  </div>
+</nav>
+<main>
+<h1>Data dictionary</h1>
+<h2 id="conventions">Conventions</h2>
+<ul>
+<li>All timestamps are tz-aware <strong>UTC</strong>; a half-hourly timestamp denotes the
+<strong>start</strong> of the settlement period. Local time (<code>Europe/London</code>) is a display
+concern — this matters because BST transitions produce 46- and 50-period days.</li>
+<li>Energy is <strong>kWh per half hour</strong> unless stated.</li>
+<li>The bottom grain is the <strong>meter</strong> (<code>mpxn</code>), not the site.</li>
+</ul>
+<h2 id="source-energy-systems-catapult-nhs-energy-consumption-nhs-tr">Source: <code>energy_systems_catapult.nhs_energy_consumption.nhs_trust_consumption_data.parquet</code></h2>
+<p>Energy Systems Catapult, NHS trust consumption. 454 MB, <strong>21,315,603 rows</strong>,
+31 columns, 2021-03-01 → 2026-05-08, 284 sites. Written by DuckDB v1.4.3.</p>
+<p>Site attributes are denormalised onto every reading row.</p>
+<h3 id="reading-columns">Reading columns</h3>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>datetime</code></td>
+  <td>timestamp[us, UTC]</td>
+  <td>Settlement period start</td>
+</tr>
+<tr>
+  <td><code>consumption</code></td>
+  <td>double</td>
+  <td><strong>Unit depends on <code>reading_type</code></strong> — see below</td>
+</tr>
+<tr>
+  <td><code>reading_type</code></td>
+  <td>string</td>
+  <td>Code 1–14; determines quantity and unit</td>
+</tr>
+<tr>
+  <td><code>reading_type_name</code></td>
+  <td>string</td>
+  <td>Human-readable form of <code>reading_type</code></td>
+</tr>
+<tr>
+  <td><code>energy_type</code></td>
+  <td>string</td>
+  <td><code>elec</code> (19.7M rows) or <code>gas</code> (1.6M)</td>
+</tr>
+<tr>
+  <td><code>mpxn</code></td>
+  <td>string</td>
+  <td>Meter identifier (MPAN/MPRN) — <strong>the true grain</strong></td>
+</tr>
+<tr>
+  <td><code>monitor_external_reference</code></td>
+  <td>string</td>
+  <td>Alternative meter reference</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reading-type-the-most-important-column-in-the-file">⚠️ <code>reading_type</code> — the most important column in the file</h3>
+<p><code>consumption</code> mixes units and granularities. Filtering is mandatory.</p>
+<table>
+<thead>
+<tr>
+  <th>Code</th>
+  <th>Name</th>
+  <th>Quantity</th>
+  <th>Rows</th>
+  <th>Keep?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>1</code></td>
+  <td>30 minute aggregated kWh</td>
+  <td>Active energy</td>
+  <td>10,338,634</td>
+  <td>✅</td>
+</tr>
+<tr>
+  <td><code>2</code></td>
+  <td>Estimate 30 minute aggregated kWh</td>
+  <td>Active energy (estimated)</td>
+  <td>516,574</td>
+  <td>✅ flagged</td>
+</tr>
+<tr>
+  <td><code>3</code></td>
+  <td>Part actual 30 minute aggregate kWh</td>
+  <td>Active energy (partial)</td>
+  <td>36,500</td>
+  <td>✅ flagged</td>
+</tr>
+<tr>
+  <td><code>6</code></td>
+  <td>Export 30 minute aggregated kWh</td>
+  <td>Export (generation)</td>
+  <td>79,952</td>
+  <td>❌ not demand</td>
+</tr>
+<tr>
+  <td><code>8</code></td>
+  <td>Reactive Export 30 min aggregated <strong>kVArh</strong></td>
+  <td>Reactive power</td>
+  <td>4,606,851</td>
+  <td>❌ not energy</td>
+</tr>
+<tr>
+  <td><code>9</code></td>
+  <td>Reactive Export estimate <strong>kVArh</strong></td>
+  <td>Reactive power</td>
+  <td>327,852</td>
+  <td>❌ not energy</td>
+</tr>
+<tr>
+  <td><code>10</code></td>
+  <td>Reactive Import 30 min aggregated <strong>kVArh</strong></td>
+  <td>Reactive power</td>
+  <td>5,029,235</td>
+  <td>❌ not energy</td>
+</tr>
+<tr>
+  <td><code>11</code></td>
+  <td>Reactive Import estimate <strong>kVArh</strong></td>
+  <td>Reactive power</td>
+  <td>366,941</td>
+  <td>❌ not energy</td>
+</tr>
+<tr>
+  <td><code>4</code></td>
+  <td>Cumulative kWh</td>
+  <td>Meter register</td>
+  <td>8,457</td>
+  <td>❌ wrong granularity</td>
+</tr>
+<tr>
+  <td><code>5</code></td>
+  <td>Monthly aggregated kWh</td>
+  <td>Monthly</td>
+  <td>2,403</td>
+  <td>❌ wrong granularity</td>
+</tr>
+<tr>
+  <td><code>14</code></td>
+  <td>Time of use cumulative kWh</td>
+  <td>Register</td>
+  <td>2,100</td>
+  <td>❌ wrong granularity</td>
+</tr>
+<tr>
+  <td><code>NULL</code></td>
+  <td>—</td>
+  <td>Unknown</td>
+  <td>104</td>
+  <td>❌</td>
+</tr>
+</tbody>
+</table>
+<p><strong>9.6M of 21.3M rows (45%) are reactive power in kVArh, not energy.</strong> Averaging
+<code>consumption</code> without filtering silently mixes kVArh into kWh.</p>
+<h3 id="site-columns-constant-per-site-code-extracted-to-sites-parqu">Site columns (constant per <code>site_code</code>; extracted to <code>sites.parquet</code>)</h3>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_code</code></td>
+  <td>string</td>
+  <td>Site identifier</td>
+</tr>
+<tr>
+  <td><code>site_name</code></td>
+  <td>string</td>
+  <td>Site name</td>
+</tr>
+<tr>
+  <td><code>postcode</code></td>
+  <td>string</td>
+  <td>Postcode — the route to weather matching</td>
+</tr>
+<tr>
+  <td><code>organisation_name</code></td>
+  <td>string</td>
+  <td>NHS trust</td>
+</tr>
+<tr>
+  <td><code>organisation_type</code></td>
+  <td>string</td>
+  <td>ACUTE - TEACHING / LARGE / MEDIUM / SMALL / SPECIALIST, COMMUNITY, MENTAL HEALTH AND LEARNING DISABILITY, AMBULANCE</td>
+</tr>
+<tr>
+  <td><code>comissioning_region</code></td>
+  <td>string</td>
+  <td><strong>[sic]</strong> — misspelled in source; renamed <code>commissioning_region</code> downstream</td>
+</tr>
+<tr>
+  <td><code>integrated_care_board</code></td>
+  <td>string</td>
+  <td>ICB</td>
+</tr>
+<tr>
+  <td><code>local_authority</code></td>
+  <td>string</td>
+  <td>Local authority</td>
+</tr>
+<tr>
+  <td><code>occupied_floor_area</code></td>
+  <td>double</td>
+  <td>m²</td>
+</tr>
+<tr>
+  <td><code>site_gross_internal_area</code></td>
+  <td>double</td>
+  <td>m² — the denominator for kWh/m²</td>
+</tr>
+<tr>
+  <td><code>site_heated_volume</code></td>
+  <td>double</td>
+  <td>m³</td>
+</tr>
+<tr>
+  <td><code>site_construction_year_band</code></td>
+  <td>string</td>
+  <td>Construction era band</td>
+</tr>
+<tr>
+  <td><code>site_use_type</code></td>
+  <td>string</td>
+  <td>Site use classification</td>
+</tr>
+<tr>
+  <td><code>fossil_fuel_led_chp_units_operated_on_site</code></td>
+  <td>int32</td>
+  <td>On-site CHP count</td>
+</tr>
+</tbody>
+</table>
+<h3 id="unused-source-columns">Unused source columns</h3>
+<p><code>main_heating_fuel</code> is <strong>empty for all 21,315,603 rows</strong>. The pre-aggregated
+<code>total_*_energy_consumption_kwh</code>, <code>chp_*</code>, <code>*_reported_kwh_m2</code> and <code>kWh_m2</code>
+columns are trust/period roll-ups, not half-hourly, and are not carried into
+interim.</p>
+<hr />
+<h2 id="interim-code-data-interim-consumption-halfhourly-parquet">Interim: <code>code/data/interim/consumption_halfhourly.parquet</code></h2>
+<p>Built by <code>sense-energy build-interim</code>. 11,013,277 rows, 38.6 MB (zstd).
+<strong>235 meters, 146 sites</strong>, 2022-12-07 → 2026-05-08.</p>
+<p>Grain: one row per (<code>mpxn</code>, <code>energy_type</code>, <code>datetime</code>) on a complete 30-minute
+grid. Meter grain is preserved deliberately so the series can be aggregated up a
+hierarchy — <code>mpxn → site_code → organisation_name → integrated_care_board → commissioning_region</code> — via <code>cleaning.aggregate_to_level</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>mpxn</code></td>
+  <td>string</td>
+  <td>Meter identifier</td>
+</tr>
+<tr>
+  <td><code>site_code</code></td>
+  <td>string</td>
+  <td>Joins to <code>sites.parquet</code></td>
+</tr>
+<tr>
+  <td><code>energy_type</code></td>
+  <td>string</td>
+  <td><code>elec</code> or <code>gas</code></td>
+</tr>
+<tr>
+  <td><code>datetime</code></td>
+  <td>datetime64[us, UTC]</td>
+  <td>Period start, on a gap-free grid</td>
+</tr>
+<tr>
+  <td><code>consumption_kwh</code></td>
+  <td>float64</td>
+  <td>Active energy, kWh. NaN = missing (11.82%)</td>
+</tr>
+<tr>
+  <td><code>is_estimated</code></td>
+  <td>bool</td>
+  <td>Came from <code>reading_type</code> 2 or 3 (3.10%)</td>
+</tr>
+<tr>
+  <td><code>is_interpolated</code></td>
+  <td>bool</td>
+  <td>Linearly filled across a gap ≤ 4 periods (1.38%)</td>
+</tr>
+<tr>
+  <td><code>is_outlier</code></td>
+  <td>bool</td>
+  <td>Implausible high reading: robust z &gt; 10 <strong>and</strong> &gt; 5× meter median <strong>and</strong> &gt; 3× meter p99.5 (148 readings, 0.001%)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cleaning-decisions">Cleaning decisions</h3>
+<table>
+<thead>
+<tr>
+  <th>Decision</th>
+  <th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Keep <code>reading_type</code> 1/2/3 only</td>
+  <td>Everything else is a different quantity or granularity</td>
+</tr>
+<tr>
+  <td>Meters <strong>summed, never de-duplicated</strong></td>
+  <td>33 of 146 sites have multiple meters (Homerton: 20). 3.1M rows share <code>site_code</code>+<code>datetime</code> and are distinct meters, not duplicates</td>
+</tr>
+<tr>
+  <td>101 true duplicates dropped</td>
+  <td>Identical on (<code>mpxn</code>, <code>energy_type</code>, <code>reading_type</code>, <code>datetime</code>); last kept</td>
+</tr>
+<tr>
+  <td>211,478 actual/estimate collisions resolved</td>
+  <td>Same meter and timestamp under two reading types; the actual (<code>1</code>) wins</td>
+</tr>
+<tr>
+  <td>Exact zeros → NaN (1,120,688; 10.49%)</td>
+  <td>Meter dropout written as zero. Concentrated — 8 sites are &gt;50% zero, 94 of 145 under 1% — which is what distinguishes it from genuine low demand</td>
+</tr>
+<tr>
+  <td>Gaps ≤ 4 periods interpolated</td>
+  <td>Longer outages stay NaN rather than inventing a load profile</td>
+</tr>
+<tr>
+  <td>Outliers flagged, never dropped</td>
+  <td>A genuine spike is signal. Three conditions must all hold (z &gt; 10, &gt; 5× median, &gt; 3× p99.5): a plain MAD z-score flagged up to 45% of readings on low-consumption or bimodal meters, whose idle/running regimes are not faults. Now 148 readings in total</td>
+</tr>
+</tbody>
+</table>
+<h3 id="known-data-quality-issues">Known data quality issues</h3>
+<ul>
+<li><strong>Gas maximum of 32,611 kWh/half-hour</strong> (65 MW thermal) against a gas mean of
+204 — implausible, flagged as an outlier and treated as missing in the processed tables. Electricity peaks at 2,505
+kWh/half-hour (5 MW), which is plausible for a large acute site.</li>
+<li><strong>Coverage varies widely</strong>: median 1,192 days per site, minimum 388.</li>
+<li><strong>Only 146 of 284 sites</strong> have half-hourly active energy at all.</li>
+<li><strong>No weather data</strong> in this source. Temperature is the strongest single
+predictor of hospital demand and must be joined from elsewhere, matched on
+<code>postcode</code>.</li>
+</ul>
+<h2 id="interim-code-data-interim-sites-parquet">Interim: <code>code/data/interim/sites.parquet</code></h2>
+<p>284 rows, 14 columns — the site columns above, with <code>comissioning_region</code>
+renamed to <code>commissioning_region</code>.</p>
+<hr />
+<h2 id="geography-code-data-geo">Geography: <code>code/data/geo/</code></h2>
+<p>The NHS extract carries <strong>no coordinates</strong>. <code>postcode</code> is the only direct
+locator — present for 275 of 284 sites, and 141 of the 146 with half-hourly
+data. Everything below is fetched by <code>sense-energy fetch-geo</code>.</p>
+<h3 id="boundary-layers">Boundary layers</h3>
+<p>ONS Open Geography Portal, <strong>Open Government Licence v3</strong> — &quot;Contains OS data
+© Crown copyright and database right&quot;. Generalised-clipped (<code>BGC</code>) versions:
+full-resolution coastlines are far larger and indistinguishable at national scale.</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Layer</th>
+  <th>Features</th>
+  <th>Joins to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>countries_uk.geojson</code></td>
+  <td>Countries December 2024 UK BGC</td>
+  <td>4</td>
+  <td>map background</td>
+</tr>
+<tr>
+  <td><code>nhs_regions_en.geojson</code></td>
+  <td>NHS England Regions January 2024 BGC</td>
+  <td>7</td>
+  <td><code>sites.commissioning_region</code></td>
+</tr>
+<tr>
+  <td><code>icb_en.geojson</code></td>
+  <td>Integrated Care Boards April 2023 BGC</td>
+  <td>42</td>
+  <td><code>sites.integrated_care_board</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each is also written as an ESRI Shapefile (<code>.shp</code> + <code>.dbf</code>/<code>.shx</code>/<code>.prj</code>/<code>.cpg</code>)
+via <code>sense-energy fetch-geo --shapefile</code>. GeoJSON is the native download and the
+better archival form — one file, explicit CRS, no 10-character field-name
+truncation — so the shapefiles are a convenience for tools that need them.</p>
+<p>⚠️ ONS layer names carry the boundary type as a suffix. <code>_NC</code> means <strong>no
+coordinates</strong> — a lookup table with null geometry, not a boundary layer.
+<code>BFC</code>/<code>BFE</code> are full resolution, <code>BGC</code> generalised, <code>BSC</code>/<code>BUC</code> (super/ultra)
+more so.</p>
+<h3 id="sites-geo-parquet"><code>sites_geo.parquet</code></h3>
+<p>284 rows — the site dimension with centroids appended.</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><em>(all <code>sites.parquet</code> columns)</em></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>latitude</code>, <code>longitude</code></td>
+  <td>Postcode centroid, EPSG:4326</td>
+</tr>
+<tr>
+  <td><code>eastings</code>, <code>northings</code></td>
+  <td>OSGB grid (EPSG:27700)</td>
+</tr>
+<tr>
+  <td><code>country</code>, <code>region_ons</code>, <code>admin_district</code></td>
+  <td>ONS geographies — cross-check on the site table</td>
+</tr>
+<tr>
+  <td><code>postcode_is_terminated</code></td>
+  <td>Centroid came from a retired postcode</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Source:</strong> <a href="https://postcodes.io">postcodes.io</a> — a free service over ONS open
+data. Only postcodes are sent; no consumption data leaves the machine. Hospital
+postcodes are public information, but see <a href="data_governance.md">data_governance.md</a>
+before extending this to anything site-level.</p>
+<h3 id="geocoding-outcome">Geocoding outcome</h3>
+<ul>
+<li><strong>275 of 284 sites</strong> located; all 258 distinct postcodes resolved.</li>
+<li><strong>5 postcodes are terminated</strong> (retired 2010–2025) and were resolved through
+the terminated-postcodes endpoint. NHS estates records outlive the postcode
+register, so this fallback is required, not incidental.</li>
+<li><strong>9 sites have no postcode at all.</strong> Five are <code>Site(s) Unknown - &lt;trust&gt;</code>
+placeholders — trust-level aggregates carried in the data as if they were
+sites. They are unmappable, and should be excluded from site-level modelling
+rather than treated as a location.</li>
+<li><strong>141 of the 146 sites with demand data are mappable</strong>; 134 appear on the map,
+the rest having no non-outlier electricity readings.</li>
+<li>Every located site is in <strong>England</strong> — consistent with an NHS England source.</li>
+</ul>
+<hr />
+<h2 id="weather-code-data-external-weather-era5-interim-weather-parq">Weather: <code>code/data/external/weather/era5/</code> → <code>interim/weather_*.parquet</code></h2>
+<p>ERA5 from the Copernicus Climate Data Store (<code>reanalysis-era5-single-levels</code>).
+Licence: Copernicus, free with attribution. Pulled by <code>sense-energy fetch-weather</code>,
+one NetCDF per product-month; extracted by <code>sense-energy build-weather</code>.
+Why reanalysis rather than forecasts: <a href="adr/0003-weather-and-price-data-sources.md">ADR 0003</a>.</p>
+<table>
+<thead>
+<tr>
+  <th>Product</th>
+  <th>Grid</th>
+  <th>Cadence</th>
+  <th>Members</th>
+  <th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>reanalysis</code></td>
+  <td>0.25°</td>
+  <td>hourly</td>
+  <td>1 (member 0)</td>
+  <td><code>weather_reanalysis.parquet</code></td>
+</tr>
+<tr>
+  <td><code>ensemble_members</code></td>
+  <td>0.5°</td>
+  <td>3-hourly</td>
+  <td>10 (EDA)</td>
+  <td><code>weather_ensemble_members.parquet</code></td>
+</tr>
+</tbody>
+</table>
+<p>Area <code>[55, -5, 50, 2]</code> (N, W, S, E) covers every located site. Site values are
+the nearest grid point to the postcode centroid.</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Units</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_code</code>, <code>datetime</code> (UTC), <code>member</code></td>
+  <td></td>
+  <td>member 0 = deterministic</td>
+</tr>
+<tr>
+  <td><code>t2m</code></td>
+  <td>K</td>
+  <td>2 m temperature. Subtract 273.15</td>
+</tr>
+<tr>
+  <td><code>d2m</code></td>
+  <td>K</td>
+  <td>2 m dewpoint → relative humidity</td>
+</tr>
+<tr>
+  <td><code>tcc</code>, <code>lcc</code></td>
+  <td>0–1</td>
+  <td>total / low cloud cover</td>
+</tr>
+<tr>
+  <td><code>tp</code></td>
+  <td>m</td>
+  <td>total precipitation, <strong>accumulated over the previous hour</strong> (3 h for EDA)</td>
+</tr>
+<tr>
+  <td><code>sf</code></td>
+  <td>m water equivalent</td>
+  <td>snowfall, accumulated</td>
+</tr>
+<tr>
+  <td><code>u10</code>, <code>v10</code></td>
+  <td>m s⁻¹</td>
+  <td>wind components; speed = √(u²+v²)</td>
+</tr>
+<tr>
+  <td><code>i10fg</code></td>
+  <td>m s⁻¹</td>
+  <td>instantaneous 10 m gust</td>
+</tr>
+<tr>
+  <td><code>ssrd</code></td>
+  <td>J m⁻²</td>
+  <td>surface solar radiation down, accumulated; ÷3600 → W m⁻² mean</td>
+</tr>
+<tr>
+  <td><code>strd</code></td>
+  <td>J m⁻²</td>
+  <td>surface thermal radiation down, accumulated</td>
+</tr>
+<tr>
+  <td><code>sp</code></td>
+  <td>Pa</td>
+  <td>surface pressure</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ The new CDS delivers a zip holding one NetCDF per step type when a request
+mixes instantaneous and accumulated variables, even with
+<code>download_format: unarchived</code>. <code>weather.open_download</code> merges them.</p>
+<h3 id="daily-interim-weather-daily-parquet">Daily: <code>interim/weather_daily.parquet</code></h3>
+<p>Built by <code>sense-energy build-weather-daily</code> (<code>data/weather_daily.py</code>) from
+<code>weather_reanalysis.parquet</code>, nothing fetched. 351,450 rows: 275 sites ×
+1 Dec 2022 → 31 May 2026. One row per (<code>site_code</code>, <code>date</code>), <code>date</code> a
+<strong>Europe/London</strong> calendar day (23 or 25 hours on BST transition days).
+Accumulated fields are dated by the hour they accumulate over.</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Units</th>
+  <th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>n_hours</code></td>
+  <td>h</td>
+  <td>hourly values in the local day</td>
+</tr>
+<tr>
+  <td><code>t_mean</code>, <code>t_min</code>, <code>t_max</code></td>
+  <td>°C</td>
+  <td>2 m temperature</td>
+</tr>
+<tr>
+  <td><code>t_eve</code></td>
+  <td>°C</td>
+  <td>mean 2 m temperature over local 18:00–23:59, the part of the day a daily mean blurs</td>
+</tr>
+<tr>
+  <td><code>hdd_15_5</code></td>
+  <td>°C day</td>
+  <td>heating degree days, integration method: mean over hours of max(15.5 − T, 0)</td>
+</tr>
+<tr>
+  <td><code>cdd_15_5</code>, <code>cdd_18</code>, <code>cdd_22</code></td>
+  <td>°C day</td>
+  <td>cooling degree days, integration method (CIBSE TM41): mean over hours of max(T − base, 0)</td>
+</tr>
+<tr>
+  <td><code>cdd_dm_15_5</code>, <code>cdd_dm_18</code>, <code>cdd_dm_22</code></td>
+  <td>°C day</td>
+  <td>daily-mean method: max(T_mean − base, 0)</td>
+</tr>
+<tr>
+  <td><code>cdd_eurostat</code></td>
+  <td>°C day</td>
+  <td>Eurostat: T_mean − 21 on days with T_mean &gt; 24 °C (almost always 0 in England)</td>
+</tr>
+<tr>
+  <td><code>hours_ge_25</code>, <code>hours_ge_28</code></td>
+  <td>h</td>
+  <td>hours with T ≥ 25 / 28 °C</td>
+</tr>
+<tr>
+  <td><code>td_mean</code>, <code>td_max</code></td>
+  <td>°C</td>
+  <td>dew point</td>
+</tr>
+<tr>
+  <td><code>rh_mean</code></td>
+  <td>%</td>
+  <td>relative humidity (Magnus)</td>
+</tr>
+<tr>
+  <td><code>tw_max</code></td>
+  <td>°C</td>
+  <td>wet-bulb temperature, daily max (Stull 2011)</td>
+</tr>
+<tr>
+  <td><code>h_mean</code>, <code>h_max</code></td>
+  <td>kJ kg⁻¹</td>
+  <td>moist-air enthalpy (latent + sensible cooling need)</td>
+</tr>
+<tr>
+  <td><code>wind_mean</code>, <code>wind_max</code></td>
+  <td>m s⁻¹</td>
+  <td>10 m wind speed</td>
+</tr>
+<tr>
+  <td><code>gust_max</code></td>
+  <td>m s⁻¹</td>
+  <td>10 m gust, daily max</td>
+</tr>
+<tr>
+  <td><code>solar_kwh_m2</code></td>
+  <td>kWh m⁻²</td>
+  <td>surface solar irradiation</td>
+</tr>
+<tr>
+  <td><code>precip_mm</code></td>
+  <td>mm</td>
+  <td>total precipitation</td>
+</tr>
+<tr>
+  <td><code>snow_mm_we</code></td>
+  <td>mm water equivalent</td>
+  <td>snowfall</td>
+</tr>
+</tbody>
+</table>
+<p>ERA5's 0.25° grid smooths urban heat islands, afternoon peaks, convective rain
+and gusts: the hottest site-day here is 34.2 °C against 35.1 °C observed at Kew
+on 26 May 2026. Read the hot, wet and windy tails as lower bounds. Uses:
+<a href="weather_and_cooling.md">weather_and_cooling.md</a>.</p>
+<h2 id="site-thermometers-era5-land-and-noaa-isd-stations">Site thermometers: ERA5-Land and NOAA ISD stations</h2>
+<p>Two independent measurements of the temperature at each site, for the measurement-error
+question in <a href="weather_and_cooling.md#5-quasi-experimental-estimates">weather_and_cooling.md</a>.</p>
+<h3 id="era5-land-code-data-external-weather-era5-land-land-interim-">ERA5-Land: <code>code/data/external/weather/era5_land/land/</code> → <code>interim/weather_land.parquet</code> → <code>interim/weather_daily_land.parquet</code></h3>
+<p>CDS <code>reanalysis-era5-land</code>, hourly, 0.1° (about 9 km), land points only; <code>t2m</code>, <code>d2m</code>, <code>sp</code>
+(fluxes stay with ERA5: ERA5-Land accumulates them from 00 UTC, not hourly). Pulled by
+<code>sense-energy fetch-weather --config code/configs/weather_era5_land.yaml --product land</code>,
+extracted by <code>build-weather --config ... --product land</code> to the nearest <em>land</em> grid point
+(coastal sites would otherwise land in the sea), and summarised by
+<code>build-weather-daily --product land --suffix _land</code> with the same columns as <code>weather_daily</code>
+minus solar, rain, snow and wind.
+351,450 site-days for 275 sites. Against the stations its daily mean has an RMSE of 0.72 °C
+(ERA5: 0.62) and its daily maximum 1.26 °C (ERA5: 0.94): the land-only tiles lose the sea's
+moderation at coastal sites, so the finer grid is the <em>worse</em> site thermometer. Kept as a check,
+not used as the primary temperature.</p>
+<h3 id="noaa-isd-code-data-external-noaa-isd-interim-isd-parquet-int">NOAA ISD: <code>code/data/external/noaa_isd/</code> → <code>interim/isd_*.parquet</code>, <code>interim/weather_daily_isd.parquet</code></h3>
+<p>NOAA's Integrated Surface Database, the Met Office synoptic and airfield observations as
+exchanged on the WMO network, open data without a key, one CSV per station and year from
+<code>https://noaa-global-hourly-pds.s3.amazonaws.com/{year}/{USAF}{WBAN}.csv</code> (<code>sense-energy fetch-isd</code>, 76 stations, 1.6 GB) plus the station history <code>isd-history.csv</code>. The mirror holds
+files to <strong>24 August 2025</strong> (nothing for 2026), so the station thermometer covers 34 of the
+record's 41 months, every summer included. <code>sense-energy build-isd</code> writes:</p>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Grain</th>
+  <th>Columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>isd_hourly.parquet</code></td>
+  <td>station × clock hour</td>
+  <td><code>t_c</code>, <code>td_c</code> (°C; <code>TMP</code>/<code>DEW</code> tenths with quality codes 0, 1, 4, 5, 9; daily/monthly summaries skipped; observations averaged within the hour)</td>
+</tr>
+<tr>
+  <td><code>isd_site_stations.parquet</code></td>
+  <td>site × candidate</td>
+  <td>the 3 nearest stations within 60 km, ranked</td>
+</tr>
+<tr>
+  <td><code>isd_site_hourly.parquet</code></td>
+  <td>site × hour</td>
+  <td>the nearest candidate that reported that hour, with <code>station_id</code>, <code>distance_km</code></td>
+</tr>
+<tr>
+  <td><code>weather_daily_isd.parquet</code></td>
+  <td>site × local day</td>
+  <td><code>t_mean</code>, <code>t_min</code>, <code>t_max</code>, <code>t_eve</code>, <code>n_hours</code> (≥ 18 required), <code>distance_km</code></td>
+</tr>
+</tbody>
+</table>
+<p>361,260 site-days for 275 sites; station distance median 13.5 km (10th–90th percentile 5.7–29.2 km).
+Against the stations ERA5's daily mean has a bias of +0.06 °C and an RMSE of 0.79 °C, its daily
+maximum an RMSE of 1.18 °C, and on the stations' 30+ °C days it reads 1.3 °C too cool.</p>
+<h2 id="weather-effect-heterogeneity-code-reports-weather-heterogene">Weather-effect heterogeneity: <code>code/reports/weather_heterogeneity/</code></h2>
+<p><code>sense-energy weather-heterogeneity</code> (<code>analysis/weather_heterogeneity.py</code>), on the sites without
+CHP with the doses and specification B of <code>weather_causal</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_slopes.csv</code></td>
+  <td>site × dose</td>
+  <td><code>slope</code>, <code>se</code> (log points), <code>slope_pct</code>, <code>se_pct</code>, <code>posterior</code> / <code>posterior_pct</code> (empirical-Bayes), <code>shrinkage</code>, <code>pooled</code>, <code>tau</code>, <code>i2</code>, plus the site descriptors</td>
+</tr>
+<tr>
+  <td><code>site_descriptors.csv</code></td>
+  <td>site</td>
+  <td><code>use</code> (ERIC site type collapsed to five groups), <code>cluster</code> (k = 4 demand shape), <code>trust_type</code>, <code>log_mean_kw</code>, <code>mean_build_year</code>, <code>summer_tmax</code>, <code>gas_to_elec</code>, <code>led_pct</code>, <code>region</code></td>
+</tr>
+<tr>
+  <td><code>moderators.csv</code></td>
+  <td>moderator × dose × level</td>
+  <td>one-at-a-time dose × moderator interactions, <code>coef_pct</code> in percentage points per °C (categorical: against the reference; continuous: per SD), <code>p_joint</code> for the moderator</td>
+</tr>
+<tr>
+  <td><code>moderators_joint.csv</code></td>
+  <td>dose × term</td>
+  <td>the same with building use and all continuous moderators together (87 sites)</td>
+</tr>
+<tr>
+  <td><code>hourly_by_use.csv</code></td>
+  <td>hour × use × band</td>
+  <td>demand on days below 2 °C and at or above 22 °C against a 14–16 °C day, by building use</td>
+</tr>
+</tbody>
+</table>
+<p>Site-dose slopes whose clustered variance is undefined (three in the current run) are dropped
+from the shrinkage and listed in the log.</p>
+<h2 id="what-moves-heat-code-reports-heat-drivers">What moves heat: <code>code/reports/heat_drivers/</code></h2>
+<p><code>sense-energy heat-drivers</code> (<code>analysis/heat_drivers.py</code>), on the sites without CHP and without a
+<code>meter_gaps</code> coverage flag (see <code>site_coverage_flags.parquet</code>), specification B of <code>weather_causal</code>.
+Slopes are in log points (<code>*_pct</code> columns: × 100).</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>plain_terms.csv</code></td>
+  <td>site × term</td>
+  <td>cold (<code>hdd14</code>) and heat (<code>cdd20</code>) slopes against temperature alone, on this module's sample</td>
+</tr>
+<tr>
+  <td><code>site_terms.csv</code></td>
+  <td>site × term</td>
+  <td>the same with a site-specific sunshine term (<code>solar_kwh_m2</code>, ERA5 surface solar radiation, kWh/m²/day) and a heat × weekend × site term: <code>cdd20</code> is the weekday heat slope, <code>cdd20_weekend</code> the weekend slope, <code>cdd20_weekend_diff</code> their difference</td>
+</tr>
+<tr>
+  <td><code>night_day_terms.csv</code></td>
+  <td>site × term</td>
+  <td>the heat dose split: <code>hot_afternoon</code> (per °C of daily maximum above 24 °C) and <code>warm_night</code> (per °C of daily minimum above 12 °C), with cold and sunshine</td>
+</tr>
+<tr>
+  <td><code>block_slopes.csv</code></td>
+  <td>site × block × term</td>
+  <td>cold, heat and sunshine slopes on the mean demand of each six-hour local block (<code>block</code> 0–3: night 00–06, morning, afternoon, evening)</td>
+</tr>
+<tr>
+  <td><code>site_features.csv</code></td>
+  <td>site</td>
+  <td>everything above side by side (<code>heat_plain</code>, <code>heat</code>, <code>sun</code>, <code>heat_weekend*</code>, <code>heat_b0..3</code>, <code>sun_b0..3</code>, <code>hot_afternoon</code>, <code>warm_night</code>, each with <code>_se</code>), derived <code>heat_afternoon_excess</code> (afternoon minus night block), <code>sun_day</code> (precision-weighted morning + afternoon), <code>sun_night</code>; <code>type</code> (rises with heat / rises with heat, falls with sunshine / falls with sunshine only / falls with heat / neither, at 5 %), <code>sign</code> (the daily heat slope's sign group), flags <code>afternoon_peaked</code>, <code>weekday_only</code>, <code>night_sunshine_negative</code>, <code>cooling_afternoon</code>, <code>heating_tail</code>; <code>use</code>, <code>mean_kw</code>, <code>region</code>, <code>urban</code>, <code>overheats</code>, <code>solar_eric</code>, <code>coverage_flag</code></td>
+</tr>
+<tr>
+  <td><code>site_descriptors.csv</code></td>
+  <td>site</td>
+  <td>the heterogeneity descriptors plus <code>elec_kwh_per_m2</code>, <code>log_elec_per_m2</code>, <code>max_demand_kw</code>, <code>peak_w_m2</code>, <code>heat_pumps</code> / <code>heat_pumps_any</code>, <code>overheating_occurrences</code> / <code>overheats</code>, <code>solar_generated_kwh</code>, <code>solar_consumed_kwh</code> / <code>solar_eric</code>, <code>tenure</code> / <code>tenure_group</code>, <code>urban</code>, <code>density_km2</code> / <code>log_density</code>, <code>repd_solar_mw</code>, <code>repd_solar_status</code>, <code>night_day_ratio</code>, <code>weekend_ratio</code>, <code>winter_summer_ratio</code>, <code>daily_cv</code></td>
+</tr>
+<tr>
+  <td><code>group_decomposition.csv</code></td>
+  <td>model × sign group × term</td>
+  <td>the three sign groups' pooled slopes, model <code>daily mean</code> (cold, heat, sunshine) and <code>night and day</code> (cold, hot afternoon, warm night, sunshine)</td>
+</tr>
+<tr>
+  <td><code>moderators_heat.csv</code></td>
+  <td>moderator × term × level</td>
+  <td>one-at-a-time interactions of cold, heat and sunshine with each moderator (<code>dose</code> column), <code>coef_pct</code> in percentage points per unit of the term; <code>p_joint</code> tests the heat interactions of the moderator</td>
+</tr>
+<tr>
+  <td><code>moderators_heat_joint.csv</code></td>
+  <td>term</td>
+  <td>building use, urban form, density, electricity intensity, peak W/m², night/day and weekend ratios together</td>
+</tr>
+<tr>
+  <td><code>variance_explained.csv</code></td>
+  <td>descriptor set</td>
+  <td>random-effects meta-regression of the sunshine-controlled heat slopes: <code>tau_before_pct</code>, <code>tau_after_pct</code>, <code>r2_true</code> (share of the true between-site variance explained; the first row is the sunshine term itself, τ before and after it)</td>
+</tr>
+<tr>
+  <td><code>excluded_sites.csv</code></td>
+  <td>site</td>
+  <td>the flagged sites left out, with their heat slopes from the heterogeneity run</td>
+</tr>
+<tr>
+  <td><code>summary.json</code></td>
+  <td>—</td>
+  <td>the headline numbers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="forecasts-code-data-external-weather-aifs-ens-interim-foreca">Forecasts: <code>code/data/external/weather/aifs_ens/</code> → <code>interim/forecast_aifs_ens.parquet</code></h2>
+<p>ECMWF AIFS-ENS from ECMWF open data, <strong>CC BY 4.0 - &quot;Contains ECMWF open data&quot;</strong>.
+Harvested by <code>sense-energy harvest-forecasts</code>, which must run <strong>daily</strong>: the
+archive holds ~4 days and there is no historical AIFS before 2025. One NetCDF
+per run, <code>YYYYMMDDTHHz.nc</code>, dims <code>(step, number, latitude, longitude)</code>.</p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Runs kept</td>
+  <td>00z, 12z (06z/18z exist)</td>
+</tr>
+<tr>
+  <td>Lead times</td>
+  <td>0–72 h, 6-hourly (configurable to 360 h)</td>
+</tr>
+<tr>
+  <td>Members</td>
+  <td>51: <code>number</code> 0 = control (<code>cf</code>), 1–50 = perturbed (<code>pf</code>)</td>
+</tr>
+<tr>
+  <td>Grid</td>
+  <td>0.25°, same area as ERA5</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Units</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_code</code>, <code>run_time</code>, <code>valid_time</code>, <code>step_hours</code>, <code>member</code></td>
+  <td>UTC</td>
+  <td><code>valid_time = run_time + step</code></td>
+</tr>
+<tr>
+  <td><code>t2m</code>, <code>d2m</code>, <code>skt</code></td>
+  <td>K</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>tcc</code>, <code>lcc</code></td>
+  <td>%</td>
+  <td><strong>percent here, fraction in ERA5</strong></td>
+</tr>
+<tr>
+  <td><code>tp</code>, <code>sf</code></td>
+  <td>kg m⁻² (= mm)</td>
+  <td><strong>accumulated from run start</strong>, not per step; difference consecutive steps</td>
+</tr>
+<tr>
+  <td><code>ssrd</code>, <code>strd</code></td>
+  <td>J m⁻²</td>
+  <td>accumulated from run start</td>
+</tr>
+<tr>
+  <td><code>u10</code>, <code>v10</code></td>
+  <td>m s⁻¹</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>sp</code></td>
+  <td>Pa</td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<p>On members: AIFS-ENS samples its members from a diffusion model with
+EDA-perturbed initial conditions rather than perturbing model physics, but the
+data are 50 perturbed fields plus a control per parameter and step.</p>
+<h2 id="prices-interim-prices-parquet">Prices: <code>interim/prices_*.parquet</code></h2>
+<p>Built by <code>sense-energy fetch-prices</code>. Rationale in
+<a href="adr/0003-weather-and-price-data-sources.md">ADR 0003</a>.</p>
+<h3 id="prices-agile-parquet-the-day-ahead-known-signal"><code>prices_agile.parquet</code> - the day-ahead-known signal</h3>
+<p>Octopus Energy Agile import tariff, half-hourly, 14 GSP regions. A published,
+deterministic transform of the N2EX day-ahead hourly auction (multiplier +
+peak adder, capped), released the afternoon of D-1. Retail p/kWh, <strong>not</strong>
+wholesale £/MWh. One row per (<code>region</code>, <code>datetime</code>) from the product on sale
+that day; <code>prices_agile_all_products.parquet</code> holds every product.</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>datetime</code>, <code>valid_to</code></td>
+  <td>UTC, 30-min</td>
+</tr>
+<tr>
+  <td><code>product</code></td>
+  <td>which Agile product supplied the rate - products differ in caps, so a change is a step</td>
+</tr>
+<tr>
+  <td><code>region</code></td>
+  <td>GSP group A–P (no I, O). Sites carry <code>gsp_group</code> in <code>sites_geo.parquet</code></td>
+</tr>
+<tr>
+  <td><code>rate_exc_vat</code>, <code>rate_inc_vat</code></td>
+  <td>p/kWh</td>
+</tr>
+</tbody>
+</table>
+<p>Product chain over the window: <code>AGILE-FLEX-22-11-25</code> (to 2023-12-11) →
+<code>AGILE-23-12-06</code> (to 2024-04-02) → <code>AGILE-24-04-03</code> (to 2024-09-30) →
+<code>AGILE-24-10-01</code>. <code>AGILE-18-02-21</code> keeps publishing throughout and is the
+fallback.</p>
+<h3 id="prices-elexon-mid-parquet-ex-post-wholesale-reference"><code>prices_elexon_mid.parquet</code> - ex-post wholesale reference</h3>
+<p>Elexon Market Index Data: APX (<code>APXMIDP</code>) and N2EX (<code>N2EXMIDP</code>) volume-weighted
+price and volume per settlement period, £/MWh. Published after delivery -
+<strong>evaluation only, never a feature</strong>.</p>
+<h3 id="not-available">Not available</h3>
+<p>ENTSO-E day-ahead prices for GB (<code>10YGB----------A</code>): none published since GB
+left EU market coupling in January 2021, and the REST host answers 404 for
+every zone at the time of writing. Nord Pool's data portal requires a
+subscription.</p>
+<hr />
+<h2 id="forecasts-historical-code-data-external-weather-tigge-ens-in">Forecasts (historical): <code>code/data/external/weather/tigge_ens/</code> → <code>interim/forecast_tigge_ens.parquet</code></h2>
+<p>ECMWF IFS ENS from the <strong>TIGGE</strong> archive via the <strong>ECMWF Data Store (ECDS)</strong>,
+which replaced the Public Datasets Web API for TIGGE on 2026-05-27. Research
+use under the TIGGE licence (CC BY-NC 4.0 for the ECMWF origin), 48 h delay.
+<code>sense-energy fetch-tigge</code> (resumable, one data-store request per type-month)
+then <code>sense-energy build-tigge</code>. Needs an ECDS token in <code>.env</code>.</p>
+<p>This is <em>what the forecast said</em> for every day of the training window — the
+counterpart to ERA5 (<em>what happened</em>). A day-ahead model backtested on this,
+not on ERA5, sees the accuracy it would really have had.</p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Runs</td>
+  <td>00z, 12z</td>
+</tr>
+<tr>
+  <td>Lead times</td>
+  <td>0–72 h, 6-hourly (TIGGE goes to 384 h)</td>
+</tr>
+<tr>
+  <td>Members</td>
+  <td>51: <code>cf</code> control = member 0, <code>pf</code> = 1–50</td>
+</tr>
+<tr>
+  <td>Grid</td>
+  <td>ECDS serves the model's <strong>native reduced grid</strong> (739 points in the box, ~9 km), not a regular 0.5° box; sites take the nearest point</td>
+</tr>
+<tr>
+  <td>Storage</td>
+  <td>Each month is extracted to the located sites on arrival (<code>control_forecast_sites/</code>, <code>perturbed_forecast_sites/</code>, float32 parquet) and the GRIB deleted (perturbed months are ~1 GB)</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+  <th>ECDS variable</th>
+  <th>Short name</th>
+  <th>Units (as delivered)</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>2_m_temperature</code> / <code>2_m_dewpoint_temperature</code></td>
+  <td><code>t2m</code> / <code>d2m</code></td>
+  <td>K</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>maximum_/minimum_2_m_temperature_in_the_last_6_hours</code></td>
+  <td><code>mx2t6</code> / <code>mn2t6</code></td>
+  <td>K</td>
+  <td>over the preceding 6 h; NaN at step 0</td>
+</tr>
+<tr>
+  <td><code>10_m_u/v_component_of_wind</code></td>
+  <td><code>u10</code> / <code>v10</code></td>
+  <td>m s⁻¹</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>surface_pressure</code></td>
+  <td><code>sp</code></td>
+  <td>Pa</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>skin_temperature</code></td>
+  <td><code>skt</code></td>
+  <td>K</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>total_precipitation</code> / <code>snow_fall_water_equivalent</code></td>
+  <td><code>tp</code> / <code>sf</code></td>
+  <td><strong>kg m⁻² (= mm)</strong></td>
+  <td><strong>accumulated from run start</strong></td>
+</tr>
+<tr>
+  <td><code>total_cloud_cover</code></td>
+  <td><code>tcc</code></td>
+  <td><strong>%</strong></td>
+  <td>fraction in ERA5</td>
+</tr>
+<tr>
+  <td><code>surface_net_solar_radiation</code> / <code>surface_net_thermal_radiation</code></td>
+  <td><code>ssr</code> / <code>str</code></td>
+  <td>J m⁻²</td>
+  <td><strong>net</strong> in TIGGE (ERA5 gives <em>downward</em>) — not directly comparable; accumulated</td>
+</tr>
+<tr>
+  <td><code>sunshine_duration</code></td>
+  <td><code>sund</code></td>
+  <td>s</td>
+  <td>accumulated</td>
+</tr>
+</tbody>
+</table>
+<p>No wind-gust field exists in the TIGGE single-level set. Output columns mirror
+<code>forecast_aifs_ens.parquet</code>: <code>site_code</code>, <code>run_time</code>, <code>valid_time</code>,
+<code>step_hours</code>, <code>member</code>, then the variables.</p>
+<hr />
+<h2 id="neso-code-data-external-neso-code-data-geo-neso-interim-parq">NESO: <code>code/data/external/neso/</code>, <code>code/data/geo/neso/</code> → <code>interim/*.parquet</code></h2>
+<p>NESO data portal (CKAN, <code>api.neso.energy</code>), NESO Open Data Licence —
+&quot;Contains NESO open data&quot;. <code>sense-energy fetch-neso</code> (manifest-driven, by
+resource name) then <code>sense-energy build-neso</code>.</p>
+<h3 id="future-energy-scenarios-the-quot-data-workbook-quot-sheet-by">Future Energy Scenarios — the &quot;data workbook&quot;, sheet by sheet</h3>
+<p>The FES workbook is published on the portal as one dataset per sheet. Kept for
+FES 2023, 2024 and 2025. Pathways: FES 2024 <em>Holistic Transition, Electric
+Engagement, Hydrogen Evolution, Counterfactual</em> (+ <em>Five Year Forecast</em>);
+FES 2025 replaces Counterfactual with <em>Falling Behind</em> (+ <em>Ten Year Forecast</em>).</p>
+<table>
+<thead>
+<tr>
+  <th>Interim table</th>
+  <th>Sheet</th>
+  <th>Grain</th>
+  <th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>fes_ed1_demand_summary</code></td>
+  <td>ED1</td>
+  <td>data item × pathway × year</td>
+  <td><strong>GB annual (GWh) and peak (GW) demand</strong>; <code>statistic ∈ {Annual [Fiscal], Peak, Min (06:00), Min (14:00)}</code>; <code>neso.peak_demand()</code> filters the peaks</td>
+</tr>
+<tr>
+  <td><code>fes_es1_supply</code></td>
+  <td>ES1</td>
+  <td>connection × pathway × technology × year</td>
+  <td>capacity/output; <code>connection == &quot;Distributed&quot;</code> is the <strong>embedded generation</strong> fleet</td>
+</tr>
+<tr>
+  <td><code>fes_flx1_flexibility</code></td>
+  <td>FLX1</td>
+  <td>flexibility type × pathway × year</td>
+  <td>interconnectors, storage, DSR</td>
+</tr>
+<tr>
+  <td><code>fes_building_blocks</code></td>
+  <td>BB</td>
+  <td>pathway × building block × GSP × year</td>
+  <td>per-GSP technology counts/capacities, joined to definitions</td>
+</tr>
+<tr>
+  <td><code>fes_regional_demand</code></td>
+  <td>regional</td>
+  <td>scenario × GSP × year</td>
+  <td><strong>peak / AM / PM demand per GSP (MW)</strong>, 2023–2050; 2024 is the latest published</td>
+</tr>
+<tr>
+  <td><code>fes_regional_distributed_generation</code></td>
+  <td>regional</td>
+  <td>scenario × GSP × technology × year × size band</td>
+  <td>capacity and contribution at winter peak / summer AM / PM</td>
+</tr>
+<tr>
+  <td><code>fes_gsp_info</code></td>
+  <td>regional</td>
+  <td>GSP</td>
+  <td>GSP id, group, name, lat/lon</td>
+</tr>
+</tbody>
+</table>
+<p><code>fes_year</code> on every row says which publication the value came from; scenario
+codes are expanded via <code>neso.SCENARIO_NAMES</code> (HE/EE/HT/CF/FB…). Years in the
+regional files arrive as two digits and are expanded.</p>
+<h3 id="national-demand-known-beforehand-covariates">National demand — known-beforehand covariates</h3>
+<table>
+<thead>
+<tr>
+  <th>Interim table</th>
+  <th>Source</th>
+  <th>Grain</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>national_demand_halfhourly</code></td>
+  <td>Historic Demand Data</td>
+  <td>30 min, UTC</td>
+  <td><code>nd</code> national demand, <code>tsd</code> transmission system demand, <code>england_wales_demand</code>, <strong>embedded wind/solar generation and capacity</strong>, interconnector flows. 2019–2026</td>
+</tr>
+<tr>
+  <td><code>embedded_forecast_archive</code></td>
+  <td>Embedded Wind &amp; Solar Forecasts archive</td>
+  <td>30 min target × issue time</td>
+  <td>every forecast NESO issued (<code>issued_at</code>, <code>lead_hours</code>). Use <code>neso.latest_forecast_before(min_lead_hours)</code> so a feature never uses a forecast issued after the model's own issue time. 2022–2026</td>
+</tr>
+</tbody>
+</table>
+<p>Settlement periods are local-clock half hours; conversion to UTC is exact on
+the 46- and 50-period clock-change days.</p>
+<h3 id="gsp-boundaries-sites">GSP boundaries → sites</h3>
+<p><code>code/data/geo/neso/</code>: GSP regions 2026-02-09 (362 regions, EPSG:4326 and
+27700, GeoPackage + GeoJSON), 2022-03-14 (333), the tRESP GSP areas 2025 (235),
+and the GSP/GNode/region lookup with GSP group per node. Sites gain two columns
+in <code>sites_geo.parquet</code>:</p>
+<table>
+<thead>
+<tr>
+  <th>Column</th>
+  <th>Source</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>gsp_region</code></td>
+  <td>NESO 2026-02 polygons, point-in-polygon</td>
+  <td>e.g. <code>LEGA_1</code>; coastal misses snapped to the nearest region within 5 km</td>
+</tr>
+<tr>
+  <td><code>gsp_group_neso</code></td>
+  <td>same polygons</td>
+  <td>A–P; cross-checked against the Octopus-derived <code>gsp_group</code>, disagreements logged</td>
+</tr>
+</tbody>
+</table>
+<p><code>gsp_region</code> is the join key to <code>fes_regional_demand.gsp_id</code> /
+<code>fes_regional_distributed_generation.gsp_id</code>, which is how a hospital gets its
+GSP's scenario demand pathway.</p>
+<hr />
+<h2 id="processed-code-data-processed-see-data-manifest-md">Processed: <code>code/data/processed/</code> — see <a href="data_manifest.md">data_manifest.md</a></h2>
+<p>Analysis-ready datasets built by <code>sense-energy build-processed</code> (<code>make processed</code>):
+electricity and gas × meter / site / trust, each as a raw and a profile-KNN-imputed
+wide matrix and long table with a series index, plus <code>site_attributes</code>. The
+manifest is generated by the build and records every step, parameter, exclusion,
+count and file hash.</p>
+<hr />
+<h2 id="neso-covariates-interim-neso-covariates-halfhourly-parquet-i">NESO covariates: <code>interim/neso_covariates_halfhourly.parquet</code>, <code>interim/neso_site_covariates.parquet</code></h2>
+<p>Built by <code>sense-energy build-neso-covariates</code> (config <code>neso_covariates.yaml</code>).
+Half-hourly UTC grid 2022-12-01 → 2026-05-31 (61,297 rows), MW unless stated.
+<strong>Suffixes say when a value is knowable</strong>: <code>_actual</code> is outturn (only legal as
+a lag); <code>_da</code> is known by the <strong>day-ahead cutoff, 16:00 UTC on D−1</strong> (the
+hour Agile prices are published), each with its <code>*_issued_at</code> / <code>*_published_at</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Column group</th>
+  <th>Source</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>nd_actual_mw</code>, <code>tsd_actual_mw</code>, <code>england_wales_demand_actual_mw</code></td>
+  <td>Historic Demand Data</td>
+  <td>national / transmission-system / England &amp; Wales demand</td>
+</tr>
+<tr>
+  <td><code>embedded_{wind,solar}_actual_mw</code>, <code>embedded_{wind,solar}_capacity_mw</code>, <code>embedded_{wind,solar}_cf_actual</code></td>
+  <td>Historic Demand Data</td>
+  <td>embedded generation and capacity factor</td>
+</tr>
+<tr>
+  <td><code>pump_storage_pumping_actual_mw</code>, <code>interconnector_net_import_actual_mw</code></td>
+  <td>Historic Demand Data</td>
+  <td>net import = sum of all interconnector flows</td>
+</tr>
+<tr>
+  <td><code>genmix_*_actual_mw</code>, <code>genmix_*_actual_pct</code>, <code>carbon_intensity_actual_gco2_kwh</code></td>
+  <td>Historic GB Generation Mix</td>
+  <td><code>DATETIME</code> taken as UTC</td>
+</tr>
+<tr>
+  <td><code>nd_forecast_da_mw</code>, <code>nd_forecast_da_published_at</code></td>
+  <td>Day-ahead HH forecast performance</td>
+  <td>NESO's own half-hourly day-ahead ND forecast, published ~09:45 UTC on D−1; aligned by settlement date/period. MAPE vs outturn 2.5%</td>
+</tr>
+<tr>
+  <td><code>triad_avoidance_estimate_mw</code></td>
+  <td>same</td>
+  <td>NESO's estimate of demand avoided at triad-risk periods</td>
+</tr>
+<tr>
+  <td><code>embedded_{wind,solar}_forecast_da_mw</code>, <code>embedded_forecast_da_issued_at</code></td>
+  <td>Embedded forecast archive</td>
+  <td>latest forecast issued before the cutoff</td>
+</tr>
+<tr>
+  <td><code>nd_forecast_{1,2,7,14}d_{peak,trough}_da_mw</code>, <code>*_issued_at</code></td>
+  <td>Cardinal-point forecasts</td>
+  <td>daily forecast peak (max of <code>P</code> points) and trough (min of <code>T</code> points) for the target day, latest issue before the cutoff, broadcast to the day's periods. 2-day file starts 2023-04</td>
+</tr>
+<tr>
+  <td><code>nd_forecast_da_error_actual_mw</code></td>
+  <td>derived</td>
+  <td>outturn − day-ahead forecast; ex-post</td>
+</tr>
+<tr>
+  <td><code>settlement_date_local</code>, <code>day_ahead_cutoff_hour_utc</code></td>
+  <td>derived</td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<p><code>neso_site_covariates.parquet</code> (one row per site, 275 with a GSP): the FES 2024
+regional breakdown for the site's GSP region (composite regions summed):
+<code>fes_gsp_peak_2024_mw</code>, <code>fes_gsp_peak_2030_{electric_engagement,holistic_transition,hydrogen_evolution}_mw</code>
+(peak demand summed over demand types), <code>fes_gsp_dg_{solar,wind,battery}_2024_mw</code>
+(distributed generation capacity, both size bands), <code>fes_gsp_n_parts</code>.</p>
+<p>Not included: NESO's carbon-intensity <em>forecast</em> (only the live file is on the
+portal; the historic forecast archive is on the separate Carbon Intensity API).</p>
+<hr />
+<h2 id="mobility-esc-the-oxford-partnership-interim-mobility-parquet">Mobility (ESC / The Oxford Partnership): <code>interim/mobility_*.parquet</code></h2>
+<p><em>Aggregate mobile data visitation for UK campus</em> — one trust only. Daily
+mobile-phone visit counts for calendar 2024 at three Royal Devon University
+Healthcare sites and a university campus comparator, plus static visitor
+profiles. Built by <code>sense-energy build-mobility</code> from
+<code>code/data/external/esc_mobility/</code> (git-ignored).</p>
+<table>
+<thead>
+<tr>
+  <th>id</th>
+  <th>Site</th>
+  <th>2024 mean visits/day</th>
+  <th>Demand coverage 2024</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>RH801</code></td>
+  <td>Royal Devon &amp; Exeter Hospital (Wonford), general acute, GIA 125,557 m²</td>
+  <td>5,183</td>
+  <td>electricity 100% (3 active meters), gas partial</td>
+</tr>
+<tr>
+  <td><code>RH802</code></td>
+  <td>Heavitree Hospital, day hospital</td>
+  <td>1,575</td>
+  <td>electricity 100%</td>
+</tr>
+<tr>
+  <td><code>RH8K6</code></td>
+  <td>NHS Nightingale Hospital Exeter, day hospital</td>
+  <td>461</td>
+  <td>electricity 100%, gas 93%</td>
+</tr>
+<tr>
+  <td><code>university</code></td>
+  <td>campus comparator, not an NHS site</td>
+  <td>6,262</td>
+  <td>—</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Columns</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>mobility_visits_daily</code></td>
+  <td><code>id, site_code, date, visits</code></td>
+  <td>RH802 carries one extra day (2025-01-01) as delivered</td>
+</tr>
+<tr>
+  <td><code>mobility_visitor_profiles</code></td>
+  <td><code>id, site_code, profile, category, pct, id_corrected</code></td>
+  <td>profiles: <code>age_band</code>, <code>household_income_quintile</code>, <code>consumer_style</code> (MBI Consumer Styles A–J), <code>travel_distance_m</code>. In the styles and travel-distance files the fourth row was labelled <code>RH801</code> a second time where the other files say <code>university</code>; it is relabelled and flagged <code>id_corrected</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Licence</strong> (EULA ESC3888-3.0, Schedule 1): research purposes only; no
+attempt to identify any person, premise or site; access-controlled storage;
+delete all copies on expiry; Schedule 3's secure-environment option is not
+ticked, so local copies are permitted. <strong>Required attribution in any output</strong>:
+<em>&quot;This [report/product] contains data provided by The Oxford Partnership. Other
+than providing certain data sets, The Oxford Partnership has not been involved
+in the development of this [report/product] and accepts no responsibility
+whatsoever for the accuracy, completeness or reliability of this
+[report/product], nor for any advice contained within it or for the use or
+reliance any reader may give to it.&quot;</em></p>
+<p><strong>How it can be used</strong>: as an observed occupancy proxy for a three-site case
+study in 2024 — not as a forecasting feature (footfall is not known ahead of
+time unless forecast itself), and not estate-wide (one trust).</p>
+<hr />
+<h2 id="forecasts-historical-51-members-code-data-external-weather-i">Forecasts (historical, 51 members): <code>code/data/external/weather/ifs_ens/sites/</code> → <code>interim/forecast_ifs_ens/YYYY-MM.parquet</code></h2>
+<p>ECMWF IFS ENS from the <strong>AWS mirror of ECMWF open data</strong> (CC BY 4.0,
+&quot;Contains ECMWF open data&quot;), harvested by <code>sense-energy harvest-ifs-ens</code>:
+each ensemble step's <code>.index</code> gives every message's byte offset, so only the
+wanted parameters and members are fetched by HTTP range (32 connections),
+decoded with ecCodes, cropped to the site box and reduced to the nearest grid
+point per site. One parquet per run; <code>build-ifs-ens</code> concatenates by month.</p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Period</td>
+  <td>18 Jan 2023 → (the mirror's first day); 00z and 12z</td>
+</tr>
+<tr>
+  <td>Members</td>
+  <td><strong>51</strong>: <code>member</code> 0 = control, 1–50 perturbed</td>
+</tr>
+<tr>
+  <td>Lead times</td>
+  <td>0–48 h, 6-hourly (3-hourly exists to 144 h)</td>
+</tr>
+<tr>
+  <td>Grid</td>
+  <td><strong>0.4°</strong> to 28 Feb 2024 (<code>grid = 0p4</code>), <strong>0.25°</strong> from 29 Feb 2024 (<code>grid = 0p25</code>)</td>
+</tr>
+<tr>
+  <td>Parameters</td>
+  <td><code>t2m d2m u10 v10 tp ssrd strd sp</code> (K, m s⁻¹, m accumulated, J m⁻² accumulated, Pa)</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>Dewpoint and radiation (<code>d2m ssrd strd</code>) exist only from 2024-03-06.</strong> Before
+that the ensemble stream carried <code>2t 10u 10v tp sp</code> plus fields we do not keep
+(<code>msl skt</code> and upper-air) — so those three columns are absent for
+2023-01-18 → 2024-03-06, independent of the grid change. No cloud cover exists in
+the open-data ensemble at all. Columns: <code>site_code, run_time, valid_time, step_hours, member, grid</code> + parameters.</p>
+<p><strong>Mirror gaps</strong>: 13 runs are absent from the AWS mirror altogether — 26 Apr
+12z → 30 Apr 2023 (9 runs) and 1 → 2 May 2023 (4 runs); no source can fill
+them except TIGGE. Other runs occasionally answer <code>503 Slow Down</code> (S3
+throttling); the harvester backs off and re-passes until they land.</p>
+<p>Relationship to TIGGE: same model family; TIGGE control (42 months, 14
+variables) and TIGGE perturbed (10 members, still being served by ECDS)
+remain; this source supplies the full 51-member spread from Jan 2023.</p>
+<h2 id="public-nhs-activity-statistics-interim-nhs-activity-parquet">Public NHS activity statistics (<code>interim/nhs_activity_*.parquet</code>)</h2>
+<p>Pulled by <code>sense-energy fetch-nhs-activity</code> from the NHS England statistics site (see <code>doc/external_activity_data.md</code>).</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Key</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>nhs_activity_ae_monthly.parquet</code></td>
+  <td><code>ods_code</code>, <code>period</code> (month start)</td>
+  <td>A&amp;E attendances by department type, booked appointments, 4-hour breaches, 4–12 h and 12 h+ waits from decision to admit, emergency admissions via A&amp;E and other; provider level, Apr 2023 – Mar 2026</td>
+</tr>
+<tr>
+  <td><code>nhs_activity_ambsys_monthly.parquet</code></td>
+  <td><code>ods_code</code>, <code>period</code></td>
+  <td>Ambulance Systems Indicators (A0–A139: calls, incidents by category, response-time mean/90th, hear-and-treat, see-and-treat), per ambulance service, Aug 2017 – Aug 2026</td>
+</tr>
+<tr>
+  <td><code>nhs_activity_kh03_quarterly.parquet</code></td>
+  <td><code>ods_code</code>, <code>sector</code>, <code>snapshot</code> (quarter end)</td>
+  <td>overnight beds available and occupied, occupancy rate, 2001 – Jun 2024</td>
+</tr>
+<tr>
+  <td><code>nhs_activity_trusts.parquet</code></td>
+  <td><code>organisation_name</code></td>
+  <td>the demand panel's trusts with their ODS code (site-code prefix or name match), AmbSYS code for ambulance services, and flags for presence in each source</td>
+</tr>
+</tbody>
+</table>
+<h2 id="eric-2023-24-and-kh03-occupied-beds-interim-eric-interim-kh0">ERIC 2023/24 and KH03 occupied beds (<code>interim/eric_*</code>, <code>interim/kh03_*</code>)</h2>
+<p>Source archives (ESC extracts) unpacked in <code>external/eric/</code> and <code>external/nhs_beds/</code>; built by <code>sense-energy estates-analysis</code> (loaders <code>data/eric.py</code>, <code>data/nhs_beds.py</code>). Analysis and figures: <code>doc/estates_analysis.md</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Key</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>eric_2023_24_site.parquet</code></td>
+  <td><code>site_code</code></td>
+  <td>ERIC 2023/24 (1 Apr 2023 – 31 Mar 2024), 2,869 English NHS sites: total electricity as the sum of the five consumption components (<code>elec_kwh</code>; the headline field is filled for ~5 % of sites and kept as <code>elec_headline_kwh</code>), gas, oil, steam, hot water, renewable heat, solar generated, maximum demand (kW), available capacity (kVA), floor area, heated volume, floor-area-weighted mean construction year, LED coverage, heat pumps, CHP units, old boilers, EV charge points, single rooms, high/significant-risk backlog, overheating occurrences that triggered a risk assessment (clinical areas above 26 °C, field S16_07: <code>overheating_occurrences</code>), trust-owned and third-party solar consumed (<code>solar_consumed_kwh</code>, <code>third_party_solar_kwh</code>), site type and tenure, postcode centroid (<code>latitude</code>, <code>longitude</code>, postcodes.io), intensities (<code>elec_kwh_per_m2</code>, <code>gas_kwh_per_m2</code>, <code>gas_to_elec</code>)</td>
+</tr>
+<tr>
+  <td><code>eric_2023_24_trust.parquet</code></td>
+  <td><code>trust_code</code></td>
+  <td>the trust-level ERIC table as published (210 trusts)</td>
+</tr>
+<tr>
+  <td><code>eric_2024_25_site.parquet</code>, <code>eric_2024_25_trust.parquet</code></td>
+  <td><code>site_code</code> / <code>trust_code</code></td>
+  <td>ERIC 2024/25 (1 Apr 2024 – 31 Mar 2025, published 16 Oct 2025; NHS England files in <code>external/eric_2024_25/</code>, latin-1, column names normalised to the 2023/24 spelling), 2,901 sites and 207 trusts, same columns as 2023/24 plus <code>occupied_floor_area_m2</code>, <code>chp_elec_output_kwh</code>, <code>chp_thermal_output_kwh</code>, <code>chp_gas_input_kwh</code>, <code>chp_other_input_kwh</code>, <code>chp_elec_purchased_kwh</code>, <code>chp_thermal_purchased_kwh</code>, <code>chp_thermal_wasted_kwh</code>, <code>exported_elec_kwh</code>, <code>exported_thermal_kwh</code>, <code>chp_elec_kw</code>, <code>chp_thermal_kw</code>, and an age band 2025–2034; the headline <code>elec_headline_kwh</code> field was dropped from the collection (missing). <code>collection</code> names the year. Built by <code>sense-energy build-eric --year 2024_25</code></td>
+</tr>
+<tr>
+  <td><code>eric_2023_24_postcodes.parquet</code></td>
+  <td><code>postcode</code></td>
+  <td>postcode centroid cache for the ERIC sites</td>
+</tr>
+<tr>
+  <td><code>kh03_occupied_by_sector.parquet</code></td>
+  <td><code>ods_code</code>, <code>quarter_end</code>, <code>sector</code></td>
+  <td>average occupied beds per quarter, <code>overnight</code> and <code>day_only</code>, sectors general &amp; acute / maternity / mental illness / learning disabilities; 2001 (overnight) or 2010 (day only) to June 2024</td>
+</tr>
+<tr>
+  <td><code>kh03_occupied_by_specialty.parquet</code></td>
+  <td><code>ods_code</code>, <code>quarter_end</code>, <code>specialty</code></td>
+  <td>the same by 78 treatment-specialty codes, 2010 – June 2024</td>
+</tr>
+<tr>
+  <td><code>site_coverage_flags.parquet</code></td>
+  <td><code>site_code</code></td>
+  <td>metered vs ERIC electricity 2023/24 per panel site: <code>coverage_flag</code> (<code>ok</code>, <code>partial_supply</code>, <code>aggregate_supply</code>, <code>chp_mismatch</code>, <code>meter_gaps</code>, <code>no_eric</code>), <code>energy_ratio</code>, <code>peak_ratio</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="site-context-interim-site-context-parquet">Site context: <code>interim/site_context.parquet</code></h2>
+<p><code>sense-energy build-site-context</code> (<code>data/site_context.py</code>), one row per site of <code>sites.parquet</code>. Three
+open sources:</p>
+<table>
+<thead>
+<tr>
+  <th>Column(s)</th>
+  <th>Source</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>oa21</code>, <code>lsoa21</code>, <code>lsoa_name</code>, <code>bua</code>, <code>ruc11</code>, <code>ruc21</code></td>
+  <td>postcodes.io (ONS open data)</td>
+  <td>2021 census geographies of the site postcode (output area, LSOA, built-up area) and the rural-urban classification 2011 (output-area codes A1–F2) and 2021; empty for the six terminated postcodes</td>
+</tr>
+<tr>
+  <td><code>urban</code></td>
+  <td>derived</td>
+  <td><code>ruc11</code> collapsed: major conurbation (A1), minor conurbation (B1), city and town (C1, C2), rural (D–F)</td>
+</tr>
+<tr>
+  <td><code>density_km2</code></td>
+  <td>ONS Census 2021 table TS006 via the Nomis API, <code>external/ons/census2021_ts006_density_lsoa21.csv</code> (35,672 LSOAs, England and Wales)</td>
+  <td>usual residents per km² of the site's LSOA</td>
+</tr>
+<tr>
+  <td><code>repd_solar_schemes</code>, <code>repd_solar_mw</code>, <code>repd_solar_status</code>, <code>repd_solar_operational_mw</code>, <code>repd_solar_first_operational</code>, <code>repd_battery_mw</code></td>
+  <td>DESNZ Renewable Energy Planning Database, quarterly extract <code>external/repd/REPD_Publication_Q2_2026.csv</code> (schemes of 150 kW and above, England)</td>
+  <td>solar PV and battery schemes at the site's full postcode: count, summed capacity, best planning status, capacity operational by the end of the electricity extract (8 May 2026) and its first operational date. In the Q2 2026 extract 24 sites have a scheme at their postcode and none was operational within the sample: these are the 2025 NHS rooftop-solar applications, awaiting construction</td>
+</tr>
+</tbody>
+</table>
+<h2 id="display-energy-certificates-code-data-external-dec-interim-d">Display Energy Certificates: <code>code/data/external/dec/</code> → <code>interim/dec_certificates.parquet</code>, <code>interim/dec_sites.parquet</code></h2>
+<p><code>sense-energy build-dec</code> (<code>data/dec.py</code>). The MHCLG energy performance of buildings data API
+(<code>api.get-energy-performance-data.communities.gov.uk</code>, bearer token <code>EPB_API_KEY</code> in <code>.env</code>, Open
+Government Licence v3.0): <code>GET /api/display/search?postcode=</code> for every site postcode, then
+<code>GET /api/certificate?certificate_number=</code> for each certificate found; both cached as JSON under
+<code>external/dec/search/</code> and <code>external/dec/certificates/</code>, so a rebuild with <code>--no-fetch</code> reads the cache.
+Every occupied public building over 250 m² displays a DEC, renewed yearly above 1,000 m²; a hospital
+postcode carries one certificate per building per year, back to 2008.</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>dec_certificates.parquet</code></td>
+  <td>certificate</td>
+  <td>flattened record: <code>certificate_number</code>, <code>uprn</code>, address, <code>postcode_norm</code>, <code>property_type</code>, <code>schema_type</code>, <code>registration_date</code>, <code>nominated_date</code>, assessment period, <code>floor_area_m2</code>, <code>main_heating_fuel</code>, <code>building_environment</code> and its collapsed <code>environment</code> (air conditioning / mixed mode / heating with mechanical or natural ventilation / unconditioned), <code>hvac_system</code>, <code>ac_present</code> and <code>ac_yes</code>, <code>ac_rated_kw</code> (missing when the certificate flags the rating unknown), <code>operational_rating</code>, metered <code>electricity_kwh</code> and <code>thermal_kwh</code> (all non-electric fuels, <code>thermal_fuels</code>) of the assessment year, <code>elec_kwh_m2</code> / <code>thermal_kwh_m2</code> and their typical benchmarks, renewables, <code>electric_heating</code> (main fuel is grid electricity)</td>
+</tr>
+<tr>
+  <td><code>dec_recommendations.parquet</code></td>
+  <td>recommendation</td>
+  <td>the advisory report linked from each latest certificate (<code>related_certificate_number</code>, newer schemas only): <code>advisory_number</code>, <code>dec_number</code>, <code>payback</code> (short / medium / long / other), <code>code</code>, <code>recommendation</code> text, <code>co2_impact</code>, <code>themes</code> (cooling, heating, hot water, lighting, controls, fabric, ventilation, renewables, by keyword), the report's floor area and building environment</td>
+</tr>
+<tr>
+  <td><code>dec_sites.parquet</code></td>
+  <td>site</td>
+  <td>the latest certificate of each building at the site postcode (buildings keyed by UPRN, else by first address line), aggregated by floor area: <code>dec_buildings</code>, <code>dec_floor_area_m2</code>, <code>dec_ac_share</code> (floor share with air conditioning present), <code>dec_ac_buildings</code>, <code>dec_ac_kw</code> / <code>dec_ac_kw_m2</code> (where rated output is known, <code>dec_ac_kw_known_share</code>), <code>dec_cooled_share</code> (air conditioning or mixed mode), <code>dec_mech_vent_share</code>, <code>dec_env_*_share</code> per environment, <code>dec_main_environment</code>, <code>dec_electric_heating_share</code>, <code>dec_elec_kwh_m2</code>, <code>dec_thermal_kwh_m2</code>, <code>dec_operational_rating</code>, <code>dec_renewables_electrical</code>, <code>dec_electricity_kwh</code>, <code>dec_latest_nominated</code> / <code>dec_oldest_nominated</code>, <code>dec_property_types</code>, <code>dec_buildings_ever</code> (buildings with any certificate, against <code>dec_buildings</code> whose latest is from 2019 on), and the recommendation counts <code>rec_buildings</code>, <code>rec_total</code>, <code>rec_short_payback</code>, <code>rec_&lt;theme&gt;</code> with <code>rec_&lt;theme&gt;_building_share</code></td>
+</tr>
+</tbody>
+</table>
+<p>| <code>epc_certificates.parquet</code>, <code>epc_sites.parquet</code> | certificate / site | the same for non-domestic EPCs (<code>sense-energy build-epc</code>, API kind <code>non-domestic</code>, cache <code>external/dec/epc_search/</code>, <code>epc_certificates/</code>): asset-rated buildings DECs do not cover (leased premises, new builds), with <code>asset_rating</code> instead of an operational rating; <code>epc_sites</code> carries the <code>epc_*</code> twins of the <code>dec_*</code> columns, latest certificate per building since 2016 (ten-year validity). <code>heat_drivers</code> fills a site's <code>dec_*</code> descriptors from its EPCs when it has no DEC (<code>cert_source</code> = DEC or EPC) |</p>
+<p>Matching is by the site's full postcode, so buildings of a hospital that carry a different postcode
+are missed and a shared postcode can bring in a neighbour's buildings; <code>heat_drivers</code> reports
+<code>dec_coverage</code>, the DEC floor area over the ERIC gross internal area, as the check.</p>
+<h2 id="next-step-analyses-code-reports-estates-eric-changes-forecas">Next-step analyses: <code>code/reports/estates/eric_changes*</code>, <code>forecast_heat_days/</code>, <code>heat_causal_ml/</code></h2>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>estates/eric_changes.csv</code></td>
+  <td>panel site in both ERIC returns</td>
+  <td>2023/24 and 2024/25 values and deltas of solar generated and consumed, heat pumps, LED share, CHP units, floor area, electricity, gas, EV points, overheating, max demand, capacity; flags <code>solar_new</code>, <code>solar_grew</code>, <code>heat_pumps_new</code>, <code>heat_pumps_more</code>, <code>led_up_10pts</code>, <code>chp_changed</code>, <code>any_change</code>, <code>chp_site</code>; the nearest demand step in or near 2024/25 (<code>steps_in_window</code>, <code>step_date</code>, <code>step_change</code>)</td>
+</tr>
+<tr>
+  <td><code>estates/demand_steps.csv</code></td>
+  <td>step</td>
+  <td>PELT changepoints in each site's log daily demand net of day-of-week (<code>analysis/estates_changes.py</code>): <code>date</code>, <code>change</code> (relative level change), <code>level_before_kw</code>, segment lengths</td>
+</tr>
+<tr>
+  <td><code>forecast_heat_days/scores_by_day_class.csv</code></td>
+  <td>model × day class</td>
+  <td>day-ahead skill by the target day's class (ERA5 daily maximum ≥ 28 °C, 25–28, other June–September, daily mean ≤ 2 °C, rest): site-mean <code>nmae</code>, <code>nmae_median</code>, <code>ncrps</code>, <code>coverage_80</code>, <code>skill_vs_naive</code>, <code>nmae_vs_lightgbm_ifs</code>; <code>per_site.csv</code> the per-site values</td>
+</tr>
+<tr>
+  <td><code>heat_causal_ml/cate_site.csv</code></td>
+  <td>site × covariate set</td>
+  <td>learned heat effects per site (<code>tau_rlearner</code>, <code>tau_forest</code> with <code>tau_forest_lo/hi</code>), the fixed-effect slope (<code>slope_fe</code>, <code>slope_fe_se</code>), <code>set</code> = observables or observables + signature</td>
+</tr>
+<tr>
+  <td><code>heat_causal_ml/importance_*.csv</code></td>
+  <td>covariate</td>
+  <td>causal-forest feature importance per covariate set</td>
+</tr>
+<tr>
+  <td><code>heat_causal_ml/summary.json</code></td>
+  <td>—</td>
+  <td>agreement of the learned effects with the regression slopes (correlation, calibration slope, share of true variance recovered), placebo with shuffled covariates, calendar modifier effects</td>
+</tr>
+</tbody>
+</table>
+<h2 id="jepa-site-embeddings-code-reports-jepa">JEPA site embeddings: <code>code/reports/jepa/</code></h2>
+<p><code>sense-energy train-jepa</code> (<code>experiments/jepa.py</code>) and <code>sense-energy jepa-probe</code> (<code>analysis/jepa_probe.py</code>).
+A joint-embedding predictive architecture trained on the half-hourly panel: 28-day windows of one
+site's demand tokenised by day (48 half-hours scaled by the site's trailing 28-day mean, weekday
+one-hot, season), seven target days per window (a block of four and three singles) whose
+embeddings under an EMA target encoder the predictor must produce from the remaining 21 days;
+smooth-L1 loss in embedding space plus a VICReg variance term.</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_embeddings.parquet</code></td>
+  <td>site</td>
+  <td><code>e0..e{d-1}</code>: mean target-encoder embedding of the site's valid days; <code>s_e0..</code>: the same over June–September; <code>days</code> embedded</td>
+</tr>
+<tr>
+  <td><code>day_embeddings.parquet</code></td>
+  <td>site × local day</td>
+  <td>the embedding of every valid day (from non-overlapping full windows; the tail window averaged where it overlaps)</td>
+</tr>
+<tr>
+  <td><code>surprise.parquet</code></td>
+  <td>site × local day</td>
+  <td>latent prediction error of the day when it alone is held out of its window: a learned anomaly / regime score</td>
+</tr>
+<tr>
+  <td><code>chronos_embeddings.parquet</code></td>
+  <td>site</td>
+  <td>mean-pooled Chronos-2 encoder states of the site's hourly demand over twelve 14-day windows spread through the history, level-normalised (the foundation-model comparison)</td>
+</tr>
+<tr>
+  <td><code>probe.csv</code></td>
+  <td>target × representation × probe model</td>
+  <td>out-of-fold <code>r2_oof</code>, <code>corr</code> and <code>share_true_variance</code> (DerSimonian-Laird) of the fixed-effect heat, cold and sunshine slopes predicted from each representation (JEPA, JEPA June–September, Chronos-2, observables, diurnal signature, combinations) by a ridge probe and by TabPFN, five site folds, repeated</td>
+</tr>
+<tr>
+  <td><code>probe_classification.csv</code></td>
+  <td>target × representation</td>
+  <td>out-of-fold accuracy of building use and DEC environment from each representation, against the majority class</td>
+</tr>
+<tr>
+  <td><code>clusters.csv</code></td>
+  <td>representation</td>
+  <td>k-means (k = 4) on each representation: adjusted Rand index against the demand-shape clusters and the share of heat-slope variance cluster membership explains</td>
+</tr>
+<tr>
+  <td><code>jepa.pt</code>, <code>train_log.csv</code>, <code>summary.json</code>, <code>probe_summary.json</code></td>
+  <td>—</td>
+  <td>weights and configuration, training curve (loss, embedding SD), headline numbers</td>
+</tr>
+</tbody>
+</table>
+<p class="meta">Built from <code>doc/data_dictionary.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

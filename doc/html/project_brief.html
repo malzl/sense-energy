@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project brief · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html" class="current">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#problem">Problem</a>
+  <a class="h2" href="#why-it-matters">Why it matters</a>
+  <a class="h2" href="#scope">Scope</a>
+  <a class="h2" href="#out-of-scope">Out of scope</a>
+  <a class="h2" href="#stakeholders">Stakeholders</a>
+  <a class="h2" href="#success-criteria">Success criteria</a>
+  <a class="h2" href="#key-risks">Key risks</a>
+  <a class="h2" href="#timeline">Timeline</a>
+  </div>
+</nav>
+<main>
+<h1>Project brief</h1>
+<blockquote>
+<p>Fill this in at kick-off. It is the document you will re-read every time scope drifts.</p>
+</blockquote>
+<h2 id="problem">Problem</h2>
+<p>Energy demand forecasting for NHS hospitals.</p>
+<h2 id="why-it-matters">Why it matters</h2>
+<!-- e.g. procurement exposure to volatile wholesale prices; DSR/flexibility revenue;
+     net-zero (Delivering a Net Zero NHS) reporting; capacity planning for
+     electrification of heat and EV fleets. -->
+
+<h2 id="scope">Scope</h2>
+<ul>
+<li><strong>Sites in scope:</strong> TBD</li>
+<li><strong>Energy vectors:</strong> electricity / gas / heat — TBD</li>
+<li><strong>Temporal resolution:</strong> half-hourly (settlement periods)</li>
+<li><strong>Forecast horizon(s):</strong> TBD (day-ahead? week-ahead? annual budget?)</li>
+<li><strong>Update cadence:</strong> TBD</li>
+</ul>
+<h2 id="out-of-scope">Out of scope</h2>
+<!-- Stating this explicitly is as valuable as stating the scope. -->
+
+<h2 id="stakeholders">Stakeholders</h2>
+<table>
+<thead>
+<tr>
+  <th>Role</th>
+  <th>Name</th>
+  <th>Interest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Data owner</td>
+  <td>TBD</td>
+  <td>Approves data access</td>
+</tr>
+<tr>
+  <td>Estates / energy manager</td>
+  <td>TBD</td>
+  <td>Consumes the forecast</td>
+</tr>
+<tr>
+  <td>Information governance</td>
+  <td>TBD</td>
+  <td>Approves data handling</td>
+</tr>
+</tbody>
+</table>
+<h2 id="success-criteria">Success criteria</h2>
+<table>
+<thead>
+<tr>
+  <th>Criterion</th>
+  <th>Target</th>
+  <th>How measured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Beats seasonal naive</td>
+  <td>MASE &lt; 1.0</td>
+  <td>Rolling-origin backtest</td>
+</tr>
+<tr>
+  <td>Day-ahead accuracy</td>
+  <td>MAPE &lt; X%</td>
+  <td>Held-out period</td>
+</tr>
+<tr>
+  <td>Reproducibility</td>
+  <td><code>make data &amp;&amp; make train &amp;&amp; make evaluate</code> from clean checkout</td>
+  <td>CI</td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-risks">Key risks</h2>
+<table>
+<thead>
+<tr>
+  <th>Risk</th>
+  <th>Impact</th>
+  <th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Data access delays</td>
+  <td>Blocks everything</td>
+  <td>Start with synthetic/public data</td>
+</tr>
+<tr>
+  <td>Meter gaps and quality issues</td>
+  <td>Biased models</td>
+  <td>Validation report before modelling</td>
+</tr>
+<tr>
+  <td>Regime change (new plant, ward closure, CHP)</td>
+  <td>Historical data misleads</td>
+  <td>Changepoint checks; site metadata</td>
+</tr>
+<tr>
+  <td>COVID-era data unrepresentative</td>
+  <td>Distorted seasonality</td>
+  <td>Consider excluding 2020-21</td>
+</tr>
+</tbody>
+</table>
+<h2 id="timeline">Timeline</h2>
+<table>
+<thead>
+<tr>
+  <th>Milestone</th>
+  <th>Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Data received</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Data quality report</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Baselines established</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Candidate model selected</td>
+  <td>TBD</td>
+</tr>
+</tbody>
+</table>
+<p class="meta">Built from <code>doc/project_brief.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

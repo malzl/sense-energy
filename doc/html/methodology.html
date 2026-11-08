@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methodology · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html" class="current">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#framing">Framing</a>
+  <a class="h2" href="#validation">Validation</a>
+  <a class="h2" href="#leakage-checklist">Leakage checklist</a>
+  <a class="h2" href="#metrics">Metrics</a>
+  <a class="h2" href="#model-progression">Model progression</a>
+  <a class="h2" href="#known-modelling-issues-in-this-domain">Known modelling issues in this domain</a>
+  </div>
+</nav>
+<main>
+<h1>Methodology</h1>
+<h2 id="framing">Framing</h2>
+<p>Site-level half-hourly demand forecasting. Each site is a time series; models may
+be fit per site (<code>local</code>) or across all sites with <code>site_id</code> as a feature
+(<code>global</code>). Global models generally win when per-site history is short, and let a
+new site borrow strength from the rest of the estate.</p>
+<h2 id="validation">Validation</h2>
+<p><strong>Rolling-origin (forward-chaining) cross-validation, always.</strong> Random k-fold
+leaks future information through both the split and the lag features, and will
+flatter every model you try.</p>
+<pre><code>fold 1: [====train====][gap][test]
+fold 2: [======train======][gap][test]
+fold 3: [========train========][gap][test]
+</code></pre>
+<p>The <code>gap</code> between train and test equals the operational lead time — if the
+forecast is issued at 11:00 for the following day, the model cannot use readings
+from the intervening hours. <code>sense_energy.evaluation.backtest.rolling_origin_splits</code>
+implements this.</p>
+<h2 id="leakage-checklist">Leakage checklist</h2>
+<ul>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Every lag ≥ the forecast horizon plus lead time</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Rolling windows shifted by at least one period</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>No target-derived aggregate (site mean, normalisation constant) fitted on the full series</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Weather features are <strong>forecast</strong> weather at prediction time, not observations</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" type="checkbox" disabled/>Test period strictly after train period in every fold</li>
+</ul>
+<p>That fourth point is the one that bites: backtesting with observed temperature
+overstates accuracy, because in production you only have a weather forecast.</p>
+<h2 id="metrics">Metrics</h2>
+<table>
+<thead>
+<tr>
+  <th>Metric</th>
+  <th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>MAE</strong></td>
+  <td>Primary; interpretable in kWh</td>
+</tr>
+<tr>
+  <td><strong>RMSE</strong></td>
+  <td>Penalises the large errors that drive peak-charge exposure</td>
+</tr>
+<tr>
+  <td><strong>MASE</strong></td>
+  <td>Model vs. seasonal naive; &lt; 1 means it earns its keep</td>
+</tr>
+<tr>
+  <td><strong>MAPE / sMAPE</strong></td>
+  <td>Reporting to stakeholders; unstable near zero demand</td>
+</tr>
+<tr>
+  <td><strong>Bias</strong></td>
+  <td>Systematic over/under-forecasting — matters for procurement</td>
+</tr>
+</tbody>
+</table>
+<p>Report metrics per site <em>and</em> pooled. A pooled average hides a model that works
+on large acute sites and fails on small community ones.</p>
+<h2 id="model-progression">Model progression</h2>
+<ol>
+<li><strong>Seasonal naive</strong> (same half-hour last week) — the bar to clear.</li>
+<li><strong>Profile mean</strong> by (day-of-week × time-of-day).</li>
+<li><strong>Regularised linear</strong> on calendar + degree-day features — interpretable.</li>
+<li><strong>Gradient boosting (LightGBM)</strong> — expected workhorse.</li>
+<li>Optionally: SARIMAX with exogenous weather, or a global neural forecaster
+(N-BEATS / TFT) if the estate is large and the horizon long.</li>
+</ol>
+<p>Do not skip steps 1–2. A benchmark you can explain to an estates manager is worth
+more than a marginal accuracy gain you cannot.</p>
+<h2 id="known-modelling-issues-in-this-domain">Known modelling issues in this domain</h2>
+<ul>
+<li><strong>BST transitions</strong> produce 46- and 50-period days. Store UTC; derive local.</li>
+<li><strong>Regime changes</strong> — CHP commissioning, ward closures, PV installation — break
+stationarity. Check for changepoints and record them in site metadata.</li>
+<li><strong>COVID period</strong> (2020–21) has atypical occupancy; consider excluding.</li>
+<li><strong>Hospitals have a high baseload</strong> relative to offices, and weaker weekend
+reduction — profiles from commercial buildings do not transfer.</li>
+</ul>
+<p class="meta">Built from <code>doc/methodology.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

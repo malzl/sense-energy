@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data manifest - processed demand datasets · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html" class="current">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#lineage">Lineage</a>
+  <a class="h2" href="#layout">Layout</a>
+  <a class="h2" href="#steps">Steps</a>
+  <a class="h2" href="#imputation-method">Imputation method</a>
+  <a class="h2" href="#tables">Tables</a>
+  <a class="h2" href="#files">Files</a>
+  <a class="h2" href="#known-limitations">Known limitations</a>
+  </div>
+</nav>
+<main>
+<h1>Data manifest - processed demand datasets</h1>
+<p>Generated 2026-09-09T09:13:47+00:00 by <code>sense-energy build-processed</code> at commit <code>618da4f</code>.
+Regenerate with <code>make processed</code>; this file and <code>code/data/processed/manifest.json</code> are written by the build and should not be edited by hand.</p>
+<h2 id="lineage">Lineage</h2>
+<pre><code>Energy Systems Catapult extract (raw)
+  -&gt; sense-energy build-interim   : reactive/cumulative rows dropped, meter grain, zeros-&gt;NaN,
+                                     30-min grid, outliers flagged, gaps &lt;= 2 h interpolated
+  -&gt; sense-energy build-processed : this manifest
+</code></pre>
+<h2 id="layout">Layout</h2>
+<p><code>code/data/processed/&lt;energy&gt;/&lt;level&gt;/</code> for energy in {elec, gas} and level in {meter, site, trust}:</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>wide_raw.parquet</code> / <code>.csv</code></td>
+  <td>time x series matrix, kWh per half hour, missing = NaN</td>
+</tr>
+<tr>
+  <td><code>wide_imputed.parquet</code> / <code>.csv</code></td>
+  <td>same, gaps filled by profile-KNN; heavily-imputed series omitted</td>
+</tr>
+<tr>
+  <td><code>long_raw.parquet</code></td>
+  <td><code>series_id, datetime, kwh</code> - present values only</td>
+</tr>
+<tr>
+  <td><code>long_imputed.parquet</code></td>
+  <td><code>series_id, datetime, kwh, imputed</code> (bool at meter level; imputed share of members above)</td>
+</tr>
+<tr>
+  <td><code>series_index.parquet</code> / <code>.csv</code></td>
+  <td>one row per series: window, coverage, imputation share, flags, site/trust attributes</td>
+</tr>
+</tbody>
+</table>
+<p>Plus <code>site_attributes.parquet</code> / <code>.csv</code> (site register with coordinates, GSP group/region) for clustering.</p>
+<p>Conventions: timestamps are UTC period <em>starts</em> on a common 30-minute grid; units are kWh per half hour; <code>series_id</code> is the MPxN at meter level, <code>site_code</code> at site level and a normalised trust name at trust level.</p>
+<h2 id="steps">Steps</h2>
+<ol>
+<li><p><strong>Load interim</strong></p>
+<ul>
+<li>rows: <code>11013277</code></li>
+<li>meters: <code>235</code></li>
+<li>sites: <code>146</code></li>
+<li>window: <code>['2022-12-07 00:00:00+00:00', '2026-05-08 23:30:00+00:00']</code></li>
+<li>source: <code>interim/consumption_halfhourly.parquet</code></li>
+</ul>
+</li>
+<li><p><strong>Exclude placeholder sites</strong></p>
+<ul>
+<li>regex: <code>Unknown</code></li>
+<li>sites_dropped: <code>['RFSUnknown', 'RH8Unknown', 'RL1Unknown', 'RQXUnknown', 'RXNUnknown']</code></li>
+<li>rows_dropped: <code>290592</code></li>
+</ul>
+</li>
+<li><p><strong>Common time grid</strong></p>
+<ul>
+<li>start: <code>2022-12-07 00:00:00+00:00</code></li>
+<li>end: <code>2026-05-08 23:30:00+00:00</code></li>
+<li>periods: <code>59952</code></li>
+<li>timezone: <code>UTC, period start</code></li>
+</ul>
+</li>
+<li><p><strong>Site attributes</strong></p>
+<ul>
+<li>rows: <code>275</code></li>
+<li>columns: <code>27 items: ['site_code', 'site_name', 'postcode', 'organisation_name', 'organisation_type', 'commissioning_region'] ...</code></li>
+</ul>
+</li>
+<li><p><strong>elec: meter frame</strong></p>
+<ul>
+<li>meters: <code>170</code></li>
+<li>outliers_set_missing: <code>142</code></li>
+</ul>
+</li>
+<li><p><strong>elec: profile-KNN imputation at meter level</strong></p>
+<ul>
+<li>method: <code>profile_knn</code></li>
+<li>k: <code>5</code></li>
+<li>window_weeks: <code>8</code></li>
+<li>same_day_type: <code>True</code></li>
+<li>min_observed_fraction_of_day: <code>0.25</code></li>
+<li>max_gap_periods: <code>48</code></li>
+<li>level_scaling: <code>True</code></li>
+<li>max_imputed_fraction_per_series: <code>0.1</code></li>
+<li>cells_missing_before: <code>1743070</code></li>
+<li>cells_imputed: <code>40572</code></li>
+<li>share_of_missing_filled: <code>0.0233</code></li>
+<li>days_skipped: <code>{'too_sparse': 34590, 'gap_over_24h': 110, 'no_neighbours': 2055}</code></li>
+<li>series_flagged_heavily_imputed: <code>['1100050353005']</code></li>
+</ul>
+</li>
+<li><p><strong>elec: inactive meters excluded from totals</strong></p>
+<ul>
+<li>min_member_coverage: <code>0.1</code></li>
+<li>meters: <code>['1030071208238', '1200010097523', '1419581430000', '2200030368412', '2200032196710', '2200042744540', '2200043162436']</code></li>
+</ul>
+</li>
+<li><p><strong>elec: site totals</strong></p>
+<ul>
+<li>sites: <code>134</code></li>
+<li>rule: <code>total = sum of meters only where every active meter has a value (observed or imputed); else NaN</code></li>
+<li>raw_complete_share: <code>0.8566</code></li>
+<li>imputed_complete_share: <code>0.8603</code></li>
+</ul>
+</li>
+<li><p><strong>elec: trust totals</strong></p>
+<ul>
+<li>trusts: <code>24</code></li>
+<li>rule: <code>total = sum of sites only where every active site has a value; else NaN</code></li>
+<li>raw_complete_share: <code>0.734</code></li>
+<li>imputed_complete_share: <code>0.7457</code></li>
+</ul>
+</li>
+<li><p><strong>gas: meter frame</strong></p>
+</li>
+</ol>
+<ul>
+<li>meters: <code>56</code></li>
+<li>outliers_set_missing: <code>6</code></li>
+</ul>
+<ol start="11">
+<li><strong>gas: profile-KNN imputation at meter level</strong></li>
+</ol>
+<ul>
+<li>method: <code>profile_knn</code></li>
+<li>k: <code>5</code></li>
+<li>window_weeks: <code>8</code></li>
+<li>same_day_type: <code>True</code></li>
+<li>min_observed_fraction_of_day: <code>0.25</code></li>
+<li>max_gap_periods: <code>48</code></li>
+<li>level_scaling: <code>True</code></li>
+<li>max_imputed_fraction_per_series: <code>0.1</code></li>
+<li>cells_missing_before: <code>2307184</code></li>
+<li>cells_imputed: <code>26533</code></li>
+<li>share_of_missing_filled: <code>0.0115</code></li>
+<li>days_skipped: <code>{'too_sparse': 46534, 'gap_over_24h': 738, 'no_neighbours': 1776}</code></li>
+<li>series_flagged_heavily_imputed: <code>[]</code></li>
+</ul>
+<ol start="12">
+<li><strong>gas: inactive meters excluded from totals</strong></li>
+</ol>
+<ul>
+<li>min_member_coverage: <code>0.1</code></li>
+<li>meters: <code>['13542103', '1643806708', '7678762807', '81755703', '9330756405', '9382951702']</code></li>
+</ul>
+<ol start="13">
+<li><strong>gas: site totals</strong></li>
+</ol>
+<ul>
+<li>sites: <code>21</code></li>
+<li>rule: <code>total = sum of meters only where every active meter has a value (observed or imputed); else NaN</code></li>
+<li>raw_complete_share: <code>0.186</code></li>
+<li>imputed_complete_share: <code>0.1917</code></li>
+</ul>
+<ol start="14">
+<li><strong>gas: trust totals</strong></li>
+</ol>
+<ul>
+<li>trusts: <code>10</code></li>
+<li>rule: <code>total = sum of sites only where every active site has a value; else NaN</code></li>
+<li>raw_complete_share: <code>0.1495</code></li>
+<li>imputed_complete_share: <code>0.1603</code></li>
+</ul>
+<h2 id="imputation-method">Imputation method</h2>
+<p>Profile-KNN within each series (Peppanen et al. 2016). Each UTC day is a 48-slot vector. For a day with gaps that is at least 25% observed and contains no gap longer than 48 periods, the k=5 nearest <em>complete</em> days of the same series and day type (weekday/weekend, local time) within ±8 weeks are found by RMSE over the observed slots; the missing slots take the neighbours' mean profile, scaled to the day's observed level (scale clipped to [0.25, 4]). Whole missing days are never filled. Series needing more than 10% imputation are flagged <code>imputed_heavily</code> and excluded from <code>wide_imputed</code>. Site and trust totals are formed only where every active member has a value.</p>
+<h2 id="tables">Tables</h2>
+<table>
+<thead>
+<tr>
+  <th>energy/level</th>
+  <th>series (raw)</th>
+  <th>series (imputed)</th>
+  <th>periods</th>
+  <th>raw cells present</th>
+  <th>imputed cells present</th>
+  <th>median coverage in span</th>
+  <th>mean imputed share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>elec/meter</td>
+  <td>170</td>
+  <td>169</td>
+  <td>59,952</td>
+  <td>82.9%</td>
+  <td>83.2%</td>
+  <td>100.0%</td>
+  <td>0.40%</td>
+</tr>
+<tr>
+  <td>elec/site</td>
+  <td>134</td>
+  <td>133</td>
+  <td>59,952</td>
+  <td>85.7%</td>
+  <td>86.0%</td>
+  <td>100.0%</td>
+  <td>0.26%</td>
+</tr>
+<tr>
+  <td>elec/trust</td>
+  <td>24</td>
+  <td>23</td>
+  <td>59,952</td>
+  <td>73.4%</td>
+  <td>74.6%</td>
+  <td>98.4%</td>
+  <td>0.35%</td>
+</tr>
+<tr>
+  <td>gas/meter</td>
+  <td>56</td>
+  <td>56</td>
+  <td>59,952</td>
+  <td>31.3%</td>
+  <td>32.1%</td>
+  <td>79.6%</td>
+  <td>0.79%</td>
+</tr>
+<tr>
+  <td>gas/site</td>
+  <td>21</td>
+  <td>21</td>
+  <td>59,952</td>
+  <td>18.6%</td>
+  <td>19.2%</td>
+  <td>51.1%</td>
+  <td>0.61%</td>
+</tr>
+<tr>
+  <td>gas/trust</td>
+  <td>10</td>
+  <td>10</td>
+  <td>59,952</td>
+  <td>14.9%</td>
+  <td>16.0%</td>
+  <td>39.4%</td>
+  <td>0.49%</td>
+</tr>
+</tbody>
+</table>
+<h2 id="files">Files</h2>
+<table>
+<thead>
+<tr>
+  <th>path</th>
+  <th>rows</th>
+  <th>cols</th>
+  <th>MB</th>
+  <th>sha256[:12]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_attributes.parquet</code></td>
+  <td>275</td>
+  <td>27</td>
+  <td>0.04</td>
+  <td><code>2d6b3dbd2253</code></td>
+</tr>
+<tr>
+  <td><code>site_attributes.csv</code></td>
+  <td>275</td>
+  <td>27</td>
+  <td>0.11</td>
+  <td><code>bed9aebe7894</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/wide_raw.parquet</code></td>
+  <td>59,952</td>
+  <td>170</td>
+  <td>10.3</td>
+  <td><code>87c4599c3d23</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/wide_raw.csv</code></td>
+  <td>59,952</td>
+  <td>170</td>
+  <td>67.78</td>
+  <td><code>a2b6f5209d9c</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/wide_imputed.parquet</code></td>
+  <td>59,952</td>
+  <td>169</td>
+  <td>10.57</td>
+  <td><code>d487dba53e4f</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/wide_imputed.csv</code></td>
+  <td>59,952</td>
+  <td>169</td>
+  <td>67.6</td>
+  <td><code>cffac8e55ff4</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/long_raw.parquet</code></td>
+  <td>8,448,770</td>
+  <td>3</td>
+  <td>14.9</td>
+  <td><code>2c8d95c87e88</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/long_imputed.parquet</code></td>
+  <td>8,433,140</td>
+  <td>4</td>
+  <td>15.21</td>
+  <td><code>774a3755970e</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/series_index.parquet</code></td>
+  <td>170</td>
+  <td>23</td>
+  <td>0.03</td>
+  <td><code>b9b8178b71f2</code></td>
+</tr>
+<tr>
+  <td><code>elec/meter/series_index.csv</code></td>
+  <td>170</td>
+  <td>23</td>
+  <td>0.05</td>
+  <td><code>3094899a14c7</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/wide_raw.parquet</code></td>
+  <td>59,952</td>
+  <td>134</td>
+  <td>9.18</td>
+  <td><code>0e5b3c105906</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/wide_raw.csv</code></td>
+  <td>59,952</td>
+  <td>134</td>
+  <td>55.13</td>
+  <td><code>664ed3fc0810</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/wide_imputed.parquet</code></td>
+  <td>59,952</td>
+  <td>133</td>
+  <td>9.39</td>
+  <td><code>569b4f4abcfe</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/wide_imputed.csv</code></td>
+  <td>59,952</td>
+  <td>133</td>
+  <td>54.91</td>
+  <td><code>7c7b8e46b9d3</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/long_raw.parquet</code></td>
+  <td>6,881,456</td>
+  <td>3</td>
+  <td>13.34</td>
+  <td><code>6781a1647989</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/long_imputed.parquet</code></td>
+  <td>6,859,825</td>
+  <td>4</td>
+  <td>13.54</td>
+  <td><code>f5dfb3040884</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/series_index.parquet</code></td>
+  <td>134</td>
+  <td>19</td>
+  <td>0.02</td>
+  <td><code>905ed8ca3c28</code></td>
+</tr>
+<tr>
+  <td><code>elec/site/series_index.csv</code></td>
+  <td>134</td>
+  <td>19</td>
+  <td>0.04</td>
+  <td><code>2d25bac5afe9</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/wide_raw.parquet</code></td>
+  <td>59,952</td>
+  <td>24</td>
+  <td>4.69</td>
+  <td><code>a93ac21f7c31</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/wide_raw.csv</code></td>
+  <td>59,952</td>
+  <td>24</td>
+  <td>11.17</td>
+  <td><code>653c8b8ed19e</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/wide_imputed.parquet</code></td>
+  <td>59,952</td>
+  <td>23</td>
+  <td>4.83</td>
+  <td><code>35ea144abda8</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/wide_imputed.csv</code></td>
+  <td>59,952</td>
+  <td>23</td>
+  <td>10.92</td>
+  <td><code>d20a8a9b2a7f</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/long_raw.parquet</code></td>
+  <td>1,056,066</td>
+  <td>3</td>
+  <td>5.08</td>
+  <td><code>c93c2c8f4e4f</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/long_imputed.parquet</code></td>
+  <td>1,028,290</td>
+  <td>4</td>
+  <td>5.12</td>
+  <td><code>f7c3c622e1b9</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/series_index.parquet</code></td>
+  <td>24</td>
+  <td>16</td>
+  <td>0.01</td>
+  <td><code>73df946619a5</code></td>
+</tr>
+<tr>
+  <td><code>elec/trust/series_index.csv</code></td>
+  <td>24</td>
+  <td>16</td>
+  <td>0.01</td>
+  <td><code>2c319bca604c</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/wide_raw.parquet</code></td>
+  <td>59,952</td>
+  <td>56</td>
+  <td>2.01</td>
+  <td><code>036dc5bf069e</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/wide_raw.csv</code></td>
+  <td>59,952</td>
+  <td>56</td>
+  <td>12.24</td>
+  <td><code>9879651ae154</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/wide_imputed.parquet</code></td>
+  <td>59,952</td>
+  <td>56</td>
+  <td>2.24</td>
+  <td><code>5ec889087f46</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/wide_imputed.csv</code></td>
+  <td>59,952</td>
+  <td>56</td>
+  <td>12.41</td>
+  <td><code>75d04de51df3</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/long_raw.parquet</code></td>
+  <td>1,050,128</td>
+  <td>3</td>
+  <td>2.42</td>
+  <td><code>277e2faa8752</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/long_imputed.parquet</code></td>
+  <td>1,076,661</td>
+  <td>4</td>
+  <td>2.63</td>
+  <td><code>e9deba87a018</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/series_index.parquet</code></td>
+  <td>56</td>
+  <td>23</td>
+  <td>0.02</td>
+  <td><code>bd46e5999286</code></td>
+</tr>
+<tr>
+  <td><code>gas/meter/series_index.csv</code></td>
+  <td>56</td>
+  <td>23</td>
+  <td>0.02</td>
+  <td><code>03ee3f18416a</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/wide_raw.parquet</code></td>
+  <td>59,952</td>
+  <td>21</td>
+  <td>1.02</td>
+  <td><code>53449b759217</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/wide_raw.csv</code></td>
+  <td>59,952</td>
+  <td>21</td>
+  <td>4.49</td>
+  <td><code>c854ca4f073e</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/wide_imputed.parquet</code></td>
+  <td>59,952</td>
+  <td>21</td>
+  <td>1.09</td>
+  <td><code>b51b8bf333de</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/wide_imputed.csv</code></td>
+  <td>59,952</td>
+  <td>21</td>
+  <td>4.54</td>
+  <td><code>00a19e657b23</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/long_raw.parquet</code></td>
+  <td>234,154</td>
+  <td>3</td>
+  <td>1.04</td>
+  <td><code>2d30a301944f</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/long_imputed.parquet</code></td>
+  <td>241,294</td>
+  <td>4</td>
+  <td>1.1</td>
+  <td><code>7ce70c71764e</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/series_index.parquet</code></td>
+  <td>21</td>
+  <td>19</td>
+  <td>0.02</td>
+  <td><code>f48f65678e2d</code></td>
+</tr>
+<tr>
+  <td><code>gas/site/series_index.csv</code></td>
+  <td>21</td>
+  <td>19</td>
+  <td>0.01</td>
+  <td><code>32a6707a8819</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/wide_raw.parquet</code></td>
+  <td>59,952</td>
+  <td>10</td>
+  <td>0.71</td>
+  <td><code>94cbdd010bf4</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/wide_raw.csv</code></td>
+  <td>59,952</td>
+  <td>10</td>
+  <td>2.85</td>
+  <td><code>ea4c13ee99f7</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/wide_imputed.parquet</code></td>
+  <td>59,952</td>
+  <td>10</td>
+  <td>0.79</td>
+  <td><code>819ce7096d1f</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/wide_imputed.csv</code></td>
+  <td>59,952</td>
+  <td>10</td>
+  <td>2.89</td>
+  <td><code>21bc00355ab5</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/long_raw.parquet</code></td>
+  <td>89,648</td>
+  <td>3</td>
+  <td>0.61</td>
+  <td><code>c28137a859b7</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/long_imputed.parquet</code></td>
+  <td>96,125</td>
+  <td>4</td>
+  <td>0.71</td>
+  <td><code>ebbe39ebb9ed</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/series_index.parquet</code></td>
+  <td>10</td>
+  <td>16</td>
+  <td>0.01</td>
+  <td><code>b8d9eb09c71b</code></td>
+</tr>
+<tr>
+  <td><code>gas/trust/series_index.csv</code></td>
+  <td>10</td>
+  <td>16</td>
+  <td>0.0</td>
+  <td><code>8159e04cef41</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations">Known limitations</h2>
+<ul>
+<li>Gaps longer than a day, and days observed less than the threshold, remain missing in the imputed tables by design.</li>
+<li>Site/trust <code>imputed</code> in the long tables is the share of members whose value was imputed at that time, not a boolean.</li>
+<li>Gas has far fewer meters and a much weaker daily cycle; profile-KNN is less well suited to it.</li>
+<li>Coverage differs across series: check <code>series_index</code> before forming rectangular blocks for clustering or foundation models.</li>
+</ul>
+<p class="meta">Built from <code>doc/data_manifest.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

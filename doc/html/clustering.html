@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structure of the demand data: shape clusters of meters, sites and trusts · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html" class="current">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#method">Method</a>
+  <a class="h2" href="#electricity-sites-131-series">Electricity sites (131 series)</a>
+  <a class="h2" href="#electricity-meters-161-and-trusts-21">Electricity meters (161) and trusts (21)</a>
+  <a class="h2" href="#gas-meters-39-sites-9">Gas (meters 39, sites 9)</a>
+  <a class="h2" href="#figures">Figures</a>
+  <a class="h2" href="#uses">Uses</a>
+  </div>
+</nav>
+<main>
+<h1>Structure of the demand data: shape clusters of meters, sites and trusts</h1>
+<p><code>sense-energy cluster-demand</code> (module <code>code/src/sense_energy/analysis/clustering.py</code>), figures from
+<code>code/scripts/clustering/</code> under <code>code/reports/figures/clustering/</code>, tables under <code>code/reports/clustering/</code>.
+15 September 2026.</p>
+<h2 id="method">Method</h2>
+<p>Each series is described by its <strong>shape</strong>: the mean daily profile on weekdays and on weekends in local
+time, normalised by the series mean (96 values). Shapes are clustered with k-means (20 restarts, k = 2–8,
+k chosen by silhouette, all solutions kept) and with Ward linkage for the dendrogram. Scalar descriptors
+interpret the clusters: mean demand (kW), night/day ratio (02:00–05:00 over 10:00–16:00), weekend/weekday
+ratio, winter/summer ratio, temperature slope of the daily demand index (per °C, ERA5 at the site), day-to-day
+CV and the imputed share. Series need ≥ 120 well-observed days.</p>
+<h2 id="electricity-sites-131-series">Electricity sites (131 series)</h2>
+<p>Silhouette prefers k = 3 (0.44) because two sites with <strong>night-time demand two to three times their daytime
+demand</strong> (RH880 Royal Devon, RRERS Midlands Partnership; probably storage heating or off-peak plant) split off
+first. Among the other 129 sites the informative solution is k = 4 (<code>cluster_profiles_elec_site_k4</code>):</p>
+<table>
+<thead>
+<tr>
+  <th>Cluster (k = 4)</th>
+  <th>n</th>
+  <th>Shape</th>
+  <th>Night/day</th>
+  <th>Weekend/weekday</th>
+  <th>Winter/summer</th>
+  <th>Median kW</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>64</td>
+  <td>flat 24/7, daytime rise to ~1.2</td>
+  <td>0.80</td>
+  <td>0.91</td>
+  <td>1.29</td>
+  <td>31</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>44</td>
+  <td>moderate daytime peak ~1.6</td>
+  <td>0.55</td>
+  <td>0.72</td>
+  <td>1.20</td>
+  <td>16</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>21</td>
+  <td>office-like, ~0.55 at night, ~2.05 by day</td>
+  <td>0.34</td>
+  <td>0.50</td>
+  <td>1.16</td>
+  <td>6</td>
+</tr>
+<tr>
+  <td>0</td>
+  <td>2</td>
+  <td>night-heavy</td>
+  <td>2.8–3.6</td>
+  <td>0.94</td>
+  <td>1.04</td>
+  <td>174</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Trust type does not determine the shape.</strong> Mental-health, acute-teaching and community sites all spread
+across the 24/7 and daytime clusters (<code>cluster_composition_elec_site</code>); what separates them is the site's
+function: inpatient community hospitals and mixed-service hospitals sit in the 24/7 cluster, administration,
+treatment centres and outpatient departments in the daytime clusters (<code>site_use_type</code> cross-tab in the
+clusters table).</li>
+<li><strong>Shape follows size.</strong> The 24/7 cluster has the largest sites (median 31 kW), the office-like cluster the
+smallest (6 kW); night/day and weekend ratios are strongly correlated (<code>cluster_descriptors_elec_site</code>).</li>
+<li><strong>Weather sensitivity is weak everywhere</strong>: the temperature slope is −0.01 to −0.02 per °C of the demand index
+in every cluster, i.e. 1 °C colder adds 1–2 % of demand. This is the electricity-only picture; gas is the
+heating fuel.</li>
+<li><strong>Forecast skill by cluster</strong> (<code>cluster_skill_elec_site</code>): CRPS skill of Chronos-2 + IFS ENS is similar
+across the three main clusters; the day-to-day CV (0.20 in the 24/7 cluster, 0.43 in the office-like cluster)
+is the better predictor of which sites are hard.</li>
+</ul>
+<h2 id="electricity-meters-161-and-trusts-21">Electricity meters (161) and trusts (21)</h2>
+<p>Meters reproduce the site picture (k = 3, silhouette 0.43; 98 flat, 59 daytime, 4 night-heavy). Trusts split
+into two groups (silhouette 0.41): eight with a pronounced daytime/weekday cycle (York and Scarborough,
+South Warwickshire, East Cheshire, RUH Bath, Central London Community, Norfolk and Norwich, UHCW, Lancashire
+Teaching; night/day 0.61, weekend 0.74) and thirteen with flatter aggregate profiles (night/day 0.80, weekend
+0.88). The Ward dendrogram (<code>cluster_dendrogram_elec_trust</code>) shows the same two branches.</p>
+<h2 id="gas-meters-39-sites-9">Gas (meters 39, sites 9)</h2>
+<p>Gas meters separate into a large heating-dominated group (35 meters, winter/summer 3.1, temperature slope
+−0.08 per °C) and four small meters with extreme seasonality (winter/summer 7.5, slope −0.13): heating-only
+supplies. Only nine gas sites have enough data to cluster; the gas panel is too thin for more.</p>
+<h2 id="figures">Figures</h2>
+<p><code>cluster_profiles_{elec_site, elec_site_k4, elec_meter, elec_trust, gas_meter, gas_site}</code>,
+<code>cluster_silhouette_elec</code>, <code>cluster_pca_elec_site</code>, <code>cluster_composition_elec_site</code>, <code>cluster_map_elec_site</code>,
+<code>cluster_skill_elec_site</code>, <code>cluster_dendrogram_elec_trust</code>, <code>cluster_descriptors_elec_site</code>. Cluster colours are a
+fixed Okabe-Ito sequence (cluster 0 first); cluster ids are ordered by the members' mean size.</p>
+<div class="figrow"><figure><img src="figures/cluster_silhouette_elec.png" alt="cluster_silhouette_elec" loading="lazy"><figcaption><code>cluster_silhouette_elec</code> <a href="figures/cluster_silhouette_elec.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_pca_elec_site.png" alt="cluster_pca_elec_site" loading="lazy"><figcaption><code>cluster_pca_elec_site</code> <a href="figures/cluster_pca_elec_site.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_composition_elec_site.png" alt="cluster_composition_elec_site" loading="lazy"><figcaption><code>cluster_composition_elec_site</code> <a href="figures/cluster_composition_elec_site.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_map_elec_site.png" alt="cluster_map_elec_site" loading="lazy"><figcaption><code>cluster_map_elec_site</code> <a href="figures/cluster_map_elec_site.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_skill_elec_site.png" alt="cluster_skill_elec_site" loading="lazy"><figcaption><code>cluster_skill_elec_site</code> <a href="figures/cluster_skill_elec_site.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_dendrogram_elec_trust.png" alt="cluster_dendrogram_elec_trust" loading="lazy"><figcaption><code>cluster_dendrogram_elec_trust</code> <a href="figures/cluster_dendrogram_elec_trust.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_descriptors_elec_site.png" alt="cluster_descriptors_elec_site" loading="lazy"><figcaption><code>cluster_descriptors_elec_site</code> <a href="figures/cluster_descriptors_elec_site.pdf">PDF</a></figcaption></figure></div>
+
+<h2 id="uses">Uses</h2>
+<p>Cluster membership is a site static for the models (a shape label rather than the trust type), a stratifier
+for reporting skill and covariate gains, and a screen for anomalous supplies (the night-heavy pair).</p>
+<p class="meta">Built from <code>doc/clustering.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

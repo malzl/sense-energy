@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html" class="current">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#1-eric-validates-the-half-hourly-meters">1. ERIC validates the half-hourly meters</a>
+  <a class="h2" href="#2-building-descriptors-replace-site-identity-in-lightgbm">2. Building descriptors replace site identity in LightGBM</a>
+  <a class="h2" href="#3-energy-intensity">3. Energy intensity</a>
+  <a class="h2" href="#4-grid-headroom-for-heat-electrification">4. Grid headroom for heat electrification</a>
+  <a class="h2" href="#5-occupied-beds">5. Occupied beds</a>
+  <a class="h2" href="#figures">Figures</a>
+  <a class="h2" href="#5-sites-with-on-site-chp">5. Sites with on-site CHP</a>
+  <a class="h2" href="#7-year-on-year-changes-and-the-steps-in-the-meter">7. Year-on-year changes and the steps in the meter</a>
+  </div>
+</nav>
+<main>
+<h1>Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</h1>
+<p><code>sense-energy estates-analysis</code> (module <code>code/src/sense_energy/analysis/estates.py</code>, loaders
+<code>data/eric.py</code> and <code>data/nhs_beds.py</code>); figures from <code>code/scripts/estates/</code> in
+<code>code/reports/figures/estates/</code>, tables in <code>code/reports/estates/</code>. 9 October 2026.</p>
+<p>Inputs: the ESC extracts <code>estatereturns.zip</code> (ERIC 2023/24 site, trust and PFI tables, 2,869 sites)
+and <code>nhsbed.zip</code> (KH03 occupied beds, overnight and day-only, by sector and by specialty, quarterly
+to June 2024), unpacked in <code>code/data/external/eric/</code> and <code>code/data/external/nhs_beds/</code>.</p>
+<h2 id="1-eric-validates-the-half-hourly-meters">1. ERIC validates the half-hourly meters</h2>
+<p>ERIC electricity is taken as the sum of its five consumption components; the headline field is
+filled for only 158 sites. 114 of the 134 electricity sites in the panel match ERIC by site code.
+Over ERIC's financial year (April 2023 – March 2024) the metered total, grossed up for missing
+half-hours, is compared with ERIC's consumption, and the highest metered half-hour with ERIC's
+maximum demand (<code>meter_vs_eric</code>, <code>peak_vs_max_demand</code>).</p>
+<table>
+<thead>
+<tr>
+  <th>Coverage flag</th>
+  <th>Sites</th>
+  <th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>ok</td>
+  <td>65</td>
+  <td>annual ratio within 0.65 – 1.5 (median 1.00, IQR 0.98 – 1.00); peak ratio median 1.00 (IQR 0.95 – 1.03)</td>
+</tr>
+<tr>
+  <td>partial supply</td>
+  <td>3</td>
+  <td>ratio below 0.65: our meters miss part of the site (RWR32, RWRPU-X, RYVA8)</td>
+</tr>
+<tr>
+  <td>aggregate supply</td>
+  <td>4</td>
+  <td>ratio above 1.5: one meter feeds more than the ERIC site (RYV01, RYV03, RYV04, RYV13)</td>
+</tr>
+<tr>
+  <td>on-site CHP</td>
+  <td>4</td>
+  <td>ratio outside the range at a site with gas-fired CHP; import and consumption then differ by the CHP output, so the mismatch says nothing about coverage (R0A07, RN325, RYX08, RH801)</td>
+</tr>
+<tr>
+  <td>meter gaps</td>
+  <td>35</td>
+  <td>fewer than 80 % of the year's half-hours observed</td>
+</tr>
+<tr>
+  <td>no ERIC figure</td>
+  <td>23</td>
+  <td>site code not in ERIC or no electricity reported</td>
+</tr>
+</tbody>
+</table>
+<p><strong>On-site CHP explains the hardest sites.</strong> The 12 PoC sites with gas-fired CHP have a median
+day-ahead nMAE of 16.2 % (Chronos-2 + IFS ENS) against 9.9 % at the 64 other sites in ERIC; LightGBM
+shows the same gap (19.0 % against 10.8 %). Their skill against seasonal naive is no lower, because
+the naive forecast suffers equally: the grid import of a CHP site steps up and down with the
+engine's operation. RH801 and RXN02, the two large sites behind the weak South West and North West
+regional results, both run CHP, which is a more likely cause of their &quot;halved&quot; days than outages.</p>
+<p><strong>Scoring is robust to the flags</strong> (<code>scoring_by_flag</code>). Restricting the PoC to the 62 verified sites
+lowers the learned models' nMAE by about 0.3 points (seasonal naive by 0.1) and changes no ranking;
+dropping the 11 flagged supplies raises it by 0.15 to 0.25 points.</p>
+<table>
+<thead>
+<tr>
+  <th>Method</th>
+  <th>All 91 sites</th>
+  <th>Without flagged supplies (80)</th>
+  <th>Verified only (62)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Seasonal naive</td>
+  <td>18.5</td>
+  <td>18.6</td>
+  <td>18.4</td>
+</tr>
+<tr>
+  <td>LightGBM + IFS ENS</td>
+  <td>13.1</td>
+  <td>13.3</td>
+  <td>12.8</td>
+</tr>
+<tr>
+  <td>Chronos-2 + IFS ENS</td>
+  <td>11.5</td>
+  <td>11.7</td>
+  <td>11.3</td>
+</tr>
+<tr>
+  <td>TimesFM 3.0 + IFS ENS</td>
+  <td>11.7</td>
+  <td>11.9</td>
+  <td>11.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-building-descriptors-replace-site-identity-in-lightgbm">2. Building descriptors replace site identity in LightGBM</h2>
+<p>Two new variants of LightGBM with forecast weather: without the site identifier, and with eleven
+ERIC descriptors instead of it (site type, floor area, heated volume, mean construction year, LED
+coverage, CHP units, heat pumps, solar generated, electricity per m², gas-to-electricity ratio,
+single rooms). ERIC's year ends before the test window, so nothing leaks.</p>
+<table>
+<thead>
+<tr>
+  <th>LightGBM + IFS ENS</th>
+  <th>nMAE (%)</th>
+  <th>CRPS</th>
+  <th>Coverage (%)</th>
+  <th>CRPS skill (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>with site identity (as before)</td>
+  <td>13.1</td>
+  <td>6.27</td>
+  <td>73</td>
+  <td>43</td>
+</tr>
+<tr>
+  <td>no site identity</td>
+  <td>13.1</td>
+  <td>6.20</td>
+  <td>75</td>
+  <td>42</td>
+</tr>
+<tr>
+  <td>ERIC descriptors instead</td>
+  <td>13.0</td>
+  <td>6.15</td>
+  <td>75</td>
+  <td>43</td>
+</tr>
+</tbody>
+</table>
+<p>The site identifier adds nothing; the model learns each site from its own recent history. ERIC
+descriptors improve on the identifier-free model at 69 % of sites (median −0.1 points nMAE), both
+variants bring the 80 % interval closer to nominal, and electricity per m² enters the ten most used
+features. Because the
+model no longer needs a site's identity, it can in principle forecast sites it was never trained
+on; a leave-sites-out test would confirm that.</p>
+<h2 id="3-energy-intensity">3. Energy intensity</h2>
+<p>Across all English sites in ERIC (<code>intensity_by_type</code>), median electricity use per m² rises from
+56 kWh for non-inpatient sites to 80 for mental health, 87 for community hospitals, 112 for general
+acute and 146 for specialist acute hospitals; gas use is 2.3 times electricity on the median site.
+In the panel, the round-the-clock demand-shape cluster is the most intensive (median 106 kWh/m²),
+the office-like cluster the least (62) (<code>cluster_intensity</code>).</p>
+<p>Across 134 acute trusts, electricity per occupied bed-day has a median of 63 kWh (IQR 39 – 93).
+Floor area explains trust electricity better than occupied beds (log-correlation 0.72 against
+0.60; <code>bed_day_intensity</code>).</p>
+<h2 id="4-grid-headroom-for-heat-electrification">4. Grid headroom for heat electrification</h2>
+<p>Scenario: all gas heating replaced by air-source heat pumps, added half-hour by half-hour to each
+site's observed electricity for 2023/24.</p>
+<ul>
+<li><strong>Heat demand</strong> = gas × 0.85 boiler efficiency, split into a weather-independent part (hot water,
+sterilisation, catering) and space heating proportional to heating degree-hours at the site
+(ERA5). Fitted on the 39 gas meters of the panel: base temperature 15.5 °C (median daily R² 0.72,
+<code>heat_model</code>), weather-independent share 0.48 (median over the 36 weather-driven meters).</li>
+<li><strong>Heat-pump electricity</strong> = heat / COP, with the Staffell et al. (2012) air-source curve at a
+55 °C flow temperature (seasonal COP 2.55).</li>
+<li><strong>Capacity</strong> = ERIC available capacity × 0.95 power factor.</li>
+</ul>
+<p>Panel sites are included only when the meters cover the whole site (flag ok), today's peak is
+below the stated capacity, and the site has no CHP (whose gas also generates electricity): 31 of
+54 modelled sites.</p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Panel (31 sites, half-hourly)</th>
+  <th>England (631 ERIC sites)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Median peak / capacity today</td>
+  <td>0.44</td>
+  <td>0.55</td>
+</tr>
+<tr>
+  <td>Median peak / capacity with heat pumps</td>
+  <td>0.88</td>
+  <td>0.97</td>
+</tr>
+<tr>
+  <td>Sites above capacity with heat pumps</td>
+  <td>13 (42 %)</td>
+  <td>48 %</td>
+</tr>
+<tr>
+  <td>Annual electricity increase (median)</td>
+  <td>+77 %</td>
+  <td>–</td>
+</tr>
+<tr>
+  <td>Peak increase (median)</td>
+  <td>×1.72</td>
+  <td>–</td>
+</tr>
+</tbody>
+</table>
+<p>The England column applies the panel's calibration to every gas-heated, non-CHP ERIC site with a
+plausible capacity: peak = ERIC maximum demand + 2.9 × the mean heat-pump load (the median
+coincident increase; heating and today's peak rarely coincide, so the factor is below the
+heat-pump peak-to-mean ratio of 3.9). General acute hospitals are most constrained (68 % above
+capacity), non-inpatient sites least (40 %) (<code>headroom_by_type</code>, <code>headroom_england</code>,
+<code>headroom_map</code>, <code>headroom_panel</code>). The example week (<code>heat_pump_week</code>, RFSDA, coldest week of
+2023/24) shows the mechanism: the heat-pump load more than doubles demand and keeps it near its
+peak through the night.</p>
+<p>Assumptions that matter: the flow temperature (lower flow temperatures raise COP), the boiler
+efficiency, the use of today's capacity (no reinforcement), and no thermal storage or demand
+shifting.</p>
+<h2 id="5-occupied-beds">5. Occupied beds</h2>
+<p>The KH03 extract adds day-only occupied beds and a 78-specialty breakdown to the overnight-by-sector
+series already pulled from the public site. It ends in June 2024 and overlaps the demand data for
+seven quarters (December 2022 – June 2024), none in the test window. Within trusts, quarterly mean
+demand does not move with occupied beds (correlation −0.04 over 19 trusts; <code>beds_vs_demand</code>):
+occupancy barely varies between quarters, demand varies with the season. Beds are a cross-sectional
+normaliser, not a forecasting covariate.</p>
+<h2 id="figures">Figures</h2>
+<p><code>meter_vs_eric</code>, <code>peak_vs_max_demand</code>, <code>scoring_by_flag</code>, <code>intensity_by_type</code>, <code>cluster_intensity</code>,
+<code>bed_day_intensity</code>, <code>beds_vs_demand</code>, <code>heat_model</code>, <code>heat_pump_week</code>, <code>headroom_panel</code>,
+<code>headroom_england</code>, <code>headroom_by_type</code>, <code>headroom_map</code> (PDF + PNG + data CSV, master figure
+specification).</p>
+<div class="figrow"><figure><img src="figures/meter_vs_eric.png" alt="meter_vs_eric" loading="lazy"><figcaption><code>meter_vs_eric</code> <a href="figures/meter_vs_eric.pdf">PDF</a></figcaption></figure><figure><img src="figures/peak_vs_max_demand.png" alt="peak_vs_max_demand" loading="lazy"><figcaption><code>peak_vs_max_demand</code> <a href="figures/peak_vs_max_demand.pdf">PDF</a></figcaption></figure><figure><img src="figures/scoring_by_flag.png" alt="scoring_by_flag" loading="lazy"><figcaption><code>scoring_by_flag</code> <a href="figures/scoring_by_flag.pdf">PDF</a></figcaption></figure><figure><img src="figures/intensity_by_type.png" alt="intensity_by_type" loading="lazy"><figcaption><code>intensity_by_type</code> <a href="figures/intensity_by_type.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_intensity.png" alt="cluster_intensity" loading="lazy"><figcaption><code>cluster_intensity</code> <a href="figures/cluster_intensity.pdf">PDF</a></figcaption></figure><figure><img src="figures/bed_day_intensity.png" alt="bed_day_intensity" loading="lazy"><figcaption><code>bed_day_intensity</code> <a href="figures/bed_day_intensity.pdf">PDF</a></figcaption></figure><figure><img src="figures/beds_vs_demand.png" alt="beds_vs_demand" loading="lazy"><figcaption><code>beds_vs_demand</code> <a href="figures/beds_vs_demand.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_model.png" alt="heat_model" loading="lazy"><figcaption><code>heat_model</code> <a href="figures/heat_model.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_pump_week.png" alt="heat_pump_week" loading="lazy"><figcaption><code>heat_pump_week</code> <a href="figures/heat_pump_week.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_panel.png" alt="headroom_panel" loading="lazy"><figcaption><code>headroom_panel</code> <a href="figures/headroom_panel.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_england.png" alt="headroom_england" loading="lazy"><figcaption><code>headroom_england</code> <a href="figures/headroom_england.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_by_type.png" alt="headroom_by_type" loading="lazy"><figcaption><code>headroom_by_type</code> <a href="figures/headroom_by_type.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_map.png" alt="headroom_map" loading="lazy"><figcaption><code>headroom_map</code> <a href="figures/headroom_map.pdf">PDF</a></figcaption></figure></div>
+
+<h2 id="5-sites-with-on-site-chp">5. Sites with on-site CHP</h2>
+<p><code>sense-energy chp-profile</code> (<code>analysis/chp.py</code>, tables in <code>code/reports/chp/</code>, figure
+<code>chp_variability</code>). The 24 sites with fossil-fuel CHP carry 70 % of the panel's electricity; their
+meters record grid import (demand minus CHP output). Against the five acute hospitals without CHP
+their weekday import varies 3.6 times as much from day to day (median CV 36 % against 10 %), 9 % of
+their weekdays sit more than 30 % above the surrounding 21-weekday median (none at acute sites
+without CHP), and Chronos-2 + IFS ENS errs 16.2 % against 3.8 % nMAE with the same skill over
+seasonal naive. Their meter-to-ERIC ratios span 0.39 – 1.08 (10th – 90th percentile). Grid import
+at one non-CHP acute site, Trafford General, halves from spring 2025 (about 410 to 215 kW), which
+points to generation or a supply change after ERIC 2023/24.</p>
+<p><strong>What the CHP sites really use (<code>chp_generation</code>, ERIC 2024/25).</strong> The 2024/25 return, published
+16 October 2025 and loaded as <code>interim/eric_2024_25_site.parquet</code> (<code>sense-energy build-eric</code>), adds
+fields the 2023/24 collection did not have: the CHP's electrical and thermal output, its gas input,
+electricity purchased from CHP, exported electricity and heat, and the unit sizes in kW. For 20 of
+the 24 CHP sites the return is internally plausible (capacity factor 0.05–1.05); for them the implied
+site demand (import + CHP output − exports) is 23.3 MW on average against 9.2 MW of grid import, so
+the import meters see 40 % of what these sites use. CHP covers a median 50 % of a site's electricity
+(University Hospital Coventry 76 %, Royal Preston 78 %, Wythenshawe 68 %) at a median capacity factor
+of 0.70; thermal output is 0.25–1.75 times electrical. Our metered import over the same year matches
+the returned import at most sites (ratio 0.95–1.06), and names the exceptions: our Wythenshawe meter
+carries 27 % of the site's import and Great Western 2 % (partial supplies), Royal Devon 159 % (more
+than the ERIC site). Three returns are unit errors (Norfolk and Norwich reports 2.4 MWh from a 1 MW
+unit, Cromer a unit with no output, Great Western 0.4 GWh from 1 MW). Table:
+<code>code/reports/chp/generation_2024_25.csv</code>.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_name</th>
+      <th>eric_import_mean_kw</th>
+      <th>implied_mean_kw</th>
+      <th>chp_elec_kw</th>
+      <th>chp_share</th>
+      <th>capacity_factor</th>
+      <th>meter_to_eric_import</th>
+      <th>plausible</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UNIVERSITY HOSPITAL</td>
+      <td>946.11</td>
+      <td>3990.82</td>
+      <td>3360</td>
+      <td>0.76</td>
+      <td>0.91</td>
+      <td>1.06</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>NORFOLK &amp; NORWICH UNIVERSITY HOSPITAL</td>
+      <td>2835.98</td>
+      <td>2836.25</td>
+      <td>1000</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>WYTHENSHAWE HOSPITAL</td>
+      <td>793.76</td>
+      <td>2486.76</td>
+      <td>2026</td>
+      <td>0.68</td>
+      <td>0.84</td>
+      <td>0.27</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>ROYAL UNITED HOSPITAL</td>
+      <td>526</td>
+      <td>1956.27</td>
+      <td>2000</td>
+      <td>0.73</td>
+      <td>0.74</td>
+      <td>0.91</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>ROYAL PRESTON HOSPITAL</td>
+      <td>425.14</td>
+      <td>1954.35</td>
+      <td>1800</td>
+      <td>0.78</td>
+      <td>0.85</td>
+      <td>1.03</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>ROYAL DEVON &amp; EXETER HOSPITAL (WONFORD)</td>
+      <td>670.65</td>
+      <td>1851.3</td>
+      <td>2500</td>
+      <td>0.64</td>
+      <td>0.47</td>
+      <td>1.59</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>GREAT WESTERN HOSPITAL</td>
+      <td>1675.63</td>
+      <td>1723.81</td>
+      <td>1000</td>
+      <td>0.03</td>
+      <td>0.05</td>
+      <td>0.02</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>YORK HOSPITAL</td>
+      <td>837.1</td>
+      <td>1514.88</td>
+      <td>1166</td>
+      <td>0.45</td>
+      <td>0.58</td>
+      <td>1</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>NORTH MANCHESTER GENERAL HOSPITAL</td>
+      <td>704.47</td>
+      <td>1342.41</td>
+      <td>1200</td>
+      <td>0.48</td>
+      <td>0.53</td>
+      <td>1.03</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>HOMERTON UNIVERSITY HOSPITAL</td>
+      <td>1146.73</td>
+      <td>1313.96</td>
+      <td>310</td>
+      <td>0.13</td>
+      <td>0.54</td>
+      <td>0.96</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>GEORGE ELIOT HOSPITAL</td>
+      <td>338.36</td>
+      <td>1152.84</td>
+      <td>1200</td>
+      <td>0.71</td>
+      <td>0.75</td>
+      <td>0.95</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>CHORLEY AND SOUTH RIBBLE DISTRICT GENERAL HOSPITAL</td>
+      <td>331.62</td>
+      <td>860.61</td>
+      <td>600</td>
+      <td>0.61</td>
+      <td>0.88</td>
+      <td>1.04</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>ROBERT JONES &amp; AGNES HUNT ORTHOPAEDIC HOSPITAL</td>
+      <td>431.35</td>
+      <td>754.6</td>
+      <td>400</td>
+      <td>0.43</td>
+      <td>0.81</td>
+      <td>0.86</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>SCARBOROUGH HOSPITAL</td>
+      <td>172.89</td>
+      <td>750.67</td>
+      <td>776</td>
+      <td>0.77</td>
+      <td>0.74</td>
+      <td>1</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>WARWICK HOSPITAL</td>
+      <td>398.11</td>
+      <td>747.62</td>
+      <td>532</td>
+      <td>0.47</td>
+      <td>0.66</td>
+      <td>0.91</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>MACCLESFIELD DISTRICT GENERAL HOSPITAL</td>
+      <td>417.8</td>
+      <td>735.38</td>
+      <td>500</td>
+      <td>0.43</td>
+      <td>0.64</td>
+      <td>1</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>NORTH DEVON DISTRICT HOSPITAL</td>
+      <td>243.26</td>
+      <td>719.78</td>
+      <td>800</td>
+      <td>0.66</td>
+      <td>0.6</td>
+      <td>1.04</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>SPRINGFIELD UNIVERSITY HOSPITAL</td>
+      <td>471.68</td>
+      <td>713.68</td>
+      <td>229</td>
+      <td>0.18</td>
+      <td>0.89</td>
+      <td></td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>WITHINGTON COMMUNITY HOSPITAL</td>
+      <td>77.86</td>
+      <td>157.32</td>
+      <td>100</td>
+      <td>0.51</td>
+      <td>0.79</td>
+      <td></td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>REDWOODS CENTRE SHREWSBURY</td>
+      <td>68.74</td>
+      <td>133.82</td>
+      <td>124</td>
+      <td>0.49</td>
+      <td>0.52</td>
+      <td>0.8</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>CROMER HOSPITAL</td>
+      <td>87.81</td>
+      <td>126</td>
+      <td>90</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.83</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>ROYAL LEAMINGTON SPA HOSPITAL</td>
+      <td>124.49</td>
+      <td>124.8</td>
+      <td>6</td>
+      <td>0</td>
+      <td>0.05</td>
+      <td>0.95</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>THE NEW SELBY WAR MEMORIAL HOSPITAL</td>
+      <td>66.75</td>
+      <td>81.32</td>
+      <td>35</td>
+      <td>0.18</td>
+      <td>0.42</td>
+      <td>1</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>BIRMINGHAM CHILDRENS HOSPITAL</td>
+      <td>182.01</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>1.48</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>LISSON GROVE HEALTH CENTRE</td>
+      <td>12.41</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0.98</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>OAK LANE CLINIC</td>
+      <td>7.19</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>QUEENS PARK HEALTH CENTRE</td>
+      <td>0.58</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>PARSON GREEN HEALTH CENTRE</td>
+      <td>30.76</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>WORLDS END HEALTH CENTRE</td>
+      <td>8.75</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/generation_2024_25.csv">code/reports/chp/generation_2024_25.csv</a> (29 rows shown)</p>
+
+<figure><img src="figures/chp_generation.png" alt="chp_generation" loading="lazy"><figcaption>Grid import as returned and CHP output net of exports, stacked to the implied demand; ticks mark our metered import. <code>chp_generation</code> <a href="figures/chp_generation.pdf">PDF</a></figcaption></figure>
+
+<h2 id="7-year-on-year-changes-and-the-steps-in-the-meter">7. Year-on-year changes and the steps in the meter</h2>
+<p><code>analysis/estates_changes.py</code> (<code>eric_changes.csv</code>, <code>demand_steps.csv</code>, figure <code>eric_changes</code>).
+Of the 109 panel sites in both returns, 45 report a change from 2023/24 to
+2024/25: LED coverage up by ten points or more at 35, solar generation appearing at
+5 and growing by half or more at 2, heat pumps installed at
+4 and added to at 2, CHP units changing at 2. The
+returns give the year, not the date; a PELT changepoint search on each site's daily demand (log,
+net of its day-of-week pattern, penalty six times the robust day-to-day variance times log n,
+segments of at least 28 days, steps of at least 15 %) gives the candidates: 1103 steps across the
+panel, 539 within a quarter of the 2024/25 year. 32 of the changed sites
+without CHP have such a step; the small sites that went to full LED show level drops of 15 to
+40 % (Tribune House, Cheadle Hospital, Malton, Longton), the CHP sites' steps are plant switching
+and are flagged rather than used. The median absolute change in returned annual electricity is
+9.2 %. These dated changes are the treatments for the next event studies; they also say
+that the 2023/24 descriptors (LED share above all) are a year stale for a third of the panel.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>site_name</th>
+      <th>led_pct_2324</th>
+      <th>led_pct_2425</th>
+      <th>solar_new</th>
+      <th>heat_pumps_new</th>
+      <th>elec_change_pct</th>
+      <th>steps_in_window</th>
+      <th>step_date</th>
+      <th>step_change</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RCBCA</td>
+      <td>SCARBOROUGH HOSPITAL</td>
+      <td>20</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>16.3</td>
+      <td>7</td>
+      <td>2025-02-12</td>
+      <td>15.37</td>
+    </tr>
+    <tr>
+      <td>RLT01</td>
+      <td>GEORGE ELIOT HOSPITAL</td>
+      <td>95</td>
+      <td>95</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-9.17</td>
+      <td>6</td>
+      <td>2025-06-13</td>
+      <td>5.11</td>
+    </tr>
+    <tr>
+      <td>RXN02</td>
+      <td>ROYAL PRESTON HOSPITAL</td>
+      <td>15</td>
+      <td>48</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-5.34</td>
+      <td>9</td>
+      <td>2025-06-05</td>
+      <td>3.13</td>
+    </tr>
+    <tr>
+      <td>RD130</td>
+      <td>ROYAL UNITED HOSPITAL</td>
+      <td>70</td>
+      <td>70</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-7.15</td>
+      <td>6</td>
+      <td>2025-04-02</td>
+      <td>2.93</td>
+    </tr>
+    <tr>
+      <td>RKB01</td>
+      <td>UNIVERSITY HOSPITAL</td>
+      <td>10</td>
+      <td>12</td>
+      <td>False</td>
+      <td>False</td>
+      <td>4.95</td>
+      <td>8</td>
+      <td>2025-01-27</td>
+      <td>2.65</td>
+    </tr>
+    <tr>
+      <td>RJN71</td>
+      <td>MACCLESFIELD DISTRICT GENERAL HOSPITAL</td>
+      <td>95</td>
+      <td>95</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-14.89</td>
+      <td>9</td>
+      <td>2024-07-24</td>
+      <td>1.93</td>
+    </tr>
+    <tr>
+      <td>R0A66</td>
+      <td>NORTH MANCHESTER GENERAL HOSPITAL</td>
+      <td>50</td>
+      <td>55</td>
+      <td>False</td>
+      <td>False</td>
+      <td>13.04</td>
+      <td>9</td>
+      <td>2024-06-28</td>
+      <td>1.83</td>
+    </tr>
+    <tr>
+      <td>RCB55</td>
+      <td>YORK HOSPITAL</td>
+      <td>35</td>
+      <td>65</td>
+      <td>False</td>
+      <td>False</td>
+      <td>9</td>
+      <td>8</td>
+      <td>2025-01-12</td>
+      <td>1.8</td>
+    </tr>
+    <tr>
+      <td>RYEA8</td>
+      <td>WINCHESTER &amp; EASTLEIGH RESOURCE CENTRE</td>
+      <td>40</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-7.14</td>
+      <td>3</td>
+      <td>2025-06-12</td>
+      <td>1.79</td>
+    </tr>
+    <tr>
+      <td>RREOX</td>
+      <td>STAFORDSHIRE AND STOKE ON TRENT WELLBEING SERVICE</td>
+      <td>0</td>
+      <td>0</td>
+      <td>False</td>
+      <td>True</td>
+      <td>15.43</td>
+      <td>5</td>
+      <td>2025-01-21</td>
+      <td>1.35</td>
+    </tr>
+    <tr>
+      <td>RH868</td>
+      <td>MARDON HOUSE</td>
+      <td>20</td>
+      <td>90</td>
+      <td>False</td>
+      <td>False</td>
+      <td>3.95</td>
+      <td>7</td>
+      <td>2024-07-05</td>
+      <td>1.07</td>
+    </tr>
+    <tr>
+      <td>RCBNH</td>
+      <td>BRIDLINGTON HOSPITAL</td>
+      <td>0</td>
+      <td>100</td>
+      <td>True</td>
+      <td>True</td>
+      <td>20.82</td>
+      <td>11</td>
+      <td>2024-05-30</td>
+      <td>1.06</td>
+    </tr>
+    <tr>
+      <td>R6A8O</td>
+      <td>HOLGATE PARK</td>
+      <td>0</td>
+      <td>0</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-5.44</td>
+      <td>5</td>
+      <td>2025-06-09</td>
+      <td>0.99</td>
+    </tr>
+    <tr>
+      <td>RXN01</td>
+      <td>CHORLEY AND SOUTH RIBBLE DISTRICT GENERAL HOSPITAL</td>
+      <td>67</td>
+      <td>95</td>
+      <td>False</td>
+      <td>False</td>
+      <td>9.31</td>
+      <td>9</td>
+      <td>2024-04-29</td>
+      <td>0.95</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>ROYAL DEVON &amp; EXETER HOSPITAL (WONFORD)</td>
+      <td>80</td>
+      <td>95</td>
+      <td>False</td>
+      <td>False</td>
+      <td>97.16</td>
+      <td>11</td>
+      <td>2024-02-25</td>
+      <td>0.95</td>
+    </tr>
+    <tr>
+      <td>RY412</td>
+      <td>QUEEN VICTORIA MEMORIAL HOSPITAL</td>
+      <td>100</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>10.19</td>
+      <td>12</td>
+      <td>2024-09-29</td>
+      <td>0.89</td>
+    </tr>
+    <tr>
+      <td>RH880</td>
+      <td>NORTH DEVON DISTRICT HOSPITAL</td>
+      <td>80</td>
+      <td>99</td>
+      <td>False</td>
+      <td>False</td>
+      <td>11.66</td>
+      <td>3</td>
+      <td>2025-01-21</td>
+      <td>0.78</td>
+    </tr>
+    <tr>
+      <td>RWR31</td>
+      <td>LAMBOURN GROVE</td>
+      <td>0</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td></td>
+      <td>5</td>
+      <td>2024-02-26</td>
+      <td>0.67</td>
+    </tr>
+    <tr>
+      <td>RRERS</td>
+      <td>REDWOODS CENTRE SHREWSBURY</td>
+      <td>100</td>
+      <td>75</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-0.22</td>
+      <td>8</td>
+      <td>2024-05-03</td>
+      <td>0.66</td>
+    </tr>
+    <tr>
+      <td>RWR13</td>
+      <td>ALBANY LODGE</td>
+      <td>0</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>1.89</td>
+      <td>4</td>
+      <td>2024-11-20</td>
+      <td>0.57</td>
+    </tr>
+    <tr>
+      <td>RY433</td>
+      <td>HODDESDON HEALTH CENTRE</td>
+      <td>100</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>4.35</td>
+      <td>12</td>
+      <td>2024-11-10</td>
+      <td>0.53</td>
+    </tr>
+    <tr>
+      <td>W6J9Z</td>
+      <td>LONDON HOUSE</td>
+      <td>70</td>
+      <td>100</td>
+      <td>False</td>
+      <td>True</td>
+      <td>29.75</td>
+      <td>7</td>
+      <td>2024-11-01</td>
+      <td>0.53</td>
+    </tr>
+    <tr>
+      <td>RY424</td>
+      <td>CHESHUNT COMMUNITY HOSPITAL</td>
+      <td>100</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-12.69</td>
+      <td>8</td>
+      <td>2024-09-23</td>
+      <td>0.53</td>
+    </tr>
+    <tr>
+      <td>RQY08</td>
+      <td>TOLWORTH HOSPITAL</td>
+      <td>60</td>
+      <td>60</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-2.63</td>
+      <td>3</td>
+      <td>2024-06-14</td>
+      <td>0.49</td>
+    </tr>
+    <tr>
+      <td>RY479</td>
+      <td>PEACE CHILDRENS CENTRE</td>
+      <td>100</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-8.1</td>
+      <td>10</td>
+      <td>2024-08-31</td>
+      <td>0.48</td>
+    </tr>
+    <tr>
+      <td>RJC02</td>
+      <td>WARWICK HOSPITAL</td>
+      <td>90</td>
+      <td>90</td>
+      <td>True</td>
+      <td>False</td>
+      <td>-20.74</td>
+      <td>7</td>
+      <td>2024-04-15</td>
+      <td>0.47</td>
+    </tr>
+    <tr>
+      <td>RY416</td>
+      <td>KINGSWAY HEALTH CENTRE</td>
+      <td>0</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>8.51</td>
+      <td>7</td>
+      <td>2024-09-30</td>
+      <td>0.47</td>
+    </tr>
+    <tr>
+      <td>RY40A</td>
+      <td>SANDRIDGE GATE</td>
+      <td>0</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>3.29</td>
+      <td>12</td>
+      <td>2025-06-13</td>
+      <td>0.45</td>
+    </tr>
+    <tr>
+      <td>RYX37</td>
+      <td>POTTERS BAR COMMUNITY HOSPITAL</td>
+      <td>85</td>
+      <td>85</td>
+      <td>True</td>
+      <td>False</td>
+      <td>-26.97</td>
+      <td>8</td>
+      <td>2024-09-22</td>
+      <td>0.41</td>
+    </tr>
+    <tr>
+      <td>RYVF1</td>
+      <td>THE POYNT</td>
+      <td>90</td>
+      <td>90</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-26.91</td>
+      <td>8</td>
+      <td>2024-11-08</td>
+      <td>0.41</td>
+    </tr>
+    <tr>
+      <td>RWRPU-X</td>
+      <td>THE COLONNADES</td>
+      <td>50</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>17.7</td>
+      <td>6</td>
+      <td>2024-11-17</td>
+      <td>0.4</td>
+    </tr>
+    <tr>
+      <td>RY407</td>
+      <td>DANESBURY</td>
+      <td>100</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-0.69</td>
+      <td>6</td>
+      <td>2025-06-20</td>
+      <td>0.37</td>
+    </tr>
+    <tr>
+      <td>RY318</td>
+      <td>CENTRAL EQUIPMENT SERVICES (RED HOUSE)</td>
+      <td>0</td>
+      <td>0</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-42.92</td>
+      <td>4</td>
+      <td>2025-01-10</td>
+      <td>0.37</td>
+    </tr>
+    <tr>
+      <td>RREHC</td>
+      <td>SEVERN FIELDS HEALTH VILLAGE</td>
+      <td>70</td>
+      <td>0</td>
+      <td>False</td>
+      <td>False</td>
+      <td>14.8</td>
+      <td>3</td>
+      <td>2025-01-31</td>
+      <td>0.36</td>
+    </tr>
+    <tr>
+      <td>RQX20</td>
+      <td>ST LEONARD'S</td>
+      <td>0</td>
+      <td>0</td>
+      <td>False</td>
+      <td>False</td>
+      <td></td>
+      <td>2</td>
+      <td>2024-06-21</td>
+      <td>0.36</td>
+    </tr>
+    <tr>
+      <td>RH8G6</td>
+      <td>BIDEFORD HOSPITAL</td>
+      <td>78</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-10.43</td>
+      <td>6</td>
+      <td>2024-06-12</td>
+      <td>0.36</td>
+    </tr>
+    <tr>
+      <td>RYEH2</td>
+      <td>DIDCOT WORKSHOP</td>
+      <td>70</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>43.29</td>
+      <td>3</td>
+      <td>2024-10-01</td>
+      <td>0.36</td>
+    </tr>
+    <tr>
+      <td>RY312</td>
+      <td>NORWICH COMMUNITY HOSPITAL</td>
+      <td>17.75</td>
+      <td>18</td>
+      <td>False</td>
+      <td>True</td>
+      <td>-7.97</td>
+      <td>6</td>
+      <td>2024-11-05</td>
+      <td>0.34</td>
+    </tr>
+    <tr>
+      <td>RYV03</td>
+      <td>PRINCESS OF WALES HOSPITAL</td>
+      <td>70</td>
+      <td>80</td>
+      <td>False</td>
+      <td>False</td>
+      <td>462.64</td>
+      <td>3</td>
+      <td>2024-11-01</td>
+      <td>0.33</td>
+    </tr>
+    <tr>
+      <td>RY332</td>
+      <td>NORTH WALSHAM &amp; DISTRICT WAR MEMORIAL HOSPITAL</td>
+      <td>95</td>
+      <td>95</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-21.18</td>
+      <td>5</td>
+      <td>2024-11-18</td>
+      <td>0.32</td>
+    </tr>
+    <tr>
+      <td>RREA9</td>
+      <td>12 PARK ROAD CANNOCK (PARK HOUSE)</td>
+      <td>20</td>
+      <td>0</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-0.01</td>
+      <td>1</td>
+      <td>2025-06-19</td>
+      <td>0.31</td>
+    </tr>
+    <tr>
+      <td>RYX08</td>
+      <td>LISSON GROVE HEALTH CENTRE</td>
+      <td>80</td>
+      <td>80</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-39.45</td>
+      <td>2</td>
+      <td>2025-06-18</td>
+      <td>0.31</td>
+    </tr>
+    <tr>
+      <td>RWX88</td>
+      <td>HILLCROFT HOUSE, THATCHAM</td>
+      <td>70</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>16.83</td>
+      <td>3</td>
+      <td>2025-06-16</td>
+      <td>0.31</td>
+    </tr>
+    <tr>
+      <td>RWR79</td>
+      <td>ADULT MENTAL HEALTH UNIT (GAINSFORD HOUSE)</td>
+      <td>0</td>
+      <td>100</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-6.9</td>
+      <td>6</td>
+      <td>2024-01-15</td>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <td>I7P7W</td>
+      <td>GEORGE BRYAN CENTRE</td>
+      <td>20</td>
+      <td>0</td>
+      <td>False</td>
+      <td>False</td>
+      <td>-13.66</td>
+      <td>7</td>
+      <td>2024-10-01</td>
+      <td>0.29</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/eric_changes.csv">code/reports/estates/eric_changes.csv</a> (45 rows shown)</p>
+
+<figure><img src="figures/eric_changes.png" alt="eric_changes" loading="lazy"><figcaption>LED change against the largest demand step in or near 2024/25 for the changed sites without CHP. <code>eric_changes</code> <a href="figures/eric_changes.pdf">PDF</a></figcaption></figure>
+
+<p class="meta">Built from <code>doc/estates_analysis.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

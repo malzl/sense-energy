@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cooling need, extreme-weather events and the demand response · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html" class="current">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#1-cooling-need">1. Cooling need</a>
+  <a class="h2" href="#2-electricity-response-to-cooling-need">2. Electricity response to cooling need</a>
+  <a class="h2" href="#3-extreme-weather-events">3. Extreme-weather events</a>
+  <a class="h2" href="#4-nonlinear-temperature-response">4. Nonlinear temperature response</a>
+  <a class="h2" href="#5-quasi-experimental-estimates">5. Quasi-experimental estimates</a>
+  <a class="h3" href="#5-1-nested-fixed-effects-causal-specs">5.1 Nested fixed effects (causal_specs)</a>
+  <a class="h3" href="#5-2-stacked-event-study-difference-in-differences-causal-eve">5.2 Stacked event-study difference-in-differences (causal_event_study)</a>
+  <a class="h3" href="#5-3-falsification-causal-lags-causal-randomisation">5.3 Falsification (causal_lags, causal_randomisation)</a>
+  <a class="h3" href="#5-4-extreme-days-temperature-response-tmax-causal-extreme">5.4 Extreme days (temperature_response_tmax, causal_extreme)</a>
+  <a class="h3" href="#5-5-space-causal-spatial">5.5 Space (causal_spatial)</a>
+  <a class="h2" href="#6-which-thermometer-era5-era5-land-and-the-met-office-statio">6. Which thermometer? ERA5, ERA5-Land and the Met Office stations</a>
+  <a class="h2" href="#7-who-responds-heterogeneity-of-the-slopes">7. Who responds: heterogeneity of the slopes</a>
+  <a class="h3" href="#7-1-every-site-s-slope-site-slopes-hdd14-site-slopes-cdd20-s">7.1 Every site's slope (site_slopes_hdd14, site_slopes_cdd20, slope_spread, maps)</a>
+  <a class="h3" href="#7-2-moderators-moderators">7.2 Moderators (moderators)</a>
+  <a class="h3" href="#7-3-hour-of-day-by-building-use-hourly-by-use-cold-hourly-by">7.3 Hour of day by building use (hourly_by_use_cold, hourly_by_use_hot)</a>
+  <a class="h2" href="#8-what-moves-heat">8. What moves heat</a>
+  <a class="h3" href="#8-1-sunshine-heat-sunshine-control-sunshine-slopes-heat-bloc">8.1 Sunshine (heat_sunshine_control, sunshine_slopes, heat_blocks_sunshine)</a>
+  <a class="h3" href="#8-2-time-of-day-and-the-week-heat-blocks-heat-heat-signature">8.2 Time of day and the week (heat_blocks_heat, heat_signature, heat_weekend)</a>
+  <a class="h3" href="#8-3-hot-afternoons-and-warm-nights-heat-night-day-heat-group">8.3 Hot afternoons and warm nights (heat_night_day, heat_group_decomposition)</a>
+  <a class="h3" href="#8-4-moderators-and-how-much-they-explain-heat-moderators-cat">8.4 Moderators and how much they explain (heat_moderators_categorical, heat_moderators_continuous, heat_variance_explained)</a>
+  <a class="h3" href="#8-5-types-heat-signature-map-heat-types">8.5 Types (heat_signature, map_heat_types)</a>
+  <a class="h3" href="#8-6-what-this-changes">8.6 What this changes</a>
+  <a class="h3" href="#8-7-what-the-certificates-say-heat-dec-aircon-heat-dec-heati">8.7 What the certificates say (heat_dec_aircon, heat_dec_heating, dec_recommendations)</a>
+  <a class="h3" href="#8-8-causal-machine-learning-on-the-heat-response-cate-vs-slo">8.8 Causal machine learning on the heat response (cate_vs_slope_observables, cate_vs_slope_signature, cate_importance)</a>
+  <a class="h2" href="#9-does-any-of-this-reach-the-day-ahead-forecasts-forecast-he">9. Does any of this reach the day-ahead forecasts? (forecast_heat_days)</a>
+  </div>
+</nav>
+<main>
+<h1>Cooling need, extreme-weather events and the demand response</h1>
+<p><code>sense-energy build-weather-daily</code> (table <code>interim/weather_daily.parquet</code>, see the
+<a href="data_dictionary.md#daily-interimweather_dailyparquet">data dictionary</a>), <code>sense-energy cooling-analysis</code>
+(<code>analysis/cooling.py</code>, tables in <code>code/reports/cooling/</code>) and <code>sense-energy weather-events</code>
+(<code>analysis/weather_events.py</code>, tables in <code>code/reports/weather_events/</code>); figures from
+<code>code/scripts/weather/</code> in <code>code/reports/figures/weather/</code>. 26 October 2026.</p>
+<p>Everything is derived from the hourly ERA5 reanalysis already extracted at the 275 located sites
+(1 December 2022 – 31 May 2026); nothing new was downloaded. The half-hourly electricity record
+runs 7 December 2022 – 8 May 2026 (gas to 9 March 2025), so it covers three summers but not the
+record heat of late May 2026.</p>
+<h2 id="1-cooling-need">1. Cooling need</h2>
+<p>The integration-method cooling degree days (base 15.5 °C) of the median site were 197, 183 and
+291 °C day over June–August 2023, 2024 and 2025; summer 2025 had 119 hours at or above 25 °C
+against 46–50 in the two summers before (<code>cooling_need_monthly</code>). The hottest site-days in the
+table are 25–26 May 2026 (34.2 °C at the hottest site; Kew observed a UK May record of 35.1 °C),
+after the electricity record ends.</p>
+<h2 id="2-electricity-response-to-cooling-need">2. Electricity response to cooling need</h2>
+<p>Daily mean demand on non-holiday weekdays, regressed on HDD (15.5 °C) and CDD with a fixed effect
+for every calendar month, so the slope comes from day-to-day weather within a month
+(<code>cooling_response_site</code>, 95 % HAC intervals).</p>
+<table>
+<thead>
+<tr>
+  <th>Group</th>
+  <th>Sites</th>
+  <th>Median slope (% per °C day)</th>
+  <th>10th – 90th percentile</th>
+  <th>Significantly &gt; 0</th>
+  <th>Demand-weighted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>no on-site CHP</td>
+  <td>107</td>
+  <td>0.8</td>
+  <td>−1.7 – 3.9</td>
+  <td>51</td>
+  <td>1.4</td>
+</tr>
+<tr>
+  <td>on-site CHP</td>
+  <td>21</td>
+  <td>3.9</td>
+  <td>1.7 – 10.4</td>
+  <td>14</td>
+  <td>6.0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Most sites barely respond to heat.</strong> Without CHP, a 30 °C day (about 8 °C day above 15.5 °C)
+adds about 6 % at the median site. General healthcare buildings respond most (median 3 % per
+°C day); mental-health and community sites hardly at all.</li>
+<li><strong>CHP sites import much more on hot days, but not all of it is cooling.</strong> A heat-led CHP unit
+turns down when there is no heat demand, so grid import rises with temperature even if the
+building's demand does not. The two cannot be separated without CHP generation data; acute
+hospitals without CHP respond 1.4 – 2.3 % per °C day, acute hospitals with CHP 2 – 12 %.</li>
+<li><strong>Base 15.5 °C fits best</strong> for 80 of 128 sites (AIC across 15.5, 18 and 22 °C): hospitals' high
+internal gains put their cooling balance point low. Daily maximum temperature and integrated
+CDD(15.5) track summer demand slightly better than humidity measures (enthalpy, wet bulb), but
+within-month weather explains under 10 % of summer weekday variance at the median site.</li>
+</ul>
+<h2 id="3-extreme-weather-events">3. Extreme-weather events</h2>
+<table>
+<thead>
+<tr>
+  <th>Type</th>
+  <th>Definition (site-day, then runs)</th>
+  <th>National events</th>
+  <th>Site events</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>heatwave</td>
+  <td>Met Office: ≥ 3 days with T_max ≥ county threshold (25 – 28 °C)</td>
+  <td>8 (7 in the electricity record)</td>
+  <td>907</td>
+</tr>
+<tr>
+  <td>cold spell</td>
+  <td>UKHSA cold-alert criterion: daily mean ≤ 2 °C for ≥ 2 days</td>
+  <td>14</td>
+  <td>3,263</td>
+</tr>
+<tr>
+  <td>snow</td>
+  <td>≥ 5 mm water equivalent in a day</td>
+  <td>8</td>
+  <td>498</td>
+</tr>
+<tr>
+  <td>heavy rain</td>
+  <td>≥ 25 mm in a day</td>
+  <td>19</td>
+  <td>1,069</td>
+</tr>
+<tr>
+  <td>high wind</td>
+  <td>daily max gust ≥ 22 m/s (about 50 mph)</td>
+  <td>37</td>
+  <td>5,378</td>
+</tr>
+</tbody>
+</table>
+<p>A national event is a run of dates on which at least 5 % of sites are in a site event of that type
+(one-day gaps bridged). The 28 °C counties (London, Surrey, Berkshire, Buckinghamshire,
+Bedfordshire, Hertfordshire, Cambridgeshire) and East Riding (26 °C) follow the Met Office 2022
+list; other counties take a regional approximation (<code>site_thresholds.csv</code>). Lowering every
+threshold by 1 °C for ERA5's warm-tail bias raises the heatwave site events from 907 to 1,445 but
+leaves the national count at 8 (<code>weather_event_timeline</code>).</p>
+<p>The catalogue recovers the named storms (Otto, Noa, Ciarán, Debi, Pia, Gerrit, Henk, Isha,
+Jocelyn, Kathleen, Bert, Darragh, Éowyn, Amy), Storm Babet's rain on 20 October 2023, the four
+England heatwaves of summer 2025 and the cold spells of December 2022, January 2024 and
+January 2025.</p>
+<p><strong>Demand on event days</strong> (median over affected site-days, against the same weekday one and two
+weeks either side; <code>weather_event_demand</code>): cold spells +4 to +12 % (median +7 %), snow +5 to
++8 %, heatwaves +3 to +6 % (median +4 %), heavy rain +0 to +5 %, high wind −6 to +6 % (the low
+points are the Christmas-week storms, where the holiday dip dominates).</p>
+<h2 id="4-nonlinear-temperature-response">4. Nonlinear temperature response</h2>
+<p><code>sense-energy weather-response</code> (<code>analysis/weather_response.py</code>, tables in
+<code>code/reports/weather_response/</code>; pyfixest). Log daily demand on 2 °C bins of daily mean temperature
+(reference 14 – 16 °C) with site × year-month and site × weekday fixed effects, bank holiday,
+Christmas-week and school-summer controls; 95 % intervals clustered by ISO week. Each bin answers &quot;how
+much more does this site use on a day this warm or cold than on a 15 °C day in the same month&quot;.
+140,326 site-days, 132 sites, December 2022 – May 2026.</p>
+<table>
+<thead>
+<tr>
+  <th>Daily mean</th>
+  <th>inpatient (43)</th>
+  <th>outpatient (66)</th>
+  <th>on-site CHP (23)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>&lt; −2 °C</td>
+  <td>+24.8 % [21.3, 28.4]</td>
+  <td>+31.5 % [27.8, 35.3]</td>
+  <td>−0.2 % [−8.5, 8.9]</td>
+</tr>
+<tr>
+  <td>0 – 2 °C</td>
+  <td>+15.9 %</td>
+  <td>+21.0 %</td>
+  <td>+0.5 %</td>
+</tr>
+<tr>
+  <td>8 – 10 °C</td>
+  <td>+6.1 %</td>
+  <td>+7.6 %</td>
+  <td>−3.3 %</td>
+</tr>
+<tr>
+  <td>14 – 16 °C</td>
+  <td>0 (reference)</td>
+  <td>0</td>
+  <td>0</td>
+</tr>
+<tr>
+  <td>20 – 22 °C</td>
+  <td>+2.6 %</td>
+  <td>+4.6 %</td>
+  <td>+29.5 %</td>
+</tr>
+<tr>
+  <td>22 – 24 °C</td>
+  <td>+6.3 % [4.7, 7.9]</td>
+  <td>+7.2 % [5.6, 8.8]</td>
+  <td>+26.6 %</td>
+</tr>
+<tr>
+  <td>≥ 24 °C</td>
+  <td>+10.0 % [6.5, 13.6]</td>
+  <td>+14.8 % [9.7, 20.2]</td>
+  <td>+32.3 % [11.7, 56.8]</td>
+</tr>
+</tbody>
+</table>
+<p>(<code>temperature_response_curve</code>)</p>
+<ul>
+<li><strong>A hockey stick, not a line.</strong> Demand is flat between 14 and 20 °C. Below that it rises almost
+linearly, about 1.5 – 2 % per degree. Above 20 °C it rises <em>convexly</em>: +2.6 % at 20 – 22 °C,
++6.3 % at 22 – 24 °C, +10 % above 24 °C. A linear temperature term or a single cooling-degree-day
+slope understates the hot tail. Cold days still move demand more than hot days do: −2 °C costs
+2.5 × as much as +24 °C.</li>
+<li><strong>The daily peak behaves like the mean</strong> on the cold side; on the hot side outpatient peaks rise
+faster (+17 % at ≥ 24 °C).</li>
+<li><strong>Hot days shift demand into the evening</strong> (<code>temperature_response_hourly</code>, inpatient). On ≥ 24 °C
+days, inpatient demand at 19:00 is +23 %, at 11:00 – 12:00 roughly −2 %, and on 22 – 24 °C days the
+midday hours are −8 to −9 %. Days below −2 °C lift every hour by a similar 22 – 29 %. The midday dip remains at the
+39 inpatient sites with no solar in ERIC 2023/24, so it is daylight (lighting) or unreported
+generation, not reported PV. The evening shift lands on the 17:00 – 20:00 system peak.</li>
+<li><strong>Persistence</strong> (<code>weather_persistence</code>): beyond its own temperature, the 2nd hot day adds +2.1 %
+[0.3, 4.1] and the 3rd and later +2.6 % [0.6, 4.7] at inpatient sites (buildings heat up), nothing at
+outpatient sites. Long cold spells add +2.5 – 3.0 % from the 3rd day.</li>
+<li><strong>Other weather</strong>, on top of the bins: wind on cold days +0.4 % per m/s (infiltration and heat
+loss), solar irradiation −1.0 to −1.6 % per kWh/m² (daylight), dew point on warm days ≈ 0: humidity
+adds nothing beyond temperature.</li>
+<li><strong>Extreme heat, on the daily maximum</strong> (<code>temperature_response_tmax</code>; bands on the daily maximum
+to 30 – 32 °C and ≥ 32 °C, reference 18 – 20 °C). Demand is flat up to a 24 °C maximum, then
+rises by a growing step per band: inpatient sites +1.1 % (24 – 26 °C), +2.8 % (26 – 28), +5.3 %
+(28 – 30), +7.6 % (30 – 32) and +14.2 % [9.9, 18.6] at 32 °C and above; outpatient sites +10.1 %
+and +17.8 %. The daily peak rises more at the hottest sites, +27 % at outpatient sites on ≥ 32 °C
+days. The two hottest bands rest on 132 and 16 inpatient site-days (11 and 4 dates, all in
+2023 – 2025), so the ≥ 32 °C step is an order of magnitude, not a precise number; the record
+heat of June 2026 lies beyond the electricity record.</li>
+<li><strong>CHP sites are the mirror image.</strong> Flat on the cold side (the CHP covers the extra heating
+electricity while it runs for heat), +27 – 32 % on warm days (it turns down), and +10 – 13 % more on
+the 2nd and 3rd hot day. This is import, not demand; see section 2.</li>
+</ul>
+<h2 id="5-quasi-experimental-estimates">5. Quasi-experimental estimates</h2>
+<p><code>sense-energy weather-causal</code> (<code>analysis/weather_causal.py</code>, tables in <code>code/reports/weather_causal/</code>;
+pyfixest). Weather is assigned by nature: hospitals do not choose their weather, and within a site
+and a calendar month, which days are hot or cold is as good as random. What is not random is how
+much heat or cold each site is exposed to overall (southern and urban sites run warmer and are
+more often acute hospitals); every design below absorbs that with site-level fixed effects and
+they differ in which <em>time-varying</em> confounders they rule out. Two doses, the two arms of the
+hockey stick: degrees of daily mean below 14 °C (cold) and above 20 °C (heat). Sites without CHP
+unless stated; 95 % intervals two-way clustered by site and date.</p>
+<h3 id="5-1-nested-fixed-effects-causal-specs">5.1 Nested fixed effects (<code>causal_specs</code>)</h3>
+<div class="figrow"><figure><img src="figures/causal_specs.png" alt="causal_specs" loading="lazy"><figcaption><code>causal_specs</code> <a href="figures/causal_specs.pdf">PDF</a></figcaption></figure></div>
+
+<table>
+<thead>
+<tr>
+  <th>Specification</th>
+  <th>Cold, % per °C</th>
+  <th>within-SD (°C)</th>
+  <th>Heat, % per °C</th>
+  <th>within-SD (°C)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>A: site × month, site × weekday, calendar</td>
+  <td>+1.38 [1.11, 1.66]</td>
+  <td>2.22</td>
+  <td>+2.42 [1.36, 3.50]</td>
+  <td>0.32</td>
+</tr>
+<tr>
+  <td>B: A + date effects</td>
+  <td>+1.09 [0.71, 1.47]</td>
+  <td>0.55</td>
+  <td>+1.50 [0.16, 2.85]</td>
+  <td>0.19</td>
+</tr>
+<tr>
+  <td>C: A + region × date effects</td>
+  <td>+1.08 [0.28, 1.89]</td>
+  <td>0.31</td>
+  <td>+1.21 [−0.27, 2.72]</td>
+  <td>0.13</td>
+</tr>
+<tr>
+  <td>D: B + sunshine, wind, rain</td>
+  <td>+1.14 [0.76, 1.51]</td>
+  <td>0.55</td>
+  <td>+1.80 [0.47, 3.16]</td>
+  <td>0.19</td>
+</tr>
+</tbody>
+</table>
+<p>Date effects remove everything common to all sites on a day (bank holidays, strikes, school
+terms, the grid, the news): what remains is how much warmer or colder one site was than the
+others on the same day, relative to its own month. That is a difference-in-differences with a
+continuous dose. The within-SD column is the dose variation left to identify the effect: date
+effects remove 94 % of it, because the panel is one weather system (section 5.5). The cold effect
+is unchanged by them; the heat effect halves and loses precision, then recovers once the day's
+sunshine is held fixed (hot days are sunny, and sunshine lowers lighting demand).</p>
+<p>The binned curves of section 4 re-estimated under B and D (<code>causal_response_mean</code>,
+<code>causal_response_tmax</code>) keep their shape and shrink by about a third at both ends: on the daily
+mean, below −2 °C +28 % (A) → +18 % (B) → +19 % (D), at ≥ 24 °C +12.6 → +7.9 → +10.6 %; on the daily
+maximum, ≥ 32 °C +16.5 → +9.3 → +12.7 %. A confounder would bend one end of the curve; a noisier
+thermometer scales the whole of it, which is what the date effects do.</p>
+<h3 id="5-2-stacked-event-study-difference-in-differences-causal-eve">5.2 Stacked event-study difference-in-differences (<code>causal_event_study</code>)</h3>
+<div class="figrow"><figure><img src="figures/causal_event_study.png" alt="causal_event_study" loading="lazy"><figcaption><code>causal_event_study</code> <a href="figures/causal_event_study.pdf">PDF</a></figcaption></figure></div>
+
+<p>For each national heatwave or cold spell, sites inside a site-level event against clean
+controls with no such event within ±10 days; stack-specific site and date effects; reference
+k ≤ −5; events with another onset in their pre-period, or fewer than five treated or control
+sites, are dropped (<code>stack_log.csv</code>: the cold spells of January 2023 and January 2026 hit nearly
+every site and have no clean controls).</p>
+<table>
+<thead>
+<tr>
+  <th>Event</th>
+  <th>Stacks</th>
+  <th>Treated / control sites</th>
+  <th>Temperature ATT</th>
+  <th>Demand ATT</th>
+  <th>% per °C (SE)</th>
+  <th>Pre-trend p</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>heatwave</td>
+  <td>6</td>
+  <td>85 / 102</td>
+  <td>+1.12 °C</td>
+  <td>+0.1 % [−2.6, +2.8]</td>
+  <td>+0.1 (1.2)</td>
+  <td>0.16</td>
+</tr>
+<tr>
+  <td>cold spell</td>
+  <td>7</td>
+  <td>102 / 81</td>
+  <td>−1.19 °C</td>
+  <td>+1.6 % [−2.2, +5.4]</td>
+  <td>+1.3 (1.6) per °C colder</td>
+  <td>0.71</td>
+</tr>
+</tbody>
+</table>
+<p>Pre-event coefficients are flat (no anticipation), the post-event ones return to zero (no
+rebound: heatwave −2.1 % [−5.6, +1.3], cold −0.6 %). The design's weakness is its dose: during
+a national event the clean controls are still hot or cold, only 1.1 – 1.2 °C less so, so the
+expected demand gap (1.5 – 2 %) sits inside intervals 3 – 5 times wider than the fixed-effect
+estimates'. The point estimates agree with section 5.1; the event study adds the parallel-trends
+evidence, not precision. For CHP sites the heatwave ATT is −7.8 % [−24, +13]: no power.</p>
+<h3 id="5-3-falsification-causal-lags-causal-randomisation">5.3 Falsification (<code>causal_lags</code>, <code>causal_randomisation</code>)</h3>
+<div class="figrow"><figure><img src="figures/causal_lags.png" alt="causal_lags" loading="lazy"><figcaption><code>causal_lags</code> <a href="figures/causal_lags.pdf">PDF</a></figcaption></figure><figure><img src="figures/causal_randomisation.png" alt="causal_randomisation" loading="lazy"><figcaption><code>causal_randomisation</code> <a href="figures/causal_randomisation.pdf">PDF</a></figcaption></figure></div>
+
+<ul>
+<li><strong>Randomisation inference.</strong> Reassigning whole daily weather series between sites at random,
+200 times, specification B gives a cold effect as large as the observed one 0 times in 200
+(permutation SD 0.22 % per °C against 1.09 observed) and a heat effect as large 6 times in 200
+(p = 0.03).</li>
+<li><strong>Leads.</strong> Tomorrow's and the next day's temperature, given today's and the past week's, are
+jointly significant (p = 0.022), driven by tomorrow's heat (+0.45 % per °C [−0.15, +1.04]);
+the cold leads are nil and the two-day lead is zero. Controlling for the same evening's
+temperature does not remove it (p = 0.052; the lead stays +0.53), so it is not the daily mean
+blurring the evening. Two readings remain: anticipation (heat-health alerts go out one to two
+days ahead and estates teams run cooling early) or measurement error in a site's ERA5
+temperature, which lets adjacent days proxy for the true value. The lead is under half the
+same-day effect either way.</li>
+<li><strong>Lags.</strong> The effect of a degree is largest the same day (cold +1.03, heat +1.11 % per °C),
+carries into the next day (+0.31, +0.60) and is nil after that; cumulative over a week, cold
++1.41 [0.57, 2.26] and heat +1.82 [−0.33, 4.02] % per °C-day, with no systematic rebound.</li>
+</ul>
+<h3 id="5-4-extreme-days-temperature-response-tmax-causal-extreme">5.4 Extreme days (<code>temperature_response_tmax</code>, <code>causal_extreme</code>)</h3>
+<div class="figrow"><figure><img src="figures/temperature_response_tmax.png" alt="temperature_response_tmax" loading="lazy"><figcaption><code>temperature_response_tmax</code> <a href="figures/temperature_response_tmax.pdf">PDF</a></figcaption></figure><figure><img src="figures/causal_extreme.png" alt="causal_extreme" loading="lazy"><figcaption><code>causal_extreme</code> <a href="figures/causal_extreme.pdf">PDF</a></figcaption></figure></div>
+
+<p>Indicators for a daily maximum of 28 – 30 and 30+ °C on top of the linear heat dose (323 site-days
+at 30+ °C). With date effects, a 30+ °C day carries −1.5 % [−4.3, +1.3] beyond what its mean
+temperature implies (28 – 30 °C: −1.0 %); without them −3.8 % [−6.7, −0.9]. There is no extra kick
+on the hottest days: demand keeps rising with temperature through 30 °C (section 4) at about
+1.2 % per °C of daily maximum, and if anything falls short of a linear extrapolation in the daily
+mean, which is what cooling plant running at its limit would look like. The daily peak rises
+more than the mean on such days (+12 % inpatient, +27 % outpatient at ≥ 32 °C).</p>
+<h3 id="5-5-space-causal-spatial">5.5 Space (<code>causal_spatial</code>)</h3>
+<div class="figrow"><figure><img src="figures/causal_spatial.png" alt="causal_spatial" loading="lazy"><figcaption><code>causal_spatial</code> <a href="figures/causal_spatial.pdf">PDF</a></figcaption></figure></div>
+
+<ul>
+<li><strong>One weather system.</strong> Day-to-day temperature anomalies correlate 0.998 between sites within
+25 km, 0.98 at 50 – 100 km, 0.94 at 100 – 200 km and 0.89 at 200 – 400 km. Specification B's
+residuals correlate 0.01 or less at every distance: after date effects there are no regional
+demand shocks left to confound, and nothing for region × date effects to remove.</li>
+<li><strong>Neighbour placebo.</strong> The mean dose of the sites 30 – 150 km away (median 99 neighbours), given
+the site's own: for cold it does nothing (own +1.03 [0.43, 1.63], neighbours +0.36 [−0.19,
++0.92]); for heat the two are too collinear to split (own +0.73 [−0.70, 2.17], neighbours +2.13
+[0.81, 3.48]; with date effects +2.29 [−0.07, 4.70]) and only their sum, about 2.8 % per °C of a
+regionally hot day, is well determined. On the neighbourhood dose alone, heat is +2.85 [1.75,
+3.97] (A) and +3.03 [0.83, 5.29] (B) % per °C, cold +1.39 in both. Section 6 tests whether this
+is the thermometer: it is not. A regional channel is the remaining reading – heat-health alerts
+are issued by region, and a site in an alerted region may run its cooling harder whatever its
+own reading says – and the UKHSA alert record would test it.</li>
+<li><strong>Inference.</strong> Specification B standard errors: site and date two-way 0.19 (cold) and 0.67 (heat)
+% per °C; region × week 0.08 and 0.32; ICB (20 clusters) 0.15 and 0.77. Clustering by region ×
+week ignores the same-day correlation across regions that the date dimension captures, so the
+two-way clustering is the conservative choice and ICB clusters agree with it.</li>
+<li><strong>Effect modification</strong> (<code>heterogeneity.csv</code>): older buildings, larger sites and warmer local
+climates do not change the slopes detectably (interactions −0.3 to +1.3 % per °C, p ≥ 0.16).</li>
+</ul>
+<p><strong>Reading.</strong> A degree of cold below 14 °C adds 1.1 – 1.4 % to a site's daily electricity, a degree of
+heat above 20 °C 1.5 – 2 % (2.8 – 3 % per degree of a regionally hot day). Both survive the removal
+of every national and regional day shock, randomisation of weather across sites and pre-trend
+tests, and section 6 shows the heat figure is not an artefact of the 25 km grid.</p>
+<h2 id="6-which-thermometer-era5-era5-land-and-the-met-office-statio">6. Which thermometer? ERA5, ERA5-Land and the Met Office stations</h2>
+<p><code>sense-energy fetch-isd</code>, <code>build-isd</code> (<code>data/isd.py</code>: NOAA's Integrated Surface Database, the Met
+Office synoptic and airfield observations, open data, 76 stations, hourly, to 24 August 2025),
+ERA5-Land (<code>fetch-weather --config code/configs/weather_era5_land.yaml</code>: 0.1°, land points only)
+and <code>sense-energy thermometers</code> (<code>analysis/thermometers.py</code>, tables in <code>code/reports/thermometers/</code>).
+Each site takes the nearest reporting station among the three within 60 km (median 13.5 km).
+Everything is re-estimated on the 106,425 site-days all three thermometers cover, so the
+estimates differ only by the thermometer.</p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>ERA5, 25 km grid point</th>
+  <th>ERA5-Land, 9 km land point</th>
+  <th>Met Office station, median 13.5 km</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Agreement with the station: daily mean / maximum RMSE, bias</td>
+  <td>0.62 / 0.94 °C, +0.07</td>
+  <td>0.72 / 1.26 °C, −0.12</td>
+  <td>–</td>
+</tr>
+<tr>
+  <td>Anomaly correlation, anomaly RMSE</td>
+  <td>0.989, 0.44 °C</td>
+  <td>0.980, 0.56 °C</td>
+  <td>–</td>
+</tr>
+<tr>
+  <td>Cold, % per °C below 14 (B / D)</td>
+  <td>+1.07 / +1.11</td>
+  <td>+1.02 / +1.06</td>
+  <td>+1.08 / +1.09</td>
+</tr>
+<tr>
+  <td>Heat, % per °C above 20 (B / D)</td>
+  <td>+1.68 / +1.97 [0.63, 3.31]</td>
+  <td>+1.97 / +2.31 [1.08, 3.56]</td>
+  <td>+1.41 / +1.69 [0.51, 2.88]</td>
+</tr>
+<tr>
+  <td>Heat on the neighbourhood dose alone (B)</td>
+  <td>+3.47</td>
+  <td>+3.36</td>
+  <td>+2.81</td>
+</tr>
+<tr>
+  <td>30+ °C day beyond the dose (B)</td>
+  <td>−1.6 [−4.7, +1.6]</td>
+  <td>+0.9 [−3.2, +5.2]</td>
+  <td>+0.3 [−3.0, +3.6]</td>
+</tr>
+<tr>
+  <td>Leads, joint p</td>
+  <td>0.031</td>
+  <td>&lt; 0.001</td>
+  <td>0.114</td>
+</tr>
+</tbody>
+</table>
+<p>(<code>thermometer_agreement</code>, <code>thermometer_effects</code>, <code>thermometer_response</code>; maps
+<code>map_thermometer_network</code>, <code>map_thermometer_error_era5</code> / <code>_era5_land</code>, <code>map_hot_day_bias</code>,
+<code>map_heatwave_exposure</code>.)</p>
+<ul>
+<li><p><strong>The error is coastal.</strong> On the map, ERA5's worst sites against the stations (anomaly RMSE
+0.8 – 1.3 °C against a median of 0.44) line the Norfolk, Suffolk and south coasts and Torbay –
+where a 25 km cell straddles sea – and its hot-day cold bias follows the same coast (median
+−0.9 °C, to −4 °C at the coastal sites; 221 sites with 10 or more station days at 28 °C+).
+Inland, the Midlands and London, the grid point is as good as the station.</p>
+</li>
+<li><p><strong>The heat is unevenly spread.</strong> By the station thermometer the hottest day of summer 2025
+ranged from 27.9 °C on the Pennine and coastal sites to 33.6 °C in London, with a median of
+three days at 30 °C+ and up to nine: the cross-site spread that the date-effect designs
+identify from is a 5 – 6 °C band across England on the same days.</p>
+</li>
+<li><p><strong>The grid was not hiding the heat effect.</strong> A station 13 km from the site, independent of any
+reanalysis, agrees with ERA5 on the day-to-day anomalies that identify the effects to 0.44 °C
+and gives the same slopes: cold identical on all three thermometers, heat 1.7 – 2.3 % per °C
+with every estimate inside the others' intervals. The attenuation reading of section 5 (that
+the 25 km grid understated heat) is not supported; the date effects shrink the curve because
+they remove 94 % of the variation, not because the thermometer is bad.</p>
+</li>
+<li><p><strong>Finer is not better.</strong> ERA5-Land's 9 km land-only tiles agree with the stations <em>less</em> well
+than ERA5's 25 km cells (anomaly RMSE 0.56 against 0.44 °C, daily-maximum RMSE 1.26 against
+0.94 °C): at coastal and estuary sites the land tile loses the sea's moderation that the
+coarser cell and the station both see. Its leads test fails outright (p &lt; 0.001), the mark of
+a thermometer whose error is proxied by adjacent days. ERA5 stays the primary thermometer;
+the stations are the independent check.</p>
+</li>
+<li><p><strong>The regional average still predicts better than any local reading</strong>, with all three
+thermometers, so that is not a measurement effect: it is a regional channel (heat-health
+alerts are issued by region) or collinearity, and the sum of the local and regional doses,
+about 2.8 % per °C, is what the data pin down.</p>
+</li>
+<li><p><strong>The lead halves</strong> with the station thermometer (joint p 0.11), so part of it was grid error
+proxied by adjacent days; what remains is small and compatible with anticipation.</p>
+</li>
+<li><p><strong>Where ERA5 is weakest is the hottest days</strong>: on the stations' 30+ °C days it reads 1.3 °C too
+cool. The 30+ °C indicator is within noise of zero on all three thermometers – still no extra
+demand beyond the temperature.</p>
+</li>
+</ul>
+<h2 id="7-who-responds-heterogeneity-of-the-slopes">7. Who responds: heterogeneity of the slopes</h2>
+<p><code>sense-energy weather-heterogeneity</code> (<code>analysis/weather_heterogeneity.py</code>, tables in
+<code>code/reports/weather_heterogeneity/</code>). Sites without CHP, specification B (site × month,
+site × weekday and date effects), so every national day shock is removed before any
+between-site comparison.</p>
+<h3 id="7-1-every-site-s-slope-site-slopes-hdd14-site-slopes-cdd20-s">7.1 Every site's slope (<code>site_slopes_hdd14</code>, <code>site_slopes_cdd20</code>, <code>slope_spread</code>, maps)</h3>
+<div class="figrow"><figure><img src="figures/site_slopes_hdd14.png" alt="site_slopes_hdd14" loading="lazy"><figcaption><code>site_slopes_hdd14</code> <a href="figures/site_slopes_hdd14.pdf">PDF</a></figcaption></figure><figure><img src="figures/site_slopes_cdd20.png" alt="site_slopes_cdd20" loading="lazy"><figcaption><code>site_slopes_cdd20</code> <a href="figures/site_slopes_cdd20.pdf">PDF</a></figcaption></figure><figure><img src="figures/slope_spread.png" alt="slope_spread" loading="lazy"><figcaption><code>slope_spread</code> <a href="figures/slope_spread.pdf">PDF</a></figcaption></figure></div>
+
+<p>Dose × site interactions in one regression give 107 cold and 106 heat slopes with standard
+errors; a random-effects decomposition (DerSimonian–Laird) separates the true between-site
+spread (τ) from sampling noise, and empirical-Bayes shrinkage gives each site a posterior slope.</p>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Cold, % per °C below 14</th>
+  <th>Heat, % per °C above 20</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Pooled slope</td>
+  <td>+1.14</td>
+  <td>+0.96</td>
+</tr>
+<tr>
+  <td>True between-site SD (τ)</td>
+  <td>1.30</td>
+  <td>3.91</td>
+</tr>
+<tr>
+  <td>Share of observed variance that is real (I²)</td>
+  <td>0.99</td>
+  <td>0.99</td>
+</tr>
+<tr>
+  <td>Posterior, 10th / 50th / 90th percentile</td>
+  <td>−0.2 / +0.7 / +3.1</td>
+  <td>−3.9 / +0.5 / +7.0</td>
+</tr>
+<tr>
+  <td>Sites significantly above / below zero</td>
+  <td>82 / 8</td>
+  <td>48 / 39</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The average hides the sites.</strong> Both slopes vary far more between sites than their standard
+errors can explain (I² = 0.99). The cold slope runs from about zero to +3 % per °C; the heat
+slope from −4 to +7, with 39 sites that significantly <em>fall</em> on hot days against 48 that rise.
+&quot;The heat effect&quot; is an average over sites that differ in sign. The cold and heat slopes of a
+site are only weakly related (correlation 0.21).</li>
+<li>Three site-dose slopes (RCBL8 heat, RWRRK heat, RY318 both) have undefined clustered
+variances and are left out of the shrinkage.</li>
+</ul>
+<h3 id="7-2-moderators-moderators">7.2 Moderators (<code>moderators</code>)</h3>
+<div class="figrow"><figure><img src="figures/moderators.png" alt="moderators" loading="lazy"><figcaption><code>moderators</code> <a href="figures/moderators.pdf">PDF</a></figcaption></figure></div>
+
+<p>Each moderator enters as dose × moderator interactions on top of the main doses, one at a time
+(categorical levels against a reference, continuous per SD) and jointly on the 87 sites with
+every descriptor.</p>
+<table>
+<thead>
+<tr>
+  <th>Moderator</th>
+  <th>Cold slope</th>
+  <th>Heat slope</th>
+  <th>Joint p</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Building use (vs acute inpatient)</td>
+  <td>community inpatient +0.8, mental health +0.9, non-inpatient +1.2, support +0.5 points</td>
+  <td>all within ±1.2, none significant</td>
+  <td>&lt; 0.001</td>
+</tr>
+<tr>
+  <td>Gas / electricity ratio (per SD)</td>
+  <td>−0.51 [−0.81, −0.21]</td>
+  <td>−1.0 [−2.2, +0.2]</td>
+  <td>0.001</td>
+</tr>
+<tr>
+  <td>Trust type</td>
+  <td>community +0.6 (p 0.09)</td>
+  <td>–</td>
+  <td>0.041</td>
+</tr>
+<tr>
+  <td>Demand-shape cluster</td>
+  <td>–</td>
+  <td>–</td>
+  <td>0.61</td>
+</tr>
+<tr>
+  <td>Site size (log kW)</td>
+  <td>–</td>
+  <td>+0.55 (p 0.14)</td>
+  <td>0.26</td>
+</tr>
+<tr>
+  <td>Mean build year, summer climate, LED share</td>
+  <td>–</td>
+  <td>–</td>
+  <td>0.27 – 0.44</td>
+</tr>
+</tbody>
+</table>
+<p>In the joint model (p &lt; 0.001) building use and the gas ratio survive together: acute inpatient
+hospitals respond to cold with +0.05 % per °C, every other use with +1.2 to +1.4 points more, and
+a one-SD higher gas-to-electricity ratio removes 0.45 points.</p>
+<ul>
+<li><strong>Cold has structure, and it is the heating fuel.</strong> The more a site heats with gas, the less
+its electricity responds to cold; the acute hospitals, which have the largest gas plant, barely
+respond at all. Cold raises electricity where heat is electric – non-inpatient buildings,
+mental-health units, community hospitals. That is the physically sensible answer, and the
+practical one for electrification: a site that moves from gas to heat pumps will acquire a
+cold slope of the order of +1 to +1.5 % per °C.</li>
+<li><strong>Heat has no explained structure.</strong> Not one of the eight moderators predicts the heat slope,
+jointly or alone. The large real dispersion (τ = 3.9 points) is driven by something ERIC does
+not record – most plausibly whether a site has cooling plant at all, and how it is controlled.
+That is the strongest argument yet for asking trusts for cooling and CHP plant data.</li>
+<li>Trust type matters (p = 0.04) only as a proxy for building use.</li>
+</ul>
+<h3 id="7-3-hour-of-day-by-building-use-hourly-by-use-cold-hourly-by">7.3 Hour of day by building use (<code>hourly_by_use_cold</code>, <code>hourly_by_use_hot</code>)</h3>
+<div class="figrow"><figure><img src="figures/hourly_by_use_cold.png" alt="hourly_by_use_cold" loading="lazy"><figcaption><code>hourly_by_use_cold</code> <a href="figures/hourly_by_use_cold.pdf">PDF</a></figcaption></figure><figure><img src="figures/hourly_by_use_hot.png" alt="hourly_by_use_hot" loading="lazy"><figcaption><code>hourly_by_use_hot</code> <a href="figures/hourly_by_use_hot.pdf">PDF</a></figcaption></figure></div>
+
+<p>Hourly curves for days below 2 °C and at or above 22 °C daily mean against a 14–16 °C day, by
+building use, with site × month and site × weekday effects (date effects would leave the hot
+band resting on a handful of site-days in the small groups; groups with fewer than 150 site-days
+in a band are left out).</p>
+<ul>
+<li><strong>Cold days</strong> lift non-inpatient (+22 to +29 %), mental-health (+19 to +25 %) and community
+inpatient (+15 to +29 %) sites through the whole day, strongest in the morning and afternoon;
+the five acute hospitals rise only 6 to 8 %, flat across the day – gas carries their heating.</li>
+<li><strong>Hot days</strong> at mental-health and non-inpatient sites (the two groups with enough hot
+site-days) are flat until midday and then climb to +12 to +15 % at 17:00–19:00 – the evening
+shift of section 4, now visible group by group, and landing on the system peak.</li>
+</ul>
+<h2 id="8-what-moves-heat">8. What moves heat</h2>
+<p><code>sense-energy heat-drivers</code> (<code>analysis/heat_drivers.py</code>, tables in <code>code/reports/heat_drivers/</code>,
+figures <code>heat_*</code>, <code>sunshine_slopes</code>, <code>map_heat_types</code>). Section 7 left the heat slope unexplained:
+a real spread of ±4 points around +1 % per °C, 39 sites falling on hot days, and none of the
+estates descriptors predicting any of it. This section takes the slope apart on the same panel
+(sites without CHP, specification B, standard errors clustered by site and date), with three
+additions: a site-specific <strong>sunshine</strong> term, the demand of each <strong>six-hour block</strong> of the day
+and the <strong>weekend</strong>, and the heat dose split into <strong>hot afternoons and warm nights</strong>. Two new
+open datasets feed the moderators: the ONS rural-urban classification and Census 2021 population
+density of every site postcode (<code>data/site_context.py</code>, via postcodes.io and Nomis), and the DESNZ
+Renewable Energy Planning Database for solar schemes at the site postcode. The estates return
+contributes two fields not used before: overheating occurrences in clinical areas (S16_07) and
+solar consumed on site.</p>
+<p><strong>Sample.</strong> 24 of the 107 sites carry the <code>meter_gaps</code> coverage flag (a meter set that comes and
+goes within the year); they are left out here, because meters that drop in and out <em>within a
+month</em> put swings into exactly the variation the site slopes are estimated from, and they
+turned out to own the tails of section 7: of the 24, Bridlington's heat slope was −15 % per °C
+and two sites' +12 %, with monthly demand swinging threefold. 83 sites remain
+(<code>excluded_sites.csv</code> lists the rest with their section-7 slopes).</p>
+<h3 id="8-1-sunshine-heat-sunshine-control-sunshine-slopes-heat-bloc">8.1 Sunshine (<code>heat_sunshine_control</code>, <code>sunshine_slopes</code>, <code>heat_blocks_sunshine</code>)</h3>
+<div class="figrow"><figure><img src="figures/heat_sunshine_control.png" alt="heat_sunshine_control" loading="lazy"><figcaption><code>heat_sunshine_control</code> <a href="figures/heat_sunshine_control.pdf">PDF</a></figcaption></figure><figure><img src="figures/sunshine_slopes.png" alt="sunshine_slopes" loading="lazy"><figcaption><code>sunshine_slopes</code> <a href="figures/sunshine_slopes.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_blocks_sunshine.png" alt="heat_blocks_sunshine" loading="lazy"><figcaption><code>heat_blocks_sunshine</code> <a href="figures/heat_blocks_sunshine.pdf">PDF</a></figcaption></figure></div>
+
+<p>Hot days are sunny days, and 55 of the 83 sites import less electricity on sunny days at a given
+temperature: the pooled sunshine slope is −0.9 % per kWh/m² of daily surface solar radiation,
+which is −5 % between an overcast and a clear summer day. The slope has the shape of daylight:
+−1.1 % in the morning block, −1.4 % in the afternoon, −0.5 % in the evening and +0.2 % at night
+(<code>heat_blocks_sunshine</code>). Sites that report solar generation to ERIC have a sunshine slope 1.9
+points more negative than the rest (p = 0.06), community inpatient sites 3.9 points more
+negative (p = 0.005). It is daylight-linked lighting across the estate, plus panels where there
+are panels.</p>
+<p>It is not, however, where the heat dispersion comes from. Adding the sunshine term moves the
+pooled heat slope from +0.6 to +1.1 % per °C (the daylight saving was masking some cooling) and
+leaves the between-site SD at 4.0–4.1 points; the two heat slopes correlate 0.90, and 22 sites
+still fall significantly with heat net of sunshine (28 before). The heat and sunshine slopes of a
+site are unrelated (r = 0.05). REPD confirms there is little rooftop PV behind these meters yet:
+24 sites have a scheme at their postcode, all 2025 applications awaiting construction, none
+operational within the sample.</p>
+<h3 id="8-2-time-of-day-and-the-week-heat-blocks-heat-heat-signature">8.2 Time of day and the week (<code>heat_blocks_heat</code>, <code>heat_signature</code>, <code>heat_weekend</code>)</h3>
+<div class="figrow"><figure><img src="figures/heat_blocks_heat.png" alt="heat_blocks_heat" loading="lazy"><figcaption><code>heat_blocks_heat</code> <a href="figures/heat_blocks_heat.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_signature.png" alt="heat_signature" loading="lazy"><figcaption><code>heat_signature</code> <a href="figures/heat_signature.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_weekend.png" alt="heat_weekend" loading="lazy"><figcaption><code>heat_weekend</code> <a href="figures/heat_weekend.pdf">PDF</a></figcaption></figure></div>
+
+<p>The heat response is an afternoon-and-evening phenomenon: pooled across sites it is +0.2 % per °C
+at night, +0.8 % in the morning, +3.6 % in the afternoon and +2.1 % in the evening. Among the 41
+sites that rise with heat, 32 have an afternoon block slope significantly above their night
+block: cooling plant that works with the sun. The 22 fallers fall through the whole day, night
+included (their block slopes run −1.3 to −3.7 %), which no sunshine mechanism can produce.</p>
+<p>Weekday and weekend heat slopes correlate 0.66; 13 risers have a significantly smaller weekend
+response (plant that runs with the working day). The median site's weekend response is 0.9
+points <em>larger</em> than its weekday one, which is a percentage effect: the same cooling kilowatts
+against a lower weekend baseline.</p>
+<h3 id="8-3-hot-afternoons-and-warm-nights-heat-night-day-heat-group">8.3 Hot afternoons and warm nights (<code>heat_night_day</code>, <code>heat_group_decomposition</code>)</h3>
+<div class="figrow"><figure><img src="figures/heat_night_day.png" alt="heat_night_day" loading="lazy"><figcaption><code>heat_night_day</code> <a href="figures/heat_night_day.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_group_decomposition.png" alt="heat_group_decomposition" loading="lazy"><figcaption><code>heat_group_decomposition</code> <a href="figures/heat_group_decomposition.pdf">PDF</a></figcaption></figure></div>
+
+<p>Splitting the dose into degrees of daily maximum above 24 °C and degrees of daily minimum above
+12 °C separates the two populations (group × dose interactions, one regression):</p>
+<table>
+<thead>
+<tr>
+  <th>Sites by the daily heat slope</th>
+  <th>Hot afternoon (% per °C of T_max &gt; 24)</th>
+  <th>Warm night (% per °C of T_min &gt; 12)</th>
+  <th>Sunshine (% per kWh/m²)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>rise with heat (41, 74 % of demand)</td>
+  <td>+1.45 (0.38)</td>
+  <td>+0.73 (0.26)</td>
+  <td>−1.27 (0.41)</td>
+</tr>
+<tr>
+  <td>fall with heat (22, 8 % of demand)</td>
+  <td>−1.24 (0.35)</td>
+  <td>−1.18 (0.26)</td>
+  <td>−1.05 (0.25)</td>
+</tr>
+<tr>
+  <td>neither (20)</td>
+  <td>+0.51 (0.70)</td>
+  <td>+0.36 (0.25)</td>
+  <td>−0.77 (0.48)</td>
+</tr>
+</tbody>
+</table>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>sign</th>
+      <th>term_name</th>
+      <th>coef_pct</th>
+      <th>lo_pct</th>
+      <th>hi_pct</th>
+      <th>p</th>
+      <th>sites</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>daily mean</td>
+      <td>rises with heat</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>1.21</td>
+      <td>0.68</td>
+      <td>1.74</td>
+      <td>0</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>rises with heat</td>
+      <td>heat (per °C of daily mean above 20 °C)</td>
+      <td>3.72</td>
+      <td>2.35</td>
+      <td>5.1</td>
+      <td>0</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>rises with heat</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-1.26</td>
+      <td>-2.07</td>
+      <td>-0.44</td>
+      <td>0</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>falls with heat</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>0.97</td>
+      <td>0.48</td>
+      <td>1.46</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>falls with heat</td>
+      <td>heat (per °C of daily mean above 20 °C)</td>
+      <td>-2.77</td>
+      <td>-4.08</td>
+      <td>-1.46</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>falls with heat</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-1.09</td>
+      <td>-1.58</td>
+      <td>-0.6</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>neither</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>0.86</td>
+      <td>0.15</td>
+      <td>1.56</td>
+      <td>0.02</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>neither</td>
+      <td>heat (per °C of daily mean above 20 °C)</td>
+      <td>1.67</td>
+      <td>-0.71</td>
+      <td>4.06</td>
+      <td>0.17</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>neither</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-0.79</td>
+      <td>-1.8</td>
+      <td>0.22</td>
+      <td>0.12</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>1.23</td>
+      <td>0.7</td>
+      <td>1.75</td>
+      <td>0</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
+      <td>1.45</td>
+      <td>0.68</td>
+      <td>2.21</td>
+      <td>0</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>warm night (per °C of daily minimum above 12 °C)</td>
+      <td>0.73</td>
+      <td>0.22</td>
+      <td>1.24</td>
+      <td>0.01</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-1.27</td>
+      <td>-2.07</td>
+      <td>-0.46</td>
+      <td>0</td>
+      <td>41</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>0.92</td>
+      <td>0.44</td>
+      <td>1.41</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
+      <td>-1.24</td>
+      <td>-1.94</td>
+      <td>-0.55</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>warm night (per °C of daily minimum above 12 °C)</td>
+      <td>-1.18</td>
+      <td>-1.69</td>
+      <td>-0.67</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-1.05</td>
+      <td>-1.54</td>
+      <td>-0.57</td>
+      <td>0</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>neither</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>0.86</td>
+      <td>0.16</td>
+      <td>1.56</td>
+      <td>0.02</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>neither</td>
+      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
+      <td>0.51</td>
+      <td>-0.87</td>
+      <td>1.89</td>
+      <td>0.46</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>neither</td>
+      <td>warm night (per °C of daily minimum above 12 °C)</td>
+      <td>0.36</td>
+      <td>-0.14</td>
+      <td>0.86</td>
+      <td>0.16</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>neither</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-0.77</td>
+      <td>-1.73</td>
+      <td>0.19</td>
+      <td>0.11</td>
+      <td>20</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/group_decomposition.csv">code/reports/heat_drivers/group_decomposition.csv</a> (21 rows shown)</p>
+
+<p>Risers respond twice as much to hot afternoons as to warm nights: cooling. Fallers respond to
+both, and as much to the night minimum as to the afternoon maximum: 17 of the 22 have a
+significantly negative warm-night slope (<code>heating_tail</code> flag). That is the signature of
+heating that is still running in the warm season and switches off when the night is warm:
+electric heating and the auxiliaries of gas heating in small buildings (the fallers' median
+demand is 9 kW against 21 kW for risers), plus water heating that follows mains-water
+temperature. The extreme cases say the same: Kelling Hospital runs 50 kW in winter and 19 kW in
+summer, Malton 43 kW in April and 30 kW in July, and South Devon's renal unit (dialysis water
+heated to 37 °C) falls 16 % per °C. &quot;Falls with heat&quot; is a heating-season tail, not a cooling
+behaviour, and it carries 8 % of the demand in the sample.</p>
+<h3 id="8-4-moderators-and-how-much-they-explain-heat-moderators-cat">8.4 Moderators and how much they explain (<code>heat_moderators_categorical</code>, <code>heat_moderators_continuous</code>, <code>heat_variance_explained</code>)</h3>
+<div class="figrow"><figure><img src="figures/heat_moderators_categorical.png" alt="heat_moderators_categorical" loading="lazy"><figcaption><code>heat_moderators_categorical</code> <a href="figures/heat_moderators_categorical.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_moderators_continuous.png" alt="heat_moderators_continuous" loading="lazy"><figcaption><code>heat_moderators_continuous</code> <a href="figures/heat_moderators_continuous.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_variance_explained.png" alt="heat_variance_explained" loading="lazy"><figcaption><code>heat_variance_explained</code> <a href="figures/heat_variance_explained.pdf">PDF</a></figcaption></figure></div>
+
+<p>With cold, heat and sunshine each interacted with the moderator (sunshine so that a daylight
+effect cannot masquerade as a heat moderator), one at a time:</p>
+<ul>
+<li><strong>Nothing in location.</strong> Urban form (major conurbation / city and town / rural; joint p =
+0.92) and the LSOA population density (p = 0.38) do not move the heat slope: the urban heat
+island does not show up in the response, consistent with the thermometer result of section 6.</li>
+<li><strong>Nothing in use, age or heating fuel.</strong> Building use (p = 0.35), build year, gas-to-electricity
+ratio, LED share, heat pumps, winter/summer ratio, size: none.</li>
+<li><strong>What moves it is how electrically intensive the estate is.</strong> Peak demand per m² (+0.7 points
+per SD, p = 0.05 alone; the joint model puts it on electricity intensity instead: +1.9 points
+per SD, p = 0.001), tenure (joint p = 0.02: leased sites +0.9, PFI/LIFT/other −0.9) and solar
+generation in ERIC (+2.0 points, p = 0.01), which reads as a marker of trusts that invest in
+their plant. Overheating reports in clinical areas go with a larger heat slope (+0.8, p = 0.13):
+sites that overheat respond, presumably with portable and retrofitted cooling.</li>
+</ul>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>set</th>
+      <th>sites</th>
+      <th>parameters</th>
+      <th>tau_before_pct</th>
+      <th>tau_after_pct</th>
+      <th>r2_true</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>site sunshine term</td>
+      <td>79</td>
+      <td>0</td>
+      <td>3.99</td>
+      <td>4.11</td>
+      <td>-0.06</td>
+    </tr>
+    <tr>
+      <td>building use</td>
+      <td>78</td>
+      <td>3</td>
+      <td>4.21</td>
+      <td>4.31</td>
+      <td>-0.05</td>
+    </tr>
+    <tr>
+      <td>urban form and density</td>
+      <td>78</td>
+      <td>3</td>
+      <td>4.26</td>
+      <td>4.38</td>
+      <td>-0.06</td>
+    </tr>
+    <tr>
+      <td>estates descriptors</td>
+      <td>40</td>
+      <td>10</td>
+      <td>3.55</td>
+      <td>3.58</td>
+      <td>-0.02</td>
+    </tr>
+    <tr>
+      <td>load shape</td>
+      <td>80</td>
+      <td>4</td>
+      <td>4.23</td>
+      <td>4.09</td>
+      <td>0.06</td>
+    </tr>
+    <tr>
+      <td>all descriptors</td>
+      <td>40</td>
+      <td>20</td>
+      <td>3.55</td>
+      <td>3.69</td>
+      <td>-0.08</td>
+    </tr>
+    <tr>
+      <td>cooling plant (DEC)</td>
+      <td>66</td>
+      <td>2</td>
+      <td>4.25</td>
+      <td>4.22</td>
+      <td>0.01</td>
+    </tr>
+    <tr>
+      <td>heating and intensity (DEC)</td>
+      <td>66</td>
+      <td>2</td>
+      <td>4.25</td>
+      <td>4.32</td>
+      <td>-0.03</td>
+    </tr>
+    <tr>
+      <td>all descriptors and DEC</td>
+      <td>35</td>
+      <td>24</td>
+      <td>3.38</td>
+      <td>3.7</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>diurnal signature</td>
+      <td>79</td>
+      <td>2</td>
+      <td>4.11</td>
+      <td>3.02</td>
+      <td>0.46</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/variance_explained.csv">code/reports/heat_drivers/variance_explained.csv</a> (10 rows shown)</p>
+
+<ul>
+<li><strong>How much is explained.</strong> A random-effects meta-regression of the sunshine-controlled site
+slopes on each descriptor set gives the share of the <em>true</em> between-site variance it accounts
+for: building use, urban form and density, the estates descriptors, the load shape, and all of
+them together each explain nothing (−8 % to +6 %). The site's own diurnal signature (afternoon
+excess and sunshine slope) explains 46 %. The heat slope is about plant on the site, which shows
+in the shape of the day and not in anything the estates return records.</li>
+</ul>
+<h3 id="8-5-types-heat-signature-map-heat-types">8.5 Types (<code>heat_signature</code>, <code>map_heat_types</code>)</h3>
+<div class="figrow"><figure><img src="figures/heat_signature.png" alt="heat_signature" loading="lazy"><figcaption><code>heat_signature</code> <a href="figures/heat_signature.pdf">PDF</a></figcaption></figure><figure><img src="figures/map_heat_types.png" alt="map_heat_types" loading="lazy"><figcaption><code>map_heat_types</code> <a href="figures/map_heat_types.pdf">PDF</a></figcaption></figure></div>
+
+<p>By significance at 5 %: 16 sites rise with heat and nothing else (45 % of demand), 25 rise with
+heat and fall with sunshine (29 %), 12 fall with sunshine only (13 %), 22 fall with heat (8 %),
+8 neither (5 %). Three quarters of the metered demand sits on sites whose electricity rises on hot
+afternoons. The map shows the types mixed within regions and ICBs: the type is a property of the
+building, not of the place.</p>
+<h3 id="8-6-what-this-changes">8.6 What this changes</h3>
+<ul>
+<li>The cooling response of the estate is cleaner and larger than the raw heat slope says: +1.1 %
+per °C of daily mean above 20 °C net of daylight, +1.45 % per °C of daily maximum above 24 °C
+at the sites that have cooling, and concentrated in the afternoon and evening.</li>
+<li>&quot;Sites that fall on hot days&quot; are small, heating-dominated buildings in their shoulder season,
+with 8 % of the demand; they should not be modelled as cooling anomalies.</li>
+<li>Sunshine deserves a place in the day-ahead feature set in its own right: −0.9 % per kWh/m² is
+a daily swing of several percent, separate from temperature.</li>
+<li>The direct data on cooling plant is the Display Energy Certificate register; section 8.7 reads
+it. It confirms the direction (the sites whose buildings are classed as air-conditioned have the
+largest heat slopes) but records presence rather than size, so the diurnal signature stays the
+better measure of plant.</li>
+</ul>
+<h3 id="8-7-what-the-certificates-say-heat-dec-aircon-heat-dec-heati">8.7 What the certificates say (<code>heat_dec_aircon</code>, <code>heat_dec_heating</code>, <code>dec_recommendations</code>)</h3>
+<div class="figrow"><figure><img src="figures/heat_dec_aircon.png" alt="heat_dec_aircon" loading="lazy"><figcaption><code>heat_dec_aircon</code> <a href="figures/heat_dec_aircon.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_dec_heating.png" alt="heat_dec_heating" loading="lazy"><figcaption><code>heat_dec_heating</code> <a href="figures/heat_dec_heating.pdf">PDF</a></figcaption></figure><figure><img src="figures/dec_recommendations.png" alt="dec_recommendations" loading="lazy"><figcaption><code>dec_recommendations</code> <a href="figures/dec_recommendations.pdf">PDF</a></figcaption></figure></div>
+
+<p>With the MHCLG energy-performance API (<code>data/dec.py</code>, <code>sense-energy build-dec</code>; bearer token in
+<code>.env</code>) every Display Energy Certificate at the site postcodes was pulled: 3,266 certificates since
+2008, 285 buildings with a certificate from 2019 on, at 187 of the 275 postcodes; 67 of the 83 sites
+of this section have one, and the certified floor area matches the ERIC gross internal area at the
+median (ratio 1.08; a shared postcode can bring in neighbours, <code>dec_coverage</code> flags it). Each
+certificate names the building environment, whether air conditioning is present, the main heating
+fuel, the metered electricity and fuel of the assessment year and the operational rating; the
+newer ones link an advisory report with the assessor's recommendations.</p>
+<ul>
+<li><strong>&quot;Air conditioning present&quot; is almost universal and separates nothing.</strong> The question covers
+any system, server rooms included: 51 of the 67 sites are &quot;mostly air-conditioned&quot; by floor area
+and 16 have none. The heat slope of the two groups differs by 1.0 point (p = 0.46; medians 1.4
+against 0.4 % per °C), and the air-conditioned floor share explains 1.5 % of the true between-site
+variance.</li>
+<li><strong>The building environment does separate, at the top.</strong> The dominant class is heating with
+natural ventilation at 38 sites, mechanical ventilation at 13, mixed mode at 13 and air
+conditioning at 3. Those three sites (34 kW median) have a heat slope 3.1 points above the
+naturally ventilated reference (p &lt; 0.001; median 4.7 % per °C against 1.0); mixed mode sits at
+2.1 and mechanical ventilation at 0.3. In the joint model the cooled floor share (air conditioning
+or mixed mode) adds 0.9 points per SD (p = 0.02, 38 sites). The register classes most hospital
+buildings as heated and naturally ventilated while their demand rises on hot afternoons: the
+plant that does it is below the threshold of &quot;building environment&quot;, and its size (the AC kW
+rating) is recorded on 19 % of recent certificates only.</li>
+<li><strong>The fallers are gas-heated on paper.</strong> Electricity is the main heating fuel of some floor area
+at 4 of 67 sites; the warm-night slope correlates −0.28 with that share, in the expected
+direction, but the fallers' certificates name gas. Their warm-night fall is the auxiliaries and
+hot water of gas heating and electric spot heating, not electric space heating as the main
+system.</li>
+<li><strong>The non-domestic EPCs do not pool with the DECs.</strong> The same API gives 1,581 EPCs at the site
+postcodes (<code>sense-energy build-epc</code>, <code>epc_sites.parquet</code>), which would cover 8 of the 16 sites
+without a DEC. Their building-environment field is a design classification from the SBEM
+assessment: 34 % of EPCs at these postcodes are &quot;Air Conditioning&quot; against 1 % of DECs, and
+filling the eight sites from EPCs flips the environment result (joint p from &lt; 0.001 to 0.86).
+The EPC fields are kept as a separate table, not as moderators.</li>
+<li><strong>The recommendations are the &quot;opportunities&quot;.</strong> 115 advisory reports linked to the current
+certificates carry 1,552 recommendations: fabric 335, controls 322, heating 284, renewables 214,
+cooling 170 (163 of them short payback: review the air-conditioning strategy, stop heating and
+cooling running together, weather-compensated controls), ventilation 159, lighting 104, hot water
+78 (<code>dec_recommendations</code>). They are stored per site as counts and building shares by theme
+(<code>rec_*</code> in <code>dec_sites.parquet</code>) and are available as features or clustering inputs; 27 of the 83
+sites here have a report, too few for a moderator yet.</li>
+</ul>
+<h3 id="8-8-causal-machine-learning-on-the-heat-response-cate-vs-slo">8.8 Causal machine learning on the heat response (<code>cate_vs_slope_observables</code>, <code>cate_vs_slope_signature</code>, <code>cate_importance</code>)</h3>
+<div class="figrow"><figure><img src="figures/cate_vs_slope_observables.png" alt="cate_vs_slope_observables" loading="lazy"><figcaption><code>cate_vs_slope_observables</code> <a href="figures/cate_vs_slope_observables.pdf">PDF</a></figcaption></figure><figure><img src="figures/cate_vs_slope_signature.png" alt="cate_vs_slope_signature" loading="lazy"><figcaption><code>cate_vs_slope_signature</code> <a href="figures/cate_vs_slope_signature.pdf">PDF</a></figcaption></figure><figure><img src="figures/cate_importance.png" alt="cate_importance" loading="lazy"><figcaption><code>cate_importance</code> <a href="figures/cate_importance.pdf">PDF</a></figcaption></figure></div>
+
+<p><code>sense-energy heat-causal-ml</code> (<code>analysis/heat_causal_ml.py</code>, tables in <code>code/reports/heat_causal_ml/</code>).
+The same panel (83 sites, 99,181 site-days) is put to two orthogonal learners. Log demand,
+the heat dose and the controls (cold dose, sunshine) are demeaned on specification B's fixed
+effects by alternating projections and the controls partialled out, so the learners see only the
+within-site, within-month, within-day variation the regressions used. An R-learner (LightGBM on
+the residual ratio, weighted by the squared residual dose) and an econml causal forest (ridge
+nuisance models, honest trees) are cross-fitted over five site folds, so every site's effect comes
+from a model that never saw it. Covariates: the estates, context and DEC descriptors of section 8.4
+plus three calendar modifiers (weekend, bank holiday, school summer); a second run adds the site's
+diurnal signature. A placebo shuffles the site covariates across sites.</p>
+<ul>
+<li><strong>The forest recovers a quarter of the heterogeneity from observables; the linear moderators
+recovered none.</strong> Out of fold, the forest's site effects correlate 0.21 with the
+fixed-effect slopes and recover 24 % of their true
+between-site variance (calibration slope 0.19: the learned effects are
+spread 5.7 points against a true 4.2, so they are
+over-dispersed and should be shrunk before use). The R-learner with observables alone finds
+nothing (-0.11); with the signature it reaches 0.21 and
+18 %. The placebo sits at -0.06 and
+-0.01.</li>
+<li><strong>What the forest splits on</strong> is the load shape and the climate, not the estates fields: the
+night/day ratio (0.26 of importance), the winter/summer
+ratio, size, the gas ratio and the summer maximum; with the signature in, the daytime sunshine
+slope takes 0.44 and the afternoon excess 0.15.
+The DEC fields do not enter the top splits.</li>
+<li><strong>The calendar does not modify the heat response.</strong> With site x weekday effects already in, the
+forest's effect is 1.70 % per °C on weekdays and 1.82 at weekends,
+and identical on bank holidays and in the school summer holiday. The weekend difference of
+section 8.2 is a percentage effect on a lower baseline, not a different response.</li>
+<li><strong>Who the forest gets right.</strong> 35 sites have a learned effect significantly above zero
+and 15 below; the large risers are recovered, the fallers are not (the forest
+places most of them near zero): their heating tail has no observable to split on.</li>
+</ul>
+<p>The mean learned effect is 1.73 % per °C, an unweighted site-day average against
+the regression's pooled +1.1; the difference is the weighting. Next in this thread: shrink the
+forest effects (empirical Bayes against the fixed-effect slopes), and use the dated ERIC changes
+(section 7 of <code>estates_analysis.md</code>) as staggered treatments for installation effects.</p>
+<h2 id="9-does-any-of-this-reach-the-day-ahead-forecasts-forecast-he">9. Does any of this reach the day-ahead forecasts? (<code>forecast_heat_days</code>)</h2>
+<div class="figrow"><figure><img src="figures/forecast_heat_days.png" alt="forecast_heat_days" loading="lazy"><figcaption><code>forecast_heat_days</code> <a href="figures/forecast_heat_days.pdf">PDF</a></figcaption></figure></div>
+
+<p><code>analysis/forecast_heat_days.py</code> scores every model's test-window forecasts (June 2025 to May 2026)
+by the kind of target day: ERA5 daily maximum at or above 28 °C (214 site-days), 25–28 °C
+(235), other June–September days (1816), daily mean at or below 2 °C (73) and
+the rest (3917); nMAE per site as in the main experiment, then the site mean.</p>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th>28 °C and above</th>
+  <th>25–28 °C</th>
+  <th>other summer</th>
+  <th>at or below 2 °C</th>
+  <th>rest of year</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>LightGBM + IFS</td>
+  <td>12.8</td>
+  <td>12.3</td>
+  <td>12.2</td>
+  <td>16.0</td>
+  <td>13.4</td>
+</tr>
+<tr>
+  <td>LightGBM + ERA5 (perfect weather)</td>
+  <td>12.8</td>
+  <td>12.4</td>
+  <td>12.0</td>
+  <td>15.5</td>
+  <td>13.1</td>
+</tr>
+<tr>
+  <td>LightGBM, no weather</td>
+  <td>14.3</td>
+  <td>13.1</td>
+  <td>12.4</td>
+  <td>16.2</td>
+  <td>13.7</td>
+</tr>
+<tr>
+  <td>Chronos-2 + IFS</td>
+  <td>11.5</td>
+  <td>13.8</td>
+  <td>11.0</td>
+  <td>14.2</td>
+  <td>11.6</td>
+</tr>
+<tr>
+  <td>TimesFM-3 + IFS</td>
+  <td>11.6</td>
+  <td>13.4</td>
+  <td>11.2</td>
+  <td>15.9</td>
+  <td>11.8</td>
+</tr>
+<tr>
+  <td>TabPFN-TS + IFS</td>
+  <td>12.2</td>
+  <td>13.6</td>
+  <td>11.2</td>
+  <td>19.9</td>
+  <td>12.3</td>
+</tr>
+</tbody>
+</table>
+<div class="chart" id="chart1"></div><p class="source">interactive; source: <a href="data/scores_by_day_class.csv">code/reports/forecast_heat_days/scores_by_day_class.csv</a></p>
+
+<ul>
+<li><strong>Hot days are harder, by about half a point.</strong> Every model errs more on 28 °C+ days than on
+other summer days; the cold days (at or below 2 °C) are harder still, by three to four points.</li>
+<li><strong>It is not the weather forecast.</strong> LightGBM with realised ERA5 weather does no better on the
+hottest days than with the IFS forecast (12.8 against 12.8), and without
+weather at all it loses 1.4 points. The gap is in how the models use heat, which
+is why the heat work prescribes the features: daily maximum and evening temperature rather than
+the hourly series, the station correction of the hottest days, the day's solar radiation, and
+the calendar (school summer holiday, Christmas, distance to a bank holiday) which the baseline set
+carried only as weekday and bank-holiday flags.</li>
+</ul>
+<p><strong>The heat features do not move the hot days (<code>lightgbm_ifs_heat</code>).</strong> A LightGBM variant with
+the prescribed features (the IFS day's forecast maximum, minimum and evening temperature, the
+station-corrected maximum and hot-day flags at 25 and 28 °C, degree terms, the day's solar
+radiation, and the extended calendar: school summer holiday, Christmas period, next-day holiday,
+days to and since a bank holiday) scores 12.83 % nMAE on 28 °C+ days against
+12.85 for the baseline IFS variant, 12.61 against 12.32 on 25–28 °C days,
+15.49 against 16.02 on the coldest days and 13.06 against 13.06
+over the whole test window. The cold days gain half a point (the calendar), the hot days nothing.
+Site identity, the recent level and the lag features carry the model; the hot-day penalty is in
+what no day-ahead feature carries, the day's plant switching, and the foundation models' lead on
+hot days (Chronos-2 11.5) comes from their shape modelling, not from
+weather. The honest reading: the response work explains demand on hot days after the fact better
+than it helps predict it the day before.</p>
+<p class="meta">Built from <code>doc/weather_and_cooling.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+<script>
+vegaEmbed("#chart1", {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Day-ahead nMAE by kind of target day (site mean)", "width": "container", "height": 420, "data": {"values": [{"model": "chronos2", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1474941634, "nmae_median": 0.130752546, "ncrps": 0.1219894359, "coverage_80": 0.6920170544, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0243042407}, {"model": "chronos2", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1193772923, "nmae_median": 0.1011632861, "ncrps": 0.0923578328, "coverage_80": 0.7528539213, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0091099762}, {"model": "chronos2", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.2662902738, "nmae_median": 0.1762511121, "ncrps": 0.213709789, "coverage_80": 0.5907534247, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.106129836}, {"model": "chronos2", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1131053538, "nmae_median": 0.0895828501, "ncrps": 0.0894955223, "coverage_80": 0.7653435035, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0092826008}, {"model": "chronos2", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1218098032, "nmae_median": 0.1196037198, "ncrps": 0.0971156849, "coverage_80": 0.7713703355, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.012096683}, {"model": "chronos2_era5", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1406013655, "nmae_median": 0.1247061087, "ncrps": 0.1186129823, "coverage_80": 0.7021277139, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0174114428}, {"model": "chronos2_era5", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1134180482, "nmae_median": 0.0945030282, "ncrps": 0.0890998581, "coverage_80": 0.7286595146, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0150692203}, {"model": "chronos2_era5", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1458439301, "nmae_median": 0.104710433, "ncrps": 0.1113896695, "coverage_80": 0.7896689498, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0143165077}, {"model": "chronos2_era5", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1090570432, "nmae_median": 0.0856754836, "ncrps": 0.087177052, "coverage_80": 0.7616016019, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0133309114}, {"model": "chronos2_era5", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.115409202, "nmae_median": 0.1089601622, "ncrps": 0.0926240063, "coverage_80": 0.7675736306, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0184972841}, {"model": "chronos2_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1378411761, "nmae_median": 0.1215861818, "ncrps": 0.1164683649, "coverage_80": 0.6969509272, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0146512534}, {"model": "chronos2_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1148965676, "nmae_median": 0.0952482725, "ncrps": 0.0902662577, "coverage_80": 0.7198039573, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0135907009}, {"model": "chronos2_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1416120458, "nmae_median": 0.1036780823, "ncrps": 0.1097061596, "coverage_80": 0.7925228311, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0185483921}, {"model": "chronos2_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1095807607, "nmae_median": 0.0861510061, "ncrps": 0.0875120129, "coverage_80": 0.7531220319, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0128071938}, {"model": "chronos2_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1161059911, "nmae_median": 0.1097557796, "ncrps": 0.0932307762, "coverage_80": 0.7591229577, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0178004951}, {"model": "gtnp_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1386724904, "nmae_median": 0.1092533475, "ncrps": 0.1139925121, "coverage_80": 0.831585335, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0154825677}, {"model": "gtnp_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1553582161, "nmae_median": 0.1353503811, "ncrps": 0.1231803435, "coverage_80": 0.8287121125, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0268709476}, {"model": "gtnp_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1829877592, "nmae_median": 0.1451147573, "ncrps": 0.1421827791, "coverage_80": 0.875, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0228273214}, {"model": "gtnp_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1332589034, "nmae_median": 0.1138784169, "ncrps": 0.1072801075, "coverage_80": 0.8726134304, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0108709489}, {"model": "gtnp_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1499794073, "nmae_median": 0.1304340429, "ncrps": 0.1205615365, "coverage_80": 0.850339933, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0160729212}, {"model": "lightgbm", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1313409252, "nmae_median": 0.100966049, "ncrps": 0.1057338862, "coverage_80": 0.7132301468, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0081510026}, {"model": "lightgbm", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1425938094, "nmae_median": 0.1194874846, "ncrps": 0.1119524762, "coverage_80": 0.6822179332, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0141065409}, {"model": "lightgbm", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1618860475, "nmae_median": 0.114481307, "ncrps": 0.1286239696, "coverage_80": 0.7548515982, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0017256097}, {"model": "lightgbm", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1240144808, "nmae_median": 0.0980825611, "ncrps": 0.0999506499, "coverage_80": 0.7524836084, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0016265263}, {"model": "lightgbm", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1366561312, "nmae_median": 0.1275786815, "ncrps": 0.1108096715, "coverage_80": 0.7374707183, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.002749645}, {"model": "lightgbm_era5", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.12405627, "nmae_median": 0.0917956798, "ncrps": 0.0990711662, "coverage_80": 0.7238516865, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0008663473}, {"model": "lightgbm_era5", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1278186269, "nmae_median": 0.1081635959, "ncrps": 0.1011704516, "coverage_80": 0.7187293427, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0006686417}, {"model": "lightgbm_era5", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1553492611, "nmae_median": 0.1126507832, "ncrps": 0.1251078008, "coverage_80": 0.7323059361, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0048111767}, {"model": "lightgbm_era5", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1204539754, "nmae_median": 0.0969025141, "ncrps": 0.0968897212, "coverage_80": 0.7318492035, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0019339792}, {"model": "lightgbm_era5", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1312045614, "nmae_median": 0.1243362775, "ncrps": 0.1065671526, "coverage_80": 0.726870618, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0027019247}, {"model": "lightgbm_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1231899227, "nmae_median": 0.0926321249, "ncrps": 0.0991473154, "coverage_80": 0.7169670834, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0}, {"model": "lightgbm_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1284872685, "nmae_median": 0.1118653691, "ncrps": 0.1012401732, "coverage_80": 0.7146813457, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0}, {"model": "lightgbm_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1601604379, "nmae_median": 0.1167028563, "ncrps": 0.1273324318, "coverage_80": 0.7134703196, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0}, {"model": "lightgbm_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1223879546, "nmae_median": 0.0976733807, "ncrps": 0.0983022689, "coverage_80": 0.7361677335, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0}, {"model": "lightgbm_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1339064862, "nmae_median": 0.1256275044, "ncrps": 0.1089435606, "coverage_80": 0.7221646035, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0}, {"model": "lightgbm_ifs_heat", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1261123506, "nmae_median": 0.0967395651, "ncrps": 0.1007866589, "coverage_80": 0.7167478868, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0029224279}, {"model": "lightgbm_ifs_heat", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1283039283, "nmae_median": 0.1141238355, "ncrps": 0.101407616, "coverage_80": 0.72035289, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0001833402}, {"model": "lightgbm_ifs_heat", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1548814286, "nmae_median": 0.1155781966, "ncrps": 0.1249443618, "coverage_80": 0.7285958904, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0052790092}, {"model": "lightgbm_ifs_heat", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1223932856, "nmae_median": 0.0955904961, "ncrps": 0.0983542344, "coverage_80": 0.7329960935, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 5.3311e-06}, {"model": "lightgbm_ifs_heat", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1338218663, "nmae_median": 0.1258299432, "ncrps": 0.108665012, "coverage_80": 0.7216802706, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -8.46199e-05}, {"model": "pttnp_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1400284877, "nmae_median": 0.1135608066, "ncrps": 0.1132011106, "coverage_80": 0.828633301, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.016838565}, {"model": "pttnp_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1521875372, "nmae_median": 0.1401616642, "ncrps": 0.120296955, "coverage_80": 0.8273043299, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0237002687}, {"model": "pttnp_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1685553307, "nmae_median": 0.1500297058, "ncrps": 0.1325052811, "coverage_80": 0.8818493151, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0083948928}, {"model": "pttnp_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1327755283, "nmae_median": 0.1089414153, "ncrps": 0.1054871376, "coverage_80": 0.8674857758, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0103875737}, {"model": "pttnp_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1489142256, "nmae_median": 0.1328880746, "ncrps": 0.1188670268, "coverage_80": 0.8493628118, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0150077394}, {"model": "t0beta_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1685312793, "nmae_median": 0.1296183182, "ncrps": 0.1383990841, "coverage_80": 0.736756084, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0453413566}, {"model": "t0beta_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1255028753, "nmae_median": 0.1020368431, "ncrps": 0.1001472601, "coverage_80": 0.7361912878, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0029843932}, {"model": "t0beta_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.2067987535, "nmae_median": 0.1220642472, "ncrps": 0.1680494966, "coverage_80": 0.6458333333, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0466383157}, {"model": "t0beta_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1126525593, "nmae_median": 0.0911145412, "ncrps": 0.0899397742, "coverage_80": 0.7652277275, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0097353953}, {"model": "t0beta_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1229698891, "nmae_median": 0.116271949, "ncrps": 0.0986062082, "coverage_80": 0.7588349045, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0109365971}, {"model": "tabpfn_ts_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1362596257, "nmae_median": 0.1182135969, "ncrps": 0.1130000162, "coverage_80": 0.7220077388, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.013069703}, {"model": "tabpfn_ts_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1217202848, "nmae_median": 0.1066685703, "ncrps": 0.0961344277, "coverage_80": 0.7359067866, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0067669837}, {"model": "tabpfn_ts_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1990702757, "nmae_median": 0.1318308948, "ncrps": 0.1508637508, "coverage_80": 0.7868150685, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0389098378}, {"model": "tabpfn_ts_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1118462467, "nmae_median": 0.092458301, "ncrps": 0.0894339412, "coverage_80": 0.7648447411, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0105417078}, {"model": "tabpfn_ts_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1226990508, "nmae_median": 0.1103947058, "ncrps": 0.0982547941, "coverage_80": 0.7708542266, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0112074353}, {"model": "timesfm3_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1338075376, "nmae_median": 0.1097994169, "ncrps": 0.1092624741, "coverage_80": 0.7787447292, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0106176149}, {"model": "timesfm3_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1155528911, "nmae_median": 0.098687001, "ncrps": 0.0906307446, "coverage_80": 0.8032500986, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0129343775}, {"model": "timesfm3_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1594548677, "nmae_median": 0.1155348973, "ncrps": 0.1212692796, "coverage_80": 0.8210616438, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0007055701}, {"model": "timesfm3_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1122116671, "nmae_median": 0.0899659342, "ncrps": 0.0893045532, "coverage_80": 0.8104928958, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0101762874}, {"model": "timesfm3_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1175621975, "nmae_median": 0.1098487938, "ncrps": 0.0944840786, "coverage_80": 0.8102595397, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0163442887}, {"model": "tirex2_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1343946294, "nmae_median": 0.1174943391, "ncrps": 0.1075452724, "coverage_80": 0.8203345701, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0112047067}, {"model": "tirex2_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1252350066, "nmae_median": 0.1044444426, "ncrps": 0.0992134791, "coverage_80": 0.8158307869, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0032522619}, {"model": "tirex2_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1838334881, "nmae_median": 0.1281936501, "ncrps": 0.1397667201, "coverage_80": 0.8356164384, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0236730503}, {"model": "tirex2_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1203519203, "nmae_median": 0.0969693139, "ncrps": 0.0959252167, "coverage_80": 0.83496802, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0020360343}, {"model": "tirex2_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1297291607, "nmae_median": 0.1208334044, "ncrps": 0.1037361009, "coverage_80": 0.8297324217, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": -0.0041773255}, {"model": "tnp_ifs", "day_class": "25\u201328 \u00b0C", "sites": 89, "site_days": 234.8958333333, "nmae": 0.1311708344, "nmae_median": 0.102315743, "ncrps": 0.1060668712, "coverage_80": 0.819077957, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0079809117}, {"model": "tnp_ifs", "day_class": "28 \u00b0C and above", "sites": 64, "site_days": 214.2916666667, "nmae": 0.1524634996, "nmae_median": 0.1376096767, "ncrps": 0.120464583, "coverage_80": 0.7928052287, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0239762311}, {"model": "tnp_ifs", "day_class": "at or below 2 \u00b0C", "sites": 73, "site_days": 73.0, "nmae": 0.1801161062, "nmae_median": 0.1326315651, "ncrps": 0.1380737519, "coverage_80": 0.8858447489, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0199556683}, {"model": "tnp_ifs", "day_class": "other June\u2013September", "sites": 91, "site_days": 1816.1666666667, "nmae": 0.1295284806, "nmae_median": 0.102469144, "ncrps": 0.102902381, "coverage_80": 0.843750693, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.007140526}, {"model": "tnp_ifs", "day_class": "rest of year", "sites": 91, "site_days": 3916.7291666667, "nmae": 0.1432925424, "nmae_median": 0.126265943, "ncrps": 0.1142490042, "coverage_80": 0.8299109247, "skill_vs_naive": null, "nmae_vs_lightgbm_ifs": 0.0093860562}]}, "mark": {"type": "bar", "tooltip": true}, "encoding": {"x": {"field": "nmae", "type": "quantitative", "title": "nmae"}, "y": {"field": "model", "type": "nominal", "title": "model"}, "color": {"field": "day_class", "type": "nominal", "title": "day_class"}, "yOffset": {"field": "day_class"}, "tooltip": [{"field": "model", "type": "nominal"}, {"field": "day_class", "type": "nominal"}, {"field": "sites", "type": "quantitative"}, {"field": "site_days", "type": "quantitative"}, {"field": "nmae", "type": "quantitative"}, {"field": "nmae_median", "type": "quantitative"}, {"field": "ncrps", "type": "quantitative"}, {"field": "coverage_80", "type": "quantitative"}, {"field": "skill_vs_naive", "type": "quantitative"}, {"field": "nmae_vs_lightgbm_ifs", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}}, {actions: {export: true, source: false, compiled: false, editor: false}});
+</script>
+</body>
+</html>

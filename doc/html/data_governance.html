@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data governance · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html" class="current">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#classification">Classification</a>
+  <a class="h2" href="#rules-in-this-repository">Rules in this repository</a>
+  <a class="h2" href="#storage">Storage</a>
+  <a class="h2" href="#third-party-licensed-datasets">Third-party licensed datasets</a>
+  </div>
+</nav>
+<main>
+<h1>Data governance</h1>
+<blockquote>
+<p>Confirm the specifics with the data owner and information governance lead before
+any data is received. This file records what was agreed.</p>
+</blockquote>
+<h2 id="classification">Classification</h2>
+<p>Site-level energy consumption data is <strong>not</strong> patient data, but it is commercially
+sensitive and can be security-sensitive (occupancy patterns, critical
+infrastructure). Treat it as confidential.</p>
+<table>
+<thead>
+<tr>
+  <th>Item</th>
+  <th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Data sharing agreement in place</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Data owner</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>IG / DPO sign-off</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Retention period</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Permitted use</td>
+  <td>TBD</td>
+</tr>
+<tr>
+  <td>Onward sharing permitted</td>
+  <td>TBD</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rules-in-this-repository">Rules in this repository</h2>
+<ol>
+<li><strong>No data is committed to git.</strong> <code>code/data/</code> is git-ignored end to end; the
+<code>check-added-large-files</code> and <code>detect-private-key</code> pre-commit hooks are a
+backstop, not the control.</li>
+<li><strong>Notebook outputs are stripped on commit</strong> (<code>nbstripout</code>) — outputs can embed
+site-level values.</li>
+<li><strong>No credentials in code.</strong> <code>.env</code> is git-ignored; read secrets via
+<code>sense_energy.config.SECRETS</code>.</li>
+<li><strong>Aggregate before publishing.</strong> Figures and reports leaving the project should
+be anonymised or aggregated unless the data owner has approved site-level
+disclosure.</li>
+<li><strong>If data is committed by accident</strong>, treat it as a disclosure incident: rotate
+any exposed credentials, notify the data owner, and rewrite history — deleting
+the file in a later commit does not remove it.</li>
+</ol>
+<h2 id="storage">Storage</h2>
+<table>
+<thead>
+<tr>
+  <th>Location</th>
+  <th>Permitted contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>code/data/</code> (local)</td>
+  <td>Full source data</td>
+</tr>
+<tr>
+  <td>Git remote</td>
+  <td>Code and docs only</td>
+</tr>
+<tr>
+  <td>Shared drives / cloud</td>
+  <td>Per the data sharing agreement — TBD</td>
+</tr>
+</tbody>
+</table>
+<h2 id="third-party-licensed-datasets">Third-party licensed datasets</h2>
+<table>
+<thead>
+<tr>
+  <th>Dataset</th>
+  <th>Provider / licence</th>
+  <th>Terms that bind us</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Aggregate mobile data visitation for UK campus (2024, Royal Devon sites)</td>
+  <td>The Oxford Partnership via ESC SENSE, EULA ESC3888-3.0</td>
+  <td>research use only; no re-identification; access-controlled storage; delete on expiry and confirm within 30 days if asked; outputs must carry the Oxford Partnership attribution (see data dictionary); outputs may be published, the dataset may not be redistributed</td>
+</tr>
+<tr>
+  <td>ERA5 (Copernicus CDS)</td>
+  <td>Copernicus licence</td>
+  <td>attribution</td>
+</tr>
+<tr>
+  <td>TIGGE (ECMWF, ECDS)</td>
+  <td>CC BY-NC 4.0</td>
+  <td>non-commercial; attribution</td>
+</tr>
+<tr>
+  <td>AIFS-ENS (ECMWF open data)</td>
+  <td>CC BY 4.0</td>
+  <td>&quot;Contains ECMWF open data&quot;</td>
+</tr>
+<tr>
+  <td>NESO data portal</td>
+  <td>NESO Open Data Licence</td>
+  <td>&quot;Contains NESO open data&quot;</td>
+</tr>
+<tr>
+  <td>ONS boundaries</td>
+  <td>OGL v3</td>
+  <td>&quot;Contains OS data © Crown copyright and database right&quot;</td>
+</tr>
+</tbody>
+</table>
+<p class="meta">Built from <code>doc/data_governance.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

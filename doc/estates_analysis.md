@@ -156,6 +156,10 @@ than the ERIC site). Three returns are unit errors (Norfolk and Norwich reports 
 unit, Cromer a unit with no output, Great Western 0.4 GWh from 1 MW). Table:
 `code/reports/chp/generation_2024_25.csv`.
 
+{{table: code/reports/chp/generation_2024_25.csv | cols=site_name,eric_import_mean_kw,implied_mean_kw,chp_elec_kw,chp_share,capacity_factor,meter_to_eric_import,plausible | sort=-implied_mean_kw | round=2}}
+
+{{figure: chp_generation | caption=Grid import as returned and CHP output net of exports, stacked to the implied demand; ticks mark our metered import.}}
+
 ## 7. Year-on-year changes and the steps in the meter
 
 `analysis/estates_changes.py` (`eric_changes.csv`, `demand_steps.csv`, figure `eric_changes`).
@@ -172,3 +176,7 @@ without CHP have such a step; the small sites that went to full LED show level d
 and are flagged rather than used. The median absolute change in returned annual electricity is
 9.2 %. These dated changes are the treatments for the next event studies; they also say
 that the 2023/24 descriptors (LED share above all) are a year stale for a third of the panel.
+
+{{table: code/reports/estates/eric_changes.csv | cols=site_code,site_name,led_pct_2324,led_pct_2425,solar_new,heat_pumps_new,elec_change_pct,steps_in_window,step_date,step_change | sort=-step_change | head=45 | round=2}}
+
+{{figure: eric_changes | caption=LED change against the largest demand step in or near 2024/25 for the changed sites without CHP.}}

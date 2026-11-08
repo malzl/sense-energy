@@ -33,5 +33,5 @@ for k, s in enumerate(picks):
 ax.set_ylabel("Latent surprise (7-day mean)")
 ax.set_ylim(0, float(np.nanpercentile(sp["surprise"], 99.5)))
 style.style_axis(ax, wide_short=True, grid="y")
-style.add_bottom_legend(ax, ncol=3, anchor_y=-0.26, bottom=0.26)
+style.add_bottom_legend(ax, ncol=3, anchor_y=-0.26, bottom=0.26, lowercase=False)
 style.save_figure(fig, OUT / "jepa_surprise", data=sp[sp["site_code"].isin(picks)])

@@ -425,6 +425,8 @@ Splitting the dose into degrees of daily maximum above 24 °C and degrees of dai
 | fall with heat (22, 8 % of demand) | −1.24 (0.35) | −1.18 (0.26) | −1.05 (0.25) |
 | neither (20) | +0.51 (0.70) | +0.36 (0.25) | −0.77 (0.48) |
 
+{{table: code/reports/heat_drivers/group_decomposition.csv | cols=model,sign,term_name,coef_pct,lo_pct,hi_pct,p,sites | round=2}}
+
 Risers respond twice as much to hot afternoons as to warm nights: cooling. Fallers respond to
 both, and as much to the night minimum as to the afternoon maximum: 17 of the 22 have a
 significantly negative warm-night slope (`heating_tail` flag). That is the signature of
@@ -452,6 +454,8 @@ effect cannot masquerade as a heat moderator), one at a time:
   generation in ERIC (+2.0 points, p = 0.01), which reads as a marker of trusts that invest in
   their plant. Overheating reports in clinical areas go with a larger heat slope (+0.8, p = 0.13):
   sites that overheat respond, presumably with portable and retrofitted cooling.
+{{table: code/reports/heat_drivers/variance_explained.csv | cols=set,sites,parameters,tau_before_pct,tau_after_pct,r2_true | round=2}}
+
 - **How much is explained.** A random-effects meta-regression of the sunshine-controlled site
   slopes on each descriptor set gives the share of the *true* between-site variance it accounts
   for: building use, urban form and density, the estates descriptors, the load shape, and all of
@@ -581,6 +585,8 @@ the rest (3917); nMAE per site as in the main experiment, then the site mean.
 | TimesFM-3 + IFS | 11.6 | 13.4 | 11.2 | 15.9 | 11.8 |
 | TabPFN-TS + IFS | 12.2 | 13.6 | 11.2 | 19.9 | 12.3 |
 
+{{chart: code/reports/forecast_heat_days/scores_by_day_class.csv | kind=bar | x=nmae | y=model | color=day_class | title=Day-ahead nMAE by kind of target day (site mean) | height=420}}
+
 - **Hot days are harder, by about half a point.** Every model errs more on 28 °C+ days than on
   other summer days; the cold days (at or below 2 °C) are harder still, by three to four points.
 - **It is not the weather forecast.** LightGBM with realised ERA5 weather does no better on the
@@ -590,3 +596,17 @@ the rest (3917); nMAE per site as in the main experiment, then the site mean.
   the hourly series, the station correction of the hottest days, the day's solar radiation, and
   the calendar (school summer holiday, Christmas, distance to a bank holiday) which the baseline set
   carried only as weekday and bank-holiday flags.
+
+**The heat features do not move the hot days (`lightgbm_ifs_heat`).** A LightGBM variant with
+the prescribed features (the IFS day's forecast maximum, minimum and evening temperature, the
+station-corrected maximum and hot-day flags at 25 and 28 °C, degree terms, the day's solar
+radiation, and the extended calendar: school summer holiday, Christmas period, next-day holiday,
+days to and since a bank holiday) scores 12.83 % nMAE on 28 °C+ days against
+12.85 for the baseline IFS variant, 12.61 against 12.32 on 25–28 °C days,
+15.49 against 16.02 on the coldest days and 13.06 against 13.06
+over the whole test window. The cold days gain half a point (the calendar), the hot days nothing.
+Site identity, the recent level and the lag features carry the model; the hot-day penalty is in
+what no day-ahead feature carries, the day's plant switching, and the foundation models' lead on
+hot days (Chronos-2 11.5) comes from their shape modelling, not from
+weather. The honest reading: the response work explains demand on hot days after the fact better
+than it helps predict it the day before.

@@ -515,6 +515,15 @@ def jepa_probe_cmd(device: str | None) -> None:
         click.echo(f"{k}: share of true heat variance {v:.2f}")
 
 
+@cli.command("build-docs")
+def build_docs_cmd() -> None:
+    """Build doc/html/ from the write-ups with tables, figures and charts embedded."""
+    from .docs.build import build
+
+    pages = build()
+    click.echo(f"{len(pages)} pages written to doc/html/")
+
+
 @cli.command("heat-drivers")
 def heat_drivers_cmd() -> None:
     """What moves the heat slope: sunshine, time of day, the week, moderators, a typology."""

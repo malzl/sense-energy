@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Public NHS activity data as covariates for the trusts and sites · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html" class="current">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+
+  <div class="toc"><a class="h2" href="#pulled-nhs-england-statistics-site-direct-downloads">Pulled (NHS England statistics site, direct downloads)</a>
+  <a class="h2" href="#available-but-not-pulled">Available but not pulled</a>
+  <a class="h2" href="#what-they-are-good-for">What they are good for</a>
+  </div>
+</nav>
+<main>
+<h1>Public NHS activity data as covariates for the trusts and sites</h1>
+<p>Assessment of 15 September 2026 (what exists, at what resolution, for which of our 24 trusts, and what is
+already pulled). Loader: <code>sense-energy fetch-nhs-activity</code> (<code>code/src/sense_energy/data/nhs_activity.py</code>).</p>
+<h2 id="pulled-nhs-england-statistics-site-direct-downloads">Pulled (NHS England statistics site, direct downloads)</h2>
+<table>
+<thead>
+<tr>
+  <th>Source</th>
+  <th>Resolution</th>
+  <th>Our trusts</th>
+  <th>Content</th>
+  <th>Interim file</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>A&amp;E attendances and emergency admissions (MSitAE)</td>
+  <td>monthly, provider</td>
+  <td>18 of 24 (acute and community trusts with any A&amp;E/UTC activity)</td>
+  <td>attendances by department type, 4-hour breaches, 12-hour waits, emergency admissions</td>
+  <td><code>nhs_activity_ae_monthly.parquet</code>, Apr 2023 – Mar 2026, 6,727 provider-months</td>
+</tr>
+<tr>
+  <td>Ambulance Systems Indicators (AmbSYS)</td>
+  <td>monthly, ambulance service</td>
+  <td>2 of 2 ambulance trusts</td>
+  <td>calls, incidents by category, response times, hear-and-treat / see-and-treat shares</td>
+  <td><code>nhs_activity_ambsys_monthly.parquet</code>, Aug 2017 – Aug 2026</td>
+</tr>
+<tr>
+  <td>Bed availability and occupancy (KH03, overnight)</td>
+  <td>quarterly, trust, by sector</td>
+  <td>23 of 24</td>
+  <td>available and occupied beds, occupancy rate</td>
+  <td><code>nhs_activity_kh03_quarterly.parquet</code>, 2001 – Jun 2024 (later quarters only as spreadsheets on the KH03 page)</td>
+</tr>
+</tbody>
+</table>
+<p>Trust ↔ ODS code mapping: <code>nhs_activity_trusts.parquet</code> (site-code prefix, else normalised name; ambulance
+services matched to their AmbSYS code separately).</p>
+<h2 id="available-but-not-pulled">Available but not pulled</h2>
+<table>
+<thead>
+<tr>
+  <th>Source</th>
+  <th>Resolution</th>
+  <th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Urgent and Emergency Care daily situation reports</td>
+  <td><strong>daily</strong>, acute trust: G&amp;A and critical-care beds occupied/available, ambulance handovers, discharges</td>
+  <td>winter only (early December to early April each year; 2025-26 file covers 4 Dec 2025 – 2 Apr 2026); spreadsheets on the UEC SitRep pages. The only public daily occupancy signal; overlaps our test winter</td>
+</tr>
+<tr>
+  <td>Mental Health Services Monthly Statistics (MHSDS)</td>
+  <td>monthly, provider</td>
+  <td>referrals, contacts, bed days for the mental-health trusts (Hertfordshire Partnership, Midlands Partnership, Berkshire); CSV data files on NHS Digital</td>
+</tr>
+<tr>
+  <td>Community Services Statistics (CSDS)</td>
+  <td>monthly, provider</td>
+  <td>contacts and referrals for the community trusts (Cambridgeshire, Hertfordshire, Norfolk, Central London); NHS Digital</td>
+</tr>
+<tr>
+  <td>Provisional monthly HES (admitted patient care, outpatients)</td>
+  <td>monthly, provider</td>
+  <td>replaced the discontinued Monthly Hospital Activity provider series (last 2017/18); open CSVs on NHS Digital</td>
+</tr>
+<tr>
+  <td>Estates Returns Information Collection (ERIC)</td>
+  <td>annual, <strong>site</strong></td>
+  <td>floor areas, building age, energy and water consumption, occupancy proxies, backlog; 2019/20 – 2024/25 on NHS Digital (data.gov.uk mirror stops at 2016/17). Our site table already carries the ERIC-style statics from the ESC extract; the annual energy totals would validate the meter data</td>
+</tr>
+</tbody>
+</table>
+<p>NHS Digital (<code>digital.nhs.uk</code>) returns 403 to scripted requests; those files need a browser download or the
+NHS Digital publication API, then drop into <code>code/data/external/</code>.</p>
+<h2 id="what-they-are-good-for">What they are good for</h2>
+<ul>
+<li><strong>Cross-sectional structure</strong>: kWh per attendance, per occupied bed day, per incident; normalising sites of
+different function; explaining the shape clusters (<code>doc/clustering.md</code>).</li>
+<li><strong>Slow covariates</strong> for the models: monthly activity level, bed occupancy (quarterly), which capture
+level shifts (ward closures, new units) that a six-week context cannot see. Not day-ahead dynamics.</li>
+<li><strong>Daily occupancy</strong> (UEC sitreps) is the one public series that could improve day-ahead forecasts at acute
+sites, for the winter months only, and only at trust level.</li>
+<li><strong>No public patient data exists at site or half-hourly resolution</strong>; anything finer needs the trusts
+themselves (PAS/EPR feeds) or the mobility dataset as an occupancy proxy.</li>
+</ul>
+<p class="meta">Built from <code>doc/external_activity_data.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

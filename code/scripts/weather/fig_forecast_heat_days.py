@@ -28,12 +28,13 @@ colors = {
 y = np.arange(len(t))
 h = 0.2
 
+NAMES = {**style.METHOD_NAMES, "lightgbm_ifs_heat": "LightGBM + IFS ENS + heat features"}
 fig, ax = style.figure(style.WIDE_SINGLE)
 for k, c in enumerate(classes):
     ax.barh(y + (1.5 - k) * h, t[c], height=h, color=colors[c], label=c, zorder=3)
 ax.set_yticks(y)
 ax.set_yticklabels(
-    [style.METHOD_NAMES.get(m, m) if hasattr(style, "METHOD_NAMES") else m for m in t.index],
+    [NAMES.get(m, m) for m in t.index],
     fontsize=style.FONT_SIZE["tick"] - 1,
 )
 ax.set_xlabel("nMAE, site mean (%)")
