@@ -610,3 +610,48 @@ what no day-ahead feature carries, the day's plant switching, and the foundation
 hot days (Chronos-2 11.5) comes from their shape modelling, not from
 weather. The honest reading: the response work explains demand on hot days after the fact better
 than it helps predict it the day before.
+
+### 8.9 A learned site embedding (`jepa_probe`, `jepa_map`, `jepa_surprise`)
+
+`sense-energy train-jepa` and `sense-energy jepa-probe` (`experiments/jepa.py`,
+`analysis/jepa_probe.py`, outputs in `code/reports/jepa/`). A joint-embedding predictive
+architecture was trained on the half-hourly panel: 28-day windows of one site's demand, one
+token per day (48 half-hours scaled by the site's trailing month, weekday, season), seven target
+days per window whose embeddings under a slowly moving target encoder the predictor must produce
+from the other 21; 0.48 million parameters, 4,000 steps on 131 sites, 131,656 days
+embedded. The test was pre-registered: does the site's embedding predict its fixed-effect heat
+slope out of fold better than the diurnal signature (46 %)? Alongside it the same probe ran on
+the Chronos-2 encoder's embedding of each site's demand (the foundation-model teacher), on the
+observable descriptors and on the signature, with a ridge probe and with TabPFN.
+
+{{table: code/reports/jepa/probe.csv | cols=target_name,representation,model,sites,dims,r2_oof,share_true_variance | round=2}}
+
+- **No, on the heat slope.** The JEPA embedding recovers 1 % of the true
+  between-site heat variance (9 % from June–September days only), the
+  Chronos-2 embedding -0 %, the observables 7 %, the
+  diurnal signature 36 % (ridge) and 45 % (TabPFN).
+  Adding the embedding to the signature adds nothing. By the criterion set in advance, the thread
+  stops here.
+- **Yes, on the responses that show in the day's shape.** The same embeddings carry the sunshine
+  slope well (Chronos-2 63 %, JEPA 52 %) and
+  Chronos-2 carries the cold slope (42 %) where the observables manage
+  18 %. Daylight-linked lighting and electric heating leave a mark on the profile
+  that a weather-blind representation picks up; an afternoon cooling response does not, because
+  it is conditional on a driver the model never sees. (The signature's 90 % on sunshine is
+  circular: the daytime sunshine slope is one of its two components.)
+- **The embeddings encode operation, not category.** Building use is classified at
+  66 % by the JEPA embedding and 53 % by Chronos-2 against a
+  62 % majority class; the DEC environment at 51 % against
+  59 %. k-means on the JEPA embedding agrees moderately with the demand-shape
+  clusters (adjusted Rand 0.28) and, like them, explains none of the heat slope.
+- **The surprise score is the usable by-product.** The latent prediction error of a day held out
+  of its window spikes at the CHP hospitals exactly where the changepoint search put steps and
+  stays flat at small sites (`jepa_surprise`): a learned regime detector that needs no penalty
+  tuning, for the meter-gap and plant-switching flags.
+
+What a second version should do is condition on the driver: give the day tokens and the
+predictor the day's weather (temperature, sunshine), so that the embedding must encode how the
+site responds rather than what its profile looks like; or predict demand-day embeddings from
+weather-day embeddings in a two-tower setting. The LaT-PFN route (a prior-fitted network trained
+to forecast in a learned latent space, pre-trained on synthetic series and this panel) is the
+larger version of the same idea and the natural next experiment after that.

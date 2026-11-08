@@ -382,6 +382,14 @@ On the same residualised panel, an R-learner and an econml causal forest, cross-
 \captionof{figure}{Left: each site's causal-forest heat effect, out of fold with its 95\,\% interval, against its fixed-effect heat slope net of sunshine. Right: causal-forest feature importance for both covariate sets.}\label{fig:cate}
 \end{figblock}
 
+\subsection{A learned site embedding}
+A joint-embedding predictive architecture was trained on the half-hourly panel (28-day windows, one token per day, seven masked target days whose embeddings a predictor must produce from the rest; 0.48 million parameters) with a pre-registered test: does a site's embedding predict its heat slope out of fold better than the diurnal signature (46\,\%)? It does not: 1\,\% of the true between-site heat variance from the JEPA embedding, 0\,\% from the Chronos-2 encoder's embedding of the same demand, 7\,\% from the observables, 36\,\% from the signature (Figure~\ref{fig:jepa}). The same embeddings do carry the responses that show in the day's shape: Chronos-2 recovers 63\,\% of the sunshine slope and 42\,\% of the cold slope, where the observables manage 28 and 18. A weather-blind representation learns what a profile looks like, not how it responds to a driver it never sees; the next version conditions the tokens and the predictor on the day's weather. The latent surprise of a held-out day is the usable by-product: it spikes at the CHP hospitals where the changepoint search put steps and stays flat at small sites.
+
+\begin{figblock}
+\pair[0.9]{jepa_probe}{jepa_surprise}
+\captionof{figure}{Left: share of the true between-site variance of the heat slope recovered out of fold by a ridge probe (bars) and TabPFN (open markers) from each representation of a site. Right: the JEPA's latent surprise, seven-day mean, for two CHP hospitals and a small site, with the demand steps of the changepoint search as dotted lines.}\label{fig:jepa}
+\end{figblock}
+
 \section{Estates returns}
 ERIC 2023/24 reports electricity, gas, floor area, connection capacity and building characteristics for 2,869 English NHS sites.
 

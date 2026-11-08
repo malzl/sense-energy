@@ -1,0 +1,126 @@
+{
+  "heat_share_true_variance": {
+    "observables | ridge": 0.067,
+    "observables | tabpfn": 0.078,
+    "diurnal signature | ridge": 0.363,
+    "diurnal signature | tabpfn": 0.449,
+    "observables + signature | ridge": 0.012,
+    "observables + signature | tabpfn": -0.034,
+    "JEPA | ridge": 0.006,
+    "JEPA | tabpfn": 0.019,
+    "JEPA (June\u2013September) | ridge": 0.094,
+    "JEPA (June\u2013September) | tabpfn": 0.059,
+    "JEPA + observables | ridge": -0.018,
+    "JEPA + observables | tabpfn": -0.002,
+    "JEPA + signature | ridge": 0.346,
+    "JEPA + signature | tabpfn": 0.171,
+    "Chronos-2 | ridge": -0.001,
+    "Chronos-2 | tabpfn": -0.013
+  },
+  "heat_r2_oof": {
+    "observables | ridge": -0.072,
+    "observables | tabpfn": -0.069,
+    "diurnal signature | ridge": 0.195,
+    "diurnal signature | tabpfn": 0.208,
+    "observables + signature | ridge": -0.029,
+    "observables + signature | tabpfn": -0.002,
+    "JEPA | ridge": -0.064,
+    "JEPA | tabpfn": -0.005,
+    "JEPA (June\u2013September) | ridge": 0.052,
+    "JEPA (June\u2013September) | tabpfn": 0.016,
+    "JEPA + observables | ridge": -0.054,
+    "JEPA + observables | tabpfn": -0.037,
+    "JEPA + signature | ridge": 0.194,
+    "JEPA + signature | tabpfn": 0.027,
+    "Chronos-2 | ridge": -0.047,
+    "Chronos-2 | tabpfn": -0.065
+  },
+  "classification_accuracy": {
+    "use | observables": [
+      0.968,
+      0.623
+    ],
+    "use | diurnal signature": [
+      0.613,
+      0.623
+    ],
+    "use | observables + signature": [
+      0.957,
+      0.623
+    ],
+    "use | JEPA": [
+      0.661,
+      0.623
+    ],
+    "use | JEPA (June\u2013September)": [
+      0.709,
+      0.623
+    ],
+    "use | JEPA + observables": [
+      0.866,
+      0.623
+    ],
+    "use | JEPA + signature": [
+      0.657,
+      0.623
+    ],
+    "use | Chronos-2": [
+      0.53,
+      0.623
+    ],
+    "dec_main_environment | observables": [
+      0.958,
+      0.594
+    ],
+    "dec_main_environment | diurnal signature": [
+      0.577,
+      0.594
+    ],
+    "dec_main_environment | observables + signature": [
+      0.95,
+      0.594
+    ],
+    "dec_main_environment | JEPA": [
+      0.508,
+      0.594
+    ],
+    "dec_main_environment | JEPA (June\u2013September)": [
+      0.55,
+      0.594
+    ],
+    "dec_main_environment | JEPA + observables": [
+      0.881,
+      0.594
+    ],
+    "dec_main_environment | JEPA + signature": [
+      0.512,
+      0.594
+    ],
+    "dec_main_environment | Chronos-2": [
+      0.584,
+      0.594
+    ]
+  },
+  "clusters": {
+    "JEPA": {
+      "ari_vs_shape_clusters": 0.279,
+      "heat_slope_r2_by_cluster": 0.006
+    },
+    "JEPA (June\u2013September)": {
+      "ari_vs_shape_clusters": 0.237,
+      "heat_slope_r2_by_cluster": 0.015
+    },
+    "Chronos-2": {
+      "ari_vs_shape_clusters": 0.171,
+      "heat_slope_r2_by_cluster": 0.02
+    },
+    "observables": {
+      "ari_vs_shape_clusters": -0.003,
+      "heat_slope_r2_by_cluster": 0.035
+    },
+    "demand-shape clusters (k = 4)": {
+      "ari_vs_shape_clusters": 1.0,
+      "heat_slope_r2_by_cluster": 0.009
+    }
+  }
+}
