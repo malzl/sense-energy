@@ -908,9 +908,10 @@ Slopes are in log points (<code>*_pct</code> columns: × 100).</p>
 </table>
 <h2 id="forecasts-code-data-external-weather-aifs-ens-interim-foreca">Forecasts: <code>code/data/external/weather/aifs_ens/</code> → <code>interim/forecast_aifs_ens.parquet</code></h2>
 <p>ECMWF AIFS-ENS from ECMWF open data, <strong>CC BY 4.0 - &quot;Contains ECMWF open data&quot;</strong>.
-Harvested by <code>sense-energy harvest-forecasts</code>, which must run <strong>daily</strong>: the
-archive holds ~4 days and there is no historical AIFS before 2025. One NetCDF
-per run, <code>YYYYMMDDTHHz.nc</code>, dims <code>(step, number, latitude, longitude)</code>.</p>
+Harvested by <code>sense-energy harvest-forecasts</code> from the open-data archive, which holds ~4 days;
+there is no historical AIFS before 2025. One NetCDF per run, <code>YYYYMMDDTHHz.nc</code>, dims
+<code>(step, number, latitude, longitude)</code>.</p>
+<p><strong>Retired 9 November 2026.</strong> The daily cron harvest was removed: no experiment used AIFS (they use the IFS ensemble), and the harvested runs (5 Sep – 9 Nov 2026) start after the electricity record ends (8 May 2026). Do not reschedule it; AIFS for past dates can be hindcast locally on the GPU instead. The 130 runs on disk are kept.</p>
 <table>
 <thead>
 <tr>

@@ -54,6 +54,10 @@ What each candidate source can actually provide:
   primary perturbed source (`harvest-ifs-ens`, days not weeks). TIGGE keeps
   running for the control run and for Dec 2022 – 17 Jan 2023 coverage. Dewpoint and
   radiation only exist in that stream from 2024-03-06; cloud cover is absent throughout.
+- **Amendment 2026-11-09:** the AIFS cron harvest is retired. No experiment used AIFS (the
+  forecasting work runs on the IFS ensemble), and the runs harvested from 5 Sep 2026 start after
+  the electricity record ends (8 May 2026). Do not reschedule it; if AIFS inputs are wanted for
+  the demand period, hindcast AIFS locally from reanalysis initial conditions.
 - **Amendment 2026-09-08:** true historical forecast ensembles are now pulled
   from TIGGE (IFS ENS, 51 members, 0.5 deg, 6-hourly, from 2006) via the ECMWF
   Data Store (ECDS) - `sense-energy fetch-tigge`. This becomes the

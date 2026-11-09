@@ -1,8 +1,10 @@
 # ECMWF AIFS-ENS harvester (ECMWF open data, CC BY 4.0 - attribute ECMWF).
 #
-# Open data keeps only the last ~4 days of runs, so this is a standing harvest
-# job, not a one-off pull: run it daily (cron) and it collects every run not
+# Open data keeps only the last ~4 days of runs; each call collects every run not
 # yet on disk. There is no historical AIFS archive before 2025 anywhere.
+#
+# RETIRED 2026-11-09: the daily cron harvest was removed on purpose (no experiment
+# uses AIFS; the runs start after the electricity record ends). Do not reschedule.
 
 # Download source: ecmwf | aws | azure | google. The ECMWF portal rate-limits
 # (HTTP 429 from 27 Sep 2026) and the AWS mirror throttles with HTTP 503 (25 Oct 2026); the Azure mirror carries the same rolling archive.

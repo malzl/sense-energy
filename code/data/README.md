@@ -39,7 +39,7 @@ Git-ignored like the rest of the tree. Contents and licensing are documented in
 | Path | Source | Fetched by |
 |---|---|---|
 | `era5/reanalysis/`, `era5/ensemble_members/` | ERA5 via CDS, one NetCDF per month | `sense-energy fetch-weather` (resumable) |
-| `aifs_ens/` | ECMWF AIFS-ENS open data, one NetCDF per run | `sense-energy harvest-forecasts` (**daily**) |
+| `aifs_ens/` | ECMWF AIFS-ENS open data, one NetCDF per run | `sense-energy harvest-forecasts` (retired 2026-11-09; 5 Sep – 9 Nov 2026 on disk) |
 
 Both are git-ignored. The AIFS archive only exists from the day the harvester
 starts running - it cannot be backfilled.

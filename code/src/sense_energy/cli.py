@@ -78,7 +78,7 @@ def build_weather_cmd(config_path: str, product: str) -> None:
 @cli.command("harvest-forecasts")
 @click.option("--config", "config_path", default="code/configs/forecasts.yaml", show_default=True)
 def harvest_forecasts_cmd(config_path: str) -> None:
-    """Harvest every AIFS-ENS run in ECMWF open data not yet on disk (run daily)."""
+    """Harvest every AIFS-ENS run in ECMWF open data not yet on disk (cron harvest retired 2026-11-09)."""
     from .data.forecasts import harvest_available
 
     paths = harvest_available(load_config(config_path))
