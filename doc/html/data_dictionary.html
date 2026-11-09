@@ -21,6 +21,7 @@
   <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
   <a href="project_brief.html">Project brief</a>
   <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
 
   <div class="toc"><a class="h2" href="#conventions">Conventions</a>
   <a class="h2" href="#source-energy-systems-catapult-nhs-energy-consumption-nhs-tr">Source: energy_systems_catapult.nhs_energy_consumption.nhs_trust_consumption_data.parquet</a>
@@ -64,6 +65,7 @@
   <a class="h2" href="#next-step-analyses-code-reports-estates-eric-changes-forecas">Next-step analyses: code/reports/estates/eric_changes*, forecast_heat_days/, heat_causal_ml/</a>
   <a class="h2" href="#jepa-site-embeddings-code-reports-jepa">JEPA site embeddings: code/reports/jepa/</a>
   <a class="h2" href="#latent-pfn-code-reports-latent-pfn">Latent PFN: code/reports/latent_pfn/</a>
+  <a class="h2" href="#the-weather-normalised-estate-hourly-response-savings-warmin">The weather-normalised estate: hourly response, savings, warming, heatwaves, solar, CHP dispatch</a>
   </div>
 </nav>
 <main>
@@ -1762,6 +1764,79 @@ period before June 2025.</p>
   <td><code>decoder.pt</code>, <code>pfn.pt</code>, <code>train_log.csv</code>, <code>summary.json</code></td>
   <td>—</td>
   <td>weights, training curves, headline numbers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-weather-normalised-estate-hourly-response-savings-warmin">The weather-normalised estate: hourly response, savings, warming, heatwaves, solar, CHP dispatch</h2>
+<p>Write-up: <code>doc/weather_normalised_estate.md</code> (HTML page <code>doc/html/weather_normalised_estate.html</code>).</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>hourly_response/hourly_terms.csv</code></td>
+  <td>site × hour × term</td>
+  <td>per local hour, the site's response of the hour's demand to the cold dose, heat dose and solar radiation (<code>slope</code>, <code>se</code>, log points) and its empirical-Bayes <code>posterior</code> (<code>sense-energy hourly-response</code>)</td>
+</tr>
+<tr>
+  <td><code>hourly_response/pooled.csv</code></td>
+  <td>hour × term</td>
+  <td>random-effects pooled response, its SE, between-site SD (<code>tau</code>), <code>i2</code></td>
+</tr>
+<tr>
+  <td><code>hourly_response/site_profiles.csv</code></td>
+  <td>site</td>
+  <td><code>heat_peak_hour</code>, <code>heat_redband_share</code> (share of the positive heat response in 16:00–19:00), daily mean, red-band, night and evening-excess heat response (%), cold response, <code>peak_hour_hot</code> / <code>peak_hour_other</code> (hour of the highest weekday demand on summer days ≥ 25 °C maximum and on other summer weekdays), <code>peak_ratio_hot</code></td>
+</tr>
+<tr>
+  <td><code>hourly_response/jepa_check.csv</code>, <code>jepa_check_days.csv</code></td>
+  <td>site; site-day</td>
+  <td>the weather-conditioned JEPA's decoded change for a 5 °C warmer summer day against the regression's on the same days: <code>jepa_mean_pct</code>, <code>reg_mean_pct</code>, <code>shape_corr</code></td>
+</tr>
+<tr>
+  <td><code>installation_savings/nac.csv</code></td>
+  <td>site × financial year</td>
+  <td>normalised annual consumption (<code>nac_kw</code>, mean kW under the common reference days), raw mean, model fit (<code>r2</code>, <code>cv_rmse</code>), cold and heat slopes (<code>sense-energy installation-savings</code>)</td>
+</tr>
+<tr>
+  <td><code>installation_savings/site_changes.csv</code></td>
+  <td>site</td>
+  <td>NAC and raw change 2023/24 → 2025/26, ERIC change flags, LED change in points, <code>group</code> (no change / LED only / solar new or grown / heat pumps installed)</td>
+</tr>
+<tr>
+  <td><code>installation_savings/group_effects.csv</code>, <code>led_dose.csv</code></td>
+  <td>group; term</td>
+  <td>group medians and the difference in medians from unchanged sites with bootstrap intervals; cross-site regression of the NAC change on the LED change (per 10 points), solar and heat pumps (HC3)</td>
+</tr>
+<tr>
+  <td><code>estate_counterfactuals/warming_sites.csv</code>, <code>warming_summary.csv</code></td>
+  <td>site × shift; shift</td>
+  <td>annual electricity change, summer peak, peak / available capacity, half-hours above 90 % of capacity, winter utilisation today and with heat pumps, for +1, +2, +4 °C (<code>sense-energy estate-counterfactuals</code>)</td>
+</tr>
+<tr>
+  <td><code>estate_counterfactuals/heatwave_site_days.csv</code>, <code>heatwave_events.csv</code></td>
+  <td>site-day; event × group</td>
+  <td>2025 heatwave site-days: observed and counterfactual temperature, kWh, attributed kWh, share, wholesale cost (market index price), CO₂ (grid intensity); CHP sites' grid import via the group's binned response</td>
+</tr>
+<tr>
+  <td><code>estate_counterfactuals/heatwave_surprise.csv</code></td>
+  <td>group</td>
+  <td>the weather-blind JEPA's latent surprise on heatwave days against other summer days, Mann-Whitney p</td>
+</tr>
+<tr>
+  <td><code>solar_watch/slopes.csv</code>, <code>breaks.csv</code></td>
+  <td>site × summer; site</td>
+  <td>sunshine slope of daytime demand per summer (2023–2025), the 2023 → 2025 change, z, downward and upward break flags, ERIC solar and LED changes, REPD status (<code>sense-energy solar-watch</code>)</td>
+</tr>
+<tr>
+  <td><code>chp_dispatch/daily.csv</code>, <code>hourly.csv</code>, <code>classification.csv</code></td>
+  <td>coefficient; site</td>
+  <td>per CHP site and pooled: daily import response to the cold and heat doses and the daily price; hourly response to the power price and the working-day red band; each against the sites without CHP; flags <code>heat_led</code>, <code>price_following</code>, <code>red_band_avoiding</code> (<code>sense-energy chp-dispatch</code>)</td>
 </tr>
 </tbody>
 </table>

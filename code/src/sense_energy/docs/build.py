@@ -40,6 +40,9 @@ VEGA_CDN = (
 )
 SHORTCODE = re.compile(r"\{\{\s*(figure|table|chart)\s*:\s*([^}]*)\}\}")
 SKIP = {"README.md"}
+LONG_TABLE = 25  # longer tables fold into an expandable block
+#: chart colours in the order of the figure specification (Okabe-Ito)
+OKABE_ITO = ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]
 
 CSS = """
 :root { --ink: #1f1f1f; --muted: #5a5a5a; --rule: #d9d9d9; --accent: #0072b2; --bg: #ffffff; }
@@ -71,8 +74,11 @@ figure { margin: 18px 0 26px; }
 figure img { max-width: 100%; height: auto; border: 1px solid #eee; background: #fff; }
 figure figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; max-width: 72ch; }
 .figrow { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.figrow figure { flex: 1 1 320px; margin: 10px 0 18px; }
-.chart { margin: 18px 0 26px; }
+.figrow figure { flex: 1 1 320px; max-width: calc(50% - 8px); margin: 10px 0 18px; }
+figure.single { max-width: 640px; }
+details.table { margin: 10px 0 18px; }
+details.table summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+.chart { margin: 18px 0 26px; width: 100%; min-width: 280px; }
 .meta { color: var(--muted); font-size: 13px; margin-bottom: 26px; }
 .index li { margin: 10px 0; }
 .index .desc { color: var(--muted); font-size: 14px; display: block; }
@@ -103,8 +109,14 @@ TEMPLATE = """<!doctype html>
 </main>
 </div>
 {% if charts %}<script>
-{% for c in charts %}vegaEmbed("#{{ c.id }}", {{ c.spec }}, {actions: {export: true, source: false, compiled: false, editor: false}});
-{% endfor %}</script>{% endif %}
+window.addEventListener("load", function () {
+{% for c in charts %}  (function () {
+    var el = document.getElementById("{{ c.id }}"), spec = {{ c.spec }};
+    spec.width = Math.max(280, el.clientWidth - 90);
+    vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
+  })();
+{% endfor %}});
+</script>{% endif %}
 </body>
 </html>
 """
@@ -150,7 +162,7 @@ class Page:
         pdf = path.with_suffix(".pdf")
         link = f' <a href="figures/{pdf.name}">PDF</a>' if pdf.exists() else ""
         return (
-            f'<figure><img src="figures/{path.name}" alt="{name}" loading="lazy">'
+            f'<figure class="{opts.get("class", "single")}"><img src="figures/{path.name}" alt="{name}" loading="lazy">'
             f"<figcaption>{cap}{' ' if cap else ''}<code>{name}</code>{link}</figcaption></figure>"
         )
 
@@ -182,7 +194,10 @@ class Page:
             na_rep="",
             float_format=lambda v: f"{v:.{nd}f}".rstrip("0").rstrip(".") if abs(v) >= 1e-9 else "0",
         )
-        return f'{html}<p class="source">source: <a href="data/{path.name}">{rel}</a> ({len(df)} rows shown)</p>'
+        src = f'<p class="source">source: <a href="data/{path.name}">{rel}</a> ({len(df)} rows shown)</p>'
+        if len(df) > LONG_TABLE:
+            return f'<details class="table"><summary>Table: {len(df)} rows</summary>{html}</details>{src}'
+        return f"{html}{src}"
 
     # -- chart ------------------------------------------------------------ #
     def chart(self, rel: str, opts: dict[str, str]) -> str:
@@ -240,6 +255,7 @@ class Page:
             "encoding": enc,
             "config": {
                 "font": "Helvetica, Arial, sans-serif",
+                "range": {"category": OKABE_ITO},
                 "axis": {"labelFontSize": 12, "titleFontSize": 13},
                 "legend": {"orient": "bottom"},
             },
@@ -269,7 +285,11 @@ def auto_figures(text: str) -> str:
         names = [n for n in re.findall(r"`([A-Za-z0-9_]+)`", heading) if find_figure(n)]
         if not names:
             return m.group(0)
-        row = '<div class="figrow">' + "".join(f"{{{{figure: {n}}}}}" for n in names) + "</div>"
+        row = (
+            '<div class="figrow">'
+            + "".join(f"{{{{figure: {n} | class=inrow}}}}" for n in names)
+            + "</div>"
+        )
         return f"{heading}\n\n{row}\n"
 
     return HEADING_FIGS.sub(repl, text)
@@ -289,7 +309,11 @@ def figure_sections(text: str) -> str:
                 names.append(n)
         if not names:
             return m.group(0)
-        row = '<div class="figrow">' + "".join(f"{{{{figure: {n}}}}}" for n in names) + "</div>"
+        row = (
+            '<div class="figrow">'
+            + "".join(f"{{{{figure: {n} | class=inrow}}}}" for n in names)
+            + "</div>"
+        )
         return f"{m.group(1)}{body.rstrip()}\n\n{row}\n\n"
 
     return FIGURE_SECTION.sub(repl, text)

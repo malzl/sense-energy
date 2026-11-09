@@ -1,0 +1,34 @@
+{
+  "sites": 107,
+  "pooled_sun_pct_by_summer": {
+    "2023": -0.54,
+    "2024": -0.68,
+    "2025": -0.55
+  },
+  "breaks_down": 19,
+  "breaks_up": 23,
+  "eric_solar_sites_in_sample": 4,
+  "eric_solar_sites_flagged": 3,
+  "flagged_without_eric_solar": 16,
+  "flagged_sites": [
+    "RKB03",
+    "RM113",
+    "RN3J8",
+    "RRE11",
+    "RREA9",
+    "RWR31",
+    "RWR58",
+    "RWR76",
+    "RWR78",
+    "RWRC8",
+    "RWRD7",
+    "RWRPU-X",
+    "RWX58",
+    "RY350",
+    "RY412",
+    "RY424",
+    "RYVF1",
+    "RYX37",
+    "W6J9Z"
+  ]
+}

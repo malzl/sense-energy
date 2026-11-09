@@ -1,0 +1,88 @@
+{
+  "warming": [
+    {
+      "shift_c": 0.0,
+      "sites": 83,
+      "median_energy_change_pct": 0.0,
+      "p90_energy_change_pct": 0.0,
+      "sites_with_capacity": 31,
+      "median_summer_util": 0.332,
+      "max_summer_util": 0.813,
+      "sites_summer_util_above_90pct": 0,
+      "sites_summer_above_winter_hp": 0
+    },
+    {
+      "shift_c": 1.0,
+      "sites": 83,
+      "median_energy_change_pct": -0.437,
+      "p90_energy_change_pct": 0.178,
+      "sites_with_capacity": 31,
+      "median_summer_util": 0.332,
+      "max_summer_util": 0.867,
+      "sites_summer_util_above_90pct": 0,
+      "sites_summer_above_winter_hp": 0
+    },
+    {
+      "shift_c": 2.0,
+      "sites": 83,
+      "median_energy_change_pct": -0.796,
+      "p90_energy_change_pct": 0.475,
+      "sites_with_capacity": 31,
+      "median_summer_util": 0.331,
+      "max_summer_util": 0.928,
+      "sites_summer_util_above_90pct": 2,
+      "sites_summer_above_winter_hp": 0
+    },
+    {
+      "shift_c": 4.0,
+      "sites": 83,
+      "median_energy_change_pct": -1.456,
+      "p90_energy_change_pct": 1.488,
+      "sites_with_capacity": 31,
+      "median_summer_util": 0.387,
+      "max_summer_util": 1.062,
+      "sites_summer_util_above_90pct": 2,
+      "sites_summer_above_winter_hp": 0
+    }
+  ],
+  "heatwaves_2025": {
+    "no_chp": {
+      "sites": 56,
+      "site_days": 370,
+      "kwh_attr": 44994,
+      "share_pct": 4.49,
+      "median_site_day_share_pct": 2.28,
+      "cost_gbp_wholesale": 2165,
+      "co2_t": 6.1,
+      "mean_t_excess_c": 4.26
+    },
+    "chp_import": {
+      "sites": 17,
+      "site_days": 127,
+      "kwh_attr": 179991,
+      "share_pct": 12.06,
+      "cost_gbp_wholesale": 8137,
+      "co2_t": 24.5
+    }
+  },
+  "surprise": [
+    {
+      "group": "no CHP",
+      "heatwave_days": 950,
+      "other_summer_days": 33152,
+      "median_heatwave": 0.0277,
+      "median_other": 0.0257,
+      "ratio": 1.0806,
+      "p": 0.0
+    },
+    {
+      "group": "on-site CHP",
+      "heatwave_days": 219,
+      "other_summer_days": 5235,
+      "median_heatwave": 0.0326,
+      "median_other": 0.0302,
+      "ratio": 1.0786,
+      "p": 0.0189
+    }
+  ]
+}

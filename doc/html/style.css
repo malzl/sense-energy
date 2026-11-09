@@ -28,8 +28,11 @@ figure { margin: 18px 0 26px; }
 figure img { max-width: 100%; height: auto; border: 1px solid #eee; background: #fff; }
 figure figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; max-width: 72ch; }
 .figrow { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.figrow figure { flex: 1 1 320px; margin: 10px 0 18px; }
-.chart { margin: 18px 0 26px; }
+.figrow figure { flex: 1 1 320px; max-width: calc(50% - 8px); margin: 10px 0 18px; }
+figure.single { max-width: 640px; }
+details.table { margin: 10px 0 18px; }
+details.table summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+.chart { margin: 18px 0 26px; width: 100%; min-width: 280px; }
 .meta { color: var(--muted); font-size: 13px; margin-bottom: 26px; }
 .index li { margin: 10px 0; }
 .index .desc { color: var(--muted); font-size: 14px; display: block; }

@@ -21,6 +21,7 @@
   <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
   <a href="project_brief.html">Project brief</a>
   <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
 
   <div class="toc"><a class="h2" href="#1-eric-validates-the-half-hourly-meters">1. ERIC validates the half-hourly meters</a>
   <a class="h2" href="#2-building-descriptors-replace-site-identity-in-lightgbm">2. Building descriptors replace site identity in LightGBM</a>
@@ -260,7 +261,7 @@ normaliser, not a forecasting covariate.</p>
 <code>bed_day_intensity</code>, <code>beds_vs_demand</code>, <code>heat_model</code>, <code>heat_pump_week</code>, <code>headroom_panel</code>,
 <code>headroom_england</code>, <code>headroom_by_type</code>, <code>headroom_map</code> (PDF + PNG + data CSV, master figure
 specification).</p>
-<div class="figrow"><figure><img src="figures/meter_vs_eric.png" alt="meter_vs_eric" loading="lazy"><figcaption><code>meter_vs_eric</code> <a href="figures/meter_vs_eric.pdf">PDF</a></figcaption></figure><figure><img src="figures/peak_vs_max_demand.png" alt="peak_vs_max_demand" loading="lazy"><figcaption><code>peak_vs_max_demand</code> <a href="figures/peak_vs_max_demand.pdf">PDF</a></figcaption></figure><figure><img src="figures/scoring_by_flag.png" alt="scoring_by_flag" loading="lazy"><figcaption><code>scoring_by_flag</code> <a href="figures/scoring_by_flag.pdf">PDF</a></figcaption></figure><figure><img src="figures/intensity_by_type.png" alt="intensity_by_type" loading="lazy"><figcaption><code>intensity_by_type</code> <a href="figures/intensity_by_type.pdf">PDF</a></figcaption></figure><figure><img src="figures/cluster_intensity.png" alt="cluster_intensity" loading="lazy"><figcaption><code>cluster_intensity</code> <a href="figures/cluster_intensity.pdf">PDF</a></figcaption></figure><figure><img src="figures/bed_day_intensity.png" alt="bed_day_intensity" loading="lazy"><figcaption><code>bed_day_intensity</code> <a href="figures/bed_day_intensity.pdf">PDF</a></figcaption></figure><figure><img src="figures/beds_vs_demand.png" alt="beds_vs_demand" loading="lazy"><figcaption><code>beds_vs_demand</code> <a href="figures/beds_vs_demand.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_model.png" alt="heat_model" loading="lazy"><figcaption><code>heat_model</code> <a href="figures/heat_model.pdf">PDF</a></figcaption></figure><figure><img src="figures/heat_pump_week.png" alt="heat_pump_week" loading="lazy"><figcaption><code>heat_pump_week</code> <a href="figures/heat_pump_week.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_panel.png" alt="headroom_panel" loading="lazy"><figcaption><code>headroom_panel</code> <a href="figures/headroom_panel.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_england.png" alt="headroom_england" loading="lazy"><figcaption><code>headroom_england</code> <a href="figures/headroom_england.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_by_type.png" alt="headroom_by_type" loading="lazy"><figcaption><code>headroom_by_type</code> <a href="figures/headroom_by_type.pdf">PDF</a></figcaption></figure><figure><img src="figures/headroom_map.png" alt="headroom_map" loading="lazy"><figcaption><code>headroom_map</code> <a href="figures/headroom_map.pdf">PDF</a></figcaption></figure></div>
+<div class="figrow"><figure class="inrow"><img src="figures/meter_vs_eric.png" alt="meter_vs_eric" loading="lazy"><figcaption><code>meter_vs_eric</code> <a href="figures/meter_vs_eric.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/peak_vs_max_demand.png" alt="peak_vs_max_demand" loading="lazy"><figcaption><code>peak_vs_max_demand</code> <a href="figures/peak_vs_max_demand.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/scoring_by_flag.png" alt="scoring_by_flag" loading="lazy"><figcaption><code>scoring_by_flag</code> <a href="figures/scoring_by_flag.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/intensity_by_type.png" alt="intensity_by_type" loading="lazy"><figcaption><code>intensity_by_type</code> <a href="figures/intensity_by_type.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/cluster_intensity.png" alt="cluster_intensity" loading="lazy"><figcaption><code>cluster_intensity</code> <a href="figures/cluster_intensity.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/bed_day_intensity.png" alt="bed_day_intensity" loading="lazy"><figcaption><code>bed_day_intensity</code> <a href="figures/bed_day_intensity.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/beds_vs_demand.png" alt="beds_vs_demand" loading="lazy"><figcaption><code>beds_vs_demand</code> <a href="figures/beds_vs_demand.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_model.png" alt="heat_model" loading="lazy"><figcaption><code>heat_model</code> <a href="figures/heat_model.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_pump_week.png" alt="heat_pump_week" loading="lazy"><figcaption><code>heat_pump_week</code> <a href="figures/heat_pump_week.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/headroom_panel.png" alt="headroom_panel" loading="lazy"><figcaption><code>headroom_panel</code> <a href="figures/headroom_panel.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/headroom_england.png" alt="headroom_england" loading="lazy"><figcaption><code>headroom_england</code> <a href="figures/headroom_england.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/headroom_by_type.png" alt="headroom_by_type" loading="lazy"><figcaption><code>headroom_by_type</code> <a href="figures/headroom_by_type.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/headroom_map.png" alt="headroom_map" loading="lazy"><figcaption><code>headroom_map</code> <a href="figures/headroom_map.pdf">PDF</a></figcaption></figure></div>
 
 <h2 id="5-sites-with-on-site-chp">5. Sites with on-site CHP</h2>
 <p><code>sense-energy chp-profile</code> (<code>analysis/chp.py</code>, tables in <code>code/reports/chp/</code>, figure
@@ -286,7 +287,7 @@ carries 27 % of the site's import and Great Western 2 % (partial supplies), Roya
 than the ERIC site). Three returns are unit errors (Norfolk and Norwich reports 2.4 MWh from a 1 MW
 unit, Cromer a unit with no output, Great Western 0.4 GWh from 1 MW). Table:
 <code>code/reports/chp/generation_2024_25.csv</code>.</p>
-<table class="dataframe data">
+<details class="table"><summary>Table: 29 rows</summary><table class="dataframe data">
   <thead>
     <tr style="text-align: right;">
       <th>site_name</th>
@@ -591,9 +592,9 @@ unit, Cromer a unit with no output, Great Western 0.4 GWh from 1 MW). Table:
       <td>False</td>
     </tr>
   </tbody>
-</table><p class="source">source: <a href="data/generation_2024_25.csv">code/reports/chp/generation_2024_25.csv</a> (29 rows shown)</p>
+</table></details><p class="source">source: <a href="data/generation_2024_25.csv">code/reports/chp/generation_2024_25.csv</a> (29 rows shown)</p>
 
-<figure><img src="figures/chp_generation.png" alt="chp_generation" loading="lazy"><figcaption>Grid import as returned and CHP output net of exports, stacked to the implied demand; ticks mark our metered import. <code>chp_generation</code> <a href="figures/chp_generation.pdf">PDF</a></figcaption></figure>
+<figure class="single"><img src="figures/chp_generation.png" alt="chp_generation" loading="lazy"><figcaption>Grid import as returned and CHP output net of exports, stacked to the implied demand; ticks mark our metered import. <code>chp_generation</code> <a href="figures/chp_generation.pdf">PDF</a></figcaption></figure>
 
 <h2 id="7-year-on-year-changes-and-the-steps-in-the-meter">7. Year-on-year changes and the steps in the meter</h2>
 <p><code>analysis/estates_changes.py</code> (<code>eric_changes.csv</code>, <code>demand_steps.csv</code>, figure <code>eric_changes</code>).
@@ -610,7 +611,7 @@ without CHP have such a step; the small sites that went to full LED show level d
 and are flagged rather than used. The median absolute change in returned annual electricity is
 9.2 %. These dated changes are the treatments for the next event studies; they also say
 that the 2023/24 descriptors (LED share above all) are a year stale for a third of the panel.</p>
-<table class="dataframe data">
+<details class="table"><summary>Table: 45 rows</summary><table class="dataframe data">
   <thead>
     <tr style="text-align: right;">
       <th>site_code</th>
@@ -1167,9 +1168,9 @@ that the 2023/24 descriptors (LED share above all) are a year stale for a third 
       <td>0.29</td>
     </tr>
   </tbody>
-</table><p class="source">source: <a href="data/eric_changes.csv">code/reports/estates/eric_changes.csv</a> (45 rows shown)</p>
+</table></details><p class="source">source: <a href="data/eric_changes.csv">code/reports/estates/eric_changes.csv</a> (45 rows shown)</p>
 
-<figure><img src="figures/eric_changes.png" alt="eric_changes" loading="lazy"><figcaption>LED change against the largest demand step in or near 2024/25 for the changed sites without CHP. <code>eric_changes</code> <a href="figures/eric_changes.pdf">PDF</a></figcaption></figure>
+<figure class="single"><img src="figures/eric_changes.png" alt="eric_changes" loading="lazy"><figcaption>LED change against the largest demand step in or near 2024/25 for the changed sites without CHP. <code>eric_changes</code> <a href="figures/eric_changes.pdf">PDF</a></figcaption></figure>
 
 <p class="meta">Built from <code>doc/estates_analysis.md</code> by <code>sense-energy build-docs</code>.</p>
 </main>

@@ -8,6 +8,8 @@ sense-energy evaluate --config code/configs/model_baseline.yaml
 
 from __future__ import annotations
 
+import json
+
 import click
 import pandas as pd
 
@@ -539,6 +541,59 @@ def train_latent_pfn_cmd(steps: int, device: str | None, no_train: bool) -> None
 
     s = run({"steps": steps}, device, retrain=not no_train)["summary"]
     click.echo(f"nMAE on 28 C+ days: {s['nmae_28C_plus']}")
+
+
+@cli.command("hourly-response")
+@click.option("--no-jepa", is_flag=True, help="Skip the JEPA counterfactual check.")
+@click.option("--device", default=None)
+def hourly_response_cmd(no_jepa: bool, device: str | None) -> None:
+    """Per-site 24-hour heat, cold and sunshine response, and the JEPA counterfactual check."""
+    from .analysis.hourly_response import run
+
+    s = run(with_jepa=not no_jepa, device=device)["summary"]
+    click.echo(
+        f"{s['sites']} sites; median red-band share of the heat response {s['median_redband_share']}"
+    )
+
+
+@cli.command("installation-savings")
+def installation_savings_cmd() -> None:
+    """Weather-normalised change in electricity at the sites whose estates returns report changes."""
+    from .analysis.installation_savings import run
+
+    s = run()["summary"]
+    click.echo(f"{s['sites_with_nac_both_years']} sites; LED per 10 points: {s['led_per_10pts']}")
+
+
+@cli.command("estate-counterfactuals")
+def estate_counterfactuals_cmd() -> None:
+    """Warming stress test against capacity and the attribution of the 2025 heatwaves."""
+    from .analysis.estate_counterfactuals import run
+
+    s = run()["summary"]
+    click.echo(json.dumps(s["heatwaves_2025"], indent=1))
+
+
+@cli.command("solar-watch")
+def solar_watch_cmd() -> None:
+    """Breaks in each site's sunshine response, summer by summer (new solar behind the meter)."""
+    from .analysis.solar_watch import run
+
+    s = run()["summary"]
+    click.echo(
+        f"{s['breaks_down']} downward breaks; {s['eric_solar_sites_flagged']} of {s['eric_solar_sites_in_sample']} reported solar sites flagged"
+    )
+
+
+@cli.command("chp-dispatch")
+def chp_dispatch_cmd() -> None:
+    """How each CHP plant is dispatched: heat-led, price-following, red-band avoiding."""
+    from .analysis.chp_dispatch import run
+
+    s = run()["summary"]
+    click.echo(
+        f"heat-led {s['heat_led_sites']}, price-following {s['price_following_sites']}, red-band avoiding {s['red_band_avoiding_sites']} of {s['chp_sites']}"
+    )
 
 
 @cli.command("heat-drivers")

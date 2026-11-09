@@ -397,6 +397,38 @@ A latent PFN on top of it (a decoder from a day's embedding to its half-hours an
 \captionof{figure}{The latent PFN scored day ahead on the proof-of-concept site-days by kind of target day, next to the existing models on the same site-days and to the oracle that decodes the day's true embedding.}\label{fig:latentpfn}
 \end{figblock}
 
+\section{The weather-normalised estate}
+One engine answers six questions: the site-level response to weather by hour of the day (for every local hour, the hour's demand on site $\times$ cold, heat and sunshine terms with site $\times$ month, site $\times$ weekday and date effects, 83 sites without CHP or meter gaps, shrunk across sites hour by hour). A site's demand in an hour under another temperature is the observed demand scaled by its own hourly response.
+
+\begin{figblock}
+\pair[0.9]{hourly_pooled}{heatwave_attribution}
+\captionof{figure}{Left: pooled response by local hour to the heat dose, the cold dose and sunshine, with 95\,\% intervals; red band shaded. Right: electricity attributed to the 2025 heatwaves (observed minus demand at the site's normal temperature), sites without CHP and CHP sites' grid import, with the share of the group's demand.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{The heat response lives in the afternoon and the red band.} A degree of daily mean above 20\,$^\circ$C adds 0.2\,\% at night and 3.3\,\% between 12:00 and 19:00; at the median site a fifth of the response falls in 16:00--19:00, 1.6 times the band's share of the day, and on hot days the peak moves later at 37 of 81 sites. The JEPA counterfactual machine gets the size of a 5\,$^\circ$C warmer day right (+5.4 against +5.0\,\%) but not its timing.
+\item \textbf{Measured savings.} On weather-normalised annual consumption, 2023/24 against 2025/26: heat pumps add 32\,\% against unchanged sites (interval 18 to 51), LED saves 0.6\,\% per ten points of coverage ($p = 0.05$), new solar about 8 points (three sites, interval wide).
+\item \textbf{Warming binds less than electrification.} With every day 4\,$^\circ$C warmer, annual electricity falls 1.5\,\% at the median site (less heating outweighs more cooling) and the median summer peak rises from 0.33 to 0.39 of capacity; two sites exceed capacity. No site's summer peak reaches its winter peak with heat pumps.
+\item \textbf{The 2025 heatwaves} added 4.5\,\% to demand at 56 sites without CHP (45\,MWh over 370 site-days, at 4.3\,$^\circ$C above normal) and 12\,\% to grid import at 17 CHP sites (180\,MWh), whose heat-led plants turn down.
+\item \textbf{Solar can be watched from the meter.} A downward break in a site's sunshine slope flags three of the four sites whose returns report new or grown solar and dates the installations; it also flags sites without reported solar (panels owned by a landlord or third party do not enter the return) and shows LED as the opposite break.
+\item \textbf{CHP dispatch differs plant by plant.} Against sites without CHP, 13 of 23 plants are heat-led, 7 follow the power price within the day and 15 cut import by 3 to 18\,\% in the working-day red band; four import more then. The pooled CHP coefficients equal the placebo's, so the group average hides the behaviours.
+\end{itemize}
+
+\begin{figblock}\centering
+\includegraphics[width=0.92\textwidth]{figures/warming_capacity.pdf}
+\captionof{figure}{Each whole-site-metered site's summer peak half-hour as a share of its available capacity today and with every day 2 and 4\,$^\circ$C warmer, against its winter peak with heat pumps replacing gas (headroom analysis).}
+\end{figblock}
+
+\begin{figblock}
+\pair[0.9]{installation_savings}{solar_watch}
+\captionof{figure}{Left: weather-normalised change in electricity 2023/24 to 2025/26 by what the estates returns report changed, with the difference in medians from unchanged sites. Right: sunshine slopes by summer for sites with a strong downward break and sites reporting new solar.}
+\end{figblock}
+
+\begin{figblock}
+\begin{center}\includegraphics[width=0.5\textwidth]{chp_dispatch_red}\end{center}
+\captionof{figure}{Each CHP site's working-day red-band import against sites without CHP, with 95\,\% intervals; coloured where the plant avoids the red band.}
+\end{figblock}
+
 \section{Estates returns}
 ERIC 2023/24 reports electricity, gas, floor area, connection capacity and building characteristics for 2,869 English NHS sites.
 

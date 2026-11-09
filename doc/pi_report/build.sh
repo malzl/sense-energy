@@ -13,7 +13,7 @@ done
 for f in cluster_profiles_elec_site_k4 cluster_map_elec_site_k4; do
   cp "$root/code/reports/figures/clustering/$f.pdf" "$here/figures/"
 done
-for f in chp_variability chp_generation dec_recommendations eric_changes meter_vs_eric headroom_by_type; do
+for f in chp_variability chp_generation dec_recommendations eric_changes installation_savings chp_dispatch_red meter_vs_eric headroom_by_type; do
   cp "$root/code/reports/figures/estates/$f.pdf" "$here/figures/"
 done
 for f in temperature_response_curve temperature_response_hourly weather_event_timeline \
@@ -27,7 +27,8 @@ for f in temperature_response_curve temperature_response_hourly weather_event_ti
          heat_sunshine_control heat_night_day heat_blocks_heat heat_group_decomposition \
          heat_moderators_continuous heat_variance_explained heat_moderators_categorical \
          map_heat_types heat_dec_aircon heat_dec_heating cate_vs_slope_observables cate_importance \
-         forecast_heat_days jepa_probe jepa_map jepa_surprise jepa_response latent_pfn; do
+         forecast_heat_days jepa_probe jepa_map jepa_surprise jepa_response latent_pfn \
+         hourly_pooled warming_capacity heatwave_attribution solar_watch; do
   cp "$root/code/reports/figures/weather/$f.pdf" "$here/figures/"
 done
 cd "$here"

@@ -719,3 +719,22 @@ period before June 2025.
 | `forecasts.parquet` | site × local day × variant | day-ahead profiles (`slot0..slot47`, kWh per half-hour) on the proof-of-concept site-days for `latent PFN + ERA5` (realised weather for the target day), `latent PFN + IFS ENS` (the 00z run of the day before, aggregated to daily variables) and `oracle: decoded true embedding` |
 | `scores_by_day_class.csv` | variant × day class | site-mean nMAE by the kind of target day for the latent variants and, on the same site-days, seasonal naive, LightGBM (IFS, ERA5), Chronos-2 and TimesFM |
 | `decoder.pt`, `pfn.pt`, `train_log.csv`, `summary.json` | — | weights, training curves, headline numbers |
+
+## The weather-normalised estate: hourly response, savings, warming, heatwaves, solar, CHP dispatch
+
+Write-up: `doc/weather_normalised_estate.md` (HTML page `doc/html/weather_normalised_estate.html`).
+
+| File | Grain | Contents |
+|---|---|---|
+| `hourly_response/hourly_terms.csv` | site × hour × term | per local hour, the site's response of the hour's demand to the cold dose, heat dose and solar radiation (`slope`, `se`, log points) and its empirical-Bayes `posterior` (`sense-energy hourly-response`) |
+| `hourly_response/pooled.csv` | hour × term | random-effects pooled response, its SE, between-site SD (`tau`), `i2` |
+| `hourly_response/site_profiles.csv` | site | `heat_peak_hour`, `heat_redband_share` (share of the positive heat response in 16:00–19:00), daily mean, red-band, night and evening-excess heat response (%), cold response, `peak_hour_hot` / `peak_hour_other` (hour of the highest weekday demand on summer days ≥ 25 °C maximum and on other summer weekdays), `peak_ratio_hot` |
+| `hourly_response/jepa_check.csv`, `jepa_check_days.csv` | site; site-day | the weather-conditioned JEPA's decoded change for a 5 °C warmer summer day against the regression's on the same days: `jepa_mean_pct`, `reg_mean_pct`, `shape_corr` |
+| `installation_savings/nac.csv` | site × financial year | normalised annual consumption (`nac_kw`, mean kW under the common reference days), raw mean, model fit (`r2`, `cv_rmse`), cold and heat slopes (`sense-energy installation-savings`) |
+| `installation_savings/site_changes.csv` | site | NAC and raw change 2023/24 → 2025/26, ERIC change flags, LED change in points, `group` (no change / LED only / solar new or grown / heat pumps installed) |
+| `installation_savings/group_effects.csv`, `led_dose.csv` | group; term | group medians and the difference in medians from unchanged sites with bootstrap intervals; cross-site regression of the NAC change on the LED change (per 10 points), solar and heat pumps (HC3) |
+| `estate_counterfactuals/warming_sites.csv`, `warming_summary.csv` | site × shift; shift | annual electricity change, summer peak, peak / available capacity, half-hours above 90 % of capacity, winter utilisation today and with heat pumps, for +1, +2, +4 °C (`sense-energy estate-counterfactuals`) |
+| `estate_counterfactuals/heatwave_site_days.csv`, `heatwave_events.csv` | site-day; event × group | 2025 heatwave site-days: observed and counterfactual temperature, kWh, attributed kWh, share, wholesale cost (market index price), CO₂ (grid intensity); CHP sites' grid import via the group's binned response |
+| `estate_counterfactuals/heatwave_surprise.csv` | group | the weather-blind JEPA's latent surprise on heatwave days against other summer days, Mann-Whitney p |
+| `solar_watch/slopes.csv`, `breaks.csv` | site × summer; site | sunshine slope of daytime demand per summer (2023–2025), the 2023 → 2025 change, z, downward and upward break flags, ERIC solar and LED changes, REPD status (`sense-energy solar-watch`) |
+| `chp_dispatch/daily.csv`, `hourly.csv`, `classification.csv` | coefficient; site | per CHP site and pooled: daily import response to the cold and heat doses and the daily price; hourly response to the power price and the working-day red band; each against the sites without CHP; flags `heat_led`, `price_following`, `red_band_avoiding` (`sense-energy chp-dispatch`) |

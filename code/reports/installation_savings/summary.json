@@ -1,0 +1,76 @@
+{
+  "sites_with_nac_both_years": 72,
+  "chp_sites": 12,
+  "group_counts": {
+    "no change": 38,
+    "LED only": 16,
+    "solar new or grown": 3,
+    "heat pumps installed": 3
+  },
+  "median_model_r2": {
+    "2023/24": 0.793,
+    "2024/25": 0.757,
+    "2025/26": 0.749
+  },
+  "median_model_cv_rmse": {
+    "2023/24": 0.105,
+    "2024/25": 0.105,
+    "2025/26": 0.112
+  },
+  "group_effects": [
+    {
+      "group": "no change",
+      "sites": 38,
+      "median_nac_change_pct": -1.92,
+      "median_raw_change_pct": -2.37,
+      "did_median_pct": NaN,
+      "did_lo": NaN,
+      "did_hi": NaN,
+      "did_raw_median_pct": NaN,
+      "did_raw_lo": NaN,
+      "did_raw_hi": NaN
+    },
+    {
+      "group": "LED only",
+      "sites": 16,
+      "median_nac_change_pct": -5.78,
+      "median_raw_change_pct": -5.95,
+      "did_median_pct": -3.87,
+      "did_lo": -11.0,
+      "did_hi": 4.29,
+      "did_raw_median_pct": -3.58,
+      "did_raw_lo": -9.93,
+      "did_raw_hi": 4.53
+    },
+    {
+      "group": "solar new or grown",
+      "sites": 3,
+      "median_nac_change_pct": -10.08,
+      "median_raw_change_pct": -10.49,
+      "did_median_pct": -8.17,
+      "did_lo": -34.98,
+      "did_hi": 10.49,
+      "did_raw_median_pct": -8.13,
+      "did_raw_lo": -32.28,
+      "did_raw_hi": 9.69
+    },
+    {
+      "group": "heat pumps installed",
+      "sites": 3,
+      "median_nac_change_pct": 30.47,
+      "median_raw_change_pct": 28.83,
+      "did_median_pct": 32.38,
+      "did_lo": 18.11,
+      "did_hi": 50.87,
+      "did_raw_median_pct": 31.2,
+      "did_raw_lo": 19.15,
+      "did_raw_hi": 45.85
+    }
+  ],
+  "led_per_10pts": {
+    "coef": -0.604,
+    "lo": -1.213,
+    "hi": 0.004,
+    "p": 0.051
+  }
+}
