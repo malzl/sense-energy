@@ -63,6 +63,7 @@
   <a class="h2" href="#display-energy-certificates-code-data-external-dec-interim-d">Display Energy Certificates: code/data/external/dec/ → interim/dec_certificates.parquet, interim/dec_sites.parquet</a>
   <a class="h2" href="#next-step-analyses-code-reports-estates-eric-changes-forecas">Next-step analyses: code/reports/estates/eric_changes*, forecast_heat_days/, heat_causal_ml/</a>
   <a class="h2" href="#jepa-site-embeddings-code-reports-jepa">JEPA site embeddings: code/reports/jepa/</a>
+  <a class="h2" href="#latent-pfn-code-reports-latent-pfn">Latent PFN: code/reports/latent_pfn/</a>
   </div>
 </nav>
 <main>
@@ -1722,6 +1723,45 @@ smooth-L1 loss in embedding space plus a VICReg variance term.</p>
   <td><code>jepa.pt</code>, <code>train_log.csv</code>, <code>summary.json</code>, <code>probe_summary.json</code></td>
   <td>—</td>
   <td>weights and configuration, training curve (loss, embedding SD), headline numbers</td>
+</tr>
+</tbody>
+</table>
+<p><code>code/reports/jepa_weather/</code> holds the same files for the weather-conditioned model
+(<code>sense-energy train-jepa --weather</code>: the day tokens and the predictor's target tokens carry the
+day's <code>t_mean</code>, <code>t_max</code>, <code>t_min</code>, <code>solar_kwh_m2</code>, <code>wind_mean</code>, <code>precip_mm</code>, standardised over the
+panel), plus in <code>site_embeddings.parquet</code> the counterfactual <strong>response embeddings</strong>: <code>h0..h{d-1}</code>
+and <code>h_norm</code>, the mean change in the predicted embedding of the last seven days of every full
+window when their temperatures are raised by 5 °C; <code>s0..</code> and <code>s_norm</code> the same for +2 kWh/m² of
+solar radiation; <code>windows</code> averaged.</p>
+<h2 id="latent-pfn-code-reports-latent-pfn">Latent PFN: <code>code/reports/latent_pfn/</code></h2>
+<p><code>sense-energy train-latent-pfn</code> (<code>experiments/latent_pfn.py</code>), the LaT-PFN route on the
+weather-conditioned JEPA: a decoder (embedding → scaled 48-slot profile, MLP) and an in-context
+transformer that predicts query days' embeddings from a context set of the same site's days
+(embedding, weather, calendar) and the queries' weather and calendar, trained across sites on the
+period before June 2025.</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Grain</th>
+  <th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>forecasts.parquet</code></td>
+  <td>site × local day × variant</td>
+  <td>day-ahead profiles (<code>slot0..slot47</code>, kWh per half-hour) on the proof-of-concept site-days for <code>latent PFN + ERA5</code> (realised weather for the target day), <code>latent PFN + IFS ENS</code> (the 00z run of the day before, aggregated to daily variables) and <code>oracle: decoded true embedding</code></td>
+</tr>
+<tr>
+  <td><code>scores_by_day_class.csv</code></td>
+  <td>variant × day class</td>
+  <td>site-mean nMAE by the kind of target day for the latent variants and, on the same site-days, seasonal naive, LightGBM (IFS, ERA5), Chronos-2 and TimesFM</td>
+</tr>
+<tr>
+  <td><code>decoder.pt</code>, <code>pfn.pt</code>, <code>train_log.csv</code>, <code>summary.json</code></td>
+  <td>—</td>
+  <td>weights, training curves, headline numbers</td>
 </tr>
 </tbody>
 </table>

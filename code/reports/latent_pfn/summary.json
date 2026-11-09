@@ -1,0 +1,25 @@
+{
+  "forecast_rows": {
+    "latent PFN + ERA5": 6189,
+    "latent PFN + IFS ENS": 6189,
+    "oracle: decoded true embedding": 6189
+  },
+  "nmae_weighted_all_classes": {
+    "chronos2_ifs": 0.1126,
+    "latent PFN + ERA5": 0.2028,
+    "latent PFN + IFS ENS": 0.2032,
+    "lightgbm_era5": 0.1243,
+    "lightgbm_ifs": 0.1264,
+    "oracle: decoded true embedding": 0.1167,
+    "timesfm3_ifs": 0.1143
+  },
+  "nmae_28C_plus": {
+    "latent PFN + ERA5": 0.211,
+    "latent PFN + IFS ENS": 0.2122,
+    "oracle: decoded true embedding": 0.1023,
+    "chronos2_ifs": 0.1141,
+    "lightgbm_era5": 0.1255,
+    "lightgbm_ifs": 0.1259,
+    "timesfm3_ifs": 0.114
+  }
+}

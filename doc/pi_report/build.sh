@@ -27,7 +27,7 @@ for f in temperature_response_curve temperature_response_hourly weather_event_ti
          heat_sunshine_control heat_night_day heat_blocks_heat heat_group_decomposition \
          heat_moderators_continuous heat_variance_explained heat_moderators_categorical \
          map_heat_types heat_dec_aircon heat_dec_heating cate_vs_slope_observables cate_importance \
-         forecast_heat_days jepa_probe jepa_map jepa_surprise; do
+         forecast_heat_days jepa_probe jepa_map jepa_surprise jepa_response latent_pfn; do
   cp "$root/code/reports/figures/weather/$f.pdf" "$here/figures/"
 done
 cd "$here"

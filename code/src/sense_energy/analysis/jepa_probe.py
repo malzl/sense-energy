@@ -92,6 +92,27 @@ def chronos_embeddings(device: str | None = None, refresh: bool = False) -> pd.D
     return out
 
 
+def weather_jepa_embeddings() -> dict[str, pd.DataFrame | None]:
+    """The weather-conditioned model's mean embedding and its heat and sunshine response vectors
+    (``response_embeddings``), when that model has been trained."""
+    from ..experiments.jepa import OUT_DIR_WEATHER
+
+    path = OUT_DIR_WEATHER / "site_embeddings.parquet"
+    if not path.exists():
+        return {}
+    e = pd.read_parquet(path)
+    out: dict[str, pd.DataFrame | None] = {
+        "JEPA-weather": e[[c for c in e.columns if c.startswith("e")]]
+    }
+    heat = [c for c in e.columns if c.startswith("h") and c[1:].isdigit()]
+    sun = [c for c in e.columns if c.startswith("s") and c[1:].isdigit()]
+    if heat:
+        out["JEPA-weather heat response"] = e[heat + ["h_norm"]]
+        out["JEPA-weather sunshine response"] = e[sun + ["s_norm"]]
+        out["JEPA-weather responses + signature"] = None  # joined with the signature by the caller
+    return out
+
+
 def representations(
     desc: pd.DataFrame, features: pd.DataFrame, device: str | None = None
 ) -> dict[str, pd.DataFrame]:
@@ -111,6 +132,9 @@ def representations(
         reps["Chronos-2"] = chronos_embeddings(device)
     except Exception as exc:  # the teacher is optional
         logger.warning("Chronos-2 embeddings unavailable: %s", exc)
+    wj = weather_jepa_embeddings()
+    for name, x in wj.items():
+        reps[name] = wj["JEPA-weather heat response"].join(sig, how="inner") if x is None else x
     return reps
 
 
@@ -247,7 +271,14 @@ def clusters(
     base = desc["cluster"].dropna()
     rows = []
     heat = features["heat"]
-    for name in ("JEPA", "JEPA (June–September)", "Chronos-2", "observables"):
+    for name in (
+        "JEPA",
+        "JEPA (June–September)",
+        "JEPA-weather",
+        "JEPA-weather heat response",
+        "Chronos-2",
+        "observables",
+    ):
         if name not in reps:
             continue
         x = reps[name].dropna()

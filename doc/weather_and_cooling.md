@@ -649,9 +649,59 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
   stays flat at small sites (`jepa_surprise`): a learned regime detector that needs no penalty
   tuning, for the meter-gap and plant-switching flags.
 
-What a second version should do is condition on the driver: give the day tokens and the
-predictor the day's weather (temperature, sunshine), so that the embedding must encode how the
-site responds rather than what its profile looks like; or predict demand-day embeddings from
-weather-day embeddings in a two-tower setting. The LaT-PFN route (a prior-fitted network trained
-to forecast in a learned latent space, pre-trained on synthetic series and this panel) is the
-larger version of the same idea and the natural next experiment after that.
+**The weather-conditioned version** (`train-jepa --weather`, `code/reports/jepa_weather/`) gives
+the day tokens and the predictor's target tokens the day's temperature, sunshine, wind and rain,
+and turns the predictor into a counterfactual machine: the same context, a target day 5 °C
+warmer, a different predicted embedding. The mean change per site is a learned *response
+vector* (`response_embeddings`; the same for +2 kWh/m² of sunshine). With the batch pipeline on
+the GPU the model trains in three minutes instead of 75. The probe, repeated:
+
+- **Still no on the heat slope.** The weather-conditioned embedding recovers 0 % of the
+  true heat variance, the heat response vector 1 % (0 % with TabPFN), the
+  sunshine response vector 12 % (TabPFN). The latent response to a warmer day has
+  almost the same size at every site (`jepa_response`): the predictor learned the panel's average
+  weather-to-profile mapping, not each site's.
+- **Yes on the cold and sunshine responses.** The same heat response vector recovers
+  22 % of the cold slope (33 % with TabPFN), against 18 % from the
+  observables and 3 % from the weather-blind JEPA; and 63 % of the sunshine slope,
+  level with Chronos-2. Conditioning on weather did put responses into the embedding, the large
+  and frequent ones: heating runs on a third of days and moves demand by tens of per cent, hot
+  afternoons on three per cent of days and by a few per cent. A loss that weights every day
+  equally cannot see the second.
+
+Two things follow. The site-level heat response is, for representation learning, a rare-event
+signal: a model that should carry it needs a warm-season objective (windows and targets drawn
+from June–September, hot days up-weighted) or an explicit target, which is what the regressions
+are. And the pre-registered criterion stands: the thread stops here for the heat question. The
+response vectors are kept as covariates for the cold and sunshine work.
+
+### 8.10 The LaT-PFN route (`latent_pfn`)
+
+`sense-energy train-latent-pfn` (`experiments/latent_pfn.py`, outputs in `code/reports/latent_pfn/`).
+Two small models on the weather-conditioned JEPA: a decoder from a day's embedding back to its 48
+half-hours (scaled by the site's trailing month), and a latent PFN, an in-context transformer that
+takes a context set of one site's days (embedding, weather, calendar, days before the query) and
+predicts the embeddings of query days given only their weather and calendar and the last context
+day's embedding; trained across all sites on tasks before June 2025, so at forecast time it adapts
+to a site from its own 42 most recent days without fitting. Scored day ahead on the
+proof-of-concept's site-days (test window June 2025 to May 2026, 91 sites) next to the existing
+models on the same site-days, with realised ERA5 weather and with the 00z IFS ENS run of the day
+before aggregated to the same daily variables.
+
+{{table: code/reports/latent_pfn/scores_by_day_class.csv | cols=variant,day_class,sites,site_days,nmae | round=3}}
+
+- **The latent space can express the day.** Decoding the day's *true* embedding gives
+  11.7 % nMAE over the window and 10.2 % on days at or above 28 °C,
+  below Chronos-2 with forecast weather (11.4 %) on those days. The ceiling is high.
+- **The in-context predictor does not reach it.** The latent PFN scores 20.3 % with realised weather
+  and 20.3 % with the IFS forecast: the same, so the query's weather barely enters its
+  prediction, and worse than seasonal naive. Giving the context tokens their distance in days from
+  the query, and the query the last context day's embedding, did not change it. The predictor
+  converges to the site's average day in latent space; the information that makes a day differ
+  from the average (its own recent level and shape, which the day-ahead models take from the last
+  24 hours as lags) is not in a weather-and-calendar query.
+- **Stop here.** As a forecasting route the latent PFN, as built, loses to every existing model by
+  eight points. What would be needed is a decoder-free formulation that predicts the next day's
+  embedding from the previous days' embeddings autoregressively (a latent forecaster rather than a
+  weather regressor), which is what the TNPs and foundation models already do in value space; the
+  latent space adds nothing to that until the embedding itself carries more than the profile.

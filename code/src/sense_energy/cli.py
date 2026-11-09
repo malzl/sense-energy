@@ -494,11 +494,16 @@ def heat_causal_ml_cmd() -> None:
 @cli.command("train-jepa")
 @click.option("--steps", default=4000, show_default=True)
 @click.option("--device", default=None, help="cuda:0, cuda:1 or cpu (default: first GPU)")
-def train_jepa_cmd(steps: int, device: str | None) -> None:
+@click.option(
+    "--weather",
+    is_flag=True,
+    help="Condition the day tokens and the predictor on the day's weather.",
+)
+def train_jepa_cmd(steps: int, device: str | None, weather: bool) -> None:
     """Self-supervised day/site embeddings of the demand panel (JEPA); embeddings and surprise."""
     from .experiments.jepa import run
 
-    s = run({"steps": steps}, device)["summary"]
+    s = run({"steps": steps, "weather": weather}, device)["summary"]
     click.echo(
         f"JEPA: {s['sites']} sites, {s['days_embedded']} days embedded, final loss {s['final_loss']:.4f}"
     )
@@ -522,6 +527,18 @@ def build_docs_cmd() -> None:
 
     pages = build()
     click.echo(f"{len(pages)} pages written to doc/html/")
+
+
+@cli.command("train-latent-pfn")
+@click.option("--steps", default=3000, show_default=True)
+@click.option("--device", default=None)
+@click.option("--no-train", is_flag=True, help="Forecast and score with the saved models.")
+def train_latent_pfn_cmd(steps: int, device: str | None, no_train: bool) -> None:
+    """Latent PFN on the weather-conditioned JEPA: in-context latent forecasting, decoded and scored day-ahead."""
+    from .experiments.latent_pfn import run
+
+    s = run({"steps": steps}, device, retrain=not no_train)["summary"]
+    click.echo(f"nMAE on 28 C+ days: {s['nmae_28C_plus']}")
 
 
 @cli.command("heat-drivers")

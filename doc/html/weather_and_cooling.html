@@ -48,6 +48,7 @@
   <a class="h3" href="#8-8-causal-machine-learning-on-the-heat-response-cate-vs-slo">8.8 Causal machine learning on the heat response (cate_vs_slope_observables, cate_vs_slope_signature, cate_importance)</a>
   <a class="h2" href="#9-does-any-of-this-reach-the-day-ahead-forecasts-forecast-he">9. Does any of this reach the day-ahead forecasts? (forecast_heat_days)</a>
   <a class="h3" href="#8-9-a-learned-site-embedding-jepa-probe-jepa-map-jepa-surpri">8.9 A learned site embedding (jepa_probe, jepa_map, jepa_surprise)</a>
+  <a class="h3" href="#8-10-the-lat-pfn-route-latent-pfn">8.10 The LaT-PFN route (latent_pfn)</a>
   </div>
 </nav>
 <main>
@@ -1490,8 +1491,80 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>80</td>
       <td>768</td>
-      <td>-0.06</td>
+      <td>-0.07</td>
       <td>-0.01</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather</td>
+      <td>ridge</td>
+      <td>80</td>
+      <td>96</td>
+      <td>-0.05</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather</td>
+      <td>tabpfn</td>
+      <td>80</td>
+      <td>96</td>
+      <td>0.01</td>
+      <td>-0.01</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather heat response</td>
+      <td>ridge</td>
+      <td>80</td>
+      <td>97</td>
+      <td>-0.1</td>
+      <td>0.01</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather heat response</td>
+      <td>tabpfn</td>
+      <td>80</td>
+      <td>97</td>
+      <td>-0.1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>ridge</td>
+      <td>80</td>
+      <td>97</td>
+      <td>-0.01</td>
+      <td>-0.02</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>tabpfn</td>
+      <td>80</td>
+      <td>97</td>
+      <td>0.08</td>
+      <td>0.12</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>ridge</td>
+      <td>80</td>
+      <td>99</td>
+      <td>0.13</td>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>tabpfn</td>
+      <td>80</td>
+      <td>99</td>
+      <td>0.12</td>
+      <td>0.38</td>
     </tr>
     <tr>
       <td>cold slope</td>
@@ -1562,8 +1635,8 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>82</td>
       <td>96</td>
-      <td>0.14</td>
-      <td>0.16</td>
+      <td>0.15</td>
+      <td>0.17</td>
     </tr>
     <tr>
       <td>cold slope</td>
@@ -1638,6 +1711,78 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>0.4</td>
     </tr>
     <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather</td>
+      <td>ridge</td>
+      <td>82</td>
+      <td>96</td>
+      <td>0.06</td>
+      <td>0.08</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather</td>
+      <td>tabpfn</td>
+      <td>82</td>
+      <td>96</td>
+      <td>0.1</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather heat response</td>
+      <td>ridge</td>
+      <td>82</td>
+      <td>97</td>
+      <td>0.23</td>
+      <td>0.22</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather heat response</td>
+      <td>tabpfn</td>
+      <td>82</td>
+      <td>97</td>
+      <td>0.33</td>
+      <td>0.33</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>ridge</td>
+      <td>82</td>
+      <td>97</td>
+      <td>0.23</td>
+      <td>0.22</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>tabpfn</td>
+      <td>82</td>
+      <td>97</td>
+      <td>0.27</td>
+      <td>0.24</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>ridge</td>
+      <td>82</td>
+      <td>99</td>
+      <td>0.28</td>
+      <td>0.26</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>tabpfn</td>
+      <td>82</td>
+      <td>99</td>
+      <td>0.23</td>
+      <td>0.22</td>
+    </tr>
+    <tr>
       <td>sunshine slope</td>
       <td>observables</td>
       <td>ridge</td>
@@ -1652,8 +1797,8 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>81</td>
       <td>47</td>
-      <td>0.31</td>
-      <td>0.37</td>
+      <td>0.33</td>
+      <td>0.38</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
@@ -1688,8 +1833,8 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>81</td>
       <td>49</td>
-      <td>0.66</td>
       <td>0.67</td>
+      <td>0.68</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
@@ -1706,8 +1851,8 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>81</td>
       <td>96</td>
-      <td>0.46</td>
-      <td>0.49</td>
+      <td>0.44</td>
+      <td>0.48</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
@@ -1724,8 +1869,8 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>81</td>
       <td>96</td>
-      <td>0.46</td>
-      <td>0.55</td>
+      <td>0.43</td>
+      <td>0.54</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
@@ -1742,7 +1887,7 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>tabpfn</td>
       <td>81</td>
       <td>143</td>
-      <td>0.5</td>
+      <td>0.51</td>
       <td>0.53</td>
     </tr>
     <tr>
@@ -1779,10 +1924,82 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>81</td>
       <td>768</td>
       <td>0.63</td>
+      <td>0.63</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather</td>
+      <td>ridge</td>
+      <td>81</td>
+      <td>96</td>
+      <td>0.49</td>
+      <td>0.55</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather</td>
+      <td>tabpfn</td>
+      <td>81</td>
+      <td>96</td>
+      <td>0.49</td>
+      <td>0.61</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather heat response</td>
+      <td>ridge</td>
+      <td>81</td>
+      <td>97</td>
+      <td>0.67</td>
+      <td>0.63</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather heat response</td>
+      <td>tabpfn</td>
+      <td>81</td>
+      <td>97</td>
+      <td>0.68</td>
+      <td>0.7</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>ridge</td>
+      <td>81</td>
+      <td>97</td>
+      <td>0.65</td>
       <td>0.62</td>
     </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>tabpfn</td>
+      <td>81</td>
+      <td>97</td>
+      <td>0.59</td>
+      <td>0.65</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>ridge</td>
+      <td>81</td>
+      <td>99</td>
+      <td>0.86</td>
+      <td>0.84</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>tabpfn</td>
+      <td>81</td>
+      <td>99</td>
+      <td>0.82</td>
+      <td>0.81</td>
+    </tr>
   </tbody>
-</table><p class="source">source: <a href="data/probe.csv">code/reports/jepa/probe.csv</a> (48 rows shown)</p>
+</table><p class="source">source: <a href="data/probe.csv">code/reports/jepa/probe.csv</a> (72 rows shown)</p>
 
 <ul>
 <li><strong>No, on the heat slope.</strong> The JEPA embedding recovers 1 % of the true
@@ -1808,12 +2025,320 @@ of its window spikes at the CHP hospitals exactly where the changepoint search p
 stays flat at small sites (<code>jepa_surprise</code>): a learned regime detector that needs no penalty
 tuning, for the meter-gap and plant-switching flags.</li>
 </ul>
-<p>What a second version should do is condition on the driver: give the day tokens and the
-predictor the day's weather (temperature, sunshine), so that the embedding must encode how the
-site responds rather than what its profile looks like; or predict demand-day embeddings from
-weather-day embeddings in a two-tower setting. The LaT-PFN route (a prior-fitted network trained
-to forecast in a learned latent space, pre-trained on synthetic series and this panel) is the
-larger version of the same idea and the natural next experiment after that.</p>
+<p><strong>The weather-conditioned version</strong> (<code>train-jepa --weather</code>, <code>code/reports/jepa_weather/</code>) gives
+the day tokens and the predictor's target tokens the day's temperature, sunshine, wind and rain,
+and turns the predictor into a counterfactual machine: the same context, a target day 5 °C
+warmer, a different predicted embedding. The mean change per site is a learned <em>response
+vector</em> (<code>response_embeddings</code>; the same for +2 kWh/m² of sunshine). With the batch pipeline on
+the GPU the model trains in three minutes instead of 75. The probe, repeated:</p>
+<ul>
+<li><strong>Still no on the heat slope.</strong> The weather-conditioned embedding recovers 0 % of the
+true heat variance, the heat response vector 1 % (0 % with TabPFN), the
+sunshine response vector 12 % (TabPFN). The latent response to a warmer day has
+almost the same size at every site (<code>jepa_response</code>): the predictor learned the panel's average
+weather-to-profile mapping, not each site's.</li>
+<li><strong>Yes on the cold and sunshine responses.</strong> The same heat response vector recovers
+22 % of the cold slope (33 % with TabPFN), against 18 % from the
+observables and 3 % from the weather-blind JEPA; and 63 % of the sunshine slope,
+level with Chronos-2. Conditioning on weather did put responses into the embedding, the large
+and frequent ones: heating runs on a third of days and moves demand by tens of per cent, hot
+afternoons on three per cent of days and by a few per cent. A loss that weights every day
+equally cannot see the second.</li>
+</ul>
+<p>Two things follow. The site-level heat response is, for representation learning, a rare-event
+signal: a model that should carry it needs a warm-season objective (windows and targets drawn
+from June–September, hot days up-weighted) or an explicit target, which is what the regressions
+are. And the pre-registered criterion stands: the thread stops here for the heat question. The
+response vectors are kept as covariates for the cold and sunshine work.</p>
+<h3 id="8-10-the-lat-pfn-route-latent-pfn">8.10 The LaT-PFN route (<code>latent_pfn</code>)</h3>
+<div class="figrow"><figure><img src="figures/latent_pfn.png" alt="latent_pfn" loading="lazy"><figcaption><code>latent_pfn</code> <a href="figures/latent_pfn.pdf">PDF</a></figcaption></figure></div>
+
+<p><code>sense-energy train-latent-pfn</code> (<code>experiments/latent_pfn.py</code>, outputs in <code>code/reports/latent_pfn/</code>).
+Two small models on the weather-conditioned JEPA: a decoder from a day's embedding back to its 48
+half-hours (scaled by the site's trailing month), and a latent PFN, an in-context transformer that
+takes a context set of one site's days (embedding, weather, calendar, days before the query) and
+predicts the embeddings of query days given only their weather and calendar and the last context
+day's embedding; trained across all sites on tasks before June 2025, so at forecast time it adapts
+to a site from its own 42 most recent days without fitting. Scored day ahead on the
+proof-of-concept's site-days (test window June 2025 to May 2026, 91 sites) next to the existing
+models on the same site-days, with realised ERA5 weather and with the 00z IFS ENS run of the day
+before aggregated to the same daily variables.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>variant</th>
+      <th>day_class</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>nmae</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>latent PFN + ERA5</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.233</td>
+    </tr>
+    <tr>
+      <td>latent PFN + ERA5</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.211</td>
+    </tr>
+    <tr>
+      <td>latent PFN + ERA5</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.245</td>
+    </tr>
+    <tr>
+      <td>latent PFN + ERA5</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.195</td>
+    </tr>
+    <tr>
+      <td>latent PFN + ERA5</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.203</td>
+    </tr>
+    <tr>
+      <td>latent PFN + IFS ENS</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.235</td>
+    </tr>
+    <tr>
+      <td>latent PFN + IFS ENS</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.212</td>
+    </tr>
+    <tr>
+      <td>latent PFN + IFS ENS</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.242</td>
+    </tr>
+    <tr>
+      <td>latent PFN + IFS ENS</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.195</td>
+    </tr>
+    <tr>
+      <td>latent PFN + IFS ENS</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.204</td>
+    </tr>
+    <tr>
+      <td>oracle: decoded true embedding</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>oracle: decoded true embedding</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.102</td>
+    </tr>
+    <tr>
+      <td>oracle: decoded true embedding</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.085</td>
+    </tr>
+    <tr>
+      <td>oracle: decoded true embedding</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.103</td>
+    </tr>
+    <tr>
+      <td>oracle: decoded true embedding</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.125</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.137</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.114</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.139</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.108</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.113</td>
+    </tr>
+    <tr>
+      <td>lightgbm_era5</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.121</td>
+    </tr>
+    <tr>
+      <td>lightgbm_era5</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.126</td>
+    </tr>
+    <tr>
+      <td>lightgbm_era5</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.151</td>
+    </tr>
+    <tr>
+      <td>lightgbm_era5</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.119</td>
+    </tr>
+    <tr>
+      <td>lightgbm_era5</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.127</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.119</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.126</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.157</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.12</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.129</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>25–28 °C</td>
+      <td>85</td>
+      <td>223.562</td>
+      <td>0.134</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>28 °C and above</td>
+      <td>64</td>
+      <td>211.792</td>
+      <td>0.114</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>at or below 2 °C</td>
+      <td>73</td>
+      <td>73</td>
+      <td>0.157</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>other June–September</td>
+      <td>91</td>
+      <td>1802.042</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>rest of year</td>
+      <td>91</td>
+      <td>3871.021</td>
+      <td>0.114</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/scores_by_day_class.csv">code/reports/latent_pfn/scores_by_day_class.csv</a> (35 rows shown)</p>
+
+<ul>
+<li><strong>The latent space can express the day.</strong> Decoding the day's <em>true</em> embedding gives
+11.7 % nMAE over the window and 10.2 % on days at or above 28 °C,
+below Chronos-2 with forecast weather (11.4 %) on those days. The ceiling is high.</li>
+<li><strong>The in-context predictor does not reach it.</strong> The latent PFN scores 20.3 % with realised weather
+and 20.3 % with the IFS forecast: the same, so the query's weather barely enters its
+prediction, and worse than seasonal naive. Giving the context tokens their distance in days from
+the query, and the query the last context day's embedding, did not change it. The predictor
+converges to the site's average day in latent space; the information that makes a day differ
+from the average (its own recent level and shape, which the day-ahead models take from the last
+24 hours as lags) is not in a weather-and-calendar query.</li>
+<li><strong>Stop here.</strong> As a forecasting route the latent PFN, as built, loses to every existing model by
+eight points. What would be needed is a decoder-free formulation that predicts the next day's
+embedding from the previous days' embeddings autoregressively (a latent forecaster rather than a
+weather regressor), which is what the TNPs and foundation models already do in value space; the
+latent space adds nothing to that until the embedding itself carries more than the profile.</li>
+</ul>
 <p class="meta">Built from <code>doc/weather_and_cooling.md</code> by <code>sense-energy build-docs</code>.</p>
 </main>
 </div>

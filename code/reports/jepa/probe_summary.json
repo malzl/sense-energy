@@ -1,39 +1,55 @@
 {
   "heat_share_true_variance": {
     "observables | ridge": 0.067,
-    "observables | tabpfn": 0.078,
+    "observables | tabpfn": 0.084,
     "diurnal signature | ridge": 0.363,
     "diurnal signature | tabpfn": 0.449,
     "observables + signature | ridge": 0.012,
-    "observables + signature | tabpfn": -0.034,
+    "observables + signature | tabpfn": -0.03,
     "JEPA | ridge": 0.006,
-    "JEPA | tabpfn": 0.019,
+    "JEPA | tabpfn": 0.017,
     "JEPA (June\u2013September) | ridge": 0.094,
-    "JEPA (June\u2013September) | tabpfn": 0.059,
+    "JEPA (June\u2013September) | tabpfn": 0.058,
     "JEPA + observables | ridge": -0.018,
-    "JEPA + observables | tabpfn": -0.002,
+    "JEPA + observables | tabpfn": -0.001,
     "JEPA + signature | ridge": 0.346,
-    "JEPA + signature | tabpfn": 0.171,
+    "JEPA + signature | tabpfn": 0.172,
     "Chronos-2 | ridge": -0.001,
-    "Chronos-2 | tabpfn": -0.013
+    "Chronos-2 | tabpfn": -0.013,
+    "JEPA-weather | ridge": -0.002,
+    "JEPA-weather | tabpfn": -0.011,
+    "JEPA-weather heat response | ridge": 0.01,
+    "JEPA-weather heat response | tabpfn": 0.004,
+    "JEPA-weather sunshine response | ridge": -0.023,
+    "JEPA-weather sunshine response | tabpfn": 0.119,
+    "JEPA-weather responses + signature | ridge": 0.303,
+    "JEPA-weather responses + signature | tabpfn": 0.378
   },
   "heat_r2_oof": {
     "observables | ridge": -0.072,
-    "observables | tabpfn": -0.069,
+    "observables | tabpfn": -0.071,
     "diurnal signature | ridge": 0.195,
     "diurnal signature | tabpfn": 0.208,
     "observables + signature | ridge": -0.029,
-    "observables + signature | tabpfn": -0.002,
+    "observables + signature | tabpfn": 0.003,
     "JEPA | ridge": -0.064,
     "JEPA | tabpfn": -0.005,
     "JEPA (June\u2013September) | ridge": 0.052,
     "JEPA (June\u2013September) | tabpfn": 0.016,
     "JEPA + observables | ridge": -0.054,
-    "JEPA + observables | tabpfn": -0.037,
+    "JEPA + observables | tabpfn": -0.038,
     "JEPA + signature | ridge": 0.194,
-    "JEPA + signature | tabpfn": 0.027,
+    "JEPA + signature | tabpfn": 0.026,
     "Chronos-2 | ridge": -0.047,
-    "Chronos-2 | tabpfn": -0.065
+    "Chronos-2 | tabpfn": -0.066,
+    "JEPA-weather | ridge": -0.052,
+    "JEPA-weather | tabpfn": 0.007,
+    "JEPA-weather heat response | ridge": -0.1,
+    "JEPA-weather heat response | tabpfn": -0.098,
+    "JEPA-weather sunshine response | ridge": -0.009,
+    "JEPA-weather sunshine response | tabpfn": 0.083,
+    "JEPA-weather responses + signature | ridge": 0.127,
+    "JEPA-weather responses + signature | tabpfn": 0.121
   },
   "classification_accuracy": {
     "use | observables": [
@@ -68,6 +84,22 @@
       0.53,
       0.623
     ],
+    "use | JEPA-weather": [
+      0.625,
+      0.623
+    ],
+    "use | JEPA-weather heat response": [
+      0.555,
+      0.623
+    ],
+    "use | JEPA-weather sunshine response": [
+      0.6,
+      0.623
+    ],
+    "use | JEPA-weather responses + signature": [
+      0.545,
+      0.623
+    ],
     "dec_main_environment | observables": [
       0.958,
       0.594
@@ -99,6 +131,22 @@
     "dec_main_environment | Chronos-2": [
       0.584,
       0.594
+    ],
+    "dec_main_environment | JEPA-weather": [
+      0.552,
+      0.594
+    ],
+    "dec_main_environment | JEPA-weather heat response": [
+      0.542,
+      0.594
+    ],
+    "dec_main_environment | JEPA-weather sunshine response": [
+      0.558,
+      0.594
+    ],
+    "dec_main_environment | JEPA-weather responses + signature": [
+      0.516,
+      0.594
     ]
   },
   "clusters": {
@@ -109,6 +157,14 @@
     "JEPA (June\u2013September)": {
       "ari_vs_shape_clusters": 0.237,
       "heat_slope_r2_by_cluster": 0.015
+    },
+    "JEPA-weather": {
+      "ari_vs_shape_clusters": 0.438,
+      "heat_slope_r2_by_cluster": 0.006
+    },
+    "JEPA-weather heat response": {
+      "ari_vs_shape_clusters": 0.067,
+      "heat_slope_r2_by_cluster": 0.005
     },
     "Chronos-2": {
       "ari_vs_shape_clusters": 0.171,

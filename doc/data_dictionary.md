@@ -697,3 +697,25 @@ smooth-L1 loss in embedding space plus a VICReg variance term.
 | `probe_classification.csv` | target × representation | out-of-fold accuracy of building use and DEC environment from each representation, against the majority class |
 | `clusters.csv` | representation | k-means (k = 4) on each representation: adjusted Rand index against the demand-shape clusters and the share of heat-slope variance cluster membership explains |
 | `jepa.pt`, `train_log.csv`, `summary.json`, `probe_summary.json` | — | weights and configuration, training curve (loss, embedding SD), headline numbers |
+
+`code/reports/jepa_weather/` holds the same files for the weather-conditioned model
+(`sense-energy train-jepa --weather`: the day tokens and the predictor's target tokens carry the
+day's `t_mean`, `t_max`, `t_min`, `solar_kwh_m2`, `wind_mean`, `precip_mm`, standardised over the
+panel), plus in `site_embeddings.parquet` the counterfactual **response embeddings**: `h0..h{d-1}`
+and `h_norm`, the mean change in the predicted embedding of the last seven days of every full
+window when their temperatures are raised by 5 °C; `s0..` and `s_norm` the same for +2 kWh/m² of
+solar radiation; `windows` averaged.
+
+## Latent PFN: `code/reports/latent_pfn/`
+
+`sense-energy train-latent-pfn` (`experiments/latent_pfn.py`), the LaT-PFN route on the
+weather-conditioned JEPA: a decoder (embedding → scaled 48-slot profile, MLP) and an in-context
+transformer that predicts query days' embeddings from a context set of the same site's days
+(embedding, weather, calendar) and the queries' weather and calendar, trained across sites on the
+period before June 2025.
+
+| File | Grain | Contents |
+|---|---|---|
+| `forecasts.parquet` | site × local day × variant | day-ahead profiles (`slot0..slot47`, kWh per half-hour) on the proof-of-concept site-days for `latent PFN + ERA5` (realised weather for the target day), `latent PFN + IFS ENS` (the 00z run of the day before, aggregated to daily variables) and `oracle: decoded true embedding` |
+| `scores_by_day_class.csv` | variant × day class | site-mean nMAE by the kind of target day for the latent variants and, on the same site-days, seasonal naive, LightGBM (IFS, ERA5), Chronos-2 and TimesFM |
+| `decoder.pt`, `pfn.pt`, `train_log.csv`, `summary.json` | — | weights, training curves, headline numbers |

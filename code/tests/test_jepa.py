@@ -85,3 +85,51 @@ def test_short_training_runs_and_exports_embeddings(tmp_path, monkeypatch):
     sp = jepa.surprise(res["model"], tok, "cpu", batch=32)
     assert (sp["surprise"] >= 0).all() and len(sp) > 0
     assert (tmp_path / "jepa.pt").exists()
+
+
+def test_weather_tokens_and_response_embeddings(tmp_path, monkeypatch):
+    monkeypatch.setattr(jepa, "OUT_DIR_WEATHER", tmp_path)
+    w = _wide(n_days=150)
+    tok = jepa.day_tokens(w)
+    rng = np.random.default_rng(3)
+    rows = []
+    for s in tok["sites"]:
+        for d in tok["dates"]:
+            t = 12 + 8 * np.sin(2 * np.pi * d.dayofyear / 365) + rng.normal()
+            rows.append(
+                {
+                    "site_code": s,
+                    "date": d,
+                    "t_mean": t,
+                    "t_max": t + 4,
+                    "t_min": t - 4,
+                    "solar_kwh_m2": max(0.2, 3 + rng.normal()),
+                    "wind_mean": 4.0,
+                    "precip_mm": 1.0,
+                }
+            )
+    table = pd.DataFrame(rows)
+    wt = jepa.weather_tokens(tok["sites"], tok["dates"], table)
+    assert wt["wx"].shape == (2, len(tok["dates"]), len(jepa.WEATHER_VARS)) and wt["wx_valid"].all()
+    assert abs(wt["wx"][:, :, 0].mean()) < 1e-3  # standardised
+    tok.update(wt)
+    res = jepa.train(
+        {
+            "steps": 2,
+            "batch_size": 8,
+            "warmup": 1,
+            "d_model": 16,
+            "n_heads": 2,
+            "enc_layers": 1,
+            "pred_layers": 1,
+            "weather": True,
+        },
+        device="cpu",
+        tokens=tok,
+        out_dir=tmp_path,
+    )
+    assert res["store"].k == len(jepa.WEATHER_VARS)
+    r = jepa.response_embeddings(res["model"], tok, "cpu", batch=32, store=res["store"])
+    assert list(r.index) == ["A", "B"] and "h_norm" in r and "s0" in r and (r["windows"] > 0).all()
+    days = jepa.embed_days(res["model"], tok, "cpu", batch=32, store=res["store"])
+    assert days.shape[1] == 2 + 16

@@ -1,0 +1,25 @@
+{
+  "sites": 131,
+  "days_embedded": 131656,
+  "final_loss": 0.020126037299633026,
+  "final_embed_std": 1.0873892307281494,
+  "weather": true,
+  "cfg": {
+    "d_model": 96,
+    "n_heads": 4,
+    "enc_layers": 4,
+    "pred_layers": 2,
+    "ff_mult": 2,
+    "dropout": 0.1,
+    "batch_size": 256,
+    "steps": 4000,
+    "lr": 0.0005,
+    "weight_decay": 0.05,
+    "warmup": 200,
+    "ema_start": 0.996,
+    "ema_end": 1.0,
+    "var_weight": 1.0,
+    "weather": true,
+    "seed": 0
+  }
+}
