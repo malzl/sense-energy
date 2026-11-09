@@ -74,12 +74,11 @@ def fit(x: pd.DataFrame) -> pd.DataFrame:
                 n = f"sun_s{i}_y{y}"
                 cols[n] = x["solar_kwh_m2"].to_numpy() * k
                 names[n] = (s, y)
-    data = pd.concat([x[hd.FE + ["site_code"]], pd.DataFrame(cols, index=x.index)], axis=1)
+    data = pd.concat([x[hd.FE + ["site_code", "date"]], pd.DataFrame(cols, index=x.index)], axis=1)
     data["y"] = np.log(x["day_kw"].to_numpy())
+    vcov, kw = wc.site_vcov(data)
     f = pf.feols(
-        f"y ~ {' + '.join(cols)} | {' + '.join(hd.FE)}",
-        data=data,
-        vcov={"CRV1": "site_code+date_id"},
+        f"y ~ {' + '.join(cols)} | {' + '.join(hd.FE)}", data=data, vcov=vcov, vcov_kwargs=kw
     )
     t = f.tidy()
     rows = [

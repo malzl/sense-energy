@@ -42,6 +42,7 @@ logger = get_logger(__name__)
 OUT_DIR = PROJECT_ROOT / "code" / "reports" / "chp_dispatch"
 RED_BAND = (16, 17, 18)
 PRICE_SCALE = 100.0  # coefficients per GBP 100/MWh
+HOURLY_LAG = 48  # Driscoll-Kraay lag for the hourly regressions: two days of hours
 Z = 1.96
 
 
@@ -117,12 +118,16 @@ def daily(df: pd.DataFrame, chp: list[str], non: list[str], prices: pd.DataFrame
         cols[n] = sub[v].to_numpy() * is_non
         extra.append((n, "no CHP (pooled)"))
     data = pd.concat(
-        [sub[["fe_month", "fe_dow", "site_code", "date_id"]], pd.DataFrame(cols, index=sub.index)],
+        [
+            sub[["fe_month", "fe_dow", "site_code", "date_id", "date"]],
+            pd.DataFrame(cols, index=sub.index),
+        ],
         axis=1,
     )
     data["y"] = sub["log_kw"]
+    vcov, kw = wc.site_vcov(data)  # site-specific terms: Driscoll-Kraay over days
     fit = pf.feols(
-        f"y ~ {' + '.join(cols)} | fe_month + fe_dow", data=data, vcov={"CRV1": "date_id"}
+        f"y ~ {' + '.join(cols)} | fe_month + fe_dow", data=data, vcov=vcov, vcov_kwargs=kw
     )
     return _tidy(fit, names, extra)
 
@@ -161,7 +166,9 @@ def hourly(hm: pd.DataFrame, chp: list[str], non: list[str]) -> pd.DataFrame:
         axis=1,
     )
     data["y"] = hm["log_kw"].to_numpy()
-    fit = pf.feols(f"y ~ {' + '.join(cols)} | fe_sd + fe_shm", data=data, vcov={"CRV1": "date_id"})
+    hours = ((hm["date"] - hm["date"].min()).dt.days * 24 + hm["hour"]).to_numpy()
+    vcov, kw = wc.site_vcov(data, lag=HOURLY_LAG, time_index=hours)  # Driscoll-Kraay over hours
+    fit = pf.feols(f"y ~ {' + '.join(cols)} | fe_sd + fe_shm", data=data, vcov=vcov, vcov_kwargs=kw)
     out = _tidy(fit, names, extra)
     # pooled CHP coefficients (one regression with group-level terms)
     is_chp = hm["site_code"].isin(chp).to_numpy(dtype=float)

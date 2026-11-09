@@ -148,10 +148,11 @@ def site_slopes(df: pd.DataFrame) -> pd.DataFrame:
             n = f"{v}_s{i}"  # site codes are not formula-safe names
             cols[n] = sub[v].to_numpy() * m
             names[(v, s)] = n
-    data = pd.concat([sub[FE + ["site_code"]], pd.DataFrame(cols, index=sub.index)], axis=1)
+    data = pd.concat([sub[FE + ["site_code", "date"]], pd.DataFrame(cols, index=sub.index)], axis=1)
     data["log_kw"] = sub["log_kw"]
     fml = f"log_kw ~ {' + '.join(cols)} | {' + '.join(FE)}"
-    fit = pf.feols(fml, data=data, vcov={"CRV1": "site_code+date_id"})
+    vcov, kw = wc.site_vcov(data)  # site-specific slopes: Driscoll-Kraay, not two-way clusters
+    fit = pf.feols(fml, data=data, vcov=vcov, vcov_kwargs=kw)
     t = fit.tidy()
     rows = []
     for s in sites:

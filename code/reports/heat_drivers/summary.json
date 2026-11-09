@@ -1,144 +1,144 @@
 {
   "sites": 83,
   "tau_pct": {
-    "plain": 3.99,
-    "sunshine_controlled": 4.11
+    "plain": 3.02,
+    "sunshine_controlled": 3.09
   },
   "pooled_pct": {
-    "heat_plain": 0.63,
-    "heat_sunshine_controlled": 1.14,
-    "sunshine_per_kwh_m2": -0.88
+    "heat_plain": 1.13,
+    "heat_sunshine_controlled": 1.16,
+    "sunshine_per_kwh_m2": -0.72
   },
-  "sunshine_tau_pct": 2.08,
+  "sunshine_tau_pct": 1.52,
   "sites_falling_on_hot_days": {
-    "plain": 28,
-    "sunshine_controlled": 22,
-    "both": 21
+    "plain": 19,
+    "sunshine_controlled": 21,
+    "both": 17
   },
-  "sites_sunshine_negative_daytime": 55,
-  "sites_sunshine_positive_daytime": 12,
-  "sites_night_sunshine_negative": 17,
+  "sites_sunshine_negative_daytime": 44,
+  "sites_sunshine_positive_daytime": 7,
+  "sites_night_sunshine_negative": 4,
   "mechanisms": {
-    "risers_with_afternoon_cooling": 32,
-    "fallers_with_heating_tail": 17,
-    "risers": 41,
-    "fallers": 22
+    "risers_with_afternoon_cooling": 25,
+    "fallers_with_heating_tail": 14,
+    "risers": 33,
+    "fallers": 21
   },
   "group_decomposition_pct": {
     "daily mean | rises with heat | hdd14": [
-      1.21,
-      0.27
+      1.4,
+      0.32
     ],
     "daily mean | rises with heat | cdd20": [
-      3.72,
-      0.69
+      4.71,
+      0.81
     ],
     "daily mean | rises with heat | solar_kwh_m2": [
-      -1.26,
-      0.41
+      -0.62,
+      0.38
     ],
     "daily mean | falls with heat | hdd14": [
-      0.97,
+      0.99,
       0.25
     ],
     "daily mean | falls with heat | cdd20": [
-      -2.77,
-      0.66
+      -2.96,
+      0.67
     ],
     "daily mean | falls with heat | solar_kwh_m2": [
-      -1.09,
-      0.25
-    ],
-    "daily mean | neither | hdd14": [
-      0.86,
-      0.35
-    ],
-    "daily mean | neither | cdd20": [
-      1.67,
-      1.2
-    ],
-    "daily mean | neither | solar_kwh_m2": [
-      -0.79,
-      0.51
-    ],
-    "night and day | rises with heat | hdd14": [
-      1.23,
-      0.26
-    ],
-    "night and day | rises with heat | hot_afternoon": [
-      1.45,
-      0.38
-    ],
-    "night and day | rises with heat | warm_night": [
-      0.73,
-      0.25
-    ],
-    "night and day | rises with heat | solar_kwh_m2": [
-      -1.27,
-      0.41
-    ],
-    "night and day | falls with heat | hdd14": [
-      0.92,
-      0.24
-    ],
-    "night and day | falls with heat | hot_afternoon": [
-      -1.24,
-      0.35
-    ],
-    "night and day | falls with heat | warm_night": [
       -1.18,
       0.26
     ],
+    "daily mean | neither | hdd14": [
+      0.66,
+      0.24
+    ],
+    "daily mean | neither | cdd20": [
+      0.49,
+      0.49
+    ],
+    "daily mean | neither | solar_kwh_m2": [
+      -1.7,
+      0.52
+    ],
+    "night and day | rises with heat | hdd14": [
+      1.43,
+      0.31
+    ],
+    "night and day | rises with heat | hot_afternoon": [
+      1.93,
+      0.46
+    ],
+    "night and day | rises with heat | warm_night": [
+      1.0,
+      0.24
+    ],
+    "night and day | rises with heat | solar_kwh_m2": [
+      -0.66,
+      0.37
+    ],
+    "night and day | falls with heat | hdd14": [
+      0.95,
+      0.25
+    ],
+    "night and day | falls with heat | hot_afternoon": [
+      -1.32,
+      0.36
+    ],
+    "night and day | falls with heat | warm_night": [
+      -1.16,
+      0.26
+    ],
     "night and day | falls with heat | solar_kwh_m2": [
-      -1.05,
+      -1.15,
       0.25
     ],
     "night and day | neither | hdd14": [
-      0.86,
-      0.35
+      0.66,
+      0.23
     ],
     "night and day | neither | hot_afternoon": [
-      0.51,
-      0.7
+      -0.2,
+      0.3
     ],
     "night and day | neither | warm_night": [
-      0.36,
-      0.25
+      0.1,
+      0.27
     ],
     "night and day | neither | solar_kwh_m2": [
-      -0.77,
-      0.48
+      -1.63,
+      0.52
     ]
   },
   "corr_heat_sun": 0.046,
   "corr_heat_plain_vs_adjusted": 0.895,
   "types": {
-    "rises with heat": 16,
-    "rises with heat, falls with sunshine": 25,
-    "falls with sunshine only": 12,
-    "falls with heat": 22,
-    "neither": 8
+    "rises with heat": 19,
+    "rises with heat, falls with sunshine": 14,
+    "falls with sunshine only": 16,
+    "falls with heat": 21,
+    "neither": 13
   },
   "type_demand_share": {
-    "rises with heat": 0.452,
-    "rises with heat, falls with sunshine": 0.292,
-    "falls with sunshine only": 0.129,
+    "rises with heat": 0.476,
+    "rises with heat, falls with sunshine": 0.25,
+    "falls with sunshine only": 0.09,
     "falls with heat": 0.079,
-    "neither": 0.048
+    "neither": 0.105
   },
-  "afternoon_peaked_among_risers": 27,
-  "weekday_only": 13,
+  "afternoon_peaked_among_risers": 16,
+  "weekday_only": 7,
   "block_pooled_heat_pct": {
-    "night (00\u201306)": 0.23,
-    "morning (06\u201312)": 0.83,
-    "afternoon (12\u201318)": 3.6,
-    "evening (18\u201324)": 2.11
+    "night (00\u201306)": 0.33,
+    "morning (06\u201312)": 0.86,
+    "afternoon (12\u201318)": 2.38,
+    "evening (18\u201324)": 1.65
   },
   "block_pooled_sun_pct": {
-    "night (00\u201306)": 0.19,
-    "morning (06\u201312)": -1.09,
-    "afternoon (12\u201318)": -1.41,
-    "evening (18\u201324)": -0.46
+    "night (00\u201306)": 0.18,
+    "morning (06\u201312)": -0.7,
+    "afternoon (12\u201318)": -1.06,
+    "evening (18\u201324)": -0.31
   },
   "dec_sites": 67,
   "cert_source_counts": {
@@ -178,44 +178,44 @@
   "joint_model_sites": 38,
   "variance_explained": {
     "site sunshine term": [
-      -0.062,
-      79
+      -0.052,
+      83
     ],
     "building use": [
-      -0.047,
-      78
+      -0.135,
+      81
     ],
     "urban form and density": [
-      -0.059,
-      78
+      -0.037,
+      81
     ],
     "estates descriptors": [
-      -0.016,
-      40
+      -0.413,
+      42
     ],
     "load shape": [
-      0.062,
-      80
+      0.016,
+      83
     ],
     "all descriptors": [
-      -0.077,
-      40
+      -1.032,
+      42
     ],
     "cooling plant (DEC)": [
-      0.015,
-      66
+      -0.041,
+      67
     ],
     "heating and intensity (DEC)": [
-      -0.032,
-      66
+      -0.033,
+      67
     ],
     "all descriptors and DEC": [
-      -0.2,
-      35
+      -1.658,
+      36
     ],
     "diurnal signature": [
-      0.46,
-      79
+      0.448,
+      83
     ]
   }
 }

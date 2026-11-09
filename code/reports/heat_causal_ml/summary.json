@@ -3,28 +3,28 @@
   "rows": 99181,
   "observables": {
     "r_learner": {
-      "sites": 80,
-      "corr": -0.113,
-      "calibration_slope": -0.142,
-      "sd_cate_pct": 3.96,
-      "sd_true_slope_pct": 4.23,
-      "share_true_variance_recovered": -0.017
+      "sites": 83,
+      "corr": -0.075,
+      "calibration_slope": -0.098,
+      "sd_cate_pct": 3.92,
+      "sd_true_slope_pct": 3.09,
+      "share_true_variance_recovered": -0.016
     },
     "forest": {
-      "sites": 80,
-      "corr": 0.212,
-      "calibration_slope": 0.187,
-      "sd_cate_pct": 5.66,
-      "sd_true_slope_pct": 4.23,
-      "share_true_variance_recovered": 0.241
+      "sites": 83,
+      "corr": 0.313,
+      "calibration_slope": 0.248,
+      "sd_cate_pct": 6.45,
+      "sd_true_slope_pct": 3.09,
+      "share_true_variance_recovered": 0.404
     },
     "placebo_r_learner": {
-      "sites": 80,
-      "corr": -0.059,
-      "calibration_slope": -0.066,
+      "sites": 83,
+      "corr": -0.04,
+      "calibration_slope": -0.047,
       "sd_cate_pct": 4.42,
-      "sd_true_slope_pct": 4.23,
-      "share_true_variance_recovered": -0.005
+      "sd_true_slope_pct": 3.09,
+      "share_true_variance_recovered": 0.002
     },
     "forest_top_covariates": {
       "night_day_ratio": 0.259,
@@ -41,7 +41,7 @@
       {
         "modifier": "is_weekend",
         "value": 0.0,
-        "effect_pct": 1.695229851298705
+        "effect_pct": 1.6952298512987054
       },
       {
         "modifier": "is_weekend",
@@ -74,73 +74,73 @@
   },
   "observables + signature": {
     "r_learner": {
-      "sites": 80,
-      "corr": 0.208,
-      "calibration_slope": 0.284,
-      "sd_cate_pct": 3.66,
-      "sd_true_slope_pct": 4.23,
-      "share_true_variance_recovered": 0.181
+      "sites": 83,
+      "corr": 0.242,
+      "calibration_slope": 0.316,
+      "sd_cate_pct": 3.91,
+      "sd_true_slope_pct": 3.09,
+      "share_true_variance_recovered": 0.134
     },
     "forest": {
-      "sites": 80,
-      "corr": 0.217,
-      "calibration_slope": 0.192,
-      "sd_cate_pct": 5.65,
-      "sd_true_slope_pct": 4.23,
-      "share_true_variance_recovered": 0.247
+      "sites": 83,
+      "corr": 0.317,
+      "calibration_slope": 0.249,
+      "sd_cate_pct": 6.49,
+      "sd_true_slope_pct": 3.09,
+      "share_true_variance_recovered": 0.41
     },
     "placebo_r_learner": {
-      "sites": 80,
-      "corr": -0.015,
-      "calibration_slope": -0.016,
-      "sd_cate_pct": 4.81,
-      "sd_true_slope_pct": 4.23,
-      "share_true_variance_recovered": -0.003
+      "sites": 83,
+      "corr": -0.058,
+      "calibration_slope": -0.066,
+      "sd_cate_pct": 4.47,
+      "sd_true_slope_pct": 3.09,
+      "share_true_variance_recovered": 0.003
     },
     "forest_top_covariates": {
-      "sun_day": 0.437,
-      "heat_afternoon_excess": 0.151,
-      "night_day_ratio": 0.07,
-      "summer_tmax": 0.049,
-      "winter_summer_ratio": 0.041,
-      "log_mean_kw": 0.03,
-      "urban_city_and_town": 0.023,
-      "gas_to_elec": 0.021
+      "sun_day": 0.247,
+      "heat_afternoon_excess": 0.202,
+      "night_day_ratio": 0.104,
+      "summer_tmax": 0.076,
+      "winter_summer_ratio": 0.059,
+      "log_mean_kw": 0.044,
+      "gas_to_elec": 0.029,
+      "log_density": 0.026
     },
-    "forest_mean_effect_pct": 1.73,
+    "forest_mean_effect_pct": 1.72,
     "calendar": [
       {
         "modifier": "is_weekend",
         "value": 0.0,
-        "effect_pct": 1.7215515648047297
+        "effect_pct": 1.700240175139112
       },
       {
         "modifier": "is_weekend",
         "value": 1.0,
-        "effect_pct": 1.760715304131244
+        "effect_pct": 1.7757672569147973
       },
       {
         "modifier": "holiday",
         "value": 0.0,
-        "effect_pct": 1.7321145722553781
+        "effect_pct": 1.7211838396350159
       },
       {
         "modifier": "holiday",
         "value": 1.0,
-        "effect_pct": 1.7321145722553781
+        "effect_pct": 1.7211838396350159
       },
       {
         "modifier": "school_summer",
         "value": 0.0,
-        "effect_pct": 1.7356207608307306
+        "effect_pct": 1.7238096728095251
       },
       {
         "modifier": "school_summer",
         "value": 1.0,
-        "effect_pct": 1.7042147564454646
+        "effect_pct": 1.7008593095819882
       }
     ],
-    "sites_significant_positive": 34,
-    "sites_significant_negative": 15
+    "sites_significant_positive": 35,
+    "sites_significant_negative": 14
   }
 }

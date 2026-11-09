@@ -1,55 +1,55 @@
 {
   "heat_share_true_variance": {
-    "observables | ridge": 0.067,
-    "observables | tabpfn": 0.084,
-    "diurnal signature | ridge": 0.363,
-    "diurnal signature | tabpfn": 0.449,
-    "observables + signature | ridge": 0.012,
-    "observables + signature | tabpfn": -0.03,
-    "JEPA | ridge": 0.006,
-    "JEPA | tabpfn": 0.017,
-    "JEPA (June\u2013September) | ridge": 0.094,
-    "JEPA (June\u2013September) | tabpfn": 0.058,
-    "JEPA + observables | ridge": -0.018,
-    "JEPA + observables | tabpfn": -0.001,
-    "JEPA + signature | ridge": 0.346,
-    "JEPA + signature | tabpfn": 0.172,
-    "Chronos-2 | ridge": -0.001,
-    "Chronos-2 | tabpfn": -0.013,
-    "JEPA-weather | ridge": -0.002,
-    "JEPA-weather | tabpfn": -0.011,
-    "JEPA-weather heat response | ridge": 0.01,
-    "JEPA-weather heat response | tabpfn": 0.004,
-    "JEPA-weather sunshine response | ridge": -0.023,
-    "JEPA-weather sunshine response | tabpfn": 0.119,
-    "JEPA-weather responses + signature | ridge": 0.303,
-    "JEPA-weather responses + signature | tabpfn": 0.378
+    "observables | ridge": -0.049,
+    "observables | tabpfn": -0.013,
+    "diurnal signature | ridge": 0.304,
+    "diurnal signature | tabpfn": 0.503,
+    "observables + signature | ridge": 0.038,
+    "observables + signature | tabpfn": 0.073,
+    "JEPA | ridge": 0.044,
+    "JEPA | tabpfn": 0.053,
+    "JEPA (June\u2013September) | ridge": 0.011,
+    "JEPA (June\u2013September) | tabpfn": 0.142,
+    "JEPA + observables | ridge": -0.002,
+    "JEPA + observables | tabpfn": 0.009,
+    "JEPA + signature | ridge": 0.254,
+    "JEPA + signature | tabpfn": 0.346,
+    "Chronos-2 | ridge": 0.004,
+    "Chronos-2 | tabpfn": -0.025,
+    "JEPA-weather | ridge": -0.026,
+    "JEPA-weather | tabpfn": 0.041,
+    "JEPA-weather heat response | ridge": -0.031,
+    "JEPA-weather heat response | tabpfn": 0.078,
+    "JEPA-weather sunshine response | ridge": 0.025,
+    "JEPA-weather sunshine response | tabpfn": 0.305,
+    "JEPA-weather responses + signature | ridge": 0.354,
+    "JEPA-weather responses + signature | tabpfn": 0.548
   },
   "heat_r2_oof": {
-    "observables | ridge": -0.072,
-    "observables | tabpfn": -0.071,
-    "diurnal signature | ridge": 0.195,
-    "diurnal signature | tabpfn": 0.208,
-    "observables + signature | ridge": -0.029,
-    "observables + signature | tabpfn": 0.003,
-    "JEPA | ridge": -0.064,
-    "JEPA | tabpfn": -0.005,
-    "JEPA (June\u2013September) | ridge": 0.052,
-    "JEPA (June\u2013September) | tabpfn": 0.016,
-    "JEPA + observables | ridge": -0.054,
-    "JEPA + observables | tabpfn": -0.038,
-    "JEPA + signature | ridge": 0.194,
-    "JEPA + signature | tabpfn": 0.026,
-    "Chronos-2 | ridge": -0.047,
-    "Chronos-2 | tabpfn": -0.066,
-    "JEPA-weather | ridge": -0.052,
-    "JEPA-weather | tabpfn": 0.007,
-    "JEPA-weather heat response | ridge": -0.1,
-    "JEPA-weather heat response | tabpfn": -0.098,
-    "JEPA-weather sunshine response | ridge": -0.009,
-    "JEPA-weather sunshine response | tabpfn": 0.083,
-    "JEPA-weather responses + signature | ridge": 0.127,
-    "JEPA-weather responses + signature | tabpfn": 0.121
+    "observables | ridge": -0.071,
+    "observables | tabpfn": -0.039,
+    "diurnal signature | ridge": 0.162,
+    "diurnal signature | tabpfn": 0.26,
+    "observables + signature | ridge": -0.03,
+    "observables + signature | tabpfn": 0.033,
+    "JEPA | ridge": -0.026,
+    "JEPA | tabpfn": 0.095,
+    "JEPA (June\u2013September) | ridge": 0.138,
+    "JEPA (June\u2013September) | tabpfn": 0.099,
+    "JEPA + observables | ridge": -0.036,
+    "JEPA + observables | tabpfn": -0.025,
+    "JEPA + signature | ridge": 0.246,
+    "JEPA + signature | tabpfn": 0.205,
+    "Chronos-2 | ridge": -0.011,
+    "Chronos-2 | tabpfn": 0.002,
+    "JEPA-weather | ridge": 0.037,
+    "JEPA-weather | tabpfn": -0.005,
+    "JEPA-weather heat response | ridge": -0.082,
+    "JEPA-weather heat response | tabpfn": -0.021,
+    "JEPA-weather sunshine response | ridge": 0.117,
+    "JEPA-weather sunshine response | tabpfn": 0.182,
+    "JEPA-weather responses + signature | ridge": 0.138,
+    "JEPA-weather responses + signature | tabpfn": 0.24
   },
   "classification_accuracy": {
     "use | observables": [
@@ -57,7 +57,7 @@
       0.623
     ],
     "use | diurnal signature": [
-      0.613,
+      0.61,
       0.623
     ],
     "use | observables + signature": [
@@ -77,7 +77,7 @@
       0.623
     ],
     "use | JEPA + signature": [
-      0.657,
+      0.651,
       0.623
     ],
     "use | Chronos-2": [
@@ -97,7 +97,7 @@
       0.623
     ],
     "use | JEPA-weather responses + signature": [
-      0.545,
+      0.551,
       0.623
     ],
     "dec_main_environment | observables": [
@@ -105,11 +105,11 @@
       0.594
     ],
     "dec_main_environment | diurnal signature": [
-      0.577,
+      0.573,
       0.594
     ],
     "dec_main_environment | observables + signature": [
-      0.95,
+      0.952,
       0.594
     ],
     "dec_main_environment | JEPA": [
@@ -125,7 +125,7 @@
       0.594
     ],
     "dec_main_environment | JEPA + signature": [
-      0.512,
+      0.509,
       0.594
     ],
     "dec_main_environment | Chronos-2": [
@@ -145,7 +145,7 @@
       0.594
     ],
     "dec_main_environment | JEPA-weather responses + signature": [
-      0.516,
+      0.519,
       0.594
     ]
   },

@@ -550,7 +550,8 @@ between-site comparison.</p>
 
 <p>Dose × site interactions in one regression give 107 cold and 106 heat slopes with standard
 errors; a random-effects decomposition (DerSimonian–Laird) separates the true between-site
-spread (τ) from sampling noise, and empirical-Bayes shrinkage gives each site a posterior slope.</p>
+spread (τ) from sampling noise, and empirical-Bayes shrinkage gives each site a posterior slope.
+The standard errors of the site slopes are Driscoll–Kraay (14-day lag); see the correction below.</p>
 <table>
 <thead>
 <tr>
@@ -562,39 +563,47 @@ spread (τ) from sampling noise, and empirical-Bayes shrinkage gives each site a
 <tbody>
 <tr>
   <td>Pooled slope</td>
-  <td>+1.14</td>
-  <td>+0.96</td>
+  <td>+0.86</td>
+  <td>+1.38</td>
 </tr>
 <tr>
   <td>True between-site SD (τ)</td>
-  <td>1.30</td>
-  <td>3.91</td>
+  <td>1.06</td>
+  <td>2.89</td>
 </tr>
 <tr>
   <td>Share of observed variance that is real (I²)</td>
-  <td>0.99</td>
-  <td>0.99</td>
+  <td>0.97</td>
+  <td>0.94</td>
 </tr>
 <tr>
   <td>Posterior, 10th / 50th / 90th percentile</td>
-  <td>−0.2 / +0.7 / +3.1</td>
-  <td>−3.9 / +0.5 / +7.0</td>
+  <td>−0.2 / +0.7 / +2.9</td>
+  <td>−3.0 / +0.8 / +5.4</td>
 </tr>
 <tr>
   <td>Sites significantly above / below zero</td>
-  <td>82 / 8</td>
-  <td>48 / 39</td>
+  <td>69 / 4</td>
+  <td>43 / 26</td>
 </tr>
 </tbody>
 </table>
 <ul>
 <li><strong>The average hides the sites.</strong> Both slopes vary far more between sites than their standard
-errors can explain (I² = 0.99). The cold slope runs from about zero to +3 % per °C; the heat
-slope from −4 to +7, with 39 sites that significantly <em>fall</em> on hot days against 48 that rise.
-&quot;The heat effect&quot; is an average over sites that differ in sign. The cold and heat slopes of a
-site are only weakly related (correlation 0.21).</li>
-<li>Three site-dose slopes (RCBL8 heat, RWRRK heat, RY318 both) have undefined clustered
-variances and are left out of the shrinkage.</li>
+errors can explain (I² = 0.97 and 0.94). The heat slope runs from about −3 to +5 % per °C
+across the middle 80 % of sites, with 26 sites that significantly <em>fall</em> on hot days against
+43 that rise. &quot;The heat effect&quot; is an average over sites that differ in sign. The cold and heat
+slopes of a site are only weakly related (correlation 0.23).</li>
+<li><strong>Correction (9 November 2026).</strong> The first version of this section clustered the site slopes'
+standard errors by site and date. For a coefficient that belongs to one site that variance is
+wrong: the site cluster contributes nothing (the site's score sums to zero) and the date and
+intersection terms cancel, so the errors came out below even heteroskedasticity-robust ones.
+The slopes now carry Driscoll–Kraay errors (scores summed by date, Newey–West kernel over 14
+days; a per-site Newey–West variance gives the same), 1.7 times the old errors for cold, 2.0
+times for heat and 3.2 times for sunshine. The heterogeneity is real either way; it is smaller
+(I² 0.94–0.97 rather than 0.99) and fewer sites are individually significant (heat: 43 rising
+and 26 falling, was 48 and 39; cold: 69 and 4, was 82 and 8). Pooled estimates, the moderator
+regressions and every result clustered on shared coefficients are unchanged.</li>
 </ul>
 <h3 id="7-2-moderators-moderators">7.2 Moderators (<code>moderators</code>)</h3>
 <div class="figrow"><figure class="inrow"><img src="figures/moderators.png" alt="moderators" loading="lazy"><figcaption><code>moderators</code> <a href="figures/moderators.pdf">PDF</a></figcaption></figure></div>
@@ -684,9 +693,9 @@ shift of section 4, now visible group by group, and landing on the system peak.<
 <h2 id="8-what-moves-heat">8. What moves heat</h2>
 <p><code>sense-energy heat-drivers</code> (<code>analysis/heat_drivers.py</code>, tables in <code>code/reports/heat_drivers/</code>,
 figures <code>heat_*</code>, <code>sunshine_slopes</code>, <code>map_heat_types</code>). Section 7 left the heat slope unexplained:
-a real spread of ±4 points around +1 % per °C, 39 sites falling on hot days, and none of the
+a real spread of ±3 points around +1.4 % per °C, 26 sites falling on hot days, and none of the
 estates descriptors predicting any of it. This section takes the slope apart on the same panel
-(sites without CHP, specification B, standard errors clustered by site and date), with three
+(sites without CHP, specification B; site-specific slopes with Driscoll–Kraay standard errors), with three
 additions: a site-specific <strong>sunshine</strong> term, the demand of each <strong>six-hour block</strong> of the day
 and the <strong>weekend</strong>, and the heat dose split into <strong>hot afternoons and warm nights</strong>. Two new
 open datasets feed the moderators: the ONS rural-urban classification and Census 2021 population
@@ -703,33 +712,35 @@ and two sites' +12 %, with monthly demand swinging threefold. 83 sites remain
 <h3 id="8-1-sunshine-heat-sunshine-control-sunshine-slopes-heat-bloc">8.1 Sunshine (<code>heat_sunshine_control</code>, <code>sunshine_slopes</code>, <code>heat_blocks_sunshine</code>)</h3>
 <div class="figrow"><figure class="inrow"><img src="figures/heat_sunshine_control.png" alt="heat_sunshine_control" loading="lazy"><figcaption><code>heat_sunshine_control</code> <a href="figures/heat_sunshine_control.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/sunshine_slopes.png" alt="sunshine_slopes" loading="lazy"><figcaption><code>sunshine_slopes</code> <a href="figures/sunshine_slopes.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_blocks_sunshine.png" alt="heat_blocks_sunshine" loading="lazy"><figcaption><code>heat_blocks_sunshine</code> <a href="figures/heat_blocks_sunshine.pdf">PDF</a></figcaption></figure></div>
 
-<p>Hot days are sunny days, and 55 of the 83 sites import less electricity on sunny days at a given
-temperature: the pooled sunshine slope is −0.9 % per kWh/m² of daily surface solar radiation,
-which is −5 % between an overcast and a clear summer day. The slope has the shape of daylight:
-−1.1 % in the morning block, −1.4 % in the afternoon, −0.5 % in the evening and +0.2 % at night
-(<code>heat_blocks_sunshine</code>). Sites that report solar generation to ERIC have a sunshine slope 1.9
-points more negative than the rest (p = 0.06), community inpatient sites 3.9 points more
-negative (p = 0.005). It is daylight-linked lighting across the estate, plus panels where there
-are panels.</p>
-<p>It is not, however, where the heat dispersion comes from. Adding the sunshine term moves the
-pooled heat slope from +0.6 to +1.1 % per °C (the daylight saving was masking some cooling) and
-leaves the between-site SD at 4.0–4.1 points; the two heat slopes correlate 0.90, and 22 sites
-still fall significantly with heat net of sunshine (28 before). The heat and sunshine slopes of a
-site are unrelated (r = 0.05). REPD confirms there is little rooftop PV behind these meters yet:
-24 sites have a scheme at their postcode, all 2025 applications awaiting construction, none
-operational within the sample.</p>
+<p>Hot days are sunny days, and 44 of the 83 sites import significantly less electricity on sunny
+days at a given temperature (7 more): the pooled sunshine slope is -0.7 % per kWh/m² of
+daily surface solar radiation, about −4 % between an overcast and a clear summer day. The slope has
+the shape of daylight: -0.7 % in the morning block, -1.1 % in the afternoon, -0.3 % in the evening
+and +0.2 % at night (<code>heat_blocks_sunshine</code>). Sites that report solar generation to ERIC have a
+sunshine slope 1.9 points more negative than the rest (p = 0.06), community inpatient sites 3.9
+points more negative (p = 0.005). It is daylight-linked lighting across the estate, plus panels
+where there are panels.</p>
+<p>It is not where the heat dispersion comes from. Adding the sunshine term leaves the pooled heat
+slope where it was (+1.13 and +1.16 % per °C) and the between-site SD at
+3.0–3.1 points; the two heat slopes correlate 0.90, and 21 sites fall significantly with heat
+net of sunshine (19 before). The heat and sunshine slopes of a site are unrelated
+(r = 0.05). REPD confirms there is little rooftop PV behind these meters yet: 24 sites have a
+scheme at their postcode, all 2025 applications awaiting construction, none operational within the
+sample. (Before the correction of the standard errors, the sunshine control appeared to raise the
+pooled heat slope from +0.6 to +1.1; that was the old inverse-variance weights, not the data.)</p>
 <h3 id="8-2-time-of-day-and-the-week-heat-blocks-heat-heat-signature">8.2 Time of day and the week (<code>heat_blocks_heat</code>, <code>heat_signature</code>, <code>heat_weekend</code>)</h3>
 <div class="figrow"><figure class="inrow"><img src="figures/heat_blocks_heat.png" alt="heat_blocks_heat" loading="lazy"><figcaption><code>heat_blocks_heat</code> <a href="figures/heat_blocks_heat.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_signature.png" alt="heat_signature" loading="lazy"><figcaption><code>heat_signature</code> <a href="figures/heat_signature.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_weekend.png" alt="heat_weekend" loading="lazy"><figcaption><code>heat_weekend</code> <a href="figures/heat_weekend.pdf">PDF</a></figcaption></figure></div>
 
-<p>The heat response is an afternoon-and-evening phenomenon: pooled across sites it is +0.2 % per °C
-at night, +0.8 % in the morning, +3.6 % in the afternoon and +2.1 % in the evening. Among the 41
-sites that rise with heat, 32 have an afternoon block slope significantly above their night
-block: cooling plant that works with the sun. The 22 fallers fall through the whole day, night
-included (their block slopes run −1.3 to −3.7 %), which no sunshine mechanism can produce.</p>
-<p>Weekday and weekend heat slopes correlate 0.66; 13 risers have a significantly smaller weekend
-response (plant that runs with the working day). The median site's weekend response is 0.9
-points <em>larger</em> than its weekday one, which is a percentage effect: the same cooling kilowatts
-against a lower weekend baseline.</p>
+<p>The heat response is an afternoon-and-evening phenomenon: pooled across sites it is
++0.3 % per °C at night, +0.9 % in the morning, +2.4 % in the afternoon and +1.6 % in the
+evening. Among the 33 sites that rise with heat, 16 have an afternoon block slope significantly above
+their night block: cooling plant that works with the sun. The 21 fallers fall through the whole
+day, night included (median block slopes −1.8 % at night to −3.5 % in the afternoon), which no
+sunshine mechanism can produce.</p>
+<p>Weekday and weekend heat slopes correlate 0.65; 7 risers have a significantly smaller weekend
+response (plant that runs with the working day). The median site's weekend response is 1.1 points
+<em>larger</em> than its weekday one, which is a percentage effect: the same cooling kilowatts against a
+lower weekend baseline.</p>
 <h3 id="8-3-hot-afternoons-and-warm-nights-heat-night-day-heat-group">8.3 Hot afternoons and warm nights (<code>heat_night_day</code>, <code>heat_group_decomposition</code>)</h3>
 <div class="figrow"><figure class="inrow"><img src="figures/heat_night_day.png" alt="heat_night_day" loading="lazy"><figcaption><code>heat_night_day</code> <a href="figures/heat_night_day.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_group_decomposition.png" alt="heat_group_decomposition" loading="lazy"><figcaption><code>heat_group_decomposition</code> <a href="figures/heat_group_decomposition.pdf">PDF</a></figcaption></figure></div>
 
@@ -746,22 +757,22 @@ against a lower weekend baseline.</p>
 </thead>
 <tbody>
 <tr>
-  <td>rise with heat (41, 74 % of demand)</td>
-  <td>+1.45 (0.38)</td>
-  <td>+0.73 (0.26)</td>
-  <td>−1.27 (0.41)</td>
+  <td>rise with heat (33, 73 % of demand)</td>
+  <td>+1.93 [+1.01, +2.85]</td>
+  <td>+1.00 [+0.53, +1.47]</td>
+  <td>−0.66 [−1.39, +0.08]</td>
 </tr>
 <tr>
-  <td>fall with heat (22, 8 % of demand)</td>
-  <td>−1.24 (0.35)</td>
-  <td>−1.18 (0.26)</td>
-  <td>−1.05 (0.25)</td>
+  <td>fall with heat (21, 8 % of demand)</td>
+  <td>−1.32 [−2.03, −0.60]</td>
+  <td>−1.16 [−1.68, −0.64]</td>
+  <td>−1.15 [−1.65, −0.64]</td>
 </tr>
 <tr>
-  <td>neither (20)</td>
-  <td>+0.51 (0.70)</td>
-  <td>+0.36 (0.25)</td>
-  <td>−0.77 (0.48)</td>
+  <td>neither (29)</td>
+  <td>−0.20 [−0.80, +0.40]</td>
+  <td>+0.10 [−0.43, +0.63]</td>
+  <td>−1.63 [−2.67, −0.60]</td>
 </tr>
 </tbody>
 </table>
@@ -783,221 +794,221 @@ against a lower weekend baseline.</p>
       <td>daily mean</td>
       <td>rises with heat</td>
       <td>cold (per °C of daily mean below 14 °C)</td>
-      <td>1.21</td>
-      <td>0.68</td>
-      <td>1.74</td>
+      <td>1.4</td>
+      <td>0.77</td>
+      <td>2.03</td>
       <td>0</td>
-      <td>41</td>
+      <td>33</td>
     </tr>
     <tr>
       <td>daily mean</td>
       <td>rises with heat</td>
       <td>heat (per °C of daily mean above 20 °C)</td>
-      <td>3.72</td>
-      <td>2.35</td>
-      <td>5.1</td>
+      <td>4.71</td>
+      <td>3.1</td>
+      <td>6.32</td>
       <td>0</td>
-      <td>41</td>
+      <td>33</td>
     </tr>
     <tr>
       <td>daily mean</td>
       <td>rises with heat</td>
       <td>sunshine (per kWh/m²)</td>
-      <td>-1.26</td>
-      <td>-2.07</td>
-      <td>-0.44</td>
-      <td>0</td>
-      <td>41</td>
+      <td>-0.62</td>
+      <td>-1.37</td>
+      <td>0.13</td>
+      <td>0.1</td>
+      <td>33</td>
     </tr>
     <tr>
       <td>daily mean</td>
       <td>falls with heat</td>
       <td>cold (per °C of daily mean below 14 °C)</td>
-      <td>0.97</td>
-      <td>0.48</td>
-      <td>1.46</td>
+      <td>0.99</td>
+      <td>0.49</td>
+      <td>1.49</td>
       <td>0</td>
-      <td>22</td>
+      <td>21</td>
     </tr>
     <tr>
       <td>daily mean</td>
       <td>falls with heat</td>
       <td>heat (per °C of daily mean above 20 °C)</td>
-      <td>-2.77</td>
-      <td>-4.08</td>
-      <td>-1.46</td>
+      <td>-2.96</td>
+      <td>-4.29</td>
+      <td>-1.64</td>
       <td>0</td>
-      <td>22</td>
+      <td>21</td>
     </tr>
     <tr>
       <td>daily mean</td>
       <td>falls with heat</td>
       <td>sunshine (per kWh/m²)</td>
-      <td>-1.09</td>
-      <td>-1.58</td>
-      <td>-0.6</td>
-      <td>0</td>
-      <td>22</td>
-    </tr>
-    <tr>
-      <td>daily mean</td>
-      <td>neither</td>
-      <td>cold (per °C of daily mean below 14 °C)</td>
-      <td>0.86</td>
-      <td>0.15</td>
-      <td>1.56</td>
-      <td>0.02</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <td>daily mean</td>
-      <td>neither</td>
-      <td>heat (per °C of daily mean above 20 °C)</td>
-      <td>1.67</td>
-      <td>-0.71</td>
-      <td>4.06</td>
-      <td>0.17</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <td>daily mean</td>
-      <td>neither</td>
-      <td>sunshine (per kWh/m²)</td>
-      <td>-0.79</td>
-      <td>-1.8</td>
-      <td>0.22</td>
-      <td>0.12</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>rises with heat</td>
-      <td>cold (per °C of daily mean below 14 °C)</td>
-      <td>1.23</td>
-      <td>0.7</td>
-      <td>1.75</td>
-      <td>0</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>rises with heat</td>
-      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
-      <td>1.45</td>
-      <td>0.68</td>
-      <td>2.21</td>
-      <td>0</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>rises with heat</td>
-      <td>warm night (per °C of daily minimum above 12 °C)</td>
-      <td>0.73</td>
-      <td>0.22</td>
-      <td>1.24</td>
-      <td>0.01</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>rises with heat</td>
-      <td>sunshine (per kWh/m²)</td>
-      <td>-1.27</td>
-      <td>-2.07</td>
-      <td>-0.46</td>
-      <td>0</td>
-      <td>41</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>falls with heat</td>
-      <td>cold (per °C of daily mean below 14 °C)</td>
-      <td>0.92</td>
-      <td>0.44</td>
-      <td>1.41</td>
-      <td>0</td>
-      <td>22</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>falls with heat</td>
-      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
-      <td>-1.24</td>
-      <td>-1.94</td>
-      <td>-0.55</td>
-      <td>0</td>
-      <td>22</td>
-    </tr>
-    <tr>
-      <td>night and day</td>
-      <td>falls with heat</td>
-      <td>warm night (per °C of daily minimum above 12 °C)</td>
       <td>-1.18</td>
       <td>-1.69</td>
       <td>-0.67</td>
       <td>0</td>
-      <td>22</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>neither</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>0.66</td>
+      <td>0.19</td>
+      <td>1.13</td>
+      <td>0.01</td>
+      <td>29</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>neither</td>
+      <td>heat (per °C of daily mean above 20 °C)</td>
+      <td>0.49</td>
+      <td>-0.48</td>
+      <td>1.47</td>
+      <td>0.32</td>
+      <td>29</td>
+    </tr>
+    <tr>
+      <td>daily mean</td>
+      <td>neither</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-1.7</td>
+      <td>-2.74</td>
+      <td>-0.66</td>
+      <td>0</td>
+      <td>29</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>1.43</td>
+      <td>0.81</td>
+      <td>2.05</td>
+      <td>0</td>
+      <td>33</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
+      <td>1.93</td>
+      <td>1.01</td>
+      <td>2.85</td>
+      <td>0</td>
+      <td>33</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>warm night (per °C of daily minimum above 12 °C)</td>
+      <td>1</td>
+      <td>0.53</td>
+      <td>1.47</td>
+      <td>0</td>
+      <td>33</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>rises with heat</td>
+      <td>sunshine (per kWh/m²)</td>
+      <td>-0.66</td>
+      <td>-1.39</td>
+      <td>0.08</td>
+      <td>0.08</td>
+      <td>33</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>cold (per °C of daily mean below 14 °C)</td>
+      <td>0.95</td>
+      <td>0.45</td>
+      <td>1.45</td>
+      <td>0</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
+      <td>-1.32</td>
+      <td>-2.03</td>
+      <td>-0.6</td>
+      <td>0</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <td>night and day</td>
+      <td>falls with heat</td>
+      <td>warm night (per °C of daily minimum above 12 °C)</td>
+      <td>-1.16</td>
+      <td>-1.68</td>
+      <td>-0.64</td>
+      <td>0</td>
+      <td>21</td>
     </tr>
     <tr>
       <td>night and day</td>
       <td>falls with heat</td>
       <td>sunshine (per kWh/m²)</td>
-      <td>-1.05</td>
-      <td>-1.54</td>
-      <td>-0.57</td>
+      <td>-1.15</td>
+      <td>-1.65</td>
+      <td>-0.64</td>
       <td>0</td>
-      <td>22</td>
+      <td>21</td>
     </tr>
     <tr>
       <td>night and day</td>
       <td>neither</td>
       <td>cold (per °C of daily mean below 14 °C)</td>
-      <td>0.86</td>
-      <td>0.16</td>
-      <td>1.56</td>
-      <td>0.02</td>
-      <td>20</td>
+      <td>0.66</td>
+      <td>0.2</td>
+      <td>1.12</td>
+      <td>0.01</td>
+      <td>29</td>
     </tr>
     <tr>
       <td>night and day</td>
       <td>neither</td>
       <td>hot afternoon (per °C of daily maximum above 24 °C)</td>
-      <td>0.51</td>
-      <td>-0.87</td>
-      <td>1.89</td>
-      <td>0.46</td>
-      <td>20</td>
+      <td>-0.2</td>
+      <td>-0.8</td>
+      <td>0.4</td>
+      <td>0.5</td>
+      <td>29</td>
     </tr>
     <tr>
       <td>night and day</td>
       <td>neither</td>
       <td>warm night (per °C of daily minimum above 12 °C)</td>
-      <td>0.36</td>
-      <td>-0.14</td>
-      <td>0.86</td>
-      <td>0.16</td>
-      <td>20</td>
+      <td>0.1</td>
+      <td>-0.43</td>
+      <td>0.63</td>
+      <td>0.71</td>
+      <td>29</td>
     </tr>
     <tr>
       <td>night and day</td>
       <td>neither</td>
       <td>sunshine (per kWh/m²)</td>
-      <td>-0.77</td>
-      <td>-1.73</td>
-      <td>0.19</td>
-      <td>0.11</td>
-      <td>20</td>
+      <td>-1.63</td>
+      <td>-2.67</td>
+      <td>-0.6</td>
+      <td>0</td>
+      <td>29</td>
     </tr>
   </tbody>
 </table><p class="source">source: <a href="data/group_decomposition.csv">code/reports/heat_drivers/group_decomposition.csv</a> (21 rows shown)</p>
 
 <p>Risers respond twice as much to hot afternoons as to warm nights: cooling. Fallers respond to
-both, and as much to the night minimum as to the afternoon maximum: 17 of the 22 have a
+both, and as much to the night minimum as to the afternoon maximum: 14 of the 21 have a
 significantly negative warm-night slope (<code>heating_tail</code> flag). That is the signature of
 heating that is still running in the warm season and switches off when the night is warm:
 electric heating and the auxiliaries of gas heating in small buildings (the fallers' median
-demand is 9 kW against 21 kW for risers), plus water heating that follows mains-water
+demand is 10 kW against 28 kW for risers), plus water heating that follows mains-water
 temperature. The extreme cases say the same: Kelling Hospital runs 50 kW in winter and 19 kW in
 summer, Malton 43 kW in April and 30 kW in July, and South Devon's renal unit (dialysis water
 heated to 37 °C) falls 16 % per °C. &quot;Falls with heat&quot; is a heating-season tail, not a cooling
@@ -1013,9 +1024,9 @@ effect cannot masquerade as a heat moderator), one at a time:</p>
 island does not show up in the response, consistent with the thermometer result of section 6.</li>
 <li><strong>Nothing in use, age or heating fuel.</strong> Building use (p = 0.35), build year, gas-to-electricity
 ratio, LED share, heat pumps, winter/summer ratio, size: none.</li>
-<li><strong>What moves it is how electrically intensive the estate is.</strong> Peak demand per m² (+0.7 points
-per SD, p = 0.05 alone; the joint model puts it on electricity intensity instead: +1.9 points
-per SD, p = 0.001), tenure (joint p = 0.02: leased sites +0.9, PFI/LIFT/other −0.9) and solar
+<li><strong>What moves it, weakly, is how electrically intensive the estate is.</strong> Peak demand per m² (+0.7
+points per SD, p = 0.06 alone), tenure (joint p = 0.02: leased sites +0.9, PFI/LIFT/other −0.9)
+and solar
 generation in ERIC (+2.0 points, p = 0.01), which reads as a marker of trusts that invest in
 their plant. Overheating reports in clinical areas go with a larger heat slope (+0.8, p = 0.13):
 sites that overheat respond, presumably with portable and retrofitted cooling.</li>
@@ -1034,83 +1045,83 @@ sites that overheat respond, presumably with portable and retrofitted cooling.</
   <tbody>
     <tr>
       <td>site sunshine term</td>
-      <td>79</td>
+      <td>83</td>
       <td>0</td>
-      <td>3.99</td>
-      <td>4.11</td>
-      <td>-0.06</td>
-    </tr>
-    <tr>
-      <td>building use</td>
-      <td>78</td>
-      <td>3</td>
-      <td>4.21</td>
-      <td>4.31</td>
+      <td>3.02</td>
+      <td>3.09</td>
       <td>-0.05</td>
     </tr>
     <tr>
-      <td>urban form and density</td>
-      <td>78</td>
+      <td>building use</td>
+      <td>81</td>
       <td>3</td>
-      <td>4.26</td>
-      <td>4.38</td>
-      <td>-0.06</td>
+      <td>3.07</td>
+      <td>3.27</td>
+      <td>-0.13</td>
+    </tr>
+    <tr>
+      <td>urban form and density</td>
+      <td>81</td>
+      <td>3</td>
+      <td>3.09</td>
+      <td>3.15</td>
+      <td>-0.04</td>
     </tr>
     <tr>
       <td>estates descriptors</td>
-      <td>40</td>
+      <td>42</td>
       <td>10</td>
-      <td>3.55</td>
-      <td>3.58</td>
-      <td>-0.02</td>
+      <td>2.52</td>
+      <td>2.99</td>
+      <td>-0.41</td>
     </tr>
     <tr>
       <td>load shape</td>
-      <td>80</td>
+      <td>83</td>
       <td>4</td>
-      <td>4.23</td>
-      <td>4.09</td>
-      <td>0.06</td>
+      <td>3.09</td>
+      <td>3.07</td>
+      <td>0.02</td>
     </tr>
     <tr>
       <td>all descriptors</td>
-      <td>40</td>
+      <td>42</td>
       <td>20</td>
-      <td>3.55</td>
-      <td>3.69</td>
-      <td>-0.08</td>
+      <td>2.52</td>
+      <td>3.59</td>
+      <td>-1.03</td>
     </tr>
     <tr>
       <td>cooling plant (DEC)</td>
-      <td>66</td>
+      <td>67</td>
       <td>2</td>
-      <td>4.25</td>
-      <td>4.22</td>
-      <td>0.01</td>
+      <td>2.83</td>
+      <td>2.89</td>
+      <td>-0.04</td>
     </tr>
     <tr>
       <td>heating and intensity (DEC)</td>
-      <td>66</td>
+      <td>67</td>
       <td>2</td>
-      <td>4.25</td>
-      <td>4.32</td>
+      <td>2.83</td>
+      <td>2.88</td>
       <td>-0.03</td>
     </tr>
     <tr>
       <td>all descriptors and DEC</td>
-      <td>35</td>
+      <td>36</td>
       <td>24</td>
-      <td>3.38</td>
-      <td>3.7</td>
-      <td>-0.2</td>
+      <td>2.14</td>
+      <td>3.49</td>
+      <td>-1.66</td>
     </tr>
     <tr>
       <td>diurnal signature</td>
-      <td>79</td>
+      <td>83</td>
       <td>2</td>
-      <td>4.11</td>
-      <td>3.02</td>
-      <td>0.46</td>
+      <td>3.09</td>
+      <td>2.3</td>
+      <td>0.45</td>
     </tr>
   </tbody>
 </table><p class="source">source: <a href="data/variance_explained.csv">code/reports/heat_drivers/variance_explained.csv</a> (10 rows shown)</p>
@@ -1118,27 +1129,28 @@ sites that overheat respond, presumably with portable and retrofitted cooling.</
 <ul>
 <li><strong>How much is explained.</strong> A random-effects meta-regression of the sunshine-controlled site
 slopes on each descriptor set gives the share of the <em>true</em> between-site variance it accounts
-for: building use, urban form and density, the estates descriptors, the load shape, and all of
-them together each explain nothing (−8 % to +6 %). The site's own diurnal signature (afternoon
-excess and sunshine slope) explains 46 %. The heat slope is about plant on the site, which shows
-in the shape of the day and not in anything the estates return records.</li>
+for: building use, urban form and density, the estates descriptors, the load shape, the DEC
+fields and all of them together each explain nothing (negative shares mean the parameters cost
+more than they explain). The site's own diurnal signature (afternoon excess and sunshine slope)
+explains 45 %. The heat slope is about plant on the site, which shows in the shape of
+the day and not in anything the estates return records.</li>
 </ul>
 <h3 id="8-5-types-heat-signature-map-heat-types">8.5 Types (<code>heat_signature</code>, <code>map_heat_types</code>)</h3>
 <div class="figrow"><figure class="inrow"><img src="figures/heat_signature.png" alt="heat_signature" loading="lazy"><figcaption><code>heat_signature</code> <a href="figures/heat_signature.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/map_heat_types.png" alt="map_heat_types" loading="lazy"><figcaption><code>map_heat_types</code> <a href="figures/map_heat_types.pdf">PDF</a></figcaption></figure></div>
 
-<p>By significance at 5 %: 16 sites rise with heat and nothing else (45 % of demand), 25 rise with
-heat and fall with sunshine (29 %), 12 fall with sunshine only (13 %), 22 fall with heat (8 %),
-8 neither (5 %). Three quarters of the metered demand sits on sites whose electricity rises on hot
-afternoons. The map shows the types mixed within regions and ICBs: the type is a property of the
-building, not of the place.</p>
+<p>By significance at 5 %: 19 sites rise with heat and nothing else (48 % of demand), 14 rise
+with heat and fall with sunshine (25 %), 16 fall with sunshine only (9 %), 21 fall with
+heat (8 %), 13 neither (10 %). Three quarters of the metered demand sits on sites
+whose electricity rises on hot afternoons. The map shows the types mixed within regions and ICBs:
+the type is a property of the building, not of the place.</p>
 <h3 id="8-6-what-this-changes">8.6 What this changes</h3>
 <ul>
-<li>The cooling response of the estate is cleaner and larger than the raw heat slope says: +1.1 %
-per °C of daily mean above 20 °C net of daylight, +1.45 % per °C of daily maximum above 24 °C
-at the sites that have cooling, and concentrated in the afternoon and evening.</li>
+<li>The cooling response of the estate: +1.2 % per °C of daily mean above 20 °C net of daylight,
++1.9 % per °C of daily maximum above 24 °C at the sites that have cooling, and concentrated in
+the afternoon and evening.</li>
 <li>&quot;Sites that fall on hot days&quot; are small, heating-dominated buildings in their shoulder season,
 with 8 % of the demand; they should not be modelled as cooling anomalies.</li>
-<li>Sunshine deserves a place in the day-ahead feature set in its own right: −0.9 % per kWh/m² is
+<li>Sunshine deserves a place in the day-ahead feature set in its own right: -0.7 % per kWh/m² is
 a daily swing of several percent, separate from temperature.</li>
 <li>The direct data on cooling plant is the Display Energy Certificate register; section 8.7 reads
 it. It confirms the direction (the sites whose buildings are classed as air-conditioned have the
@@ -1160,8 +1172,8 @@ newer ones link an advisory report with the assessor's recommendations.</p>
 <li><strong>&quot;Air conditioning present&quot; is almost universal and separates nothing.</strong> The question covers
 any system, server rooms included: 51 of the 67 sites are &quot;mostly air-conditioned&quot; by floor area
 and 16 have none. The heat slope of the two groups differs by 1.0 point (p = 0.46; medians 1.4
-against 0.4 % per °C), and the air-conditioned floor share explains 1.5 % of the true between-site
-variance.</li>
+against 0.4 % per °C), and the air-conditioned and cooled floor shares together explain none of
+the true between-site variance.</li>
 <li><strong>The building environment does separate, at the top.</strong> The dominant class is heating with
 natural ventilation at 38 sites, mechanical ventilation at 13, mixed mode at 13 and air
 conditioning at 3. Those three sites (34 kW median) have a heat slope 3.1 points above the
@@ -1204,30 +1216,30 @@ from a model that never saw it. Covariates: the estates, context and DEC descrip
 plus three calendar modifiers (weekend, bank holiday, school summer); a second run adds the site's
 diurnal signature. A placebo shuffles the site covariates across sites.</p>
 <ul>
-<li><strong>The forest recovers a quarter of the heterogeneity from observables; the linear moderators
-recovered none.</strong> Out of fold, the forest's site effects correlate 0.21 with the
-fixed-effect slopes and recover 24 % of their true
-between-site variance (calibration slope 0.19: the learned effects are
-spread 5.7 points against a true 4.2, so they are
-over-dispersed and should be shrunk before use). The R-learner with observables alone finds
-nothing (-0.11); with the signature it reaches 0.21 and
-18 %. The placebo sits at -0.06 and
--0.01.</li>
+<li><strong>The forest recovers two fifths of the heterogeneity from observables; the linear moderators
+recovered none.</strong> Out of fold, the forest's site effects correlate 0.31 with the fixed-effect
+slopes and recover 40 % of their true between-site variance (calibration slope 0.25: the learned
+effects are spread 6.5 points against a true 3.1, so they are over-dispersed and should be
+shrunk before use). The R-learner with observables alone finds nothing (−0.08); with the
+signature it reaches 0.24 and 13 %. The placebo sits at −0.04 and 0 %. (Before the correction
+of the site standard errors the forest's share read 24 %: the old errors overstated the true
+spread, 4.2 points, which the forest was then measured against.)</li>
 <li><strong>What the forest splits on</strong> is the load shape and the climate, not the estates fields: the
-night/day ratio (0.26 of importance), the winter/summer
-ratio, size, the gas ratio and the summer maximum; with the signature in, the daytime sunshine
-slope takes 0.44 and the afternoon excess 0.15.
-The DEC fields do not enter the top splits.</li>
+night/day ratio (0.26 of importance), the winter/summer ratio, size, the gas ratio and the
+summer maximum; with the signature in, the daytime sunshine slope takes 0.25 and the afternoon
+excess 0.20. Of the DEC fields only the electricity intensity enters the top eight, at 0.03.</li>
 <li><strong>The calendar does not modify the heat response.</strong> With site x weekday effects already in, the
 forest's effect is 1.70 % per °C on weekdays and 1.82 at weekends,
 and identical on bank holidays and in the school summer holiday. The weekend difference of
 section 8.2 is a percentage effect on a lower baseline, not a different response.</li>
 <li><strong>Who the forest gets right.</strong> 35 sites have a learned effect significantly above zero
-and 15 below; the large risers are recovered, the fallers are not (the forest
-places most of them near zero): their heating tail has no observable to split on.</li>
+and 15 below. The risers are recovered in rank (correlation 0.45 among them) though shrunk
+towards the mean (median +2.6 % against +4.7 % in the regressions); the fallers are not: the
+forest places them at the panel average (median +2.3 % against −3.9 %), because their heating
+tail has no observable to split on.</li>
 </ul>
 <p>The mean learned effect is 1.73 % per °C, an unweighted site-day average against
-the regression's pooled +1.1; the difference is the weighting. Next in this thread: shrink the
+the regression's pooled +1.2; the difference is the weighting. Next in this thread: shrink the
 forest effects (empirical Bayes against the fixed-effect slopes), and use the dated ERIC changes
 (section 7 of <code>estates_analysis.md</code>) as staggered treatments for installation effects.</p>
 <h2 id="9-does-any-of-this-reach-the-day-ahead-forecasts-forecast-he">9. Does any of this reach the day-ahead forecasts? (<code>forecast_heat_days</code>)</h2>
@@ -1335,7 +1347,8 @@ token per day (48 half-hours scaled by the site's trailing month, weekday, seaso
 days per window whose embeddings under a slowly moving target encoder the predictor must produce
 from the other 21; 0.48 million parameters, 4,000 steps on 131 sites, 131,656 days
 embedded. The test was pre-registered: does the site's embedding predict its fixed-effect heat
-slope out of fold better than the diurnal signature (46 %)? Alongside it the same probe ran on
+slope out of fold better than the diurnal signature (46 %; 45 % with the corrected standard
+errors)? Alongside it the same probe ran on
 the Chronos-2 encoder's embedding of each site's demand (the foundation-model teacher), on the
 observable descriptors and on the signature, with a ridge probe and with TabPFN.</p>
 <details class="table"><summary>Table: 72 rows</summary><table class="dataframe data">
@@ -1355,666 +1368,667 @@ observable descriptors and on the signature, with a ridge probe and with TabPFN.
       <td>heat slope net of sunshine</td>
       <td>observables</td>
       <td>ridge</td>
-      <td>80</td>
+      <td>83</td>
       <td>47</td>
       <td>-0.07</td>
-      <td>0.07</td>
+      <td>-0.05</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>observables</td>
       <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>47</td>
-      <td>-0.07</td>
-      <td>0.08</td>
+      <td>-0.04</td>
+      <td>-0.01</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>diurnal signature</td>
       <td>ridge</td>
-      <td>80</td>
+      <td>83</td>
       <td>2</td>
-      <td>0.2</td>
-      <td>0.36</td>
+      <td>0.16</td>
+      <td>0.3</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>diurnal signature</td>
       <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>2</td>
-      <td>0.21</td>
-      <td>0.45</td>
+      <td>0.26</td>
+      <td>0.5</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>observables + signature</td>
       <td>ridge</td>
-      <td>80</td>
+      <td>83</td>
       <td>49</td>
       <td>-0.03</td>
-      <td>0.01</td>
+      <td>0.04</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>observables + signature</td>
       <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>49</td>
-      <td>0</td>
-      <td>-0.03</td>
+      <td>0.03</td>
+      <td>0.07</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>JEPA</td>
       <td>ridge</td>
-      <td>80</td>
+      <td>83</td>
       <td>96</td>
-      <td>-0.06</td>
-      <td>0.01</td>
+      <td>-0.03</td>
+      <td>0.04</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>JEPA</td>
       <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>96</td>
-      <td>0</td>
-      <td>0.02</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA (June–September)</td>
-      <td>ridge</td>
-      <td>80</td>
-      <td>96</td>
+      <td>0.1</td>
       <td>0.05</td>
-      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA (June–September)</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.14</td>
+      <td>0.01</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>JEPA (June–September)</td>
       <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>96</td>
-      <td>0.02</td>
-      <td>0.06</td>
+      <td>0.1</td>
+      <td>0.14</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>JEPA + observables</td>
       <td>ridge</td>
-      <td>80</td>
-      <td>143</td>
-      <td>-0.05</td>
-      <td>-0.02</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA + observables</td>
-      <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>143</td>
       <td>-0.04</td>
       <td>0</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
+      <td>JEPA + observables</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>143</td>
+      <td>-0.02</td>
+      <td>0.01</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
       <td>JEPA + signature</td>
       <td>ridge</td>
-      <td>80</td>
+      <td>83</td>
       <td>98</td>
-      <td>0.19</td>
+      <td>0.25</td>
+      <td>0.25</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA + signature</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>98</td>
+      <td>0.2</td>
       <td>0.35</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
-      <td>JEPA + signature</td>
-      <td>tabpfn</td>
-      <td>80</td>
-      <td>98</td>
-      <td>0.03</td>
-      <td>0.17</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
       <td>Chronos-2</td>
       <td>ridge</td>
-      <td>80</td>
+      <td>83</td>
       <td>768</td>
-      <td>-0.05</td>
+      <td>-0.01</td>
       <td>0</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>Chronos-2</td>
       <td>tabpfn</td>
-      <td>80</td>
+      <td>83</td>
       <td>768</td>
-      <td>-0.07</td>
-      <td>-0.01</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA-weather</td>
-      <td>ridge</td>
-      <td>80</td>
-      <td>96</td>
-      <td>-0.05</td>
       <td>0</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA-weather</td>
-      <td>tabpfn</td>
-      <td>80</td>
-      <td>96</td>
-      <td>0.01</td>
-      <td>-0.01</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA-weather heat response</td>
-      <td>ridge</td>
-      <td>80</td>
-      <td>97</td>
-      <td>-0.1</td>
-      <td>0.01</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA-weather heat response</td>
-      <td>tabpfn</td>
-      <td>80</td>
-      <td>97</td>
-      <td>-0.1</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <td>heat slope net of sunshine</td>
-      <td>JEPA-weather sunshine response</td>
-      <td>ridge</td>
-      <td>80</td>
-      <td>97</td>
-      <td>-0.01</td>
       <td>-0.02</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
-      <td>JEPA-weather sunshine response</td>
-      <td>tabpfn</td>
-      <td>80</td>
-      <td>97</td>
-      <td>0.08</td>
-      <td>0.12</td>
+      <td>JEPA-weather</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.04</td>
+      <td>-0.03</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
-      <td>JEPA-weather responses + signature</td>
+      <td>JEPA-weather</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0</td>
+      <td>0.04</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather heat response</td>
       <td>ridge</td>
-      <td>80</td>
-      <td>99</td>
-      <td>0.13</td>
+      <td>83</td>
+      <td>97</td>
+      <td>-0.08</td>
+      <td>-0.03</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather heat response</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>97</td>
+      <td>-0.02</td>
+      <td>0.08</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>97</td>
+      <td>0.12</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>97</td>
+      <td>0.18</td>
       <td>0.3</td>
     </tr>
     <tr>
       <td>heat slope net of sunshine</td>
       <td>JEPA-weather responses + signature</td>
-      <td>tabpfn</td>
-      <td>80</td>
+      <td>ridge</td>
+      <td>83</td>
       <td>99</td>
-      <td>0.12</td>
-      <td>0.38</td>
+      <td>0.14</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <td>heat slope net of sunshine</td>
+      <td>JEPA-weather responses + signature</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>99</td>
+      <td>0.24</td>
+      <td>0.55</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>observables</td>
       <td>ridge</td>
-      <td>82</td>
+      <td>83</td>
       <td>47</td>
-      <td>0.2</td>
+      <td>0.19</td>
       <td>0.18</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>observables</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>47</td>
-      <td>0.12</td>
-      <td>0.12</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>diurnal signature</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>2</td>
-      <td>0.16</td>
-      <td>0.12</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>diurnal signature</td>
-      <td>tabpfn</td>
-      <td>82</td>
-      <td>2</td>
-      <td>0.09</td>
-      <td>0.03</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>observables + signature</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>49</td>
-      <td>0.23</td>
-      <td>0.2</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>observables + signature</td>
-      <td>tabpfn</td>
-      <td>82</td>
-      <td>49</td>
-      <td>0.16</td>
-      <td>0.15</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>96</td>
-      <td>0.01</td>
-      <td>0.03</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA</td>
-      <td>tabpfn</td>
-      <td>82</td>
-      <td>96</td>
-      <td>0.15</td>
-      <td>0.17</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA (June–September)</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>96</td>
-      <td>-0.06</td>
-      <td>0.04</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA (June–September)</td>
-      <td>tabpfn</td>
-      <td>82</td>
-      <td>96</td>
-      <td>0</td>
-      <td>0.02</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA + observables</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>143</td>
-      <td>0.18</td>
-      <td>0.16</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA + observables</td>
-      <td>tabpfn</td>
-      <td>82</td>
-      <td>143</td>
-      <td>0.1</td>
-      <td>0.12</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA + signature</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>98</td>
       <td>0.15</td>
       <td>0.14</td>
     </tr>
     <tr>
       <td>cold slope</td>
+      <td>diurnal signature</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>2</td>
+      <td>0.15</td>
+      <td>0.16</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>diurnal signature</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>2</td>
+      <td>0.1</td>
+      <td>0.16</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>observables + signature</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>49</td>
+      <td>0.22</td>
+      <td>0.23</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>observables + signature</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>49</td>
+      <td>0.16</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>-0.02</td>
+      <td>0.01</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.14</td>
+      <td>0.13</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA (June–September)</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>-0.03</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA (June–September)</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>96</td>
+      <td>-0.06</td>
+      <td>-0.02</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA + observables</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>143</td>
+      <td>0.15</td>
+      <td>0.17</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA + observables</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>143</td>
+      <td>0.15</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA + signature</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>98</td>
+      <td>0.07</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
       <td>JEPA + signature</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>98</td>
-      <td>0.21</td>
-      <td>0.21</td>
+      <td>0.13</td>
+      <td>0.15</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>Chronos-2</td>
       <td>ridge</td>
-      <td>82</td>
+      <td>83</td>
       <td>768</td>
-      <td>0.41</td>
       <td>0.42</td>
+      <td>0.53</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>Chronos-2</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>768</td>
-      <td>0.38</td>
-      <td>0.4</td>
+      <td>0.39</td>
+      <td>0.53</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather</td>
       <td>ridge</td>
-      <td>82</td>
+      <td>83</td>
       <td>96</td>
-      <td>0.06</td>
-      <td>0.08</td>
+      <td>-0.16</td>
+      <td>0.04</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>96</td>
+      <td>0.04</td>
       <td>0.1</td>
+    </tr>
+    <tr>
+      <td>cold slope</td>
+      <td>JEPA-weather heat response</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>97</td>
+      <td>0.18</td>
       <td>0.11</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather heat response</td>
-      <td>ridge</td>
-      <td>82</td>
-      <td>97</td>
-      <td>0.23</td>
-      <td>0.22</td>
-    </tr>
-    <tr>
-      <td>cold slope</td>
-      <td>JEPA-weather heat response</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>97</td>
-      <td>0.33</td>
-      <td>0.33</td>
+      <td>0.09</td>
+      <td>0.09</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather sunshine response</td>
       <td>ridge</td>
-      <td>82</td>
+      <td>83</td>
       <td>97</td>
+      <td>0.2</td>
       <td>0.23</td>
-      <td>0.22</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather sunshine response</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>97</td>
-      <td>0.27</td>
-      <td>0.24</td>
+      <td>0.28</td>
+      <td>0.34</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather responses + signature</td>
       <td>ridge</td>
-      <td>82</td>
+      <td>83</td>
       <td>99</td>
-      <td>0.28</td>
-      <td>0.26</td>
+      <td>0.21</td>
+      <td>0.17</td>
     </tr>
     <tr>
       <td>cold slope</td>
       <td>JEPA-weather responses + signature</td>
       <td>tabpfn</td>
-      <td>82</td>
+      <td>83</td>
       <td>99</td>
-      <td>0.23</td>
-      <td>0.22</td>
+      <td>-0.04</td>
+      <td>0.06</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
       <td>observables</td>
       <td>ridge</td>
-      <td>81</td>
+      <td>83</td>
       <td>47</td>
-      <td>0.29</td>
       <td>0.28</td>
+      <td>0.16</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
       <td>observables</td>
       <td>tabpfn</td>
-      <td>81</td>
+      <td>83</td>
       <td>47</td>
-      <td>0.33</td>
+      <td>0.42</td>
+      <td>0.28</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>diurnal signature</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>2</td>
+      <td>0.89</td>
+      <td>0.93</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>diurnal signature</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>2</td>
+      <td>0.95</td>
+      <td>0.99</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>observables + signature</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>49</td>
+      <td>0.59</td>
+      <td>0.42</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>observables + signature</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>49</td>
+      <td>0.62</td>
+      <td>0.6</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.52</td>
+      <td>0.32</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.46</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA (June–September)</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.55</td>
+      <td>0.46</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA (June–September)</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.46</td>
       <td>0.38</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>diurnal signature</td>
+      <td>JEPA + observables</td>
       <td>ridge</td>
-      <td>81</td>
-      <td>2</td>
-      <td>0.91</td>
+      <td>83</td>
+      <td>143</td>
+      <td>0.6</td>
+      <td>0.45</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA + observables</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>143</td>
+      <td>0.57</td>
+      <td>0.49</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA + signature</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>98</td>
       <td>0.9</td>
+      <td>0.91</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>diurnal signature</td>
+      <td>JEPA + signature</td>
       <td>tabpfn</td>
-      <td>81</td>
-      <td>2</td>
-      <td>0.95</td>
+      <td>83</td>
+      <td>98</td>
       <td>0.94</td>
+      <td>0.93</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>observables + signature</td>
+      <td>Chronos-2</td>
       <td>ridge</td>
-      <td>81</td>
-      <td>49</td>
-      <td>0.58</td>
-      <td>0.55</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>observables + signature</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>49</td>
-      <td>0.67</td>
-      <td>0.68</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>96</td>
-      <td>0.52</td>
-      <td>0.47</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>96</td>
-      <td>0.44</td>
-      <td>0.48</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA (June–September)</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>96</td>
-      <td>0.52</td>
-      <td>0.52</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA (June–September)</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>96</td>
-      <td>0.43</td>
+      <td>83</td>
+      <td>768</td>
+      <td>0.64</td>
       <td>0.54</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>JEPA + observables</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>143</td>
-      <td>0.61</td>
-      <td>0.56</td>
+      <td>Chronos-2</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>768</td>
+      <td>0.69</td>
+      <td>0.66</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>JEPA + observables</td>
+      <td>JEPA-weather</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.47</td>
+      <td>0.49</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather</td>
       <td>tabpfn</td>
-      <td>81</td>
-      <td>143</td>
-      <td>0.51</td>
+      <td>83</td>
+      <td>96</td>
+      <td>0.24</td>
+      <td>0.48</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather heat response</td>
+      <td>ridge</td>
+      <td>83</td>
+      <td>97</td>
+      <td>0.65</td>
       <td>0.53</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>JEPA + signature</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>98</td>
-      <td>0.92</td>
-      <td>0.92</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA + signature</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>98</td>
-      <td>0.95</td>
-      <td>0.94</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>Chronos-2</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>768</td>
-      <td>0.66</td>
-      <td>0.63</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>Chronos-2</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>768</td>
-      <td>0.63</td>
-      <td>0.63</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA-weather</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>96</td>
-      <td>0.49</td>
-      <td>0.55</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA-weather</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>96</td>
-      <td>0.49</td>
-      <td>0.61</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
-      <td>JEPA-weather heat response</td>
-      <td>ridge</td>
-      <td>81</td>
-      <td>97</td>
-      <td>0.67</td>
-      <td>0.63</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
       <td>JEPA-weather heat response</td>
       <td>tabpfn</td>
-      <td>81</td>
+      <td>83</td>
       <td>97</td>
-      <td>0.68</td>
       <td>0.7</td>
+      <td>0.65</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
       <td>JEPA-weather sunshine response</td>
       <td>ridge</td>
-      <td>81</td>
+      <td>83</td>
       <td>97</td>
-      <td>0.65</td>
+      <td>0.64</td>
+      <td>0.54</td>
+    </tr>
+    <tr>
+      <td>sunshine slope</td>
+      <td>JEPA-weather sunshine response</td>
+      <td>tabpfn</td>
+      <td>83</td>
+      <td>97</td>
+      <td>0.63</td>
       <td>0.62</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
-      <td>JEPA-weather sunshine response</td>
-      <td>tabpfn</td>
-      <td>81</td>
-      <td>97</td>
-      <td>0.59</td>
-      <td>0.65</td>
-    </tr>
-    <tr>
-      <td>sunshine slope</td>
       <td>JEPA-weather responses + signature</td>
       <td>ridge</td>
-      <td>81</td>
+      <td>83</td>
       <td>99</td>
+      <td>0.87</td>
       <td>0.86</td>
-      <td>0.84</td>
     </tr>
     <tr>
       <td>sunshine slope</td>
       <td>JEPA-weather responses + signature</td>
       <td>tabpfn</td>
-      <td>81</td>
+      <td>83</td>
       <td>99</td>
-      <td>0.82</td>
-      <td>0.81</td>
+      <td>0.87</td>
+      <td>0.85</td>
     </tr>
   </tbody>
 </table></details><p class="source">source: <a href="data/probe.csv">code/reports/jepa/probe.csv</a> (72 rows shown)</p>
 
 <ul>
-<li><strong>No, on the heat slope.</strong> The JEPA embedding recovers 1 % of the true
-between-site heat variance (9 % from June–September days only), the
-Chronos-2 embedding -0 %, the observables 7 %, the
-diurnal signature 36 % (ridge) and 45 % (TabPFN).
+<li><strong>No, on the heat slope.</strong> The JEPA embedding recovers 4 % of the true
+between-site heat variance (1 % from June–September days only; 5 % and 14 % with TabPFN), the
+Chronos-2 embedding 0 %, the observables nothing (−5 %), the diurnal signature 30 % (ridge) and
+50 % (TabPFN). (Shares recomputed on 9 November against slopes with Driscoll–Kraay standard
+errors.)
 Adding the embedding to the signature adds nothing. By the criterion set in advance, the thread
 stops here.</li>
 <li><strong>Yes, on the responses that show in the day's shape.</strong> The same embeddings carry the sunshine
-slope well (Chronos-2 63 %, JEPA 52 %) and
-Chronos-2 carries the cold slope (42 %) where the observables manage
+slope well (Chronos-2 54 %, JEPA 32 %; 66 % and 35 % with TabPFN) and
+Chronos-2 carries the cold slope (53 %) where the observables manage
 18 %. Daylight-linked lighting and electric heating leave a mark on the profile
 that a weather-blind representation picks up; an afternoon cooling response does not, because
-it is conditional on a driver the model never sees. (The signature's 90 % on sunshine is
+it is conditional on a driver the model never sees. (The signature's 93 % on sunshine is
 circular: the daytime sunshine slope is one of its two components.)</li>
 <li><strong>The embeddings encode operation, not category.</strong> Building use is classified at
 66 % by the JEPA embedding and 53 % by Chronos-2 against a
@@ -2033,15 +2047,18 @@ warmer, a different predicted embedding. The mean change per site is a learned <
 vector</em> (<code>response_embeddings</code>; the same for +2 kWh/m² of sunshine). With the batch pipeline on
 the GPU the model trains in three minutes instead of 75. The probe, repeated:</p>
 <ul>
-<li><strong>Still no on the heat slope.</strong> The weather-conditioned embedding recovers 0 % of the
-true heat variance, the heat response vector 1 % (0 % with TabPFN), the
-sunshine response vector 12 % (TabPFN). The latent response to a warmer day has
+<li><strong>Still no on the heat slope.</strong> The weather-conditioned embedding recovers none of the
+true heat variance (−3 %; 4 % with TabPFN), the heat response vector none (−3 %; 8 % with
+TabPFN). The sunshine response vector reaches 31 % with TabPFN and 3 % with ridge: one probe,
+not a stable signal, and below the signature's 50 %. The latent response to a warmer day has
 almost the same size at every site (<code>jepa_response</code>): the predictor learned the panel's average
 weather-to-profile mapping, not each site's.</li>
-<li><strong>Yes on the cold and sunshine responses.</strong> The same heat response vector recovers
-22 % of the cold slope (33 % with TabPFN), against 18 % from the
-observables and 3 % from the weather-blind JEPA; and 63 % of the sunshine slope,
-level with Chronos-2. Conditioning on weather did put responses into the embedding, the large
+<li><strong>Yes on the cold and sunshine responses.</strong> The sunshine response vector recovers 23 % of
+the cold slope (34 % with TabPFN), against 18 % from the observables and 1 % from the
+weather-blind JEPA; the heat response vector recovers 53 % of the sunshine slope (65 % with
+TabPFN), level with Chronos-2. Which vector carries the cold slope moved with the correction of
+the standard errors (before it the heat vector did, at 22–33 %): the two are readings of one
+learned weather sensitivity, not separate responses. Conditioning on weather did put responses into the embedding, the large
 and frequent ones: heating runs on a third of days and moves demand by tens of per cent, hot
 afternoons on three per cent of days and by a few per cent. A loss that weights every day
 equally cannot see the second.</li>

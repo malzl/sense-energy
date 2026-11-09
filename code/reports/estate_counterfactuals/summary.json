@@ -14,33 +14,33 @@
     {
       "shift_c": 1.0,
       "sites": 83,
-      "median_energy_change_pct": -0.437,
-      "p90_energy_change_pct": 0.178,
+      "median_energy_change_pct": -0.436,
+      "p90_energy_change_pct": 0.072,
       "sites_with_capacity": 31,
       "median_summer_util": 0.332,
-      "max_summer_util": 0.867,
+      "max_summer_util": 0.864,
       "sites_summer_util_above_90pct": 0,
       "sites_summer_above_winter_hp": 0
     },
     {
       "shift_c": 2.0,
       "sites": 83,
-      "median_energy_change_pct": -0.796,
-      "p90_energy_change_pct": 0.475,
+      "median_energy_change_pct": -0.785,
+      "p90_energy_change_pct": 0.244,
       "sites_with_capacity": 31,
       "median_summer_util": 0.331,
-      "max_summer_util": 0.928,
-      "sites_summer_util_above_90pct": 2,
+      "max_summer_util": 0.922,
+      "sites_summer_util_above_90pct": 1,
       "sites_summer_above_winter_hp": 0
     },
     {
       "shift_c": 4.0,
       "sites": 83,
-      "median_energy_change_pct": -1.456,
-      "p90_energy_change_pct": 1.488,
+      "median_energy_change_pct": -1.199,
+      "p90_energy_change_pct": 0.794,
       "sites_with_capacity": 31,
-      "median_summer_util": 0.387,
-      "max_summer_util": 1.062,
+      "median_summer_util": 0.331,
+      "max_summer_util": 1.05,
       "sites_summer_util_above_90pct": 2,
       "sites_summer_above_winter_hp": 0
     }
@@ -49,11 +49,11 @@
     "no_chp": {
       "sites": 56,
       "site_days": 370,
-      "kwh_attr": 44994,
-      "share_pct": 4.49,
-      "median_site_day_share_pct": 2.28,
-      "cost_gbp_wholesale": 2165,
-      "co2_t": 6.1,
+      "kwh_attr": 43426,
+      "share_pct": 4.33,
+      "median_site_day_share_pct": 2.05,
+      "cost_gbp_wholesale": 2089,
+      "co2_t": 6.0,
       "mean_t_excess_c": 4.26
     },
     "chp_import": {

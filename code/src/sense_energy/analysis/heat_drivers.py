@@ -249,10 +249,11 @@ def fit_sites(sub: pd.DataFrame, y: np.ndarray, terms: tuple[str, ...], weekend:
     import pyfixest as pf
 
     design, names, sites = site_design(sub, terms, weekend)
-    data = pd.concat([sub[FE + ["site_code"]], design], axis=1)
+    data = pd.concat([sub[FE + ["site_code", "date"]], design], axis=1)
     data["y"] = np.asarray(y, dtype=float)
     fml = f"y ~ {' + '.join(design.columns)} | {' + '.join(FE)}"
-    fit = pf.feols(fml, data=data, vcov={"CRV1": "site_code+date_id"})
+    vcov, kw = wc.site_vcov(data)
+    fit = pf.feols(fml, data=data, vcov=vcov, vcov_kwargs=kw)
     return fit, names, sites
 
 

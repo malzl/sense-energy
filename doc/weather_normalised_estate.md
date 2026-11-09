@@ -8,22 +8,32 @@ hour by hour. A site's demand in hour h under another temperature is the observe
 exp(β_heat[s, h] × change in the heat dose + β_cold[s, h] × change in the cold dose). Commands:
 `hourly-response`, `installation-savings`, `estate-counterfactuals`, `solar-watch`, `chp-dispatch`.
 
+**Correction (9 November 2026).** The first version of this page used standard errors clustered
+by site and date for the site-specific coefficients. For a coefficient that belongs to one site
+those understate the uncertainty two- to threefold; the numbers here use Driscoll–Kraay standard
+errors (`weather_causal.site_vcov`). Point estimates barely moved; the shrinkage weights and every
+count of "significant" sites did. What changed: the solar watch now finds 8 downward and 5 upward
+breaks instead of 19 and 23, and the LED reading of the upward breaks does not survive; 10 CHP
+plants test heat-led instead of 13; one site, not two, passes its capacity at +4 °C. The installation
+savings use a different model and are unaffected.
+
 ## 1. Where in the day the weather response lives (`hourly_pooled`, `hourly_heat_profiles`, `hot_day_peak`)
 
 The heat response is an afternoon and evening phenomenon at almost every site. Pooled, a degree
-of daily mean above 20 °C adds 0.2 % at night (00:00–06:00) and 3.3 % on average between 12:00
-and 19:00; the cold response is flat through the day at about 1 % per degree; sunshine lowers
-demand by 1.8 % per kWh/m² between 09:00 and 16:00 and not at night.
+of daily mean above 20 °C adds 0.4 % at night (00:00–06:00) and 2.5 % on average between 12:00
+and 19:00, peaking at 3.3 % in the 16:00 hour; the cold response is flat through the day at about
+0.8 % per degree (0.5–1.2 %); sunshine lowers demand by 1.2 % per kWh/m² between 09:00 and 16:00
+and not at night.
 
 {{chart: code/reports/hourly_response/pooled.csv | kind=line | x=hour | y=pooled | color=term | title=Pooled response by local hour (log points per °C or per kWh/m²) | xlabel=local hour | ylabel=pooled response | height=300}}
 
-- **The red band carries a fifth of each site's heat response.** At the median site, 20 % of the
-  positive heat response falls in 16:00–19:00 (interquartile 11–26 %), 1.6 times the band's share
+- **The red band carries a fifth of each site's heat response.** At the median site, 22 % of the
+  positive heat response falls in 16:00–19:00 (interquartile 16–28 %), 1.8 times the band's share
   of the day: warm afternoons raise demand when distribution charges are highest.
 - **Hot days move the peak later.** On summer weekdays at or above 25 °C the site's demand peak
   falls later than on other summer weekdays at 37 of 81 sites and earlier at 10; the hot-day peak
   is 3 % higher at the median site.
-- **The site profiles differ.** 55 % of sites peak between 12:00 and 19:00, the rest are spread
+- **The site profiles differ.** 61 % of sites peak between 12:00 and 19:00, the rest are spread
   through the night and morning, where small responses dominate the noise.
 
 {{table: code/reports/hourly_response/site_profiles.csv | cols=site_code,heat_peak_hour,heat_redband_share,heat_daily_mean_pct,heat_evening_excess_pct,cold_daily_mean_pct,peak_hour_hot,peak_hour_other,peak_ratio_hot | sort=-heat_daily_mean_pct | round=2 | head=30}}
@@ -31,8 +41,8 @@ demand by 1.8 % per kWh/m² between 09:00 and 16:00 and not at night.
 **The JEPA counterfactual machine, checked (`jepa_cf_check`).** The weather-conditioned JEPA
 predicts each summer day's embedding with the day's temperature raised by 5 °C; a decoder turns
 both predictions into half-hours. Against the regression on the same 6,601 site-days it gets the
-size right (median +5.4 % against +5.0 %), ranks sites weakly (r = 0.35 across sites) and has no
-hourly shape (median correlation of the two hour profiles −0.02). As a counterfactual machine it
+size roughly right (median +5.4 % against +4.3 %), ranks sites weakly (r = 0.35 across sites) and
+has no hourly shape (median correlation of the two hour profiles 0.00). As a counterfactual machine it
 knows that a warm day costs about five per cent; it does not know when, or where.
 
 ## 2. Weather-normalised savings of the reported installations (`installation_savings`)
@@ -66,11 +76,12 @@ bound), through each site's hourly heat and cold response.
 
 {{table: code/reports/estate_counterfactuals/warming_summary.csv | round=3}}
 
-- **Annual electricity falls slightly.** At the median site −0.4 %, −0.8 % and −1.5 % at +1, +2
-  and +4 °C: less heating outweighs more cooling; a tenth of sites rise, by up to 1.5 % at +4 °C.
-- **Summer peaks barely move, with two exceptions.** Median utilisation of available capacity
-  goes from 0.33 to 0.39 at +4 °C. Two sites (RWR63, RREA9) pass 90 % of capacity at +2 °C and
-  exceed it at +4 °C, for 14–24 half-hours a summer.
+- **Annual electricity falls slightly.** At the median site −0.4 %, −0.8 % and −1.2 % at +1, +2
+  and +4 °C: less heating outweighs more cooling; a quarter of sites rise, the top tenth by 0.8 %
+  or more at +4 °C (at most 2.9 %).
+- **Summer peaks barely move, with one exception.** Median utilisation of available capacity
+  stays at 0.33. One site (RWR63) passes 90 % of capacity at +2 °C and exceeds it at +4 °C, for 21
+  half-hours a summer; a second (RREA9) reaches 94 % at +4 °C for 7 half-hours.
 - **Electrification binds first, everywhere.** No site's summer peak at +4 °C reaches its winter
   peak with heat pumps replacing gas (headroom analysis). The connection question for the NHS
   estate is winter heat, not summer cooling.
@@ -84,12 +95,12 @@ priced at the market index price and costed at the grid's carbon intensity.
 
 {{table: code/reports/estate_counterfactuals/heatwave_events.csv | cols=event_id,start,end,group,sites,site_days,kwh_attr,share_pct,cost_gbp,co2_t | round=1}}
 
-- **Sites without CHP: 4.5 % more electricity on heatwave days.** 45 MWh over 370 site-days at 56
-  sites, at 4.3 °C above normal; £2,200 at wholesale prices and 6 t CO₂. The median site-day adds
-  2.3 %.
+- **Sites without CHP: 4.3 % more electricity on heatwave days.** 43 MWh over 370 site-days at 56
+  sites, at 4.3 °C above normal; £2,100 at wholesale prices and 6 t CO₂. The median site-day adds
+  2.1 %.
 - **Sites with CHP: 12 % more grid import.** 180 MWh over 127 site-days at 17 sites, £8,100 and
   25 t CO₂: the heat-led plants turn down when there is no heat demand, so the grid carries the
-  hot days. Per site-day the CHP sites cost the grid nine times what the others do.
+  hot days. Per site-day the CHP sites cost eleven times what the others do (£64 against £5.60).
 - **The days are unusual in shape, too.** The JEPA's latent surprise is 8 % higher on heatwave days
   than on other summer days, at sites with and without CHP alike (p < 0.001 and 0.02).
 
@@ -102,16 +113,20 @@ break downwards. Daytime demand of April–September days regressed on site × s
 radiation (summers 2023, 2024, 2025) with the usual effects; a break is a fall of more than one
 point per kWh/m² beyond 2.5 standard errors.
 
-- **Three of the four sites whose returns report new or grown solar break**, and the breaks date
-  the installations: Church Hill House and Potters Bar Community Hospital between the 2023 and
-  2024 summers (−1 to −22 and −1 to −21 points), St George's Hospital progressively. Bridlington
-  has no 2023 summer in the record and already sits at −25 in 2024.
+- **Eight of 107 sites break downwards, and three of them are three of the four sites whose
+  returns report new or grown solar.** The breaks date the installations: Church Hill House and
+  Potters Bar Community Hospital between the 2023 and 2024 summers (−2 to −23 and −1 to −21
+  points), St George's Hospital progressively (−4.5, −7.8, −9.4). Bridlington has no 2023 summer
+  in the record and already sits at −25 in 2024.
 - **Candidates without reported solar:** Queen Victoria Memorial Hospital (−2 to −18 from 2023 to
-  2024), St Paul's Hemel Hempstead (−2 to −19 in 2025), the Health Records Library and 99 Waverley
-  Road (−8 in 2025). The estates return counts only trust-owned solar; panels installed by a
-  landlord or a third party appear here and not there.
-- **LED shows as the opposite break.** 23 sites' sunshine slope moved *towards zero*, and most of
-  them went to full LED: with efficient lighting, daylight displaces less load.
+  2024) and St Paul's Hemel Hempstead (−2 to −19 in 2025) break as sharply as the reported
+  installations. 99 Waverley Road and Hampden House fall to −8 in 2025, the Hospital of St Cross
+  to −3. The estates return counts only trust-owned solar; panels installed by a landlord or a
+  third party appear here and not there.
+- **LED leaves at most a faint opposite trace.** Five sites break upwards, only one of them after
+  an LED programme. Sites that went to full LED moved their sunshine slope 0.8 points towards zero
+  at the median, the rest 0.1 (regression on LED coverage change, p = 0.1). Before the correction
+  of the standard errors this looked like 23 upward breaks driven by LED; it was noise.
 
 {{table: code/reports/solar_watch/breaks.csv | cols=site_code,site_name,sun_2023_pct,sun_2024_pct,sun_2025_pct,change_pct,z,eric_solar_new_or_grown,eric_led_change_pts,break_down,break_up | sort=change_pct | round=2 | head=25}}
 
@@ -125,7 +140,7 @@ working-day red band against weekends (plants run to avoid red-band charges).
 
 - **Pooled, nothing:** the CHP sites' price and red-band coefficients equal the placebo's (+12.7
   against +13.1 % per £100/MWh; +14.2 against +14.2 %). The pooled null hides opposite behaviours.
-- **Per site: 13 of 23 heat-led, 7 price-following, 15 red-band avoiding.** The red-band avoiders
+- **Per site: 10 of 23 heat-led, 7 price-following, 15 red-band avoiding.** The red-band avoiders
   cut import by 3 to 18 % in 16:00–19:00 on working days; four sites (Royal Preston, George Eliot,
   North Devon, Scarborough) import 24 to 41 % *more*, their plant apparently stopping in the
   evening. University Hospital Coventry does all three at a capacity factor of 0.91.

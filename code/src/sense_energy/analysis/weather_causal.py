@@ -107,6 +107,32 @@ GROUPS = {
 # --------------------------------------------------------------------------- #
 
 
+#: Site-specific coefficients (dose x site interactions) take a Driscoll-Kraay variance: two-way
+#: clustering by site and date understates them, because a regressor that belongs to one site
+#: has a single site cluster (its score sums to zero there) while the date and intersection
+#: terms cancel. Driscoll-Kraay sums the scores by date and applies a Newey-West kernel over
+#: dates, robust to serial and cross-sectional correlation; in the site-slope regression it
+#: matches a per-site Newey-West variance and is 1.7-3.2 times the two-way standard error.
+HAC_LAG_DAYS = 14
+
+
+def site_vcov(
+    data: pd.DataFrame,
+    date_col: str = "date",
+    site_col: str = "site_code",
+    lag: int = HAC_LAG_DAYS,
+    time_index: np.ndarray | None = None,
+):
+    """Add numeric panel and time ids to ``data`` (in place) and return pyfixest's ``vcov`` and
+    ``vcov_kwargs`` for a Driscoll-Kraay variance with ``lag`` periods."""
+    data["_pid"] = pd.factorize(data[site_col])[0]
+    if time_index is None:
+        d = pd.to_datetime(data[date_col])
+        time_index = (d - d.min()).dt.days.to_numpy()
+    data["_tid"] = np.asarray(time_index)
+    return "DK", {"time_id": "_tid", "panel_id": "_pid", "lag": lag}
+
+
 def dose(t: pd.Series | np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     t = np.asarray(t, dtype=float)
     return np.maximum(COLD_BASE - t, 0.0), np.maximum(t - HOT_BASE, 0.0)

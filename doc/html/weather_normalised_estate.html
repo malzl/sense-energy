@@ -41,23 +41,32 @@ site × weekday and date effects, on the 83 sites without CHP or meter gaps, shr
 hour by hour. A site's demand in hour h under another temperature is the observed demand times
 exp(β_heat[s, h] × change in the heat dose + β_cold[s, h] × change in the cold dose). Commands:
 <code>hourly-response</code>, <code>installation-savings</code>, <code>estate-counterfactuals</code>, <code>solar-watch</code>, <code>chp-dispatch</code>.</p>
+<p><strong>Correction (9 November 2026).</strong> The first version of this page used standard errors clustered
+by site and date for the site-specific coefficients. For a coefficient that belongs to one site
+those understate the uncertainty two- to threefold; the numbers here use Driscoll–Kraay standard
+errors (<code>weather_causal.site_vcov</code>). Point estimates barely moved; the shrinkage weights and every
+count of &quot;significant&quot; sites did. What changed: the solar watch now finds 8 downward and 5 upward
+breaks instead of 19 and 23, and the LED reading of the upward breaks does not survive; 10 CHP
+plants test heat-led instead of 13; one site, not two, passes its capacity at +4 °C. The installation
+savings use a different model and are unaffected.</p>
 <h2 id="1-where-in-the-day-the-weather-response-lives-hourly-pooled-">1. Where in the day the weather response lives (<code>hourly_pooled</code>, <code>hourly_heat_profiles</code>, <code>hot_day_peak</code>)</h2>
 <div class="figrow"><figure class="inrow"><img src="figures/hourly_pooled.png" alt="hourly_pooled" loading="lazy"><figcaption><code>hourly_pooled</code> <a href="figures/hourly_pooled.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/hourly_heat_profiles.png" alt="hourly_heat_profiles" loading="lazy"><figcaption><code>hourly_heat_profiles</code> <a href="figures/hourly_heat_profiles.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/hot_day_peak.png" alt="hot_day_peak" loading="lazy"><figcaption><code>hot_day_peak</code> <a href="figures/hot_day_peak.pdf">PDF</a></figcaption></figure></div>
 
 <p>The heat response is an afternoon and evening phenomenon at almost every site. Pooled, a degree
-of daily mean above 20 °C adds 0.2 % at night (00:00–06:00) and 3.3 % on average between 12:00
-and 19:00; the cold response is flat through the day at about 1 % per degree; sunshine lowers
-demand by 1.8 % per kWh/m² between 09:00 and 16:00 and not at night.</p>
+of daily mean above 20 °C adds 0.4 % at night (00:00–06:00) and 2.5 % on average between 12:00
+and 19:00, peaking at 3.3 % in the 16:00 hour; the cold response is flat through the day at about
+0.8 % per degree (0.5–1.2 %); sunshine lowers demand by 1.2 % per kWh/m² between 09:00 and 16:00
+and not at night.</p>
 <div class="chart" id="chart1"></div><p class="source">interactive; source: <a href="data/pooled.csv">code/reports/hourly_response/pooled.csv</a></p>
 
 <ul>
-<li><strong>The red band carries a fifth of each site's heat response.</strong> At the median site, 20 % of the
-positive heat response falls in 16:00–19:00 (interquartile 11–26 %), 1.6 times the band's share
+<li><strong>The red band carries a fifth of each site's heat response.</strong> At the median site, 22 % of the
+positive heat response falls in 16:00–19:00 (interquartile 16–28 %), 1.8 times the band's share
 of the day: warm afternoons raise demand when distribution charges are highest.</li>
 <li><strong>Hot days move the peak later.</strong> On summer weekdays at or above 25 °C the site's demand peak
 falls later than on other summer weekdays at 37 of 81 sites and earlier at 10; the hot-day peak
 is 3 % higher at the median site.</li>
-<li><strong>The site profiles differ.</strong> 55 % of sites peak between 12:00 and 19:00, the rest are spread
+<li><strong>The site profiles differ.</strong> 61 % of sites peak between 12:00 and 19:00, the rest are spread
 through the night and morning, where small responses dominate the noise.</li>
 </ul>
 <details class="table"><summary>Table: 30 rows</summary><table class="dataframe data">
@@ -78,164 +87,65 @@ through the night and morning, where small responses dominate the noise.</li>
     <tr>
       <td>RWRRK</td>
       <td>21</td>
-      <td>0.13</td>
-      <td>13.22</td>
-      <td>4.17</td>
-      <td>4.65</td>
+      <td>0.18</td>
+      <td>8.45</td>
+      <td>8.54</td>
+      <td>3.53</td>
       <td>16</td>
       <td>15</td>
       <td>1.44</td>
     </tr>
     <tr>
+      <td>RWRC8</td>
+      <td>12</td>
+      <td>0.18</td>
+      <td>7.46</td>
+      <td>8.74</td>
+      <td>2.13</td>
+      <td>21</td>
+      <td>14</td>
+      <td>1.27</td>
+    </tr>
+    <tr>
+      <td>RY40A</td>
+      <td>19</td>
+      <td>0.17</td>
+      <td>6.04</td>
+      <td>4.58</td>
+      <td>3.51</td>
+      <td>15</td>
+      <td>15</td>
+      <td>1.32</td>
+    </tr>
+    <tr>
       <td>RYX37</td>
-      <td>11</td>
-      <td>0.19</td>
-      <td>9.61</td>
-      <td>12.94</td>
+      <td>17</td>
+      <td>0.22</td>
+      <td>5.92</td>
+      <td>8.87</td>
       <td>0.55</td>
       <td>9</td>
       <td>9</td>
       <td>1.02</td>
     </tr>
     <tr>
-      <td>R0A2Q</td>
-      <td>6</td>
-      <td>0.13</td>
-      <td>9.4</td>
-      <td>6.41</td>
-      <td>0.62</td>
-      <td>16</td>
-      <td>13</td>
-      <td>1.29</td>
-    </tr>
-    <tr>
-      <td>RY350</td>
-      <td>19</td>
-      <td>0.36</td>
-      <td>9.15</td>
-      <td>23.61</td>
-      <td>-0.09</td>
-      <td>21</td>
-      <td>21</td>
-      <td>1.15</td>
-    </tr>
-    <tr>
-      <td>RY351</td>
-      <td>18</td>
-      <td>0.27</td>
-      <td>9.06</td>
-      <td>20.67</td>
-      <td>5.34</td>
-      <td>17</td>
-      <td>9</td>
-      <td>1.6</td>
-    </tr>
-    <tr>
-      <td>RWRC8</td>
-      <td>15</td>
-      <td>0.21</td>
-      <td>8.88</td>
-      <td>9.83</td>
-      <td>2.26</td>
-      <td>21</td>
-      <td>14</td>
-      <td>1.27</td>
-    </tr>
-    <tr>
-      <td>RY318</td>
-      <td>13</td>
-      <td>0.2</td>
-      <td>7.48</td>
-      <td>8.26</td>
-      <td>0.28</td>
-      <td>16</td>
-      <td>10</td>
-      <td>1.14</td>
-    </tr>
-    <tr>
       <td>RWX88</td>
       <td>15</td>
       <td>0.25</td>
-      <td>7.36</td>
-      <td>15.22</td>
-      <td>2.77</td>
+      <td>5.85</td>
+      <td>12</td>
+      <td>2.53</td>
       <td>15</td>
       <td>15</td>
       <td>1.46</td>
     </tr>
     <tr>
-      <td>RY40A</td>
-      <td>19</td>
-      <td>0.11</td>
-      <td>7.22</td>
-      <td>2.64</td>
-      <td>3.66</td>
-      <td>15</td>
-      <td>15</td>
-      <td>1.32</td>
-    </tr>
-    <tr>
-      <td>R0A67</td>
-      <td>16</td>
-      <td>0.2</td>
-      <td>7.17</td>
-      <td>5.04</td>
-      <td>1.97</td>
-      <td>15</td>
-      <td>11</td>
-      <td>1.21</td>
-    </tr>
-    <tr>
-      <td>RH868</td>
-      <td>11</td>
-      <td>0.08</td>
-      <td>6.64</td>
-      <td>-5.84</td>
-      <td>-0.95</td>
-      <td>0</td>
-      <td>21</td>
-      <td>1.07</td>
-    </tr>
-    <tr>
-      <td>RREA9</td>
-      <td>7</td>
-      <td>0.16</td>
-      <td>5.57</td>
-      <td>2.99</td>
-      <td>0.6</td>
-      <td>16</td>
-      <td>10</td>
-      <td>1.28</td>
-    </tr>
-    <tr>
-      <td>R0A02</td>
-      <td>9</td>
-      <td>0.11</td>
-      <td>5.31</td>
-      <td>-0.12</td>
-      <td>1.7</td>
-      <td>12</td>
-      <td>14</td>
-      <td>1.19</td>
-    </tr>
-    <tr>
-      <td>R0A09</td>
-      <td>18</td>
-      <td>0.22</td>
-      <td>5.29</td>
-      <td>6.48</td>
-      <td>0.22</td>
-      <td>12</td>
-      <td>12</td>
-      <td>1.05</td>
-    </tr>
-    <tr>
       <td>RQY77</td>
       <td>16</td>
       <td>0.21</td>
-      <td>5.28</td>
-      <td>7.28</td>
-      <td>0.46</td>
+      <td>4.74</td>
+      <td>6.81</td>
+      <td>0.49</td>
       <td>16</td>
       <td>15</td>
       <td>1.47</td>
@@ -244,166 +154,265 @@ through the night and morning, where small responses dominate the noise.</li>
       <td>RWR32</td>
       <td>16</td>
       <td>0.23</td>
-      <td>5.07</td>
-      <td>6.69</td>
-      <td>0.45</td>
+      <td>4.73</td>
+      <td>6.55</td>
+      <td>0.46</td>
       <td>15</td>
       <td>11</td>
       <td>1.18</td>
     </tr>
     <tr>
-      <td>RH802</td>
+      <td>R0A2Q</td>
+      <td>11</td>
+      <td>0.15</td>
+      <td>4.68</td>
+      <td>5.12</td>
+      <td>0.62</td>
+      <td>16</td>
+      <td>13</td>
+      <td>1.29</td>
+    </tr>
+    <tr>
+      <td>R0A09</td>
+      <td>18</td>
+      <td>0.22</td>
+      <td>4.42</td>
+      <td>5.6</td>
+      <td>0.23</td>
       <td>12</td>
-      <td>0.14</td>
-      <td>4.89</td>
-      <td>3.45</td>
-      <td>0.33</td>
-      <td>9</td>
-      <td>9</td>
-      <td>1.03</td>
+      <td>12</td>
+      <td>1.05</td>
     </tr>
     <tr>
       <td>RWR63</td>
       <td>20</td>
-      <td>0.22</td>
-      <td>4.54</td>
-      <td>6.16</td>
-      <td>1.15</td>
+      <td>0.23</td>
+      <td>4.22</td>
+      <td>6.32</td>
+      <td>1.14</td>
       <td>14</td>
       <td>13</td>
       <td>1.13</td>
     </tr>
     <tr>
-      <td>RWRPU-X</td>
-      <td>19</td>
-      <td>0.2</td>
-      <td>4.16</td>
-      <td>2.85</td>
-      <td>5.33</td>
-      <td>7</td>
-      <td>7</td>
-      <td>0.95</td>
-    </tr>
-    <tr>
-      <td>RH8K6</td>
-      <td>12</td>
-      <td>0.24</td>
-      <td>4.11</td>
-      <td>6.23</td>
-      <td>1.51</td>
-      <td>16</td>
-      <td>15</td>
-      <td>1.22</td>
-    </tr>
-    <tr>
-      <td>RWR62</td>
-      <td>14</td>
-      <td>0.2</td>
-      <td>4.02</td>
-      <td>5.37</td>
-      <td>1.46</td>
-      <td>10</td>
-      <td>11</td>
-      <td>1.21</td>
-    </tr>
-    <tr>
       <td>RYVF1</td>
-      <td>19</td>
-      <td>0.22</td>
-      <td>3.95</td>
-      <td>8.07</td>
-      <td>3.41</td>
+      <td>17</td>
+      <td>0.23</td>
+      <td>3.92</td>
+      <td>7.33</td>
+      <td>3.29</td>
       <td>15</td>
       <td>14</td>
       <td>1.11</td>
     </tr>
     <tr>
+      <td>RH802</td>
+      <td>13</td>
+      <td>0.16</td>
+      <td>3.81</td>
+      <td>3.47</td>
+      <td>0.34</td>
+      <td>9</td>
+      <td>9</td>
+      <td>1.03</td>
+    </tr>
+    <tr>
       <td>F4E4F</td>
       <td>15</td>
       <td>0.22</td>
-      <td>3.88</td>
-      <td>5.03</td>
-      <td>0.66</td>
+      <td>3.62</td>
+      <td>4.85</td>
+      <td>0.67</td>
       <td>15</td>
       <td>10</td>
       <td>1.31</td>
     </tr>
     <tr>
+      <td>RWR62</td>
+      <td>14</td>
+      <td>0.21</td>
+      <td>3.52</td>
+      <td>4.97</td>
+      <td>1.33</td>
+      <td>10</td>
+      <td>11</td>
+      <td>1.21</td>
+    </tr>
+    <tr>
+      <td>RWRPU-X</td>
+      <td>19</td>
+      <td>0.22</td>
+      <td>3.43</td>
+      <td>3.44</td>
+      <td>4.92</td>
+      <td>7</td>
+      <td>7</td>
+      <td>0.95</td>
+    </tr>
+    <tr>
+      <td>RY318</td>
+      <td>17</td>
+      <td>0.27</td>
+      <td>3.43</td>
+      <td>6.31</td>
+      <td>0.38</td>
+      <td>16</td>
+      <td>10</td>
+      <td>1.14</td>
+    </tr>
+    <tr>
+      <td>RY351</td>
+      <td>17</td>
+      <td>0.29</td>
+      <td>3.42</td>
+      <td>7.5</td>
+      <td>4.62</td>
+      <td>17</td>
+      <td>9</td>
+      <td>1.6</td>
+    </tr>
+    <tr>
+      <td>R0A02</td>
+      <td>9</td>
+      <td>0.15</td>
+      <td>3.36</td>
+      <td>2.48</td>
+      <td>1.65</td>
+      <td>12</td>
+      <td>14</td>
+      <td>1.19</td>
+    </tr>
+    <tr>
+      <td>RH8K6</td>
+      <td>12</td>
+      <td>0.24</td>
+      <td>3.18</td>
+      <td>5.55</td>
+      <td>1.49</td>
+      <td>16</td>
+      <td>15</td>
+      <td>1.22</td>
+    </tr>
+    <tr>
+      <td>RREA9</td>
+      <td>17</td>
+      <td>0.2</td>
+      <td>2.99</td>
+      <td>3.61</td>
+      <td>0.63</td>
+      <td>16</td>
+      <td>10</td>
+      <td>1.28</td>
+    </tr>
+    <tr>
+      <td>R0A67</td>
+      <td>14</td>
+      <td>0.24</td>
+      <td>2.91</td>
+      <td>4.66</td>
+      <td>1.62</td>
+      <td>15</td>
+      <td>11</td>
+      <td>1.21</td>
+    </tr>
+    <tr>
+      <td>RY309</td>
+      <td>16</td>
+      <td>0.38</td>
+      <td>2.8</td>
+      <td>12.5</td>
+      <td>3.17</td>
+      <td>17</td>
+      <td>10</td>
+      <td>1.12</td>
+    </tr>
+    <tr>
       <td>RY412</td>
-      <td>18</td>
+      <td>17</td>
       <td>0.39</td>
-      <td>3.4</td>
-      <td>14.16</td>
-      <td>3.34</td>
+      <td>2.7</td>
+      <td>9.1</td>
+      <td>2.8</td>
       <td>21</td>
       <td>8</td>
       <td>1.02</td>
     </tr>
     <tr>
-      <td>D0L4E</td>
-      <td>17</td>
-      <td>0.27</td>
-      <td>3.32</td>
-      <td>3.64</td>
-      <td>2.04</td>
-      <td>16</td>
-      <td>10</td>
-      <td>1.27</td>
-    </tr>
-    <tr>
-      <td>RWX58</td>
-      <td>12</td>
-      <td>0.2</td>
-      <td>3.16</td>
-      <td>5.11</td>
-      <td>0.31</td>
-      <td>10</td>
-      <td>10</td>
-      <td>0.9</td>
-    </tr>
-    <tr>
-      <td>RY479</td>
-      <td>15</td>
-      <td>0.28</td>
-      <td>3.1</td>
-      <td>9.7</td>
-      <td>1.39</td>
-      <td>21</td>
-      <td>10</td>
-      <td>0.91</td>
-    </tr>
-    <tr>
-      <td>RM144</td>
-      <td>8</td>
-      <td>0.1</td>
-      <td>3.03</td>
-      <td>-0.55</td>
-      <td>0.96</td>
-      <td>14</td>
-      <td>14</td>
-      <td>1.19</td>
-    </tr>
-    <tr>
       <td>RFSDA</td>
       <td>17</td>
-      <td>0.26</td>
-      <td>2.81</td>
-      <td>3.89</td>
+      <td>0.25</td>
+      <td>2.69</td>
+      <td>3.69</td>
       <td>0.21</td>
       <td>16</td>
       <td>11</td>
       <td>1.1</td>
     </tr>
     <tr>
+      <td>RYV03</td>
+      <td>20</td>
+      <td>0.19</td>
+      <td>2.61</td>
+      <td>2.63</td>
+      <td>0.62</td>
+      <td>14</td>
+      <td>12</td>
+      <td>1.17</td>
+    </tr>
+    <tr>
       <td>RKB03</td>
       <td>22</td>
-      <td>0.13</td>
-      <td>2.75</td>
-      <td>0.22</td>
+      <td>0.14</td>
+      <td>2.6</td>
+      <td>0.55</td>
       <td>0.07</td>
       <td>9</td>
       <td>9</td>
       <td>1.01</td>
+    </tr>
+    <tr>
+      <td>RY350</td>
+      <td>19</td>
+      <td>0.23</td>
+      <td>2.58</td>
+      <td>3.98</td>
+      <td>0.23</td>
+      <td>21</td>
+      <td>21</td>
+      <td>1.15</td>
+    </tr>
+    <tr>
+      <td>RRE11</td>
+      <td>13</td>
+      <td>0.2</td>
+      <td>2.52</td>
+      <td>3.34</td>
+      <td>1.11</td>
+      <td>10</td>
+      <td>10</td>
+      <td>0.89</td>
+    </tr>
+    <tr>
+      <td>RM144</td>
+      <td>12</td>
+      <td>0.13</td>
+      <td>2.39</td>
+      <td>0.33</td>
+      <td>0.9</td>
+      <td>14</td>
+      <td>14</td>
+      <td>1.19</td>
+    </tr>
+    <tr>
+      <td>D0L4E</td>
+      <td>17</td>
+      <td>0.33</td>
+      <td>2.36</td>
+      <td>5.42</td>
+      <td>1.96</td>
+      <td>16</td>
+      <td>10</td>
+      <td>1.27</td>
     </tr>
   </tbody>
 </table></details><p class="source">source: <a href="data/site_profiles.csv">code/reports/hourly_response/site_profiles.csv</a> (30 rows shown)</p>
@@ -411,8 +420,8 @@ through the night and morning, where small responses dominate the noise.</li>
 <p><strong>The JEPA counterfactual machine, checked (<code>jepa_cf_check</code>).</strong> The weather-conditioned JEPA
 predicts each summer day's embedding with the day's temperature raised by 5 °C; a decoder turns
 both predictions into half-hours. Against the regression on the same 6,601 site-days it gets the
-size right (median +5.4 % against +5.0 %), ranks sites weakly (r = 0.35 across sites) and has no
-hourly shape (median correlation of the two hour profiles −0.02). As a counterfactual machine it
+size roughly right (median +5.4 % against +4.3 %), ranks sites weakly (r = 0.35 across sites) and
+has no hourly shape (median correlation of the two hour profiles 0.00). As a counterfactual machine it
 knows that a warm day costs about five per cent; it does not know when, or where.</p>
 <h2 id="2-weather-normalised-savings-of-the-reported-installations-i">2. Weather-normalised savings of the reported installations (<code>installation_savings</code>)</h2>
 <div class="figrow"><figure class="inrow"><img src="figures/installation_savings.png" alt="installation_savings" loading="lazy"><figcaption><code>installation_savings</code> <a href="figures/installation_savings.pdf">PDF</a></figcaption></figure></div>
@@ -573,33 +582,33 @@ bound), through each site's hourly heat and cold response.</p>
     <tr>
       <td>1</td>
       <td>83</td>
-      <td>-0.437</td>
-      <td>0.178</td>
+      <td>-0.436</td>
+      <td>0.072</td>
       <td>31</td>
       <td>0.332</td>
-      <td>0.867</td>
+      <td>0.864</td>
       <td>0</td>
       <td>0</td>
     </tr>
     <tr>
       <td>2</td>
       <td>83</td>
-      <td>-0.796</td>
-      <td>0.475</td>
+      <td>-0.785</td>
+      <td>0.244</td>
       <td>31</td>
       <td>0.331</td>
-      <td>0.928</td>
-      <td>2</td>
+      <td>0.922</td>
+      <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <td>4</td>
       <td>83</td>
-      <td>-1.456</td>
-      <td>1.488</td>
+      <td>-1.199</td>
+      <td>0.794</td>
       <td>31</td>
-      <td>0.387</td>
-      <td>1.062</td>
+      <td>0.331</td>
+      <td>1.05</td>
       <td>2</td>
       <td>0</td>
     </tr>
@@ -607,11 +616,12 @@ bound), through each site's hourly heat and cold response.</p>
 </table><p class="source">source: <a href="data/warming_summary.csv">code/reports/estate_counterfactuals/warming_summary.csv</a> (4 rows shown)</p>
 
 <ul>
-<li><strong>Annual electricity falls slightly.</strong> At the median site −0.4 %, −0.8 % and −1.5 % at +1, +2
-and +4 °C: less heating outweighs more cooling; a tenth of sites rise, by up to 1.5 % at +4 °C.</li>
-<li><strong>Summer peaks barely move, with two exceptions.</strong> Median utilisation of available capacity
-goes from 0.33 to 0.39 at +4 °C. Two sites (RWR63, RREA9) pass 90 % of capacity at +2 °C and
-exceed it at +4 °C, for 14–24 half-hours a summer.</li>
+<li><strong>Annual electricity falls slightly.</strong> At the median site −0.4 %, −0.8 % and −1.2 % at +1, +2
+and +4 °C: less heating outweighs more cooling; a quarter of sites rise, the top tenth by 0.8 %
+or more at +4 °C (at most 2.9 %).</li>
+<li><strong>Summer peaks barely move, with one exception.</strong> Median utilisation of available capacity
+stays at 0.33. One site (RWR63) passes 90 % of capacity at +2 °C and exceeds it at +4 °C, for 21
+half-hours a summer; a second (RREA9) reaches 94 % at +4 °C for 7 half-hours.</li>
 <li><strong>Electrification binds first, everywhere.</strong> No site's summer peak at +4 °C reaches its winter
 peak with heat pumps replacing gas (headroom analysis). The connection question for the NHS
 estate is winter heat, not summer cooling.</li>
@@ -646,10 +656,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>35</td>
       <td>110</td>
-      <td>13271.2</td>
-      <td>4.9</td>
-      <td>662.2</td>
-      <td>1.5</td>
+      <td>12482.3</td>
+      <td>4.7</td>
+      <td>619.8</td>
+      <td>1.4</td>
     </tr>
     <tr>
       <td>heatwave_20250618</td>
@@ -670,10 +680,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>11</td>
       <td>48</td>
-      <td>5450.2</td>
-      <td>5.5</td>
-      <td>369.5</td>
-      <td>0.8</td>
+      <td>5240.8</td>
+      <td>5.2</td>
+      <td>357.4</td>
+      <td>0.7</td>
     </tr>
     <tr>
       <td>heatwave_20250627</td>
@@ -694,10 +704,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>39</td>
       <td>132</td>
-      <td>18568.9</td>
-      <td>3.9</td>
-      <td>779.8</td>
-      <td>2.6</td>
+      <td>17543</td>
+      <td>3.7</td>
+      <td>740.4</td>
+      <td>2.5</td>
     </tr>
     <tr>
       <td>heatwave_20250709</td>
@@ -718,10 +728,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>26</td>
       <td>78</td>
-      <td>7703.7</td>
-      <td>5</td>
-      <td>353.7</td>
-      <td>1.3</td>
+      <td>8160.1</td>
+      <td>5.3</td>
+      <td>371.6</td>
+      <td>1.4</td>
     </tr>
     <tr>
       <td>heatwave_20250811</td>
@@ -739,12 +749,12 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
 </table><p class="source">source: <a href="data/heatwave_events.csv">code/reports/estate_counterfactuals/heatwave_events.csv</a> (8 rows shown)</p>
 
 <ul>
-<li><strong>Sites without CHP: 4.5 % more electricity on heatwave days.</strong> 45 MWh over 370 site-days at 56
-sites, at 4.3 °C above normal; £2,200 at wholesale prices and 6 t CO₂. The median site-day adds
-2.3 %.</li>
+<li><strong>Sites without CHP: 4.3 % more electricity on heatwave days.</strong> 43 MWh over 370 site-days at 56
+sites, at 4.3 °C above normal; £2,100 at wholesale prices and 6 t CO₂. The median site-day adds
+2.1 %.</li>
 <li><strong>Sites with CHP: 12 % more grid import.</strong> 180 MWh over 127 site-days at 17 sites, £8,100 and
 25 t CO₂: the heat-led plants turn down when there is no heat demand, so the grid carries the
-hot days. Per site-day the CHP sites cost the grid nine times what the others do.</li>
+hot days. Per site-day the CHP sites cost eleven times what the others do (£64 against £5.60).</li>
 <li><strong>The days are unusual in shape, too.</strong> The JEPA's latent surprise is 8 % higher on heatwave days
 than on other summer days, at sites with and without CHP alike (p &lt; 0.001 and 0.02).</li>
 </ul>
@@ -790,16 +800,20 @@ break downwards. Daytime demand of April–September days regressed on site × s
 radiation (summers 2023, 2024, 2025) with the usual effects; a break is a fall of more than one
 point per kWh/m² beyond 2.5 standard errors.</p>
 <ul>
-<li><strong>Three of the four sites whose returns report new or grown solar break</strong>, and the breaks date
-the installations: Church Hill House and Potters Bar Community Hospital between the 2023 and
-2024 summers (−1 to −22 and −1 to −21 points), St George's Hospital progressively. Bridlington
-has no 2023 summer in the record and already sits at −25 in 2024.</li>
+<li><strong>Eight of 107 sites break downwards, and three of them are three of the four sites whose
+returns report new or grown solar.</strong> The breaks date the installations: Church Hill House and
+Potters Bar Community Hospital between the 2023 and 2024 summers (−2 to −23 and −1 to −21
+points), St George's Hospital progressively (−4.5, −7.8, −9.4). Bridlington has no 2023 summer
+in the record and already sits at −25 in 2024.</li>
 <li><strong>Candidates without reported solar:</strong> Queen Victoria Memorial Hospital (−2 to −18 from 2023 to
-2024), St Paul's Hemel Hempstead (−2 to −19 in 2025), the Health Records Library and 99 Waverley
-Road (−8 in 2025). The estates return counts only trust-owned solar; panels installed by a
-landlord or a third party appear here and not there.</li>
-<li><strong>LED shows as the opposite break.</strong> 23 sites' sunshine slope moved <em>towards zero</em>, and most of
-them went to full LED: with efficient lighting, daylight displaces less load.</li>
+2024) and St Paul's Hemel Hempstead (−2 to −19 in 2025) break as sharply as the reported
+installations. 99 Waverley Road and Hampden House fall to −8 in 2025, the Hospital of St Cross
+to −3. The estates return counts only trust-owned solar; panels installed by a landlord or a
+third party appear here and not there.</li>
+<li><strong>LED leaves at most a faint opposite trace.</strong> Five sites break upwards, only one of them after
+an LED programme. Sites that went to full LED moved their sunshine slope 0.8 points towards zero
+at the median, the rest 0.1 (regression on LED coverage change, p = 0.1). Before the correction
+of the standard errors this looked like 23 upward breaks driven by LED; it was noise.</li>
 </ul>
 <table class="dataframe data">
   <thead>
@@ -825,7 +839,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-2.47</td>
       <td>-19.27</td>
       <td>-17.5</td>
-      <td>-28.97</td>
+      <td>-5.95</td>
       <td></td>
       <td></td>
       <td>True</td>
@@ -838,7 +852,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-17.94</td>
       <td>-18.72</td>
       <td>-16.71</td>
-      <td>-27.39</td>
+      <td>-7.75</td>
       <td>False</td>
       <td>0</td>
       <td>True</td>
@@ -851,7 +865,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-20.78</td>
       <td>-16.1</td>
       <td>-15.35</td>
-      <td>-33.66</td>
+      <td>-11.78</td>
       <td>True</td>
       <td>0</td>
       <td>True</td>
@@ -864,7 +878,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-23.24</td>
       <td>-11.07</td>
       <td>-9.49</td>
-      <td>-18.5</td>
+      <td>-4.06</td>
       <td>True</td>
       <td>0</td>
       <td>True</td>
@@ -877,10 +891,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>2.7</td>
       <td>-6.03</td>
       <td>-7.83</td>
-      <td>-16.51</td>
+      <td>-2.35</td>
       <td>False</td>
       <td>0</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -890,7 +904,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>0.21</td>
       <td>-8.01</td>
       <td>-7.81</td>
-      <td>-22</td>
+      <td>-4.5</td>
       <td>False</td>
       <td>100</td>
       <td>True</td>
@@ -903,7 +917,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-0.88</td>
       <td>-7.95</td>
       <td>-6.43</td>
-      <td>-10.85</td>
+      <td>-3.05</td>
       <td>False</td>
       <td>100</td>
       <td>True</td>
@@ -916,10 +930,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-21.19</td>
       <td>-21.79</td>
       <td>-4.91</td>
-      <td>-8.4</td>
+      <td>-1.32</td>
       <td></td>
       <td></td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -929,7 +943,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-7.79</td>
       <td>-9.41</td>
       <td>-4.86</td>
-      <td>-11.82</td>
+      <td>-3.76</td>
       <td>True</td>
       <td>-57</td>
       <td>True</td>
@@ -942,10 +956,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>0.21</td>
       <td>-4.15</td>
       <td>-4.4</td>
-      <td>-9.2</td>
+      <td>-1.88</td>
       <td>False</td>
       <td>0</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -955,10 +969,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>2.4</td>
       <td>-2.26</td>
       <td>-3.44</td>
-      <td>-7.3</td>
+      <td>-1.47</td>
       <td>False</td>
       <td>30</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -968,7 +982,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-0.87</td>
       <td>1.39</td>
       <td>-3.14</td>
-      <td></td>
+      <td>-1.17</td>
       <td>False</td>
       <td>0</td>
       <td>False</td>
@@ -981,10 +995,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-21.4</td>
       <td>-22.78</td>
       <td>-3.05</td>
-      <td>-5.25</td>
+      <td>-1.03</td>
       <td>False</td>
       <td>0</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -994,7 +1008,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-3.65</td>
       <td>-3.03</td>
       <td>-2.47</td>
-      <td>-6.64</td>
+      <td>-2.73</td>
       <td>False</td>
       <td>10</td>
       <td>True</td>
@@ -1007,10 +1021,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>1.19</td>
       <td>-1.14</td>
       <td>-2.33</td>
-      <td>-6.24</td>
+      <td>-2.25</td>
       <td>False</td>
       <td>0</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -1020,10 +1034,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>0.84</td>
       <td>0.05</td>
       <td>-2.02</td>
-      <td>-6.86</td>
+      <td>-2.48</td>
       <td>False</td>
       <td>0</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -1033,10 +1047,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-0.22</td>
       <td>-1.37</td>
       <td>-1.72</td>
-      <td>-6.92</td>
+      <td>-0.94</td>
       <td>False</td>
       <td>-20</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -1046,10 +1060,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-1.15</td>
       <td>-1.79</td>
       <td>-1.56</td>
-      <td>-3.36</td>
+      <td>-1.14</td>
       <td>False</td>
       <td>0</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -1059,10 +1073,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>1.44</td>
       <td>0.91</td>
       <td>-1.3</td>
-      <td>-5.01</td>
+      <td>-1.34</td>
       <td>False</td>
       <td>50</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -1072,10 +1086,10 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-1.33</td>
       <td>-1.55</td>
       <td>-1.1</td>
-      <td>-2.76</td>
+      <td>-1.16</td>
       <td>False</td>
       <td>100</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
     </tr>
     <tr>
@@ -1085,7 +1099,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>0.42</td>
       <td>-0.01</td>
       <td>-0.97</td>
-      <td>-3.4</td>
+      <td>-1.07</td>
       <td>False</td>
       <td>0</td>
       <td>False</td>
@@ -1098,7 +1112,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>0.5</td>
       <td>-0.41</td>
       <td>-0.91</td>
-      <td>-2.53</td>
+      <td>-1.11</td>
       <td>False</td>
       <td>0</td>
       <td>False</td>
@@ -1111,7 +1125,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-1.64</td>
       <td>-0.21</td>
       <td>-0.78</td>
-      <td></td>
+      <td>-0.84</td>
       <td>False</td>
       <td>100</td>
       <td>False</td>
@@ -1124,7 +1138,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>0.04</td>
       <td>-0.8</td>
       <td>-0.77</td>
-      <td>-2.34</td>
+      <td>-1.25</td>
       <td>False</td>
       <td>0</td>
       <td>False</td>
@@ -1137,7 +1151,7 @@ them went to full LED: with efficient lighting, daylight displaces less load.</l
       <td>-1.2</td>
       <td>-1.76</td>
       <td>-0.72</td>
-      <td>-1.87</td>
+      <td>-0.78</td>
       <td>False</td>
       <td>-20</td>
       <td>False</td>
@@ -1157,7 +1171,7 @@ working-day red band against weekends (plants run to avoid red-band charges).</p
 <ul>
 <li><strong>Pooled, nothing:</strong> the CHP sites' price and red-band coefficients equal the placebo's (+12.7
 against +13.1 % per £100/MWh; +14.2 against +14.2 %). The pooled null hides opposite behaviours.</li>
-<li><strong>Per site: 13 of 23 heat-led, 7 price-following, 15 red-band avoiding.</strong> The red-band avoiders
+<li><strong>Per site: 10 of 23 heat-led, 7 price-following, 15 red-band avoiding.</strong> The red-band avoiders
 cut import by 3 to 18 % in 16:00–19:00 on working days; four sites (Royal Preston, George Eliot,
 North Devon, Scarborough) import 24 to 41 % <em>more</em>, their plant apparently stopping in the
 evening. University Hospital Coventry does all three at a capacity factor of 0.91.</li>
@@ -1285,7 +1299,7 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>-0.57</td>
       <td>-5.41</td>
       <td>-6.94</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
       <td>True</td>
       <td>0.89</td>
@@ -1329,7 +1343,7 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>-1.15</td>
       <td>-5.02</td>
       <td>-4.51</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
       <td>True</td>
       <td>0.66</td>
@@ -1428,7 +1442,7 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>-1.72</td>
       <td>11.07</td>
       <td>41.33</td>
-      <td>True</td>
+      <td>False</td>
       <td>False</td>
       <td>False</td>
       <td>0.85</td>
@@ -1448,7 +1462,7 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
 <script>
 window.addEventListener("load", function () {
   (function () {
-    var el = document.getElementById("chart1"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Pooled response by local hour (log points per \u00b0C or per kWh/m\u00b2)", "width": "container", "height": 300, "data": {"values": [{"hour": 0, "term": "cdd20", "pooled": 0.0048373383, "pooled_se": 0.0027489323, "tau": 0.0240987621, "i2": 0.983949841, "sites": 80}, {"hour": 0, "term": "hdd14", "pooled": 0.0082268622, "pooled_se": 0.00147962, "tau": 0.0134199996, "i2": 0.9913830924, "sites": 83}, {"hour": 0, "term": "solar_kwh_m2", "pooled": 0.0006346335, "pooled_se": 0.0007306072, "tau": 0.00657926, "i2": 0.9809975405, "sites": 83}, {"hour": 1, "term": "cdd20", "pooled": -0.007090567, "pooled_se": 0.0055415795, "tau": 0.0502113941, "i2": 0.9951205571, "sites": 83}, {"hour": 1, "term": "hdd14", "pooled": 0.0082659743, "pooled_se": 0.0015531592, "tau": 0.0140984883, "i2": 0.9930033405, "sites": 83}, {"hour": 1, "term": "solar_kwh_m2", "pooled": 0.0017583167, "pooled_se": 0.0005857796, "tau": 0.0052284459, "i2": 0.9656962351, "sites": 83}, {"hour": 2, "term": "cdd20", "pooled": 0.0041714386, "pooled_se": 0.003262256, "tau": 0.0286788857, "i2": 0.9811323825, "sites": 80}, {"hour": 2, "term": "hdd14", "pooled": 0.0095704624, "pooled_se": 0.0015939382, "tau": 0.0144664956, "i2": 0.9926807679, "sites": 83}, {"hour": 2, "term": "solar_kwh_m2", "pooled": 0.0011811557, "pooled_se": 0.0006159175, "tau": 0.005517776, "i2": 0.9719718965, "sites": 83}, {"hour": 3, "term": "cdd20", "pooled": 0.0025633864, "pooled_se": 0.0029827384, "tau": 0.0266228714, "i2": 0.9794552869, "sites": 83}, {"hour": 3, "term": "hdd14", "pooled": 0.0100281394, "pooled_se": 0.0016093194, "tau": 0.0146009763, "i2": 0.9919697019, "sites": 83}, {"hour": 3, "term": "solar_kwh_m2", "pooled": 0.0022464438, "pooled_se": 0.0005876414, "tau": 0.0052478496, "i2": 0.9660084465, "sites": 83}, {"hour": 4, "term": "cdd20", "pooled": 0.0056453915, "pooled_se": 0.0029629521, "tau": 0.0263525974, "i2": 0.9721386612, "sites": 83}, {"hour": 4, "term": "hdd14", "pooled": 0.0104394605, "pooled_se": 0.0016564032, "tau": 0.0150334538, "i2": 0.9926833048, "sites": 83}, {"hour": 4, "term": "solar_kwh_m2", "pooled": 0.0030800925, "pooled_se": 0.0006612227, "tau": 0.0059215876, "i2": 0.9700352101, "sites": 83}, {"hour": 5, "term": "cdd20", "pooled": 0.0018942815, "pooled_se": 0.0035057277, "tau": 0.0308834379, "i2": 0.9551207429, "sites": 83}, {"hour": 5, "term": "hdd14", "pooled": 0.0098541892, "pooled_se": 0.0016642107, "tau": 0.015097614, "i2": 0.9918157042, "sites": 83}, {"hour": 5, "term": "solar_kwh_m2", "pooled": 0.0019385488, "pooled_se": 0.0006763624, "tau": 0.0060172699, "i2": 0.9578856765, "sites": 83}, {"hour": 6, "term": "cdd20", "pooled": -0.0027142463, "pooled_se": 0.0038595184, "tau": 0.0341183149, "i2": 0.9638607078, "sites": 83}, {"hour": 6, "term": "hdd14", "pooled": 0.0096393487, "pooled_se": 0.001626655, "tau": 0.0147489313, "i2": 0.9907621195, "sites": 83}, {"hour": 6, "term": "solar_kwh_m2", "pooled": 0.0008649709, "pooled_se": 0.0008149282, "tau": 0.0072902943, "i2": 0.9679283111, "sites": 83}, {"hour": 7, "term": "cdd20", "pooled": 0.0084959055, "pooled_se": 0.0037720239, "tau": 0.0330958149, "i2": 0.9720761036, "sites": 81}, {"hour": 7, "term": "hdd14", "pooled": 0.0101612282, "pooled_se": 0.0014988277, "tau": 0.0134991912, "i2": 0.9905409724, "sites": 82}, {"hour": 7, "term": "solar_kwh_m2", "pooled": -8.78187e-05, "pooled_se": 0.0010908957, "tau": 0.0098098831, "i2": 0.9834542023, "sites": 83}, {"hour": 8, "term": "cdd20", "pooled": 0.0211672438, "pooled_se": 0.0044763761, "tau": 0.0388979441, "i2": 0.9810449225, "sites": 79}, {"hour": 8, "term": "hdd14", "pooled": 0.0050862032, "pooled_se": 0.0013160798, "tau": 0.0118697553, "i2": 0.9895030322, "sites": 83}, {"hour": 8, "term": "solar_kwh_m2", "pooled": 0.0025439434, "pooled_se": 0.0026098084, "tau": 0.0236798602, "i2": 0.9951643108, "sites": 83}, {"hour": 9, "term": "cdd20", "pooled": 0.012114735, "pooled_se": 0.0054368619, "tau": 0.047822966, "i2": 0.977212757, "sites": 81}, {"hour": 9, "term": "hdd14", "pooled": 0.0129239558, "pooled_se": 0.0016233899, "tau": 0.0146488949, "i2": 0.9827638187, "sites": 83}, {"hour": 9, "term": "solar_kwh_m2", "pooled": -0.0126573952, "pooled_se": 0.0049298362, "tau": 0.044815188, "i2": 0.9965312208, "sites": 83}, {"hour": 10, "term": "cdd20", "pooled": 0.0126070149, "pooled_se": 0.0067152272, "tau": 0.0590847131, "i2": 0.9815613, "sites": 81}, {"hour": 10, "term": "hdd14", "pooled": 0.0130671328, "pooled_se": 0.0017433055, "tau": 0.0157424057, "i2": 0.9841351253, "sites": 83}, {"hour": 10, "term": "solar_kwh_m2", "pooled": -0.0204556987, "pooled_se": 0.0072422286, "tau": 0.0658702726, "i2": 0.9971856536, "sites": 83}, {"hour": 11, "term": "cdd20", "pooled": 0.00610129, "pooled_se": 0.0064452434, "tau": 0.0560821762, "i2": 0.9810845811, "sites": 80}, {"hour": 11, "term": "hdd14", "pooled": 0.0122423498, "pooled_se": 0.0016675101, "tau": 0.0150037842, "i2": 0.9773833742, "sites": 83}, {"hour": 11, "term": "solar_kwh_m2", "pooled": -0.0231532033, "pooled_se": 0.0080003621, "tau": 0.0727879782, "i2": 0.9978221079, "sites": 83}, {"hour": 12, "term": "cdd20", "pooled": 0.0461451058, "pooled_se": 0.0076148237, "tau": 0.06622217, "i2": 0.985359367, "sites": 79}, {"hour": 12, "term": "hdd14", "pooled": 0.01164877, "pooled_se": 0.0016056737, "tau": 0.0144222407, "i2": 0.9739691278, "sites": 83}, {"hour": 12, "term": "solar_kwh_m2", "pooled": -0.0196888597, "pooled_se": 0.0068065969, "tau": 0.0619198984, "i2": 0.9982079145, "sites": 83}, {"hour": 13, "term": "cdd20", "pooled": 0.0245307222, "pooled_se": 0.0063430579, "tau": 0.0552576479, "i2": 0.9782379332, "sites": 80}, {"hour": 13, "term": "hdd14", "pooled": 0.0124381237, "pooled_se": 0.00149191, "tau": 0.0134174529, "i2": 0.9763632637, "sites": 83}, {"hour": 13, "term": "solar_kwh_m2", "pooled": -0.0198457969, "pooled_se": 0.0061185124, "tau": 0.0556577123, "i2": 0.998260438, "sites": 83}, {"hour": 14, "term": "cdd20", "pooled": 0.0344669422, "pooled_se": 0.0059643517, "tau": 0.0515875198, "i2": 0.9761923404, "sites": 80}, {"hour": 14, "term": "hdd14", "pooled": 0.0115009336, "pooled_se": 0.0014163223, "tau": 0.0127371526, "i2": 0.9760272481, "sites": 83}, {"hour": 14, "term": "solar_kwh_m2", "pooled": -0.0160925932, "pooled_se": 0.0058327016, "tau": 0.053061447, "i2": 0.9982932602, "sites": 83}, {"hour": 15, "term": "cdd20", "pooled": 0.0267893875, "pooled_se": 0.005887522, "tau": 0.050400043, "i2": 0.9851723315, "sites": 79}, {"hour": 15, "term": "hdd14", "pooled": 0.0133384861, "pooled_se": 0.0013673682, "tau": 0.0122774577, "i2": 0.9730295031, "sites": 83}, {"hour": 15, "term": "solar_kwh_m2", "pooled": -0.015910343, "pooled_se": 0.0052748784, "tau": 0.0479783167, "i2": 0.9980761551, "sites": 83}, {"hour": 16, "term": "cdd20", "pooled": 0.0297891287, "pooled_se": 0.0058126772, "tau": 0.0492623564, "i2": 0.9805839189, "sites": 77}, {"hour": 16, "term": "hdd14", "pooled": 0.0112446663, "pooled_se": 0.0013606638, "tau": 0.0122171234, "i2": 0.9722595474, "sites": 83}, {"hour": 16, "term": "solar_kwh_m2", "pooled": -0.005681398, "pooled_se": 0.0045040825, "tau": 0.0409480736, "i2": 0.9976202756, "sites": 83}, {"hour": 17, "term": "cdd20", "pooled": 0.0443638986, "pooled_se": 0.0067364601, "tau": 0.0595450195, "i2": 0.9782778136, "sites": 82}, {"hour": 17, "term": "hdd14", "pooled": 0.0117109744, "pooled_se": 0.001369636, "tau": 0.0123678637, "i2": 0.9831014851, "sites": 83}, {"hour": 17, "term": "solar_kwh_m2", "pooled": -0.0068595358, "pooled_se": 0.0040883933, "tau": 0.0371448403, "i2": 0.99597198, "sites": 83}, {"hour": 18, "term": "cdd20", "pooled": 0.0210492159, "pooled_se": 0.0077856659, "tau": 0.06926516, "i2": 0.9912936152, "sites": 81}, {"hour": 18, "term": "hdd14", "pooled": 0.0116600515, "pooled_se": 0.0013602449, "tau": 0.0122721801, "i2": 0.9811372567, "sites": 83}, {"hour": 18, "term": "solar_kwh_m2", "pooled": -0.0018765702, "pooled_se": 0.0033768205, "tau": 0.0306839396, "i2": 0.9959368525, "sites": 83}, {"hour": 19, "term": "cdd20", "pooled": 0.0385615432, "pooled_se": 0.0075394758, "tau": 0.0667387025, "i2": 0.9931902427, "sites": 80}, {"hour": 19, "term": "hdd14", "pooled": 0.0094957719, "pooled_se": 0.0014319583, "tau": 0.0129516272, "i2": 0.9859536979, "sites": 83}, {"hour": 19, "term": "solar_kwh_m2", "pooled": -0.0060352132, "pooled_se": 0.0021275042, "tau": 0.0192996115, "i2": 0.9927894308, "sites": 83}, {"hour": 20, "term": "cdd20", "pooled": 0.0076305261, "pooled_se": 0.0082156199, "tau": 0.073999954, "i2": 0.9960826423, "sites": 82}, {"hour": 20, "term": "hdd14", "pooled": 0.0094231367, "pooled_se": 0.001395799, "tau": 0.0126448775, "i2": 0.9891414943, "sites": 83}, {"hour": 20, "term": "solar_kwh_m2", "pooled": -0.0050948156, "pooled_se": 0.0012579233, "tau": 0.011367209, "i2": 0.9852012794, "sites": 83}, {"hour": 21, "term": "cdd20", "pooled": 0.0219842402, "pooled_se": 0.0047013669, "tau": 0.0416983204, "i2": 0.9892725389, "sites": 81}, {"hour": 21, "term": "hdd14", "pooled": 0.0107126459, "pooled_se": 0.0014491386, "tau": 0.0131383892, "i2": 0.9906627005, "sites": 83}, {"hour": 21, "term": "solar_kwh_m2", "pooled": -0.0036781383, "pooled_se": 0.0010015544, "tau": 0.0090266699, "i2": 0.9803924482, "sites": 83}, {"hour": 22, "term": "cdd20", "pooled": 0.0084330947, "pooled_se": 0.0038826561, "tau": 0.0347303037, "i2": 0.9912098026, "sites": 82}, {"hour": 22, "term": "hdd14", "pooled": 0.0107682936, "pooled_se": 0.0015271666, "tau": 0.0138436617, "i2": 0.9902875725, "sites": 83}, {"hour": 22, "term": "solar_kwh_m2", "pooled": -0.0023316449, "pooled_se": 0.0008719993, "tau": 0.0078396186, "i2": 0.976024937, "sites": 83}, {"hour": 23, "term": "cdd20", "pooled": 0.0111805983, "pooled_se": 0.0038507708, "tau": 0.0344738252, "i2": 0.9898678568, "sites": 82}, {"hour": 23, "term": "hdd14", "pooled": 0.009928966, "pooled_se": 0.0015614695, "tau": 0.0141551313, "i2": 0.9903850012, "sites": 83}, {"hour": 23, "term": "solar_kwh_m2", "pooled": -0.001593926, "pooled_se": 0.0008520846, "tau": 0.0076841903, "i2": 0.9819855315, "sites": 83}]}, "mark": {"type": "line", "point": true, "tooltip": true}, "encoding": {"x": {"field": "hour", "type": "quantitative", "title": "local hour"}, "y": {"field": "pooled", "type": "quantitative", "title": "pooled response"}, "color": {"field": "term", "type": "nominal", "title": "term"}, "tooltip": [{"field": "hour", "type": "quantitative"}, {"field": "term", "type": "nominal"}, {"field": "pooled", "type": "quantitative"}, {"field": "pooled_se", "type": "quantitative"}, {"field": "tau", "type": "quantitative"}, {"field": "i2", "type": "quantitative"}, {"field": "sites", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
+    var el = document.getElementById("chart1"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Pooled response by local hour (log points per \u00b0C or per kWh/m\u00b2)", "width": "container", "height": 300, "data": {"values": [{"hour": 0, "term": "cdd20", "pooled": 0.0016595319, "pooled_se": 0.0020452194, "tau": 0.014708187, "i2": 0.8134043298, "sites": 83}, {"hour": 0, "term": "hdd14", "pooled": 0.0050587846, "pooled_se": 0.0010600262, "tau": 0.009200688, "i2": 0.9489500552, "sites": 83}, {"hour": 0, "term": "solar_kwh_m2", "pooled": 0.0016243456, "pooled_se": 0.0005026003, "tau": 0.0030517485, "i2": 0.5476173036, "sites": 83}, {"hour": 1, "term": "cdd20", "pooled": 0.0041803788, "pooled_se": 0.0019575166, "tau": 0.0137281206, "i2": 0.801422007, "sites": 83}, {"hour": 1, "term": "hdd14", "pooled": 0.0048886773, "pooled_se": 0.0010990934, "tau": 0.0095523649, "i2": 0.9513347987, "sites": 83}, {"hour": 1, "term": "solar_kwh_m2", "pooled": 0.0019547228, "pooled_se": 0.000465176, "tau": 0.0025933166, "i2": 0.4636154162, "sites": 83}, {"hour": 2, "term": "cdd20", "pooled": 0.0056917317, "pooled_se": 0.0019860253, "tau": 0.0139181841, "i2": 0.7768114415, "sites": 83}, {"hour": 2, "term": "hdd14", "pooled": 0.0061912216, "pooled_se": 0.0011593521, "tau": 0.0101363116, "i2": 0.9572077568, "sites": 83}, {"hour": 2, "term": "solar_kwh_m2", "pooled": 0.0013979673, "pooled_se": 0.0004777394, "tau": 0.0027968144, "i2": 0.5155291647, "sites": 83}, {"hour": 3, "term": "cdd20", "pooled": 0.0046946721, "pooled_se": 0.0019078988, "tau": 0.0133269131, "i2": 0.7823613808, "sites": 83}, {"hour": 3, "term": "hdd14", "pooled": 0.0066837836, "pooled_se": 0.0011872982, "tau": 0.0103938116, "i2": 0.9599457744, "sites": 83}, {"hour": 3, "term": "solar_kwh_m2", "pooled": 0.0021638921, "pooled_se": 0.0004580531, "tau": 0.0025848432, "i2": 0.4715417989, "sites": 83}, {"hour": 4, "term": "cdd20", "pooled": 0.005215533, "pooled_se": 0.0018999138, "tau": 0.0130132381, "i2": 0.7793755359, "sites": 83}, {"hour": 4, "term": "hdd14", "pooled": 0.0071173496, "pooled_se": 0.001264512, "tau": 0.0111209386, "i2": 0.9664551599, "sites": 83}, {"hour": 4, "term": "solar_kwh_m2", "pooled": 0.002654303, "pooled_se": 0.0005083082, "tau": 0.0031667198, "i2": 0.5694951849, "sites": 83}, {"hour": 5, "term": "cdd20", "pooled": 0.00227336, "pooled_se": 0.0021062016, "tau": 0.0147259177, "i2": 0.784406012, "sites": 83}, {"hour": 5, "term": "hdd14", "pooled": 0.0065300163, "pooled_se": 0.0012692928, "tau": 0.0111114608, "i2": 0.9616886433, "sites": 83}, {"hour": 5, "term": "solar_kwh_m2", "pooled": 0.001386418, "pooled_se": 0.0005110954, "tau": 0.0030642718, "i2": 0.5311097409, "sites": 83}, {"hour": 6, "term": "cdd20", "pooled": 0.0018738361, "pooled_se": 0.0023749459, "tau": 0.0166463651, "i2": 0.7750671276, "sites": 83}, {"hour": 6, "term": "hdd14", "pooled": 0.0066797946, "pooled_se": 0.0012333564, "tau": 0.0107551947, "i2": 0.9546669352, "sites": 83}, {"hour": 6, "term": "solar_kwh_m2", "pooled": 0.0003253082, "pooled_se": 0.0006524466, "tau": 0.0043353232, "i2": 0.6356811279, "sites": 83}, {"hour": 7, "term": "cdd20", "pooled": 0.0081725228, "pooled_se": 0.002683841, "tau": 0.018688275, "i2": 0.7658392166, "sites": 83}, {"hour": 7, "term": "hdd14", "pooled": 0.0089090966, "pooled_se": 0.0013410417, "tau": 0.0117388415, "i2": 0.9541060942, "sites": 83}, {"hour": 7, "term": "solar_kwh_m2", "pooled": -0.0010480156, "pooled_se": 0.0009057039, "tau": 0.0065245861, "i2": 0.7352547081, "sites": 83}, {"hour": 8, "term": "cdd20", "pooled": 0.0052192173, "pooled_se": 0.0031536874, "tau": 0.022095953, "i2": 0.7888541922, "sites": 83}, {"hour": 8, "term": "hdd14", "pooled": 0.0101573494, "pooled_se": 0.001407953, "tau": 0.0122583483, "i2": 0.9382198549, "sites": 83}, {"hour": 8, "term": "solar_kwh_m2", "pooled": -0.0034308665, "pooled_se": 0.00146028, "tau": 0.0116247499, "i2": 0.8672102195, "sites": 83}, {"hour": 9, "term": "cdd20", "pooled": 0.0094958961, "pooled_se": 0.0041497361, "tau": 0.0310226135, "i2": 0.8389916825, "sites": 83}, {"hour": 9, "term": "hdd14", "pooled": 0.0122110518, "pooled_se": 0.0014344265, "tau": 0.0124225458, "i2": 0.9373552501, "sites": 83}, {"hour": 9, "term": "solar_kwh_m2", "pooled": -0.0084003223, "pooled_se": 0.0022835497, "tau": 0.0191494501, "i2": 0.9338721405, "sites": 83}, {"hour": 10, "term": "cdd20", "pooled": 0.0093640639, "pooled_se": 0.0048195916, "tau": 0.0365499416, "i2": 0.8551766504, "sites": 83}, {"hour": 10, "term": "hdd14", "pooled": 0.0124342755, "pooled_se": 0.0014978796, "tau": 0.0128982655, "i2": 0.9383538765, "sites": 83}, {"hour": 10, "term": "solar_kwh_m2", "pooled": -0.0091640791, "pooled_se": 0.0027630092, "tau": 0.023315343, "i2": 0.9479070982, "sites": 83}, {"hour": 11, "term": "cdd20", "pooled": 0.0185007524, "pooled_se": 0.0049119261, "tau": 0.0373520843, "i2": 0.8664960698, "sites": 83}, {"hour": 11, "term": "hdd14", "pooled": 0.0106631648, "pooled_se": 0.0014511408, "tau": 0.0123727101, "i2": 0.9267885499, "sites": 83}, {"hour": 11, "term": "solar_kwh_m2", "pooled": -0.0115153279, "pooled_se": 0.0030394111, "tau": 0.0257402286, "i2": 0.9564585513, "sites": 83}, {"hour": 12, "term": "cdd20", "pooled": 0.0181132875, "pooled_se": 0.0052719167, "tau": 0.0410637609, "i2": 0.887125731, "sites": 83}, {"hour": 12, "term": "hdd14", "pooled": 0.0102074938, "pooled_se": 0.0013879179, "tau": 0.0117259555, "i2": 0.9156836003, "sites": 83}, {"hour": 12, "term": "solar_kwh_m2", "pooled": -0.0139643469, "pooled_se": 0.0031435036, "tau": 0.0265798701, "i2": 0.9571438322, "sites": 83}, {"hour": 13, "term": "cdd20", "pooled": 0.0243284757, "pooled_se": 0.0053606184, "tau": 0.041554826, "i2": 0.885433118, "sites": 83}, {"hour": 13, "term": "hdd14", "pooled": 0.0105671109, "pooled_se": 0.0012830284, "tau": 0.0107767793, "i2": 0.9073384271, "sites": 83}, {"hour": 13, "term": "solar_kwh_m2", "pooled": -0.014636011, "pooled_se": 0.0031172439, "tau": 0.0263843435, "i2": 0.9572897867, "sites": 83}, {"hour": 14, "term": "cdd20", "pooled": 0.0240133659, "pooled_se": 0.0054923245, "tau": 0.0421495168, "i2": 0.8858182225, "sites": 83}, {"hour": 14, "term": "hdd14", "pooled": 0.0094105729, "pooled_se": 0.0012428331, "tau": 0.0104836991, "i2": 0.9090136711, "sites": 83}, {"hour": 14, "term": "solar_kwh_m2", "pooled": -0.0121785132, "pooled_se": 0.0029784176, "tau": 0.0250791658, "i2": 0.9537479832, "sites": 83}, {"hour": 15, "term": "cdd20", "pooled": 0.0242825712, "pooled_se": 0.0056424729, "tau": 0.0428430567, "i2": 0.8844338638, "sites": 83}, {"hour": 15, "term": "hdd14", "pooled": 0.0107228131, "pooled_se": 0.0011963772, "tau": 0.0101302767, "i2": 0.9158260839, "sites": 83}, {"hour": 15, "term": "solar_kwh_m2", "pooled": -0.0115593886, "pooled_se": 0.0028822402, "tau": 0.0241799399, "i2": 0.949043316, "sites": 83}, {"hour": 16, "term": "cdd20", "pooled": 0.0326662686, "pooled_se": 0.0054739635, "tau": 0.0407649388, "i2": 0.8596361096, "sites": 83}, {"hour": 16, "term": "hdd14", "pooled": 0.0079573213, "pooled_se": 0.001148875, "tau": 0.0098425757, "i2": 0.9295299257, "sites": 83}, {"hour": 16, "term": "solar_kwh_m2", "pooled": -0.0061748783, "pooled_se": 0.0027025688, "tau": 0.0226635838, "i2": 0.9416700318, "sites": 83}, {"hour": 17, "term": "cdd20", "pooled": 0.0301527874, "pooled_se": 0.0055561982, "tau": 0.0432555573, "i2": 0.8812298883, "sites": 83}, {"hour": 17, "term": "hdd14", "pooled": 0.0086339066, "pooled_se": 0.001153586, "tau": 0.009961669, "i2": 0.9413515114, "sites": 83}, {"hour": 17, "term": "solar_kwh_m2", "pooled": -0.0044438464, "pooled_se": 0.0023403055, "tau": 0.0195196184, "i2": 0.9339130972, "sites": 83}, {"hour": 18, "term": "cdd20", "pooled": 0.0237796307, "pooled_se": 0.0050209611, "tau": 0.0389982728, "i2": 0.8871997842, "sites": 83}, {"hour": 18, "term": "hdd14", "pooled": 0.0088160163, "pooled_se": 0.0011951768, "tau": 0.0103942144, "i2": 0.9461646304, "sites": 83}, {"hour": 18, "term": "solar_kwh_m2", "pooled": -0.0015928908, "pooled_se": 0.0018889794, "tau": 0.0156281635, "i2": 0.9201292027, "sites": 83}, {"hour": 19, "term": "cdd20", "pooled": 0.0200945767, "pooled_se": 0.0047407738, "tau": 0.0376352904, "i2": 0.9053136407, "sites": 83}, {"hour": 19, "term": "hdd14", "pooled": 0.0063964937, "pooled_se": 0.0012028939, "tau": 0.010507747, "i2": 0.949883483, "sites": 83}, {"hour": 19, "term": "solar_kwh_m2", "pooled": -0.0032592091, "pooled_se": 0.001331007, "tau": 0.0106018294, "i2": 0.8729646033, "sites": 83}, {"hour": 20, "term": "cdd20", "pooled": 0.0197146617, "pooled_se": 0.0041816604, "tau": 0.033190043, "i2": 0.9095035021, "sites": 83}, {"hour": 20, "term": "hdd14", "pooled": 0.0065176455, "pooled_se": 0.0011525371, "tau": 0.0100606389, "i2": 0.9533931234, "sites": 83}, {"hour": 20, "term": "solar_kwh_m2", "pooled": -0.0030292462, "pooled_se": 0.001046996, "tau": 0.0082082273, "i2": 0.839136515, "sites": 83}, {"hour": 21, "term": "cdd20", "pooled": 0.0143747181, "pooled_se": 0.0038372668, "tau": 0.0303945485, "i2": 0.9150599567, "sites": 83}, {"hour": 21, "term": "hdd14", "pooled": 0.0075602849, "pooled_se": 0.0011653863, "tau": 0.0101757515, "i2": 0.9540515644, "sites": 83}, {"hour": 21, "term": "solar_kwh_m2", "pooled": -0.002463377, "pooled_se": 0.0008276152, "tau": 0.0062410164, "i2": 0.8037890919, "sites": 83}, {"hour": 22, "term": "cdd20", "pooled": 0.0119917436, "pooled_se": 0.0033437452, "tau": 0.0263731628, "i2": 0.9029290836, "sites": 83}, {"hour": 22, "term": "hdd14", "pooled": 0.006982566, "pooled_se": 0.0011704524, "tau": 0.0102396156, "i2": 0.9585498854, "sites": 83}, {"hour": 22, "term": "solar_kwh_m2", "pooled": -0.0014448653, "pooled_se": 0.0007175563, "tau": 0.0052006966, "i2": 0.755842019, "sites": 83}, {"hour": 23, "term": "cdd20", "pooled": 0.0106612275, "pooled_se": 0.0029459804, "tau": 0.0227072806, "i2": 0.8893278819, "sites": 83}, {"hour": 23, "term": "hdd14", "pooled": 0.0056995688, "pooled_se": 0.0011535483, "tau": 0.0101061166, "i2": 0.9617080557, "sites": 83}, {"hour": 23, "term": "solar_kwh_m2", "pooled": -0.000841822, "pooled_se": 0.0006607935, "tau": 0.004704946, "i2": 0.7390993764, "sites": 83}]}, "mark": {"type": "line", "point": true, "tooltip": true}, "encoding": {"x": {"field": "hour", "type": "quantitative", "title": "local hour"}, "y": {"field": "pooled", "type": "quantitative", "title": "pooled response"}, "color": {"field": "term", "type": "nominal", "title": "term"}, "tooltip": [{"field": "hour", "type": "quantitative"}, {"field": "term", "type": "nominal"}, {"field": "pooled", "type": "quantitative"}, {"field": "pooled_se", "type": "quantitative"}, {"field": "tau", "type": "quantitative"}, {"field": "i2", "type": "quantitative"}, {"field": "sites", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
     spec.width = Math.max(280, el.clientWidth - 90);
     vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
   })();

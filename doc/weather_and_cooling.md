@@ -298,22 +298,31 @@ between-site comparison.
 Dose × site interactions in one regression give 107 cold and 106 heat slopes with standard
 errors; a random-effects decomposition (DerSimonian–Laird) separates the true between-site
 spread (τ) from sampling noise, and empirical-Bayes shrinkage gives each site a posterior slope.
+The standard errors of the site slopes are Driscoll–Kraay (14-day lag); see the correction below.
 
 | | Cold, % per °C below 14 | Heat, % per °C above 20 |
 |---|---|---|
-| Pooled slope | +1.14 | +0.96 |
-| True between-site SD (τ) | 1.30 | 3.91 |
-| Share of observed variance that is real (I²) | 0.99 | 0.99 |
-| Posterior, 10th / 50th / 90th percentile | −0.2 / +0.7 / +3.1 | −3.9 / +0.5 / +7.0 |
-| Sites significantly above / below zero | 82 / 8 | 48 / 39 |
+| Pooled slope | +0.86 | +1.38 |
+| True between-site SD (τ) | 1.06 | 2.89 |
+| Share of observed variance that is real (I²) | 0.97 | 0.94 |
+| Posterior, 10th / 50th / 90th percentile | −0.2 / +0.7 / +2.9 | −3.0 / +0.8 / +5.4 |
+| Sites significantly above / below zero | 69 / 4 | 43 / 26 |
 
 - **The average hides the sites.** Both slopes vary far more between sites than their standard
-  errors can explain (I² = 0.99). The cold slope runs from about zero to +3 % per °C; the heat
-  slope from −4 to +7, with 39 sites that significantly *fall* on hot days against 48 that rise.
-  "The heat effect" is an average over sites that differ in sign. The cold and heat slopes of a
-  site are only weakly related (correlation 0.21).
-- Three site-dose slopes (RCBL8 heat, RWRRK heat, RY318 both) have undefined clustered
-  variances and are left out of the shrinkage.
+  errors can explain (I² = 0.97 and 0.94). The heat slope runs from about −3 to +5 % per °C
+  across the middle 80 % of sites, with 26 sites that significantly *fall* on hot days against
+  43 that rise. "The heat effect" is an average over sites that differ in sign. The cold and heat
+  slopes of a site are only weakly related (correlation 0.23).
+- **Correction (9 November 2026).** The first version of this section clustered the site slopes'
+  standard errors by site and date. For a coefficient that belongs to one site that variance is
+  wrong: the site cluster contributes nothing (the site's score sums to zero) and the date and
+  intersection terms cancel, so the errors came out below even heteroskedasticity-robust ones.
+  The slopes now carry Driscoll–Kraay errors (scores summed by date, Newey–West kernel over 14
+  days; a per-site Newey–West variance gives the same), 1.7 times the old errors for cold, 2.0
+  times for heat and 3.2 times for sunshine. The heterogeneity is real either way; it is smaller
+  (I² 0.94–0.97 rather than 0.99) and fewer sites are individually significant (heat: 43 rising
+  and 26 falling, was 48 and 39; cold: 69 and 4, was 82 and 8). Pooled estimates, the moderator
+  regressions and every result clustered on shared coefficients are unchanged.
 
 ### 7.2 Moderators (`moderators`)
 
@@ -364,9 +373,9 @@ in a band are left out).
 
 `sense-energy heat-drivers` (`analysis/heat_drivers.py`, tables in `code/reports/heat_drivers/`,
 figures `heat_*`, `sunshine_slopes`, `map_heat_types`). Section 7 left the heat slope unexplained:
-a real spread of ±4 points around +1 % per °C, 39 sites falling on hot days, and none of the
+a real spread of ±3 points around +1.4 % per °C, 26 sites falling on hot days, and none of the
 estates descriptors predicting any of it. This section takes the slope apart on the same panel
-(sites without CHP, specification B, standard errors clustered by site and date), with three
+(sites without CHP, specification B; site-specific slopes with Driscoll–Kraay standard errors), with three
 additions: a site-specific **sunshine** term, the demand of each **six-hour block** of the day
 and the **weekend**, and the heat dose split into **hot afternoons and warm nights**. Two new
 open datasets feed the moderators: the ONS rural-urban classification and Census 2021 population
@@ -384,35 +393,37 @@ and two sites' +12 %, with monthly demand swinging threefold. 83 sites remain
 
 ### 8.1 Sunshine (`heat_sunshine_control`, `sunshine_slopes`, `heat_blocks_sunshine`)
 
-Hot days are sunny days, and 55 of the 83 sites import less electricity on sunny days at a given
-temperature: the pooled sunshine slope is −0.9 % per kWh/m² of daily surface solar radiation,
-which is −5 % between an overcast and a clear summer day. The slope has the shape of daylight:
-−1.1 % in the morning block, −1.4 % in the afternoon, −0.5 % in the evening and +0.2 % at night
-(`heat_blocks_sunshine`). Sites that report solar generation to ERIC have a sunshine slope 1.9
-points more negative than the rest (p = 0.06), community inpatient sites 3.9 points more
-negative (p = 0.005). It is daylight-linked lighting across the estate, plus panels where there
-are panels.
+Hot days are sunny days, and 44 of the 83 sites import significantly less electricity on sunny
+days at a given temperature (7 more): the pooled sunshine slope is -0.7 % per kWh/m² of
+daily surface solar radiation, about −4 % between an overcast and a clear summer day. The slope has
+the shape of daylight: -0.7 % in the morning block, -1.1 % in the afternoon, -0.3 % in the evening
+and +0.2 % at night (`heat_blocks_sunshine`). Sites that report solar generation to ERIC have a
+sunshine slope 1.9 points more negative than the rest (p = 0.06), community inpatient sites 3.9
+points more negative (p = 0.005). It is daylight-linked lighting across the estate, plus panels
+where there are panels.
 
-It is not, however, where the heat dispersion comes from. Adding the sunshine term moves the
-pooled heat slope from +0.6 to +1.1 % per °C (the daylight saving was masking some cooling) and
-leaves the between-site SD at 4.0–4.1 points; the two heat slopes correlate 0.90, and 22 sites
-still fall significantly with heat net of sunshine (28 before). The heat and sunshine slopes of a
-site are unrelated (r = 0.05). REPD confirms there is little rooftop PV behind these meters yet:
-24 sites have a scheme at their postcode, all 2025 applications awaiting construction, none
-operational within the sample.
+It is not where the heat dispersion comes from. Adding the sunshine term leaves the pooled heat
+slope where it was (+1.13 and +1.16 % per °C) and the between-site SD at
+3.0–3.1 points; the two heat slopes correlate 0.90, and 21 sites fall significantly with heat
+net of sunshine (19 before). The heat and sunshine slopes of a site are unrelated
+(r = 0.05). REPD confirms there is little rooftop PV behind these meters yet: 24 sites have a
+scheme at their postcode, all 2025 applications awaiting construction, none operational within the
+sample. (Before the correction of the standard errors, the sunshine control appeared to raise the
+pooled heat slope from +0.6 to +1.1; that was the old inverse-variance weights, not the data.)
 
 ### 8.2 Time of day and the week (`heat_blocks_heat`, `heat_signature`, `heat_weekend`)
 
-The heat response is an afternoon-and-evening phenomenon: pooled across sites it is +0.2 % per °C
-at night, +0.8 % in the morning, +3.6 % in the afternoon and +2.1 % in the evening. Among the 41
-sites that rise with heat, 32 have an afternoon block slope significantly above their night
-block: cooling plant that works with the sun. The 22 fallers fall through the whole day, night
-included (their block slopes run −1.3 to −3.7 %), which no sunshine mechanism can produce.
+The heat response is an afternoon-and-evening phenomenon: pooled across sites it is
++0.3 % per °C at night, +0.9 % in the morning, +2.4 % in the afternoon and +1.6 % in the
+evening. Among the 33 sites that rise with heat, 16 have an afternoon block slope significantly above
+their night block: cooling plant that works with the sun. The 21 fallers fall through the whole
+day, night included (median block slopes −1.8 % at night to −3.5 % in the afternoon), which no
+sunshine mechanism can produce.
 
-Weekday and weekend heat slopes correlate 0.66; 13 risers have a significantly smaller weekend
-response (plant that runs with the working day). The median site's weekend response is 0.9
-points *larger* than its weekday one, which is a percentage effect: the same cooling kilowatts
-against a lower weekend baseline.
+Weekday and weekend heat slopes correlate 0.65; 7 risers have a significantly smaller weekend
+response (plant that runs with the working day). The median site's weekend response is 1.1 points
+*larger* than its weekday one, which is a percentage effect: the same cooling kilowatts against a
+lower weekend baseline.
 
 ### 8.3 Hot afternoons and warm nights (`heat_night_day`, `heat_group_decomposition`)
 
@@ -421,18 +432,18 @@ Splitting the dose into degrees of daily maximum above 24 °C and degrees of dai
 
 | Sites by the daily heat slope | Hot afternoon (% per °C of T_max > 24) | Warm night (% per °C of T_min > 12) | Sunshine (% per kWh/m²) |
 |---|---|---|---|
-| rise with heat (41, 74 % of demand) | +1.45 (0.38) | +0.73 (0.26) | −1.27 (0.41) |
-| fall with heat (22, 8 % of demand) | −1.24 (0.35) | −1.18 (0.26) | −1.05 (0.25) |
-| neither (20) | +0.51 (0.70) | +0.36 (0.25) | −0.77 (0.48) |
+| rise with heat (33, 73 % of demand) | +1.93 [+1.01, +2.85] | +1.00 [+0.53, +1.47] | −0.66 [−1.39, +0.08] |
+| fall with heat (21, 8 % of demand) | −1.32 [−2.03, −0.60] | −1.16 [−1.68, −0.64] | −1.15 [−1.65, −0.64] |
+| neither (29) | −0.20 [−0.80, +0.40] | +0.10 [−0.43, +0.63] | −1.63 [−2.67, −0.60] |
 
 {{table: code/reports/heat_drivers/group_decomposition.csv | cols=model,sign,term_name,coef_pct,lo_pct,hi_pct,p,sites | round=2}}
 
 Risers respond twice as much to hot afternoons as to warm nights: cooling. Fallers respond to
-both, and as much to the night minimum as to the afternoon maximum: 17 of the 22 have a
+both, and as much to the night minimum as to the afternoon maximum: 14 of the 21 have a
 significantly negative warm-night slope (`heating_tail` flag). That is the signature of
 heating that is still running in the warm season and switches off when the night is warm:
 electric heating and the auxiliaries of gas heating in small buildings (the fallers' median
-demand is 9 kW against 21 kW for risers), plus water heating that follows mains-water
+demand is 10 kW against 28 kW for risers), plus water heating that follows mains-water
 temperature. The extreme cases say the same: Kelling Hospital runs 50 kW in winter and 19 kW in
 summer, Malton 43 kW in April and 30 kW in July, and South Devon's renal unit (dialysis water
 heated to 37 °C) falls 16 % per °C. "Falls with heat" is a heating-season tail, not a cooling
@@ -448,9 +459,9 @@ effect cannot masquerade as a heat moderator), one at a time:
   island does not show up in the response, consistent with the thermometer result of section 6.
 - **Nothing in use, age or heating fuel.** Building use (p = 0.35), build year, gas-to-electricity
   ratio, LED share, heat pumps, winter/summer ratio, size: none.
-- **What moves it is how electrically intensive the estate is.** Peak demand per m² (+0.7 points
-  per SD, p = 0.05 alone; the joint model puts it on electricity intensity instead: +1.9 points
-  per SD, p = 0.001), tenure (joint p = 0.02: leased sites +0.9, PFI/LIFT/other −0.9) and solar
+- **What moves it, weakly, is how electrically intensive the estate is.** Peak demand per m² (+0.7
+  points per SD, p = 0.06 alone), tenure (joint p = 0.02: leased sites +0.9, PFI/LIFT/other −0.9)
+  and solar
   generation in ERIC (+2.0 points, p = 0.01), which reads as a marker of trusts that invest in
   their plant. Overheating reports in clinical areas go with a larger heat slope (+0.8, p = 0.13):
   sites that overheat respond, presumably with portable and retrofitted cooling.
@@ -458,27 +469,28 @@ effect cannot masquerade as a heat moderator), one at a time:
 
 - **How much is explained.** A random-effects meta-regression of the sunshine-controlled site
   slopes on each descriptor set gives the share of the *true* between-site variance it accounts
-  for: building use, urban form and density, the estates descriptors, the load shape, and all of
-  them together each explain nothing (−8 % to +6 %). The site's own diurnal signature (afternoon
-  excess and sunshine slope) explains 46 %. The heat slope is about plant on the site, which shows
-  in the shape of the day and not in anything the estates return records.
+  for: building use, urban form and density, the estates descriptors, the load shape, the DEC
+  fields and all of them together each explain nothing (negative shares mean the parameters cost
+  more than they explain). The site's own diurnal signature (afternoon excess and sunshine slope)
+  explains 45 %. The heat slope is about plant on the site, which shows in the shape of
+  the day and not in anything the estates return records.
 
 ### 8.5 Types (`heat_signature`, `map_heat_types`)
 
-By significance at 5 %: 16 sites rise with heat and nothing else (45 % of demand), 25 rise with
-heat and fall with sunshine (29 %), 12 fall with sunshine only (13 %), 22 fall with heat (8 %),
-8 neither (5 %). Three quarters of the metered demand sits on sites whose electricity rises on hot
-afternoons. The map shows the types mixed within regions and ICBs: the type is a property of the
-building, not of the place.
+By significance at 5 %: 19 sites rise with heat and nothing else (48 % of demand), 14 rise
+with heat and fall with sunshine (25 %), 16 fall with sunshine only (9 %), 21 fall with
+heat (8 %), 13 neither (10 %). Three quarters of the metered demand sits on sites
+whose electricity rises on hot afternoons. The map shows the types mixed within regions and ICBs:
+the type is a property of the building, not of the place.
 
 ### 8.6 What this changes
 
-- The cooling response of the estate is cleaner and larger than the raw heat slope says: +1.1 %
-  per °C of daily mean above 20 °C net of daylight, +1.45 % per °C of daily maximum above 24 °C
-  at the sites that have cooling, and concentrated in the afternoon and evening.
+- The cooling response of the estate: +1.2 % per °C of daily mean above 20 °C net of daylight,
+  +1.9 % per °C of daily maximum above 24 °C at the sites that have cooling, and concentrated in
+  the afternoon and evening.
 - "Sites that fall on hot days" are small, heating-dominated buildings in their shoulder season,
   with 8 % of the demand; they should not be modelled as cooling anomalies.
-- Sunshine deserves a place in the day-ahead feature set in its own right: −0.9 % per kWh/m² is
+- Sunshine deserves a place in the day-ahead feature set in its own right: -0.7 % per kWh/m² is
   a daily swing of several percent, separate from temperature.
 - The direct data on cooling plant is the Display Energy Certificate register; section 8.7 reads
   it. It confirms the direction (the sites whose buildings are classed as air-conditioned have the
@@ -499,8 +511,8 @@ newer ones link an advisory report with the assessor's recommendations.
 - **"Air conditioning present" is almost universal and separates nothing.** The question covers
   any system, server rooms included: 51 of the 67 sites are "mostly air-conditioned" by floor area
   and 16 have none. The heat slope of the two groups differs by 1.0 point (p = 0.46; medians 1.4
-  against 0.4 % per °C), and the air-conditioned floor share explains 1.5 % of the true between-site
-  variance.
+  against 0.4 % per °C), and the air-conditioned and cooled floor shares together explain none of
+  the true between-site variance.
 - **The building environment does separate, at the top.** The dominant class is heating with
   natural ventilation at 38 sites, mechanical ventilation at 13, mixed mode at 13 and air
   conditioning at 3. Those three sites (34 kW median) have a heat slope 3.1 points above the
@@ -542,30 +554,30 @@ from a model that never saw it. Covariates: the estates, context and DEC descrip
 plus three calendar modifiers (weekend, bank holiday, school summer); a second run adds the site's
 diurnal signature. A placebo shuffles the site covariates across sites.
 
-- **The forest recovers a quarter of the heterogeneity from observables; the linear moderators
-  recovered none.** Out of fold, the forest's site effects correlate 0.21 with the
-  fixed-effect slopes and recover 24 % of their true
-  between-site variance (calibration slope 0.19: the learned effects are
-  spread 5.7 points against a true 4.2, so they are
-  over-dispersed and should be shrunk before use). The R-learner with observables alone finds
-  nothing (-0.11); with the signature it reaches 0.21 and
-  18 %. The placebo sits at -0.06 and
-  -0.01.
+- **The forest recovers two fifths of the heterogeneity from observables; the linear moderators
+  recovered none.** Out of fold, the forest's site effects correlate 0.31 with the fixed-effect
+  slopes and recover 40 % of their true between-site variance (calibration slope 0.25: the learned
+  effects are spread 6.5 points against a true 3.1, so they are over-dispersed and should be
+  shrunk before use). The R-learner with observables alone finds nothing (−0.08); with the
+  signature it reaches 0.24 and 13 %. The placebo sits at −0.04 and 0 %. (Before the correction
+  of the site standard errors the forest's share read 24 %: the old errors overstated the true
+  spread, 4.2 points, which the forest was then measured against.)
 - **What the forest splits on** is the load shape and the climate, not the estates fields: the
-  night/day ratio (0.26 of importance), the winter/summer
-  ratio, size, the gas ratio and the summer maximum; with the signature in, the daytime sunshine
-  slope takes 0.44 and the afternoon excess 0.15.
-  The DEC fields do not enter the top splits.
+  night/day ratio (0.26 of importance), the winter/summer ratio, size, the gas ratio and the
+  summer maximum; with the signature in, the daytime sunshine slope takes 0.25 and the afternoon
+  excess 0.20. Of the DEC fields only the electricity intensity enters the top eight, at 0.03.
 - **The calendar does not modify the heat response.** With site x weekday effects already in, the
   forest's effect is 1.70 % per °C on weekdays and 1.82 at weekends,
   and identical on bank holidays and in the school summer holiday. The weekend difference of
   section 8.2 is a percentage effect on a lower baseline, not a different response.
 - **Who the forest gets right.** 35 sites have a learned effect significantly above zero
-  and 15 below; the large risers are recovered, the fallers are not (the forest
-  places most of them near zero): their heating tail has no observable to split on.
+  and 15 below. The risers are recovered in rank (correlation 0.45 among them) though shrunk
+  towards the mean (median +2.6 % against +4.7 % in the regressions); the fallers are not: the
+  forest places them at the panel average (median +2.3 % against −3.9 %), because their heating
+  tail has no observable to split on.
 
 The mean learned effect is 1.73 % per °C, an unweighted site-day average against
-the regression's pooled +1.1; the difference is the weighting. Next in this thread: shrink the
+the regression's pooled +1.2; the difference is the weighting. Next in this thread: shrink the
 forest effects (empirical Bayes against the fixed-effect slopes), and use the dated ERIC changes
 (section 7 of `estates_analysis.md`) as staggered treatments for installation effects.
 
@@ -620,24 +632,26 @@ token per day (48 half-hours scaled by the site's trailing month, weekday, seaso
 days per window whose embeddings under a slowly moving target encoder the predictor must produce
 from the other 21; 0.48 million parameters, 4,000 steps on 131 sites, 131,656 days
 embedded. The test was pre-registered: does the site's embedding predict its fixed-effect heat
-slope out of fold better than the diurnal signature (46 %)? Alongside it the same probe ran on
+slope out of fold better than the diurnal signature (46 %; 45 % with the corrected standard
+errors)? Alongside it the same probe ran on
 the Chronos-2 encoder's embedding of each site's demand (the foundation-model teacher), on the
 observable descriptors and on the signature, with a ridge probe and with TabPFN.
 
 {{table: code/reports/jepa/probe.csv | cols=target_name,representation,model,sites,dims,r2_oof,share_true_variance | round=2}}
 
-- **No, on the heat slope.** The JEPA embedding recovers 1 % of the true
-  between-site heat variance (9 % from June–September days only), the
-  Chronos-2 embedding -0 %, the observables 7 %, the
-  diurnal signature 36 % (ridge) and 45 % (TabPFN).
+- **No, on the heat slope.** The JEPA embedding recovers 4 % of the true
+  between-site heat variance (1 % from June–September days only; 5 % and 14 % with TabPFN), the
+  Chronos-2 embedding 0 %, the observables nothing (−5 %), the diurnal signature 30 % (ridge) and
+  50 % (TabPFN). (Shares recomputed on 9 November against slopes with Driscoll–Kraay standard
+  errors.)
   Adding the embedding to the signature adds nothing. By the criterion set in advance, the thread
   stops here.
 - **Yes, on the responses that show in the day's shape.** The same embeddings carry the sunshine
-  slope well (Chronos-2 63 %, JEPA 52 %) and
-  Chronos-2 carries the cold slope (42 %) where the observables manage
+  slope well (Chronos-2 54 %, JEPA 32 %; 66 % and 35 % with TabPFN) and
+  Chronos-2 carries the cold slope (53 %) where the observables manage
   18 %. Daylight-linked lighting and electric heating leave a mark on the profile
   that a weather-blind representation picks up; an afternoon cooling response does not, because
-  it is conditional on a driver the model never sees. (The signature's 90 % on sunshine is
+  it is conditional on a driver the model never sees. (The signature's 93 % on sunshine is
   circular: the daytime sunshine slope is one of its two components.)
 - **The embeddings encode operation, not category.** Building use is classified at
   66 % by the JEPA embedding and 53 % by Chronos-2 against a
@@ -656,15 +670,18 @@ warmer, a different predicted embedding. The mean change per site is a learned *
 vector* (`response_embeddings`; the same for +2 kWh/m² of sunshine). With the batch pipeline on
 the GPU the model trains in three minutes instead of 75. The probe, repeated:
 
-- **Still no on the heat slope.** The weather-conditioned embedding recovers 0 % of the
-  true heat variance, the heat response vector 1 % (0 % with TabPFN), the
-  sunshine response vector 12 % (TabPFN). The latent response to a warmer day has
+- **Still no on the heat slope.** The weather-conditioned embedding recovers none of the
+  true heat variance (−3 %; 4 % with TabPFN), the heat response vector none (−3 %; 8 % with
+  TabPFN). The sunshine response vector reaches 31 % with TabPFN and 3 % with ridge: one probe,
+  not a stable signal, and below the signature's 50 %. The latent response to a warmer day has
   almost the same size at every site (`jepa_response`): the predictor learned the panel's average
   weather-to-profile mapping, not each site's.
-- **Yes on the cold and sunshine responses.** The same heat response vector recovers
-  22 % of the cold slope (33 % with TabPFN), against 18 % from the
-  observables and 3 % from the weather-blind JEPA; and 63 % of the sunshine slope,
-  level with Chronos-2. Conditioning on weather did put responses into the embedding, the large
+- **Yes on the cold and sunshine responses.** The sunshine response vector recovers 23 % of
+  the cold slope (34 % with TabPFN), against 18 % from the observables and 1 % from the
+  weather-blind JEPA; the heat response vector recovers 53 % of the sunshine slope (65 % with
+  TabPFN), level with Chronos-2. Which vector carries the cold slope moved with the correction of
+  the standard errors (before it the heat vector did, at 22–33 %): the two are readings of one
+  learned weather sensitivity, not separate responses. Conditioning on weather did put responses into the embedding, the large
   and frequent ones: heating runs on a third of days and moves demand by tens of per cent, hot
   afternoons on three per cent of days and by a few per cent. A loss that weights every day
   equally cannot see the second.
