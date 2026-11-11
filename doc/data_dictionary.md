@@ -740,3 +740,42 @@ Write-up: `doc/weather_normalised_estate.md` (HTML page `doc/html/weather_normal
 | `estate_counterfactuals/heatwave_surprise.csv` | group | the weather-blind JEPA's latent surprise on heatwave days against other summer days, Mann-Whitney p |
 | `solar_watch/slopes.csv`, `breaks.csv` | site × summer; site | sunshine slope of daytime demand per summer (2023–2025), the 2023 → 2025 change, z, downward and upward break flags, ERIC solar and LED changes, REPD status (`sense-energy solar-watch`) |
 | `chp_dispatch/daily.csv`, `hourly.csv`, `classification.csv` | coefficient; site | per CHP site and pooled: daily import response to the cold and heat doses and the daily price; hourly response to the power price and the working-day red band; each against the sites without CHP; flags `heat_led`, `price_following`, `red_band_avoiding` (`sense-energy chp-dispatch`) |
+
+---
+
+## Long temperature record: `code/data/external/weather/era5_timeseries/` → `interim/weather_daily_long.parquet`
+
+ERA5 hourly 2 m temperature from 1 January 1960 at the 59 grid cells (0.25°) that hold a panel
+site, from the Climate Data Store's point time-series dataset
+(`reanalysis-era5-single-levels-timeseries`, one request per cell, minutes each; contains
+modified Copernicus Climate Change Service information). `sense-energy fetch-era5-timeseries`
+(resumable), then `sense-energy build-era5-long`.
+
+| Table | Rows | Columns |
+|---|---|---|
+| `era5_long_hourly.parquet` | cell × hour, 1960 – 2022 | `cell`, `datetime` (UTC), `t2m` (°C) |
+| `era5_long_site_cells.parquet` | site | `site_code`, `cell` |
+| `weather_daily_long.parquet` | site × `Europe/London` day, 1960 – May 2026 | `site_code`, `date`, `t_mean`, `t_min`, `t_max` (°C); the long record up to 30 November 2022, then `weather_daily.parquet` |
+
+The two records agree exactly on their overlap (December 2022, 4,371 site-days, difference
+0.0 °C), so they splice without a correction.
+
+## Flexibility, design winters, heat pumps in the field, solar programme
+
+Write-up: [flexibility_and_design_winters.md](flexibility_and_design_winters.md).
+
+| Folder (`code/reports/`) | Files |
+|---|---|
+| `flexibility/` | `bill_anatomy.csv` (site × financial year: energy, wholesale cost, price paid, shape premium, red-band share), `battery_unit_daily.csv` and `battery_unit_annual.csv` (value of a 1 kW, 2 h battery per price case), `battery_sites.csv`, `solar_sites.csv` and `solar_summary.csv` (array size × site: self-consumption, demand covered, value), `forecast_value.csv` (model × planning quantile: share of the achievable peak cut captured), `forecast_value_site_days.parquet`, `summary.json` |
+| `design_winter/` | `site_years.parquet` (site × weather year 1960/61 – 2025/26: annual electricity ratio, peaks today and with heat pumps, hours above capacity, store power and energy, days extrapolated), `years.csv`, `design_sites.csv` (reference year, one-in-twenty and worst winter per site, storage class), `summary.json` |
+| `heat_pump_field/` | `site_changes.csv` (every English site in both returns: heat-pump status, changes in gas, electricity and floor area, plausibility), `did.csv`, `switchers.csv` (gas down a quarter or more: implied COP), `slope.csv`, `panel_sites.csv`, `summary.json` |
+| `solar_programme/` | `spring_slopes.csv` (site × spring 2023 – 2026 sunshine slope), `spring_breaks.csv` (change 2025 to 2026, implied kWp), `funded_sites.csv` (panel sites on the Great British Energy list), `summer_measured.csv` (meter-sized arrays against reported generation), `summary.json` |
+
+`code/data/external/gbe_solar/gbe-nhs-solar-projects.csv`: the published list of NHS trusts and
+site postcodes funded by Great British Energy (GOV.UK, 21 March 2025; contains public sector
+information licensed under the Open Government Licence v3.0): trust code and name, region, site
+postcodes, sites funded, award, estimated lifetime savings.
+
+Market index price: `data.prices.load_mid` returns one row per half-hour from the traded provider
+(`APXMIDP`); the other provider in `prices_elexon_mid.parquet` (`N2EXMIDP`) is zero in 99.8 % of
+periods and must not be averaged or joined in.

@@ -5,15 +5,15 @@
     "no CHP": 1.28
   },
   "pooled_hourly_price_pct_per_100": {
-    "no CHP": 13.07,
-    "CHP": 12.69
+    "no CHP": 7.04,
+    "CHP": 6.44
   },
   "pooled_red_band_pct": {
-    "no CHP": 14.17,
-    "CHP": 14.23
+    "no CHP": 14.16,
+    "CHP": 14.22
   },
   "heat_led_sites": 10,
-  "price_following_sites": 7,
+  "price_following_sites": 6,
   "red_band_avoiding_sites": 15,
   "sites_with_estimates": 23
 }

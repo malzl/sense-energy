@@ -224,16 +224,18 @@ def counterfactual_temperature(hw: pd.DataFrame, all_hw: pd.DataFrame) -> pd.Dat
 
 
 def prices_and_carbon() -> pd.DataFrame:
-    p = pd.read_parquet(
-        INTERIM_DIR / "prices_elexon_mid.parquet", columns=["datetime", "price_gbp_mwh"]
-    )
+    from ..data.prices import load_mid
+
+    p = load_mid()  # one row per half-hour: the traded provider only
     c = pd.read_parquet(
         INTERIM_DIR / "neso_covariates_halfhourly.parquet",
         columns=["datetime", "carbon_intensity_actual_gco2_kwh"],
     )
-    p["datetime"] = pd.to_datetime(p["datetime"], utc=True)
     c["datetime"] = pd.to_datetime(c["datetime"], utc=True)
-    return p.merge(c, on="datetime", how="outer")
+    c = c.drop_duplicates("datetime")
+    out = p.merge(c, on="datetime", how="outer")
+    assert not out["datetime"].duplicated().any(), "prices and carbon must be one row per half-hour"
+    return out
 
 
 def heatwave_cost(

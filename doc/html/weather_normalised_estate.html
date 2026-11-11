@@ -17,6 +17,7 @@
   <a href="data_manifest.html">Data manifest - processed demand datasets</a>
   <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
   <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
   <a href="methodology.html">Methodology</a>
   <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
   <a href="project_brief.html">Project brief</a>
@@ -49,6 +50,14 @@ count of &quot;significant&quot; sites did. What changed: the solar watch now fi
 breaks instead of 19 and 23, and the LED reading of the upward breaks does not survive; 10 CHP
 plants test heat-led instead of 13; one site, not two, passes its capacity at +4 °C. The installation
 savings use a different model and are unaffected.</p>
+<p><strong>Correction (11 November 2026).</strong> The market index price table carries two providers, and one of
+them (N2EX) reports zero in 99.8 % of half-hours. The heatwave costing joined both, which counted
+every half-hour of the sites without CHP twice (energy and carbon doubled, cost unaffected) and
+halved the daily mean price used for the CHP sites (their cost halved). The CHP price test used
+the same halved price, so its coefficients per £100/MWh were twice too large. All price work now
+reads the traded provider only (<code>data.prices.load_mid</code>). Percentages and the heat-led and
+red-band classifications did not move; one plant (Royal Devon and Exeter) no longer tests as
+price-following.</p>
 <h2 id="1-where-in-the-day-the-weather-response-lives-hourly-pooled-">1. Where in the day the weather response lives (<code>hourly_pooled</code>, <code>hourly_heat_profiles</code>, <code>hot_day_peak</code>)</h2>
 <div class="figrow"><figure class="inrow"><img src="figures/hourly_pooled.png" alt="hourly_pooled" loading="lazy"><figcaption><code>hourly_pooled</code> <a href="figures/hourly_pooled.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/hourly_heat_profiles.png" alt="hourly_heat_profiles" loading="lazy"><figcaption><code>hourly_heat_profiles</code> <a href="figures/hourly_heat_profiles.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/hot_day_peak.png" alt="hot_day_peak" loading="lazy"><figcaption><code>hot_day_peak</code> <a href="figures/hot_day_peak.pdf">PDF</a></figcaption></figure></div>
 
@@ -485,9 +494,11 @@ is 2023/24, after 2025/26, 2024/25 the installation year; sites with CHP left ou
 </table><p class="source">source: <a href="data/group_effects.csv">code/reports/installation_savings/group_effects.csv</a> (4 rows shown)</p>
 
 <ul>
-<li><strong>Heat pumps add about a third.</strong> The three sites that installed heat pumps use 32 % more
-electricity than the sites with no change (bootstrap 95 % interval +18 to +51 %): the
-electrification the headroom analysis assumed, measured.</li>
+<li><strong>Sites that report heat pumps use a third more electricity.</strong> The three sites that installed
+heat pumps use 32 % more electricity than the sites with no change (bootstrap 95 % interval +18
+to +51 %). It is added electric load, not gas being replaced: in the returns one of the three
+has no gas, one kept its gas and one changed its reporting scope (corrected 11 November 2026;
+see section 7 of <code>flexibility_and_design_winters.md</code>).</li>
 <li><strong>LED saves 0.6 % per ten points of coverage</strong> (cross-site regression, 59 sites, interval −1.2
 to 0.0, p = 0.05): a site going from no LED to full LED saves about 6 %. The 16 LED-only sites
 fall 3.9 points more than unchanged sites at the median (interval −11 to +4).</li>
@@ -656,10 +667,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>35</td>
       <td>110</td>
-      <td>12482.3</td>
+      <td>6241.1</td>
       <td>4.7</td>
       <td>619.8</td>
-      <td>1.4</td>
+      <td>0.7</td>
     </tr>
     <tr>
       <td>heatwave_20250618</td>
@@ -670,7 +681,7 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>32</td>
       <td>62997.7</td>
       <td>12.6</td>
-      <td>3104.4</td>
+      <td>6208.9</td>
       <td>7.4</td>
     </tr>
     <tr>
@@ -680,10 +691,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>11</td>
       <td>48</td>
-      <td>5240.8</td>
-      <td>5.2</td>
+      <td>3914.2</td>
+      <td>5.6</td>
       <td>357.4</td>
-      <td>0.7</td>
+      <td>0.5</td>
     </tr>
     <tr>
       <td>heatwave_20250627</td>
@@ -694,7 +705,7 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>17</td>
       <td>8544</td>
       <td>11.5</td>
-      <td>494.2</td>
+      <td>547.2</td>
       <td>0.9</td>
     </tr>
     <tr>
@@ -704,10 +715,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>39</td>
       <td>132</td>
-      <td>17543</td>
+      <td>8812.2</td>
       <td>3.7</td>
       <td>740.4</td>
-      <td>2.5</td>
+      <td>1.2</td>
     </tr>
     <tr>
       <td>heatwave_20250709</td>
@@ -718,7 +729,7 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>48</td>
       <td>65484.9</td>
       <td>11.1</td>
-      <td>2674.9</td>
+      <td>5330.2</td>
       <td>9</td>
     </tr>
     <tr>
@@ -728,10 +739,10 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>no CHP</td>
       <td>26</td>
       <td>78</td>
-      <td>8160.1</td>
+      <td>4080</td>
       <td>5.3</td>
       <td>371.6</td>
-      <td>1.4</td>
+      <td>0.7</td>
     </tr>
     <tr>
       <td>heatwave_20250811</td>
@@ -742,19 +753,19 @@ priced at the market index price and costed at the grid's carbon intensity.</p>
       <td>29</td>
       <td>42954.8</td>
       <td>12.9</td>
-      <td>1863.1</td>
+      <td>3726.1</td>
       <td>7.3</td>
     </tr>
   </tbody>
 </table><p class="source">source: <a href="data/heatwave_events.csv">code/reports/estate_counterfactuals/heatwave_events.csv</a> (8 rows shown)</p>
 
 <ul>
-<li><strong>Sites without CHP: 4.3 % more electricity on heatwave days.</strong> 43 MWh over 370 site-days at 56
-sites, at 4.3 °C above normal; £2,100 at wholesale prices and 6 t CO₂. The median site-day adds
+<li><strong>Sites without CHP: 4.4 % more electricity on heatwave days.</strong> 23 MWh over 370 site-days at 56
+sites, at 4.3 °C above normal; £2,100 at wholesale prices and 3 t CO₂. The median site-day adds
 2.1 %.</li>
-<li><strong>Sites with CHP: 12 % more grid import.</strong> 180 MWh over 127 site-days at 17 sites, £8,100 and
+<li><strong>Sites with CHP: 12 % more grid import.</strong> 180 MWh over 127 site-days at 17 sites, £15,800 and
 25 t CO₂: the heat-led plants turn down when there is no heat demand, so the grid carries the
-hot days. Per site-day the CHP sites cost eleven times what the others do (£64 against £5.60).</li>
+hot days. Per site-day the CHP sites cost 22 times what the others do (£125 against £5.60).</li>
 <li><strong>The days are unusual in shape, too.</strong> The JEPA's latent surprise is 8 % higher on heatwave days
 than on other summer days, at sites with and without CHP alike (p &lt; 0.001 and 0.02).</li>
 </ul>
@@ -1169,9 +1180,9 @@ daily import on cold days (heat-led plants run more, so import falls), hourly im
 power price within the day (price-following plants run when power is dear), and import in the
 working-day red band against weekends (plants run to avoid red-band charges).</p>
 <ul>
-<li><strong>Pooled, nothing:</strong> the CHP sites' price and red-band coefficients equal the placebo's (+12.7
-against +13.1 % per £100/MWh; +14.2 against +14.2 %). The pooled null hides opposite behaviours.</li>
-<li><strong>Per site: 10 of 23 heat-led, 7 price-following, 15 red-band avoiding.</strong> The red-band avoiders
+<li><strong>Pooled, nothing:</strong> the CHP sites' price and red-band coefficients equal the placebo's (+6.4
+against +7.0 % per £100/MWh; +14.2 against +14.2 %). The pooled null hides opposite behaviours.</li>
+<li><strong>Per site: 10 of 23 heat-led, 6 price-following, 15 red-band avoiding.</strong> The red-band avoiders
 cut import by 3 to 18 % in 16:00–19:00 on working days; four sites (Royal Preston, George Eliot,
 North Devon, Scarborough) import 24 to 41 % <em>more</em>, their plant apparently stopping in the
 evening. University Hospital Coventry does all three at a capacity factor of 0.91.</li>
@@ -1195,33 +1206,33 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
   </thead>
   <tbody>
     <tr>
-      <td>RRERS</td>
-      <td>Redwoods Centre Shrewsbury</td>
-      <td>-0.96</td>
-      <td>37.48</td>
-      <td>-17.64</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>0.52</td>
-    </tr>
-    <tr>
       <td>RD130</td>
       <td>Royal United Hospital</td>
-      <td>-1.89</td>
-      <td>22.04</td>
-      <td>-17.58</td>
+      <td>-1.87</td>
+      <td>10.41</td>
+      <td>-17.7</td>
       <td>False</td>
       <td>False</td>
       <td>True</td>
       <td>0.74</td>
     </tr>
     <tr>
+      <td>RRERS</td>
+      <td>Redwoods Centre Shrewsbury</td>
+      <td>-0.95</td>
+      <td>19.23</td>
+      <td>-17.68</td>
+      <td>True</td>
+      <td>False</td>
+      <td>True</td>
+      <td>0.52</td>
+    </tr>
+    <tr>
       <td>RKB01</td>
       <td>University Hospital</td>
-      <td>-4.1</td>
-      <td>-17.44</td>
-      <td>-14.95</td>
+      <td>-4.09</td>
+      <td>-9.16</td>
+      <td>-14.94</td>
       <td>True</td>
       <td>True</td>
       <td>True</td>
@@ -1231,19 +1242,19 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>RH801</td>
       <td>Royal Devon &amp; Exeter Hospital (wonford)</td>
       <td>-0.9</td>
-      <td>-9.11</td>
-      <td>-12.42</td>
+      <td>-4.74</td>
+      <td>-12.44</td>
       <td>False</td>
-      <td>True</td>
+      <td>False</td>
       <td>True</td>
       <td>0.47</td>
     </tr>
     <tr>
       <td>RM131</td>
       <td>Cromer Hospital</td>
-      <td>0.82</td>
-      <td>-6.12</td>
-      <td>-12.24</td>
+      <td>0.86</td>
+      <td>-3.32</td>
+      <td>-12.23</td>
       <td>False</td>
       <td>False</td>
       <td>True</td>
@@ -1252,9 +1263,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>R0A66</td>
       <td>North Manchester General Hospital</td>
-      <td>-2.54</td>
-      <td>-12.84</td>
-      <td>-11.3</td>
+      <td>-2.42</td>
+      <td>-7.17</td>
+      <td>-11.29</td>
       <td>True</td>
       <td>True</td>
       <td>True</td>
@@ -1263,9 +1274,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RL131</td>
       <td>Robert Jones &amp; Agnes Hunt Orthopaedic Hospital</td>
-      <td>-3.08</td>
-      <td>29.84</td>
-      <td>-10.09</td>
+      <td>-3.05</td>
+      <td>15.63</td>
+      <td>-10.12</td>
       <td>True</td>
       <td>False</td>
       <td>True</td>
@@ -1275,8 +1286,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>RQ301</td>
       <td>Birmingham Childrens Hospital</td>
       <td>-1.44</td>
-      <td>-12.41</td>
-      <td>-9.99</td>
+      <td>-6.88</td>
+      <td>-9.98</td>
       <td>True</td>
       <td>True</td>
       <td>True</td>
@@ -1286,8 +1297,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>RQXM1</td>
       <td>Homerton University Hospital</td>
       <td>-0.9</td>
-      <td>-11.04</td>
-      <td>-7.45</td>
+      <td>-6</td>
+      <td>-7.43</td>
       <td>True</td>
       <td>True</td>
       <td>True</td>
@@ -1297,8 +1308,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>RQY01</td>
       <td>Springfield University Hospital</td>
       <td>-0.57</td>
-      <td>-5.41</td>
-      <td>-6.94</td>
+      <td>-3.08</td>
+      <td>-6.95</td>
       <td>False</td>
       <td>False</td>
       <td>True</td>
@@ -1307,8 +1318,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RCB07</td>
       <td>The New Selby War Memorial Hospital</td>
-      <td>-2</td>
-      <td>-0.83</td>
+      <td>-1.99</td>
+      <td>-0.75</td>
       <td>-5.91</td>
       <td>True</td>
       <td>False</td>
@@ -1318,9 +1329,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RJN71</td>
       <td>Macclesfield District General Hospital</td>
-      <td>-0.25</td>
-      <td>-6.99</td>
-      <td>-5.54</td>
+      <td>-0.31</td>
+      <td>-3.75</td>
+      <td>-5.53</td>
       <td>False</td>
       <td>False</td>
       <td>True</td>
@@ -1329,9 +1340,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RJC46</td>
       <td>Royal Leamington Spa Hospital</td>
-      <td>0.31</td>
-      <td>9.38</td>
-      <td>-4.72</td>
+      <td>0.32</td>
+      <td>5.38</td>
+      <td>-4.73</td>
       <td>False</td>
       <td>False</td>
       <td>True</td>
@@ -1340,9 +1351,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RJC02</td>
       <td>Warwick Hospital</td>
-      <td>-1.15</td>
-      <td>-5.02</td>
-      <td>-4.51</td>
+      <td>-1.16</td>
+      <td>-2.79</td>
+      <td>-4.48</td>
       <td>False</td>
       <td>False</td>
       <td>True</td>
@@ -1352,8 +1363,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>R0A07</td>
       <td>Wythenshawe Hospital</td>
       <td>-1.52</td>
-      <td>-7.66</td>
-      <td>-2.62</td>
+      <td>-4.1</td>
+      <td>-2.61</td>
       <td>True</td>
       <td>True</td>
       <td>True</td>
@@ -1362,9 +1373,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RXN01</td>
       <td>Chorley And South Ribble District General Hospital</td>
-      <td>-2.02</td>
-      <td>-9.82</td>
-      <td>-1.45</td>
+      <td>-2</td>
+      <td>-5.56</td>
+      <td>-1.44</td>
       <td>True</td>
       <td>True</td>
       <td>False</td>
@@ -1374,8 +1385,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>RCB55</td>
       <td>York Hospital</td>
       <td>-0.26</td>
-      <td>-4.56</td>
-      <td>2.65</td>
+      <td>-3.04</td>
+      <td>2.68</td>
       <td>False</td>
       <td>False</td>
       <td>False</td>
@@ -1384,8 +1395,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RN325</td>
       <td>Great Western Hospital</td>
-      <td>2.53</td>
-      <td>3.31</td>
+      <td>2.54</td>
+      <td>1.97</td>
       <td>13.39</td>
       <td>False</td>
       <td>False</td>
@@ -1395,9 +1406,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RYX08</td>
       <td>Lisson Grove Health Centre</td>
-      <td>-0.8</td>
-      <td>-6.01</td>
-      <td>16.02</td>
+      <td>-0.81</td>
+      <td>-3.28</td>
+      <td>16.03</td>
       <td>True</td>
       <td>False</td>
       <td>False</td>
@@ -1406,8 +1417,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RCBCA</td>
       <td>Scarborough Hospital</td>
-      <td>-2.84</td>
-      <td>1.98</td>
+      <td>-2.56</td>
+      <td>-0.43</td>
       <td>23.77</td>
       <td>False</td>
       <td>False</td>
@@ -1418,8 +1429,8 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
       <td>RH880</td>
       <td>North Devon District Hospital</td>
       <td>-0.4</td>
-      <td>33.89</td>
-      <td>30.73</td>
+      <td>16.14</td>
+      <td>30.88</td>
       <td>False</td>
       <td>False</td>
       <td>False</td>
@@ -1428,9 +1439,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RLT01</td>
       <td>George Eliot Hospital</td>
-      <td>-3.13</td>
-      <td>-26.16</td>
-      <td>37.29</td>
+      <td>-3.09</td>
+      <td>-18.67</td>
+      <td>37.28</td>
       <td>False</td>
       <td>False</td>
       <td>False</td>
@@ -1439,9 +1450,9 @@ dose. The CHP sites' error is the rest: unplanned trips and maintenance.</li>
     <tr>
       <td>RXN02</td>
       <td>Royal Preston Hospital</td>
-      <td>-1.72</td>
-      <td>11.07</td>
-      <td>41.33</td>
+      <td>-1.67</td>
+      <td>4.52</td>
+      <td>41.47</td>
       <td>False</td>
       <td>False</td>
       <td>False</td>

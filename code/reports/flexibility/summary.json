@@ -1,0 +1,412 @@
+{
+  "bill_2024_25": {
+    "sites": 124,
+    "gwh": 117.5,
+    "wholesale_cost_gbp_m": 9.87,
+    "median_shape_premium_pct": 4.33,
+    "shape_premium_by_group": {
+      "inpatient": 3.65,
+      "on-site CHP": 3.78,
+      "outpatient": 4.78
+    },
+    "median_red_share_energy": 0.0998,
+    "red_share_time": 0.087,
+    "red_gwh": 12.44
+  },
+  "battery_gbp_per_kwh_year_2024_25": {
+    "wholesale": 23.5,
+    "red_2p": 27.2,
+    "red_5p": 34.7,
+    "red_10p": 47.4,
+    "agile_min": 88.2,
+    "agile_max": 96.4,
+    "cycles_per_day_wholesale": 1.78
+  },
+  "battery_sites": {
+    "sites": 134,
+    "total_kwh": 7487.0,
+    "value_wholesale_gbp_year": 175685.0,
+    "value_red5_gbp_year": 259485.0,
+    "max_export_share_red5": 0.3646,
+    "sites_exporting_over_1pct": 24
+  },
+  "solar_1kwp_per_kw_2024_25": {
+    "sites": 106,
+    "median_yield_kwh_kwp": 825.0,
+    "self_consumption_by_group": {
+      "inpatient": 0.999,
+      "outpatient": 0.998
+    },
+    "demand_covered_by_group": {
+      "inpatient": 0.094,
+      "outpatient": 0.093
+    },
+    "median_capture_ratio": 0.849,
+    "median_value_gbp_kwp_year": 55.9
+  },
+  "forecast_value": [
+    {
+      "model": "seasonal_naive",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 17.894,
+      "captured_share": 0.401,
+      "median_site_day_share": 0.343,
+      "peak_cut_pct": 5.02,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.381
+    },
+    {
+      "model": "profile_quantiles",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 17.649,
+      "captured_share": 0.373,
+      "median_site_day_share": 0.379,
+      "peak_cut_pct": 5.167,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.361
+    },
+    {
+      "model": "profile_quantiles",
+      "plan": "q60",
+      "site_days": 6107,
+      "nmae_pct": 17.649,
+      "captured_share": 0.367,
+      "median_site_day_share": 0.378,
+      "peak_cut_pct": 5.147,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.36
+    },
+    {
+      "model": "profile_quantiles",
+      "plan": "q70",
+      "site_days": 6107,
+      "nmae_pct": 17.649,
+      "captured_share": 0.356,
+      "median_site_day_share": 0.342,
+      "peak_cut_pct": 4.905,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.375
+    },
+    {
+      "model": "profile_quantiles",
+      "plan": "q80",
+      "site_days": 6107,
+      "nmae_pct": 17.649,
+      "captured_share": 0.335,
+      "median_site_day_share": 0.261,
+      "peak_cut_pct": 4.45,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.423
+    },
+    {
+      "model": "profile_quantiles",
+      "plan": "q90",
+      "site_days": 6107,
+      "nmae_pct": 17.649,
+      "captured_share": 0.271,
+      "median_site_day_share": 0.0,
+      "peak_cut_pct": 3.475,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.512
+    },
+    {
+      "model": "lightgbm_ifs",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 12.503,
+      "captured_share": 0.477,
+      "median_site_day_share": 0.497,
+      "peak_cut_pct": 5.936,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.277
+    },
+    {
+      "model": "lightgbm_ifs",
+      "plan": "q60",
+      "site_days": 6107,
+      "nmae_pct": 12.503,
+      "captured_share": 0.493,
+      "median_site_day_share": 0.583,
+      "peak_cut_pct": 6.441,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.232
+    },
+    {
+      "model": "lightgbm_ifs",
+      "plan": "q70",
+      "site_days": 6107,
+      "nmae_pct": 12.503,
+      "captured_share": 0.472,
+      "median_site_day_share": 0.576,
+      "peak_cut_pct": 6.289,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.233
+    },
+    {
+      "model": "lightgbm_ifs",
+      "plan": "q80",
+      "site_days": 6107,
+      "nmae_pct": 12.503,
+      "captured_share": 0.411,
+      "median_site_day_share": 0.481,
+      "peak_cut_pct": 5.595,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.288
+    },
+    {
+      "model": "lightgbm_ifs",
+      "plan": "q90",
+      "site_days": 6107,
+      "nmae_pct": 12.503,
+      "captured_share": 0.354,
+      "median_site_day_share": 0.309,
+      "peak_cut_pct": 4.616,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.38
+    },
+    {
+      "model": "tabpfn_ts_ifs",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 11.728,
+      "captured_share": 0.508,
+      "median_site_day_share": 0.533,
+      "peak_cut_pct": 6.073,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.271
+    },
+    {
+      "model": "tabpfn_ts_ifs",
+      "plan": "q60",
+      "site_days": 6107,
+      "nmae_pct": 11.728,
+      "captured_share": 0.528,
+      "median_site_day_share": 0.61,
+      "peak_cut_pct": 6.542,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.233
+    },
+    {
+      "model": "tabpfn_ts_ifs",
+      "plan": "q70",
+      "site_days": 6107,
+      "nmae_pct": 11.728,
+      "captured_share": 0.537,
+      "median_site_day_share": 0.654,
+      "peak_cut_pct": 6.77,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.207
+    },
+    {
+      "model": "tabpfn_ts_ifs",
+      "plan": "q80",
+      "site_days": 6107,
+      "nmae_pct": 11.728,
+      "captured_share": 0.508,
+      "median_site_day_share": 0.608,
+      "peak_cut_pct": 6.39,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.227
+    },
+    {
+      "model": "tabpfn_ts_ifs",
+      "plan": "q90",
+      "site_days": 6107,
+      "nmae_pct": 11.728,
+      "captured_share": 0.407,
+      "median_site_day_share": 0.396,
+      "peak_cut_pct": 4.912,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.327
+    },
+    {
+      "model": "timesfm3_ifs",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 11.341,
+      "captured_share": 0.498,
+      "median_site_day_share": 0.557,
+      "peak_cut_pct": 6.216,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.259
+    },
+    {
+      "model": "timesfm3_ifs",
+      "plan": "q60",
+      "site_days": 6107,
+      "nmae_pct": 11.341,
+      "captured_share": 0.532,
+      "median_site_day_share": 0.632,
+      "peak_cut_pct": 6.689,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.215
+    },
+    {
+      "model": "timesfm3_ifs",
+      "plan": "q70",
+      "site_days": 6107,
+      "nmae_pct": 11.341,
+      "captured_share": 0.528,
+      "median_site_day_share": 0.642,
+      "peak_cut_pct": 6.729,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.208
+    },
+    {
+      "model": "timesfm3_ifs",
+      "plan": "q80",
+      "site_days": 6107,
+      "nmae_pct": 11.341,
+      "captured_share": 0.481,
+      "median_site_day_share": 0.548,
+      "peak_cut_pct": 6.061,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.252
+    },
+    {
+      "model": "timesfm3_ifs",
+      "plan": "q90",
+      "site_days": 6107,
+      "nmae_pct": 11.341,
+      "captured_share": 0.36,
+      "median_site_day_share": 0.278,
+      "peak_cut_pct": 4.314,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.393
+    },
+    {
+      "model": "chronos2",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 11.795,
+      "captured_share": 0.511,
+      "median_site_day_share": 0.556,
+      "peak_cut_pct": 6.211,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.262
+    },
+    {
+      "model": "chronos2",
+      "plan": "q50",
+      "site_days": 6107,
+      "nmae_pct": 11.795,
+      "captured_share": 0.511,
+      "median_site_day_share": 0.557,
+      "peak_cut_pct": 6.211,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.262
+    },
+    {
+      "model": "chronos2",
+      "plan": "q60",
+      "site_days": 6107,
+      "nmae_pct": 11.795,
+      "captured_share": 0.527,
+      "median_site_day_share": 0.624,
+      "peak_cut_pct": 6.616,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.232
+    },
+    {
+      "model": "chronos2",
+      "plan": "q70",
+      "site_days": 6107,
+      "nmae_pct": 11.795,
+      "captured_share": 0.527,
+      "median_site_day_share": 0.624,
+      "peak_cut_pct": 6.581,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.227
+    },
+    {
+      "model": "chronos2",
+      "plan": "q80",
+      "site_days": 6107,
+      "nmae_pct": 11.795,
+      "captured_share": 0.48,
+      "median_site_day_share": 0.538,
+      "peak_cut_pct": 6.023,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.259
+    },
+    {
+      "model": "chronos2",
+      "plan": "q90",
+      "site_days": 6107,
+      "nmae_pct": 11.795,
+      "captured_share": 0.353,
+      "median_site_day_share": 0.289,
+      "peak_cut_pct": 4.412,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.387
+    },
+    {
+      "model": "chronos2_ifs",
+      "plan": "point",
+      "site_days": 6107,
+      "nmae_pct": 11.161,
+      "captured_share": 0.533,
+      "median_site_day_share": 0.587,
+      "peak_cut_pct": 6.436,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.236
+    },
+    {
+      "model": "chronos2_ifs",
+      "plan": "q50",
+      "site_days": 6107,
+      "nmae_pct": 11.161,
+      "captured_share": 0.533,
+      "median_site_day_share": 0.586,
+      "peak_cut_pct": 6.436,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.236
+    },
+    {
+      "model": "chronos2_ifs",
+      "plan": "q60",
+      "site_days": 6107,
+      "nmae_pct": 11.161,
+      "captured_share": 0.558,
+      "median_site_day_share": 0.641,
+      "peak_cut_pct": 6.795,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.209
+    },
+    {
+      "model": "chronos2_ifs",
+      "plan": "q70",
+      "site_days": 6107,
+      "nmae_pct": 11.161,
+      "captured_share": 0.552,
+      "median_site_day_share": 0.643,
+      "peak_cut_pct": 6.76,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.204
+    },
+    {
+      "model": "chronos2_ifs",
+      "plan": "q80",
+      "site_days": 6107,
+      "nmae_pct": 11.161,
+      "captured_share": 0.522,
+      "median_site_day_share": 0.567,
+      "peak_cut_pct": 6.182,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.239
+    },
+    {
+      "model": "chronos2_ifs",
+      "plan": "q90",
+      "site_days": 6107,
+      "nmae_pct": 11.161,
+      "captured_share": 0.399,
+      "median_site_day_share": 0.312,
+      "peak_cut_pct": 4.501,
+      "perfect_cut_pct": 11.817,
+      "failed_share": 0.38
+    }
+  ]
+}

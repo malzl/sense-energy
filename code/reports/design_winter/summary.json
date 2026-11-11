@@ -1,0 +1,112 @@
+{
+  "check": {
+    "reference_year_peak_hp_max_rel_diff": 1.8027801473863292e-11,
+    "reference_sites_above_capacity": 13,
+    "in_sample_coldest_day_c_median_site": -3.2148804664611816
+  },
+  "sites": 80,
+  "hp_sites": 31,
+  "weather_years": [
+    "1960/61",
+    "2025/26"
+  ],
+  "reference_year": {
+    "label": "2023/24",
+    "winter_mean_c": 6.8,
+    "winter_rank_coldest_of_recent": 29,
+    "sites_above_capacity": 13
+  },
+  "heat_pump_sites_above_capacity": {
+    "reference_year": 13,
+    "median_recent_year": 11,
+    "one_in_twenty": 14,
+    "worst_on_record": 20,
+    "recent_years_min": 10,
+    "recent_years_max": 15
+  },
+  "today_sites_above_capacity_one_in_twenty": 0,
+  "util_hp_median": {
+    "reference_year": 0.877,
+    "one_in_twenty": 0.954,
+    "worst_on_record": 1.062
+  },
+  "worst_years_by_sites_above_capacity": [
+    {
+      "label": "1962/63",
+      "hp_sites_above_capacity": 19,
+      "t_winter_mean": -1.07,
+      "t_coldest_day_median": -9.56
+    },
+    {
+      "label": "1985/86",
+      "hp_sites_above_capacity": 17,
+      "t_winter_mean": 3.16,
+      "t_coldest_day_median": -7.07
+    },
+    {
+      "label": "1986/87",
+      "hp_sites_above_capacity": 16,
+      "t_winter_mean": 3.57,
+      "t_coldest_day_median": -8.11
+    },
+    {
+      "label": "1984/85",
+      "hp_sites_above_capacity": 16,
+      "t_winter_mean": 2.78,
+      "t_coldest_day_median": -5.46
+    },
+    {
+      "label": "1981/82",
+      "hp_sites_above_capacity": 16,
+      "t_winter_mean": 2.85,
+      "t_coldest_day_median": -7.9
+    }
+  ],
+  "coldest_winters": [
+    {
+      "label": "1962/63",
+      "t_winter_mean": -1.07
+    },
+    {
+      "label": "1978/79",
+      "t_winter_mean": 1.91
+    },
+    {
+      "label": "2009/10",
+      "t_winter_mean": 2.66
+    },
+    {
+      "label": "1963/64",
+      "t_winter_mean": 2.77
+    },
+    {
+      "label": "1984/85",
+      "t_winter_mean": 2.78
+    }
+  ],
+  "budget_risk_recent": {
+    "today_energy_sd_pct_median_site": 0.31,
+    "today_energy_range_pct": [
+      -0.0,
+      1.18
+    ],
+    "heat_pump_electricity_range_pct": [
+      -1.0,
+      26.6
+    ],
+    "with_heat_pumps_energy_sd_pct_median_site": 2.98
+  },
+  "storage_one_in_twenty": {
+    "beyond storage (over 24 h)": 7,
+    "battery scale (under 2 h)": 5,
+    "thermal store scale (2 to 24 h)": 2
+  },
+  "storage_reference_year": {
+    "beyond storage (over 24 h)": 5,
+    "battery scale (under 2 h)": 5,
+    "thermal store scale (2 to 24 h)": 3
+  },
+  "today_peak_change_pct": {
+    "one_in_twenty_median_site": 3.95
+  }
+}

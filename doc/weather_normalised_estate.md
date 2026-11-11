@@ -17,6 +17,15 @@ breaks instead of 19 and 23, and the LED reading of the upward breaks does not s
 plants test heat-led instead of 13; one site, not two, passes its capacity at +4 °C. The installation
 savings use a different model and are unaffected.
 
+**Correction (11 November 2026).** The market index price table carries two providers, and one of
+them (N2EX) reports zero in 99.8 % of half-hours. The heatwave costing joined both, which counted
+every half-hour of the sites without CHP twice (energy and carbon doubled, cost unaffected) and
+halved the daily mean price used for the CHP sites (their cost halved). The CHP price test used
+the same halved price, so its coefficients per £100/MWh were twice too large. All price work now
+reads the traded provider only (`data.prices.load_mid`). Percentages and the heat-led and
+red-band classifications did not move; one plant (Royal Devon and Exeter) no longer tests as
+price-following.
+
 ## 1. Where in the day the weather response lives (`hourly_pooled`, `hourly_heat_profiles`, `hot_day_peak`)
 
 The heat response is an afternoon and evening phenomenon at almost every site. Pooled, a degree
@@ -56,9 +65,11 @@ is 2023/24, after 2025/26, 2024/25 the installation year; sites with CHP left ou
 
 {{table: code/reports/installation_savings/group_effects.csv | cols=group,sites,median_nac_change_pct,median_raw_change_pct,did_median_pct,did_lo,did_hi | round=1}}
 
-- **Heat pumps add about a third.** The three sites that installed heat pumps use 32 % more
-  electricity than the sites with no change (bootstrap 95 % interval +18 to +51 %): the
-  electrification the headroom analysis assumed, measured.
+- **Sites that report heat pumps use a third more electricity.** The three sites that installed
+  heat pumps use 32 % more electricity than the sites with no change (bootstrap 95 % interval +18
+  to +51 %). It is added electric load, not gas being replaced: in the returns one of the three
+  has no gas, one kept its gas and one changed its reporting scope (corrected 11 November 2026;
+  see section 7 of `flexibility_and_design_winters.md`).
 - **LED saves 0.6 % per ten points of coverage** (cross-site regression, 59 sites, interval −1.2
   to 0.0, p = 0.05): a site going from no LED to full LED saves about 6 %. The 16 LED-only sites
   fall 3.9 points more than unchanged sites at the median (interval −11 to +4).
@@ -95,12 +106,12 @@ priced at the market index price and costed at the grid's carbon intensity.
 
 {{table: code/reports/estate_counterfactuals/heatwave_events.csv | cols=event_id,start,end,group,sites,site_days,kwh_attr,share_pct,cost_gbp,co2_t | round=1}}
 
-- **Sites without CHP: 4.3 % more electricity on heatwave days.** 43 MWh over 370 site-days at 56
-  sites, at 4.3 °C above normal; £2,100 at wholesale prices and 6 t CO₂. The median site-day adds
+- **Sites without CHP: 4.4 % more electricity on heatwave days.** 23 MWh over 370 site-days at 56
+  sites, at 4.3 °C above normal; £2,100 at wholesale prices and 3 t CO₂. The median site-day adds
   2.1 %.
-- **Sites with CHP: 12 % more grid import.** 180 MWh over 127 site-days at 17 sites, £8,100 and
+- **Sites with CHP: 12 % more grid import.** 180 MWh over 127 site-days at 17 sites, £15,800 and
   25 t CO₂: the heat-led plants turn down when there is no heat demand, so the grid carries the
-  hot days. Per site-day the CHP sites cost eleven times what the others do (£64 against £5.60).
+  hot days. Per site-day the CHP sites cost 22 times what the others do (£125 against £5.60).
 - **The days are unusual in shape, too.** The JEPA's latent surprise is 8 % higher on heatwave days
   than on other summer days, at sites with and without CHP alike (p < 0.001 and 0.02).
 
@@ -138,9 +149,9 @@ daily import on cold days (heat-led plants run more, so import falls), hourly im
 power price within the day (price-following plants run when power is dear), and import in the
 working-day red band against weekends (plants run to avoid red-band charges).
 
-- **Pooled, nothing:** the CHP sites' price and red-band coefficients equal the placebo's (+12.7
-  against +13.1 % per £100/MWh; +14.2 against +14.2 %). The pooled null hides opposite behaviours.
-- **Per site: 10 of 23 heat-led, 7 price-following, 15 red-band avoiding.** The red-band avoiders
+- **Pooled, nothing:** the CHP sites' price and red-band coefficients equal the placebo's (+6.4
+  against +7.0 % per £100/MWh; +14.2 against +14.2 %). The pooled null hides opposite behaviours.
+- **Per site: 10 of 23 heat-led, 6 price-following, 15 red-band avoiding.** The red-band avoiders
   cut import by 3 to 18 % in 16:00–19:00 on working days; four sites (Royal Preston, George Eliot,
   North Devon, Scarborough) import 24 to 41 % *more*, their plant apparently stopping in the
   evening. University Hospital Coventry does all three at a capacity factor of 0.91.

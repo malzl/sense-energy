@@ -450,7 +450,7 @@ def build_site_context_cmd() -> None:
 
 
 @cli.command("build-eric")
-@click.option("--year", default="2024_25", show_default=True, help="2023_24 or 2024_25")
+@click.option("--year", default="2024_25", show_default=True, help="2023_24, 2024_25 or 2025_26")
 def build_eric_cmd(year: str) -> None:
     """Load an ERIC collection (site and trust tables) into interim/eric_<year>_*.parquet."""
     from .data.eric import build
@@ -572,6 +572,66 @@ def estate_counterfactuals_cmd() -> None:
 
     s = run()["summary"]
     click.echo(json.dumps(s["heatwaves_2025"], indent=1))
+
+
+@cli.command("fetch-era5-timeseries")
+@click.option("--start", default="1960-01-01", show_default=True)
+@click.option("--end", default="2022-12-31", show_default=True)
+@click.option("--workers", default=4, show_default=True)
+def fetch_era5_timeseries_cmd(start: str, end: str, workers: int) -> None:
+    """Hourly ERA5 temperature since 1960 at the panel's grid cells (point time series, resumable)."""
+    from .data.era5_timeseries import fetch_all
+
+    click.echo(f"{fetch_all(start, end, workers)} cells failed")
+
+
+@cli.command("build-era5-long")
+def build_era5_long_cmd() -> None:
+    """Long hourly and daily temperature tables per site from the ERA5 point time series."""
+    from .data.era5_timeseries import build
+
+    click.echo(json.dumps(build(), indent=1))
+
+
+@cli.command("flexibility")
+def flexibility_cmd() -> None:
+    """Bill anatomy, battery arbitrage, rooftop solar against the load and the value of a forecast."""
+    from .analysis.flexibility import run
+
+    s = run()["summary"]
+    click.echo(
+        json.dumps(
+            {k: s[k] for k in ("bill_2024_25", "battery_gbp_per_kwh_year_2024_25")}, indent=1
+        )
+    )
+
+
+@cli.command("heat-pump-field")
+def heat_pump_field_cmd() -> None:
+    """Gas and electricity changes at sites that report new heat pumps, and the implied COP."""
+    from .analysis.heat_pump_field import run
+
+    s = run()["summary"]
+    click.echo(
+        json.dumps({k: s[k] for k in ("new_heat_pump_sites", "switchers", "slope")}, indent=1)
+    )
+
+
+@cli.command("design-winter")
+def design_winter_cmd() -> None:
+    """Demand and heat-pump headroom under every winter since 1960, with the storage it needs."""
+    from .analysis.design_winter import run
+
+    s = run()["summary"]
+    click.echo(json.dumps({k: s[k] for k in ("check", "heat_pump_sites_above_capacity")}, indent=1))
+
+
+@cli.command("solar-programme")
+def solar_programme_cmd() -> None:
+    """The funded hospital solar sites seen from the meter: spring breaks sized in kWp."""
+    from .analysis.solar_programme import run
+
+    click.echo(json.dumps(run()["summary"], indent=1))
 
 
 @cli.command("solar-watch")

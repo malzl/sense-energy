@@ -31,6 +31,10 @@ for f in temperature_response_curve temperature_response_hourly weather_event_ti
          hourly_pooled warming_capacity heatwave_attribution solar_watch; do
   cp "$root/code/reports/figures/weather/$f.pdf" "$here/figures/"
 done
+for f in design_winter_sites design_winter_storage forecast_value battery_value \
+         solar_self_consumption solar_programme_spring; do
+  cp "$root/code/reports/figures/flexibility/$f.pdf" "$here/figures/"
+done
 cd "$here"
 pdflatex -interaction=nonstopmode -halt-on-error pi_report.tex > build.log
 pdflatex -interaction=nonstopmode -halt-on-error pi_report.tex >> build.log

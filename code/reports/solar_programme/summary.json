@@ -1,0 +1,58 @@
+{
+  "programme": {
+    "trusts": 78,
+    "site_postcodes": 187,
+    "funding_gbp_m": 100.0
+  },
+  "panel_sites_funded": 10,
+  "panel_trusts_funded": 8,
+  "funded_sites_tested": 8,
+  "funded_sites_with_break": 1,
+  "funded_break_sites": [
+    "RWR62"
+  ],
+  "spring_watch": {
+    "sites": 114,
+    "breaks_down": 3,
+    "breaks_up": 6,
+    "breaks_down_not_funded": [
+      "RWRD7",
+      "W6J9Z"
+    ],
+    "implied_kwp_at_breaks": {
+      "RWR62": 13.0,
+      "RWRD7": 31.0,
+      "W6J9Z": 54.0
+    }
+  },
+  "summer_measured": {
+    "sites": 9,
+    "sites_with_reported_generation": 4,
+    "metered_vs_reported_kwp": {
+      "RRE11": {
+        "implied_kwp_level": 215.0,
+        "eric_total_kwp": 230.0,
+        "metered_share_of_reported": 1.0,
+        "day_kw": 162.0
+      },
+      "RYX37": {
+        "implied_kwp_level": 52.0,
+        "eric_total_kwp": 93.0,
+        "metered_share_of_reported": 1.0,
+        "day_kw": 22.0
+      },
+      "RWX58": {
+        "implied_kwp_level": 8.0,
+        "eric_total_kwp": 61.0,
+        "metered_share_of_reported": 0.0,
+        "day_kw": 5.0
+      },
+      "RCBNH": {
+        "implied_kwp_level": 349.0,
+        "eric_total_kwp": 684.0,
+        "metered_share_of_reported": 1.0,
+        "day_kw": 120.0
+      }
+    }
+  }
+}

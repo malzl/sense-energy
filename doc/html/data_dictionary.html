@@ -17,6 +17,7 @@
   <a href="data_manifest.html">Data manifest - processed demand datasets</a>
   <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
   <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
   <a href="methodology.html">Methodology</a>
   <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
   <a href="project_brief.html">Project brief</a>
@@ -66,6 +67,8 @@
   <a class="h2" href="#jepa-site-embeddings-code-reports-jepa">JEPA site embeddings: code/reports/jepa/</a>
   <a class="h2" href="#latent-pfn-code-reports-latent-pfn">Latent PFN: code/reports/latent_pfn/</a>
   <a class="h2" href="#the-weather-normalised-estate-hourly-response-savings-warmin">The weather-normalised estate: hourly response, savings, warming, heatwaves, solar, CHP dispatch</a>
+  <a class="h2" href="#long-temperature-record-code-data-external-weather-era5-time">Long temperature record: code/data/external/weather/era5_timeseries/ → interim/weather_daily_long.parquet</a>
+  <a class="h2" href="#flexibility-design-winters-heat-pumps-in-the-field-solar-pro">Flexibility, design winters, heat pumps in the field, solar programme</a>
   </div>
 </nav>
 <main>
@@ -1841,6 +1844,76 @@ period before June 2025.</p>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="long-temperature-record-code-data-external-weather-era5-time">Long temperature record: <code>code/data/external/weather/era5_timeseries/</code> → <code>interim/weather_daily_long.parquet</code></h2>
+<p>ERA5 hourly 2 m temperature from 1 January 1960 at the 59 grid cells (0.25°) that hold a panel
+site, from the Climate Data Store's point time-series dataset
+(<code>reanalysis-era5-single-levels-timeseries</code>, one request per cell, minutes each; contains
+modified Copernicus Climate Change Service information). <code>sense-energy fetch-era5-timeseries</code>
+(resumable), then <code>sense-energy build-era5-long</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Rows</th>
+  <th>Columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>era5_long_hourly.parquet</code></td>
+  <td>cell × hour, 1960 – 2022</td>
+  <td><code>cell</code>, <code>datetime</code> (UTC), <code>t2m</code> (°C)</td>
+</tr>
+<tr>
+  <td><code>era5_long_site_cells.parquet</code></td>
+  <td>site</td>
+  <td><code>site_code</code>, <code>cell</code></td>
+</tr>
+<tr>
+  <td><code>weather_daily_long.parquet</code></td>
+  <td>site × <code>Europe/London</code> day, 1960 – May 2026</td>
+  <td><code>site_code</code>, <code>date</code>, <code>t_mean</code>, <code>t_min</code>, <code>t_max</code> (°C); the long record up to 30 November 2022, then <code>weather_daily.parquet</code></td>
+</tr>
+</tbody>
+</table>
+<p>The two records agree exactly on their overlap (December 2022, 4,371 site-days, difference
+0.0 °C), so they splice without a correction.</p>
+<h2 id="flexibility-design-winters-heat-pumps-in-the-field-solar-pro">Flexibility, design winters, heat pumps in the field, solar programme</h2>
+<p>Write-up: <a href="flexibility_and_design_winters.md">flexibility_and_design_winters.md</a>.</p>
+<table>
+<thead>
+<tr>
+  <th>Folder (<code>code/reports/</code>)</th>
+  <th>Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>flexibility/</code></td>
+  <td><code>bill_anatomy.csv</code> (site × financial year: energy, wholesale cost, price paid, shape premium, red-band share), <code>battery_unit_daily.csv</code> and <code>battery_unit_annual.csv</code> (value of a 1 kW, 2 h battery per price case), <code>battery_sites.csv</code>, <code>solar_sites.csv</code> and <code>solar_summary.csv</code> (array size × site: self-consumption, demand covered, value), <code>forecast_value.csv</code> (model × planning quantile: share of the achievable peak cut captured), <code>forecast_value_site_days.parquet</code>, <code>summary.json</code></td>
+</tr>
+<tr>
+  <td><code>design_winter/</code></td>
+  <td><code>site_years.parquet</code> (site × weather year 1960/61 – 2025/26: annual electricity ratio, peaks today and with heat pumps, hours above capacity, store power and energy, days extrapolated), <code>years.csv</code>, <code>design_sites.csv</code> (reference year, one-in-twenty and worst winter per site, storage class), <code>summary.json</code></td>
+</tr>
+<tr>
+  <td><code>heat_pump_field/</code></td>
+  <td><code>site_changes.csv</code> (every English site in both returns: heat-pump status, changes in gas, electricity and floor area, plausibility), <code>did.csv</code>, <code>switchers.csv</code> (gas down a quarter or more: implied COP), <code>slope.csv</code>, <code>panel_sites.csv</code>, <code>summary.json</code></td>
+</tr>
+<tr>
+  <td><code>solar_programme/</code></td>
+  <td><code>spring_slopes.csv</code> (site × spring 2023 – 2026 sunshine slope), <code>spring_breaks.csv</code> (change 2025 to 2026, implied kWp), <code>funded_sites.csv</code> (panel sites on the Great British Energy list), <code>summer_measured.csv</code> (meter-sized arrays against reported generation), <code>summary.json</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>code/data/external/gbe_solar/gbe-nhs-solar-projects.csv</code>: the published list of NHS trusts and
+site postcodes funded by Great British Energy (GOV.UK, 21 March 2025; contains public sector
+information licensed under the Open Government Licence v3.0): trust code and name, region, site
+postcodes, sites funded, award, estimated lifetime savings.</p>
+<p>Market index price: <code>data.prices.load_mid</code> returns one row per half-hour from the traded provider
+(<code>APXMIDP</code>); the other provider in <code>prices_elexon_mid.parquet</code> (<code>N2EXMIDP</code>) is zero in 99.8 % of
+periods and must not be averaged or joined in.</p>
 <p class="meta">Built from <code>doc/data_dictionary.md</code> by <code>sense-energy build-docs</code>.</p>
 </main>
 </div>

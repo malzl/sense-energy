@@ -47,10 +47,10 @@ Z = 1.96
 
 
 def prices_hourly() -> pd.DataFrame:
-    p = pd.read_parquet(
-        INTERIM_DIR / "prices_elexon_mid.parquet", columns=["datetime", "price_gbp_mwh"]
-    )
-    local = pd.to_datetime(p["datetime"], utc=True).dt.tz_convert(wr.TZ)
+    from ..data.prices import load_mid
+
+    p = load_mid()  # the traded provider only: the other reports zero and would halve the mean
+    local = p["datetime"].dt.tz_convert(wr.TZ)
     p["date"] = local.dt.normalize().dt.tz_localize(None)
     p["hour"] = local.dt.hour
     return p.groupby(["date", "hour"], as_index=False)["price_gbp_mwh"].mean()

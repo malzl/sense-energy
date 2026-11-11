@@ -1,0 +1,1962 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flexibility, design winters, heat pumps in the field and the solar programme · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="flexibility_and_design_winters.html" class="current">Flexibility, design winters, heat pumps in the field and the solar programme</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
+
+  <div class="toc"><a class="h2" href="#1-what-the-load-shape-costs-bill-shape-premium">1. What the load shape costs (bill_shape_premium)</a>
+  <a class="h2" href="#2-what-a-battery-earns-battery-value">2. What a battery earns (battery_value)</a>
+  <a class="h2" href="#3-rooftop-solar-against-the-real-load-solar-self-consumption">3. Rooftop solar against the real load (solar_self_consumption)</a>
+  <a class="h2" href="#4-what-a-forecast-is-worth-peak-shaving-forecast-value-forec">4. What a forecast is worth: peak shaving (forecast_value, forecast_value_quantile)</a>
+  <a class="h2" href="#5-design-winters-design-winter-sites-design-winter-utilisati">5. Design winters (design_winter_sites, design_winter_utilisation, design_winter_budget)</a>
+  <a class="h2" href="#6-storage-against-reinforcement-design-winter-storage">6. Storage against reinforcement (design_winter_storage)</a>
+  <a class="h2" href="#7-heat-pumps-in-the-field-heat-pump-field">7. Heat pumps in the field (heat_pump_field)</a>
+  <a class="h2" href="#8-the-solar-programme-from-the-meter-solar-programme-spring-">8. The solar programme from the meter (solar_programme_spring, solar_metered_vs_reported)</a>
+  <a class="h2" href="#9-what-this-changes">9. What this changes</a>
+  <a class="h2" href="#figures">Figures</a>
+  </div>
+</nav>
+<main>
+<h1>Flexibility, design winters, heat pumps in the field and the solar programme</h1>
+<p>Four new pieces of modelling on data already in the project, 11 November 2026, all run on CPU.
+Commands: <code>flexibility</code>, <code>fetch-era5-timeseries</code>, <code>build-era5-long</code>, <code>design-winter</code>,
+<code>heat-pump-field</code>, <code>solar-programme</code>. Modules in <code>code/src/sense_energy/analysis/</code>
+(<code>flexibility.py</code>, <code>design_winter.py</code>, <code>heat_pump_field.py</code>, <code>solar_programme.py</code>) and
+<code>data/era5_timeseries.py</code>; tables in <code>code/reports/&lt;name&gt;/</code>; figures from
+<code>code/scripts/flexibility/</code>.</p>
+<p>What the page answers: what a site's load shape costs and what a battery or a solar array is
+worth against it; what a load forecast is worth in a decision; whether heat pumps fit under the
+connections in a cold winter and not only in 2023/24; what the estates returns say heat pumps
+did; and whether the funded hospital solar arrays can be seen from the meter.</p>
+<p>New data: ERA5 hourly temperature from 1960 at the panel's 59 grid cells (Copernicus point
+time series; contains modified Copernicus Climate Change Service information) and the list of
+NHS sites funded by Great British Energy (GOV.UK, Open Government Licence v3.0).</p>
+<h2 id="1-what-the-load-shape-costs-bill-shape-premium">1. What the load shape costs (<code>bill_shape_premium</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/bill_shape_premium.png" alt="bill_shape_premium" loading="lazy"><figcaption><code>bill_shape_premium</code> <a href="figures/bill_shape_premium.pdf">PDF</a></figcaption></figure></div>
+
+<p>Every half-hour of 2024/25 priced at the Elexon market index (energy only, no network charges or
+levies), for the 124 sites with at least 90 % of the year metered.</p>
+<ul>
+<li><strong>The panel: 118 GWh, £9.9 million a year at the wholesale index.</strong></li>
+<li><strong>The shape costs 4 %.</strong> The median site pays 4.3 % more per kWh than the time-average price,
+because it uses more in the dearer hours: 3.7 % at inpatient sites, 4.8 % at outpatient sites,
+3.8 % for the import of the CHP sites. Five sites pay less than the average price (down to
+−4.7 %); the dearest shape pays 23 % more.</li>
+<li><strong>The red band holds 10 % of the energy in 8.7 % of the hours</strong> (16:00–19:00 on working days):
+12.4 GWh a year across the panel, so every penny per kWh of red-band charge is £124,000 a year.</li>
+</ul>
+<details class="table"><summary>Table: 30 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>site_name</th>
+      <th>group</th>
+      <th>fy</th>
+      <th>mwh</th>
+      <th>wholesale_cost_gbp</th>
+      <th>paid_p_kwh</th>
+      <th>shape_premium_pct</th>
+      <th>red_share_energy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RFSDA</td>
+      <td>Chesterfield  Royal Hospital</td>
+      <td>inpatient</td>
+      <td>2024/25</td>
+      <td>13506.55</td>
+      <td>1119391.86</td>
+      <td>8.29</td>
+      <td>2.75</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RFSDA</td>
+      <td>Chesterfield  Royal Hospital</td>
+      <td>inpatient</td>
+      <td>2025/26</td>
+      <td>13489.96</td>
+      <td>1054408.16</td>
+      <td>7.82</td>
+      <td>1.28</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RFSDA</td>
+      <td>Chesterfield  Royal Hospital</td>
+      <td>inpatient</td>
+      <td>2023/24</td>
+      <td>12772.01</td>
+      <td>1004556.33</td>
+      <td>7.87</td>
+      <td>1.18</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RQXM1</td>
+      <td>Homerton University Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>9644.59</td>
+      <td>791635.18</td>
+      <td>8.21</td>
+      <td>1.76</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>Royal Devon &amp; Exeter Hospital (wonford)</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>9589.25</td>
+      <td>747987.35</td>
+      <td>7.8</td>
+      <td>1.07</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>Royal Devon &amp; Exeter Hospital (wonford)</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>9344.6</td>
+      <td>751020.2</td>
+      <td>8.04</td>
+      <td>-0.36</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>RKB01</td>
+      <td>University Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>8753.71</td>
+      <td>765062.76</td>
+      <td>8.74</td>
+      <td>8.35</td>
+      <td>0.13</td>
+    </tr>
+    <tr>
+      <td>RKB01</td>
+      <td>University Hospital</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>7975.75</td>
+      <td>618520.19</td>
+      <td>7.76</td>
+      <td>0.21</td>
+      <td>0.14</td>
+    </tr>
+    <tr>
+      <td>RKB01</td>
+      <td>University Hospital</td>
+      <td>on-site CHP</td>
+      <td>2023/24</td>
+      <td>7529.13</td>
+      <td>620979.31</td>
+      <td>8.25</td>
+      <td>6.1</td>
+      <td>0.14</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>Royal Devon &amp; Exeter Hospital (wonford)</td>
+      <td>on-site CHP</td>
+      <td>2023/24</td>
+      <td>7446.14</td>
+      <td>596365.79</td>
+      <td>8.01</td>
+      <td>3.03</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>RCB55</td>
+      <td>York Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>7331.82</td>
+      <td>633786.31</td>
+      <td>8.64</td>
+      <td>7.17</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>RCB55</td>
+      <td>York Hospital</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>6685.9</td>
+      <td>525830.49</td>
+      <td>7.86</td>
+      <td>1.91</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>R0A66</td>
+      <td>North Manchester General Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>6386.86</td>
+      <td>525516.86</td>
+      <td>8.23</td>
+      <td>2.02</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>RXN02</td>
+      <td>Royal Preston Hospital</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>5957.54</td>
+      <td>467267.18</td>
+      <td>7.84</td>
+      <td>1.54</td>
+      <td>0.12</td>
+    </tr>
+    <tr>
+      <td>R0A66</td>
+      <td>North Manchester General Hospital</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>5541.15</td>
+      <td>430373.4</td>
+      <td>7.77</td>
+      <td>0.7</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>R0A66</td>
+      <td>North Manchester General Hospital</td>
+      <td>on-site CHP</td>
+      <td>2023/24</td>
+      <td>5375.16</td>
+      <td>425411.87</td>
+      <td>7.91</td>
+      <td>1.81</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>RJC02</td>
+      <td>Warwick Hospital</td>
+      <td>on-site CHP</td>
+      <td>2023/24</td>
+      <td>4715.22</td>
+      <td>371913.74</td>
+      <td>7.89</td>
+      <td>1.44</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>RD130</td>
+      <td>Royal United Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>4572.05</td>
+      <td>390183.4</td>
+      <td>8.53</td>
+      <td>3.95</td>
+      <td>0.14</td>
+    </tr>
+    <tr>
+      <td>RXN02</td>
+      <td>Royal Preston Hospital</td>
+      <td>on-site CHP</td>
+      <td>2023/24</td>
+      <td>4058.79</td>
+      <td>333787.11</td>
+      <td>8.22</td>
+      <td>5.8</td>
+      <td>0.14</td>
+    </tr>
+    <tr>
+      <td>RL131</td>
+      <td>Robert Jones &amp; Agnes Hunt Orthopaedic Hospital</td>
+      <td>on-site CHP</td>
+      <td>2023/24</td>
+      <td>3871.18</td>
+      <td>319431</td>
+      <td>8.25</td>
+      <td>6.15</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>RXN02</td>
+      <td>Royal Preston Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>3847.35</td>
+      <td>337972.83</td>
+      <td>8.78</td>
+      <td>8.91</td>
+      <td>0.14</td>
+    </tr>
+    <tr>
+      <td>RJN71</td>
+      <td>Macclesfield District General Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>3660.23</td>
+      <td>307199.53</td>
+      <td>8.39</td>
+      <td>4.05</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>RJN71</td>
+      <td>Macclesfield District General Hospital</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>3634.92</td>
+      <td>283475.4</td>
+      <td>7.8</td>
+      <td>1.05</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>RKB03</td>
+      <td>Hospital Of St Cross</td>
+      <td>inpatient</td>
+      <td>2023/24</td>
+      <td>3553.14</td>
+      <td>279937.79</td>
+      <td>7.88</td>
+      <td>1.35</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RKB03</td>
+      <td>Hospital Of St Cross</td>
+      <td>inpatient</td>
+      <td>2024/25</td>
+      <td>3544.2</td>
+      <td>294607.99</td>
+      <td>8.31</td>
+      <td>3.04</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>R0A09</td>
+      <td>Trafford General Hospital</td>
+      <td>inpatient</td>
+      <td>2023/24</td>
+      <td>3429.25</td>
+      <td>269586.46</td>
+      <td>7.86</td>
+      <td>1.13</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RL131</td>
+      <td>Robert Jones &amp; Agnes Hunt Orthopaedic Hospital</td>
+      <td>on-site CHP</td>
+      <td>2025/26</td>
+      <td>3427.53</td>
+      <td>283996.25</td>
+      <td>8.29</td>
+      <td>7.15</td>
+      <td>0.09</td>
+    </tr>
+    <tr>
+      <td>R0A09</td>
+      <td>Trafford General Hospital</td>
+      <td>inpatient</td>
+      <td>2024/25</td>
+      <td>3420.06</td>
+      <td>281875.66</td>
+      <td>8.24</td>
+      <td>2.18</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RKB03</td>
+      <td>Hospital Of St Cross</td>
+      <td>inpatient</td>
+      <td>2025/26</td>
+      <td>3282.29</td>
+      <td>257171.47</td>
+      <td>7.84</td>
+      <td>1.52</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RL131</td>
+      <td>Robert Jones &amp; Agnes Hunt Orthopaedic Hospital</td>
+      <td>on-site CHP</td>
+      <td>2024/25</td>
+      <td>3239.75</td>
+      <td>283639.86</td>
+      <td>8.75</td>
+      <td>8.53</td>
+      <td>0.11</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/bill_anatomy.csv">code/reports/flexibility/bill_anatomy.csv</a> (30 rows shown)</p>
+
+<h2 id="2-what-a-battery-earns-battery-value">2. What a battery earns (<code>battery_value</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/battery_value.png" alt="battery_value" loading="lazy"><figcaption><code>battery_value</code> <a href="figures/battery_value.pdf">PDF</a></figcaption></figure></div>
+
+<p>A two-hour battery (round-trip efficiency 0.85) cycled each day against the day's prices by a
+linear programme, starting and ending empty. Price cases: the market index; the index plus a
+red-band unit charge of 2, 5 or 10 p/kWh; and the Octopus Agile tariff of each region, a published
+half-hourly retail tariff with its own evening adder. The red-band charges are scenario values:
+the real rates differ by network area and voltage and are not in the project. Perfect knowledge
+of the day's prices is exact for Agile (published the day before) and an upper bound for the
+index (known after delivery). No degradation cost.</p>
+<div class="chart" id="chart1"></div><p class="source">interactive; source: <a href="data/battery_unit_annual.csv">code/reports/flexibility/battery_unit_annual.csv</a></p>
+
+<ul>
+<li><strong>£23 per kWh of capacity a year on wholesale spreads</strong> (1.8 cycles a day), £27, £35 and £47
+with a 2, 5 and 10 p red-band charge, £88–96 on Agile. Stable across the three years
+(wholesale £21–24).</li>
+<li><strong>The tariff sets the value, not the site.</strong> The schedule depends on prices only. The site
+enters through the no-export limit: with a battery of 20 % of its mean demand, 24 of 134 sites
+would push more than 1 % of the discharge past their own load (median 4 %), ten of them CHP
+sites whose import is low when the plant runs.</li>
+<li><strong>Break-even.</strong> A ten-year simple payback needs an installed cost below £235 per kWh on
+wholesale spreads, £350 with a 5 p red band, about £900 on an Agile-style tariff.</li>
+<li><strong>Across the panel</strong>, a battery of 20 % of mean demand at every site is 7.5 MWh and earns
+£176,000 a year at the index, £259,000 with a 5 p red band.</li>
+<li><strong>A load forecast is worth nothing here.</strong> Arbitrage needs the prices, which are published.</li>
+</ul>
+<h2 id="3-rooftop-solar-against-the-real-load-solar-self-consumption">3. Rooftop solar against the real load (<code>solar_self_consumption</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/solar_self_consumption.png" alt="solar_self_consumption" loading="lazy"><figcaption><code>solar_self_consumption</code> <a href="figures/solar_self_consumption.pdf">PDF</a></figcaption></figure></div>
+
+<p>Generation per kWp from ERA5 surface solar radiation at the site (performance ratio 0.8 on the
+horizontal irradiance; median yield 825 kWh per kWp a year), against each half-hour of 2024/25 at
+the 106 sites without CHP, for arrays sized relative to the site's mean demand.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>size</th>
+      <th>self_consumption</th>
+      <th>demand_covered</th>
+      <th>export_share</th>
+      <th>value_gbp_kwp_year</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>inpatient</td>
+      <td>0.25</td>
+      <td>1</td>
+      <td>0.024</td>
+      <td>0</td>
+      <td>56.12</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>0.5</td>
+      <td>1</td>
+      <td>0.047</td>
+      <td>0</td>
+      <td>56.12</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>1</td>
+      <td>0.999</td>
+      <td>0.094</td>
+      <td>0.001</td>
+      <td>56.073</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>2</td>
+      <td>0.962</td>
+      <td>0.181</td>
+      <td>0.038</td>
+      <td>54.602</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>4</td>
+      <td>0.772</td>
+      <td>0.293</td>
+      <td>0.228</td>
+      <td>45.939</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>0.25</td>
+      <td>1</td>
+      <td>0.023</td>
+      <td>0</td>
+      <td>55.99</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>0.5</td>
+      <td>1</td>
+      <td>0.047</td>
+      <td>0</td>
+      <td>55.981</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>1</td>
+      <td>0.998</td>
+      <td>0.093</td>
+      <td>0.002</td>
+      <td>55.778</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>2</td>
+      <td>0.953</td>
+      <td>0.175</td>
+      <td>0.047</td>
+      <td>53.432</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>4</td>
+      <td>0.785</td>
+      <td>0.295</td>
+      <td>0.215</td>
+      <td>46.442</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/solar_summary.csv">code/reports/flexibility/solar_summary.csv</a> (10 rows shown)</p>
+
+<ul>
+<li><strong>Hospitals use everything a roof can make.</strong> Up to 1 kWp per kW of mean demand the site
+consumes all of the generation; at 2 kWp per kW 96 %, at 4 kWp per kW 78 %. Inpatient and
+outpatient sites are alike: the weekend baseload absorbs the weekend sun.</li>
+<li><strong>The array covers 9 % of demand at 1 kWp per kW</strong>, 18 % at 2, 29 % at 4.</li>
+<li><strong>Worth £56 per kWp a year at the wholesale index.</strong> Solar hours are 15 % cheaper than the
+average hour (capture ratio 0.85). The saving on the bill is larger, since a kWh consumed on
+site also avoids network charges and levies; that part needs the real tariffs.</li>
+<li><strong>For the programme</strong>: exports are not the constraint at hospital sites; roof area is.</li>
+</ul>
+<h2 id="4-what-a-forecast-is-worth-peak-shaving-forecast-value-forec">4. What a forecast is worth: peak shaving (<code>forecast_value</code>, <code>forecast_value_quantile</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/forecast_value.png" alt="forecast_value" loading="lazy"><figcaption><code>forecast_value</code> <a href="figures/forecast_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value_quantile.png" alt="forecast_value_quantile" loading="lazy"><figcaption><code>forecast_value_quantile</code> <a href="figures/forecast_value_quantile.pdf">PDF</a></figcaption></figure></div>
+
+<p>Peak shaving is the use where the load forecast matters. A battery (20 % of mean demand, two
+hours) starts the day full. A threshold is planned from the day-ahead forecast as the lowest
+import ceiling the battery could hold through the forecast day; the battery then defends that
+threshold in real time on the actual load. If the forecast is too low the store empties before
+the peak and the peak comes through; if too high the cut is smaller than it could be. Scored on
+the 91 sites and 69 test days of the proof of concept (6,107 site-days), for the saved forecasts
+of each model, against the cut under perfect foresight (11.8 % of the day's peak on average).</p>
+<details class="table"><summary>Table: 33 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>plan</th>
+      <th>nmae_pct</th>
+      <th>captured_share</th>
+      <th>peak_cut_pct</th>
+      <th>perfect_cut_pct</th>
+      <th>failed_share</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>seasonal_naive</td>
+      <td>point</td>
+      <td>17.894</td>
+      <td>0.401</td>
+      <td>5.02</td>
+      <td>11.817</td>
+      <td>0.381</td>
+    </tr>
+    <tr>
+      <td>profile_quantiles</td>
+      <td>point</td>
+      <td>17.649</td>
+      <td>0.373</td>
+      <td>5.167</td>
+      <td>11.817</td>
+      <td>0.361</td>
+    </tr>
+    <tr>
+      <td>profile_quantiles</td>
+      <td>q60</td>
+      <td>17.649</td>
+      <td>0.367</td>
+      <td>5.147</td>
+      <td>11.817</td>
+      <td>0.36</td>
+    </tr>
+    <tr>
+      <td>profile_quantiles</td>
+      <td>q70</td>
+      <td>17.649</td>
+      <td>0.356</td>
+      <td>4.905</td>
+      <td>11.817</td>
+      <td>0.375</td>
+    </tr>
+    <tr>
+      <td>profile_quantiles</td>
+      <td>q80</td>
+      <td>17.649</td>
+      <td>0.335</td>
+      <td>4.45</td>
+      <td>11.817</td>
+      <td>0.423</td>
+    </tr>
+    <tr>
+      <td>profile_quantiles</td>
+      <td>q90</td>
+      <td>17.649</td>
+      <td>0.271</td>
+      <td>3.475</td>
+      <td>11.817</td>
+      <td>0.512</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>point</td>
+      <td>12.503</td>
+      <td>0.477</td>
+      <td>5.936</td>
+      <td>11.817</td>
+      <td>0.277</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>q60</td>
+      <td>12.503</td>
+      <td>0.493</td>
+      <td>6.441</td>
+      <td>11.817</td>
+      <td>0.232</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>q70</td>
+      <td>12.503</td>
+      <td>0.472</td>
+      <td>6.289</td>
+      <td>11.817</td>
+      <td>0.233</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>q80</td>
+      <td>12.503</td>
+      <td>0.411</td>
+      <td>5.595</td>
+      <td>11.817</td>
+      <td>0.288</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>q90</td>
+      <td>12.503</td>
+      <td>0.354</td>
+      <td>4.616</td>
+      <td>11.817</td>
+      <td>0.38</td>
+    </tr>
+    <tr>
+      <td>tabpfn_ts_ifs</td>
+      <td>point</td>
+      <td>11.728</td>
+      <td>0.508</td>
+      <td>6.073</td>
+      <td>11.817</td>
+      <td>0.271</td>
+    </tr>
+    <tr>
+      <td>tabpfn_ts_ifs</td>
+      <td>q60</td>
+      <td>11.728</td>
+      <td>0.528</td>
+      <td>6.542</td>
+      <td>11.817</td>
+      <td>0.233</td>
+    </tr>
+    <tr>
+      <td>tabpfn_ts_ifs</td>
+      <td>q70</td>
+      <td>11.728</td>
+      <td>0.537</td>
+      <td>6.77</td>
+      <td>11.817</td>
+      <td>0.207</td>
+    </tr>
+    <tr>
+      <td>tabpfn_ts_ifs</td>
+      <td>q80</td>
+      <td>11.728</td>
+      <td>0.508</td>
+      <td>6.39</td>
+      <td>11.817</td>
+      <td>0.227</td>
+    </tr>
+    <tr>
+      <td>tabpfn_ts_ifs</td>
+      <td>q90</td>
+      <td>11.728</td>
+      <td>0.407</td>
+      <td>4.912</td>
+      <td>11.817</td>
+      <td>0.327</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>point</td>
+      <td>11.341</td>
+      <td>0.498</td>
+      <td>6.216</td>
+      <td>11.817</td>
+      <td>0.259</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>q60</td>
+      <td>11.341</td>
+      <td>0.532</td>
+      <td>6.689</td>
+      <td>11.817</td>
+      <td>0.215</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>q70</td>
+      <td>11.341</td>
+      <td>0.528</td>
+      <td>6.729</td>
+      <td>11.817</td>
+      <td>0.208</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>q80</td>
+      <td>11.341</td>
+      <td>0.481</td>
+      <td>6.061</td>
+      <td>11.817</td>
+      <td>0.252</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>q90</td>
+      <td>11.341</td>
+      <td>0.36</td>
+      <td>4.314</td>
+      <td>11.817</td>
+      <td>0.393</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>point</td>
+      <td>11.795</td>
+      <td>0.511</td>
+      <td>6.211</td>
+      <td>11.817</td>
+      <td>0.262</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>q50</td>
+      <td>11.795</td>
+      <td>0.511</td>
+      <td>6.211</td>
+      <td>11.817</td>
+      <td>0.262</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>q60</td>
+      <td>11.795</td>
+      <td>0.527</td>
+      <td>6.616</td>
+      <td>11.817</td>
+      <td>0.232</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>q70</td>
+      <td>11.795</td>
+      <td>0.527</td>
+      <td>6.581</td>
+      <td>11.817</td>
+      <td>0.227</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>q80</td>
+      <td>11.795</td>
+      <td>0.48</td>
+      <td>6.023</td>
+      <td>11.817</td>
+      <td>0.259</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>q90</td>
+      <td>11.795</td>
+      <td>0.353</td>
+      <td>4.412</td>
+      <td>11.817</td>
+      <td>0.387</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>point</td>
+      <td>11.161</td>
+      <td>0.533</td>
+      <td>6.436</td>
+      <td>11.817</td>
+      <td>0.236</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>q50</td>
+      <td>11.161</td>
+      <td>0.533</td>
+      <td>6.436</td>
+      <td>11.817</td>
+      <td>0.236</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>q60</td>
+      <td>11.161</td>
+      <td>0.558</td>
+      <td>6.795</td>
+      <td>11.817</td>
+      <td>0.209</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>q70</td>
+      <td>11.161</td>
+      <td>0.552</td>
+      <td>6.76</td>
+      <td>11.817</td>
+      <td>0.204</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>q80</td>
+      <td>11.161</td>
+      <td>0.522</td>
+      <td>6.182</td>
+      <td>11.817</td>
+      <td>0.239</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>q90</td>
+      <td>11.161</td>
+      <td>0.399</td>
+      <td>4.501</td>
+      <td>11.817</td>
+      <td>0.38</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/forecast_value.csv">code/reports/flexibility/forecast_value.csv</a> (33 rows shown)</p>
+
+<ul>
+<li><strong>The best forecast captures just over half of what is achievable.</strong> Seasonal naive 40 %,
+LightGBM + IFS ENS 48 %, the foundation models 50–53 % (Chronos-2 + IFS ENS 53 %).</li>
+<li><strong>Six points of nMAE are thirteen points of value</strong>: from seasonal naive (17.9 % nMAE) to
+Chronos-2 + IFS ENS (11.2 %).</li>
+<li><strong>Plan on the 60–70 % quantile, not the median.</strong> Missing the peak costs the whole cut; aiming
+high costs a part of it. The 70 % quantile adds about 2 to 3 points for the foundation models
+(Chronos-2 + IFS ENS 55 %); the 90 % quantile gives up a quarter to a third of the value. That is what the quantile
+forecasts are for, and it is a modest gain.</li>
+<li><strong>On a fifth to a quarter of site-days the battery achieves next to nothing</strong> (under 5 % of its
+potential) even with the best model: the days whose peak the forecast misses.</li>
+</ul>
+<h2 id="5-design-winters-design-winter-sites-design-winter-utilisati">5. Design winters (<code>design_winter_sites</code>, <code>design_winter_utilisation</code>, <code>design_winter_budget</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/design_winter_sites.png" alt="design_winter_sites" loading="lazy"><figcaption><code>design_winter_sites</code> <a href="figures/design_winter_sites.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_utilisation.png" alt="design_winter_utilisation" loading="lazy"><figcaption><code>design_winter_utilisation</code> <a href="figures/design_winter_utilisation.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_budget.png" alt="design_winter_budget" loading="lazy"><figcaption><code>design_winter_budget</code> <a href="figures/design_winter_budget.pdf">PDF</a></figcaption></figure></div>
+
+<p>The headroom result (13 of 31 sites above their connection with heat pumps) used the weather of
+2023/24. Here the same year's demand is re-weathered with each of 66 weather years, April 1960 to
+March 2026: today's electricity through each site's hourly cold and heat response, the heat-pump
+load rebuilt from that year's hourly temperature with the headroom model (degree-hours, base
+share, air-source COP). Two checks: the long temperature record equals the gridded record on
+their overlap (4,371 site-days, difference 0.0 °C), and the reference year reproduces the
+headroom peaks to eleven decimal places.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>label</th>
+      <th>t_winter_mean</th>
+      <th>t_coldest_day_median</th>
+      <th>hp_sites_above_capacity</th>
+      <th>util_hp_median</th>
+      <th>hp_energy_vs_ref_pct</th>
+      <th>peak_now_change_median_pct</th>
+      <th>energy_change_median_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1962/63</td>
+      <td>-1.07</td>
+      <td>-9.56</td>
+      <td>19</td>
+      <td>1.06</td>
+      <td>50.22</td>
+      <td>6.31</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>1978/79</td>
+      <td>1.91</td>
+      <td>-5.67</td>
+      <td>15</td>
+      <td>0.92</td>
+      <td>31.23</td>
+      <td>1.29</td>
+      <td>1.27</td>
+    </tr>
+    <tr>
+      <td>2009/10</td>
+      <td>2.66</td>
+      <td>-3.45</td>
+      <td>14</td>
+      <td>0.86</td>
+      <td>17.69</td>
+      <td>0.78</td>
+      <td>0.71</td>
+    </tr>
+    <tr>
+      <td>1963/64</td>
+      <td>2.77</td>
+      <td>-3.96</td>
+      <td>13</td>
+      <td>0.89</td>
+      <td>28.99</td>
+      <td>0.34</td>
+      <td>1.21</td>
+    </tr>
+    <tr>
+      <td>1984/85</td>
+      <td>2.78</td>
+      <td>-5.46</td>
+      <td>16</td>
+      <td>1.01</td>
+      <td>24.77</td>
+      <td>2.57</td>
+      <td>1.11</td>
+    </tr>
+    <tr>
+      <td>1981/82</td>
+      <td>2.85</td>
+      <td>-7.9</td>
+      <td>16</td>
+      <td>1.06</td>
+      <td>28.04</td>
+      <td>2.45</td>
+      <td>1.14</td>
+    </tr>
+    <tr>
+      <td>1964/65</td>
+      <td>2.97</td>
+      <td>-3.84</td>
+      <td>14</td>
+      <td>0.87</td>
+      <td>26.03</td>
+      <td>0.71</td>
+      <td>1.11</td>
+    </tr>
+    <tr>
+      <td>1995/96</td>
+      <td>3.09</td>
+      <td>-3.91</td>
+      <td>14</td>
+      <td>0.83</td>
+      <td>19.22</td>
+      <td>1.22</td>
+      <td>1.14</td>
+    </tr>
+    <tr>
+      <td>1985/86</td>
+      <td>3.16</td>
+      <td>-7.07</td>
+      <td>17</td>
+      <td>1.02</td>
+      <td>29.19</td>
+      <td>1.02</td>
+      <td>1.2</td>
+    </tr>
+    <tr>
+      <td>1990/91</td>
+      <td>3.16</td>
+      <td>-6.35</td>
+      <td>15</td>
+      <td>0.9</td>
+      <td>19.67</td>
+      <td>1.06</td>
+      <td>0.83</td>
+    </tr>
+    <tr>
+      <td>1968/69</td>
+      <td>3.31</td>
+      <td>-4.03</td>
+      <td>12</td>
+      <td>0.93</td>
+      <td>25.63</td>
+      <td>0.08</td>
+      <td>0.98</td>
+    </tr>
+    <tr>
+      <td>1976/77</td>
+      <td>3.43</td>
+      <td>-3.31</td>
+      <td>12</td>
+      <td>0.9</td>
+      <td>19.3</td>
+      <td>0.78</td>
+      <td>1.08</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/years.csv">code/reports/design_winter/years.csv</a> (12 rows shown)</p>
+
+<ul>
+<li><strong>The count barely depends on the winter.</strong> 2023/24 was the second-mildest of the last 30
+winters (6.8 °C) and puts 13 sites above capacity; the last 30 winters give 10 to 15, the
+one-in-twenty winter 14, the winter of 1962/63 19. The peak follows the coldest hours of a
+winter, not its mean, and the sites that exceed their connection do so by a wide margin.</li>
+<li><strong>The margin moves.</strong> Peak over capacity at the median site: 0.88 in 2023/24, 0.95 in the
+one-in-twenty winter, 1.06 in the worst winter on record.</li>
+<li><strong>Today's estate is safe in a cold winter.</strong> Without heat pumps the one-in-twenty winter raises
+the peak by 4 % at the median site and no site passes its capacity.</li>
+<li><strong>Electrification makes the budget weather-sensitive.</strong> Across the last 30 weather years
+today's annual electricity varies by 0.3 % (standard deviation, median site); with heat pumps
+by 3.0 %. The heat pumps' own electricity ranges from −1 % to +27 % against 2023/24, and +50 %
+in the weather of 1962/63.</li>
+</ul>
+<p>Limits: on the coldest days of the old winters the cold response is extrapolated beyond the
+temperatures of the demand record (coldest day −3.2 °C at the median site; up to 49 days a year
+in 1962/63, a handful in recent years), and the old winters are colder than today's climate,
+which is why the design statistics use the last 30 years.</p>
+<h2 id="6-storage-against-reinforcement-design-winter-storage">6. Storage against reinforcement (<code>design_winter_storage</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/design_winter_storage.png" alt="design_winter_storage" loading="lazy"><figcaption><code>design_winter_storage</code> <a href="figures/design_winter_storage.pdf">PDF</a></figcaption></figure></div>
+
+<p>For each over-capacity site, the store that would hold it under its connection: power equal to
+the largest excess, energy equal to the largest run of excess net of recharging below capacity.
+Classes by the hours of the connection's capacity the store holds (scenario bounds: 2 h and 24 h).</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>capacity_kw</th>
+      <th>util_hp_ref</th>
+      <th>util_hp_design</th>
+      <th>util_hp_worst</th>
+      <th>worst_year</th>
+      <th>store_kw_design</th>
+      <th>store_kwh_design</th>
+      <th>store_hours_design</th>
+      <th>hours_over_design</th>
+      <th>store_class_design</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RWX51</td>
+      <td>406.6</td>
+      <td>2.34</td>
+      <td>2.61</td>
+      <td>3.66</td>
+      <td>1985/86</td>
+      <td>654.58</td>
+      <td>587614.98</td>
+      <td>1445.19</td>
+      <td>4497.75</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>RKB03</td>
+      <td>760</td>
+      <td>2.37</td>
+      <td>2.51</td>
+      <td>3.33</td>
+      <td>1962/63</td>
+      <td>1145.65</td>
+      <td>987571.23</td>
+      <td>1299.44</td>
+      <td>4162.12</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>RRECI</td>
+      <td>112.1</td>
+      <td>2.19</td>
+      <td>2.46</td>
+      <td>3.41</td>
+      <td>1962/63</td>
+      <td>163.31</td>
+      <td>119802.63</td>
+      <td>1068.71</td>
+      <td>3315.18</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>R0A09</td>
+      <td>1425</td>
+      <td>1.71</td>
+      <td>1.9</td>
+      <td>2.53</td>
+      <td>1962/63</td>
+      <td>1288.87</td>
+      <td>239264.41</td>
+      <td>167.9</td>
+      <td>1466.1</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>RWR63</td>
+      <td>62.7</td>
+      <td>1.56</td>
+      <td>1.76</td>
+      <td>2.21</td>
+      <td>1962/63</td>
+      <td>47.95</td>
+      <td>6006.64</td>
+      <td>95.8</td>
+      <td>1303.8</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>RRE11</td>
+      <td>487.35</td>
+      <td>1.59</td>
+      <td>1.59</td>
+      <td>2.25</td>
+      <td>1962/63</td>
+      <td>286.52</td>
+      <td>29015.69</td>
+      <td>59.54</td>
+      <td>1111.28</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>RRECO</td>
+      <td>165.3</td>
+      <td>1.39</td>
+      <td>1.52</td>
+      <td>2.09</td>
+      <td>1962/63</td>
+      <td>86.21</td>
+      <td>5731.33</td>
+      <td>34.67</td>
+      <td>706.75</td>
+      <td>beyond storage (over 24 h)</td>
+    </tr>
+    <tr>
+      <td>RM103</td>
+      <td>76</td>
+      <td>1.28</td>
+      <td>1.4</td>
+      <td>1.8</td>
+      <td>1962/63</td>
+      <td>30.69</td>
+      <td>332.89</td>
+      <td>4.38</td>
+      <td>357.6</td>
+      <td>thermal store scale (2 to 24 h)</td>
+    </tr>
+    <tr>
+      <td>RFSDA</td>
+      <td>4412.75</td>
+      <td>1.22</td>
+      <td>1.38</td>
+      <td>1.63</td>
+      <td>1984/85</td>
+      <td>1669.88</td>
+      <td>54321.01</td>
+      <td>12.31</td>
+      <td>260.02</td>
+      <td>thermal store scale (2 to 24 h)</td>
+    </tr>
+    <tr>
+      <td>RREA9</td>
+      <td>55.1</td>
+      <td>1.22</td>
+      <td>1.3</td>
+      <td>1.65</td>
+      <td>1962/63</td>
+      <td>16.8</td>
+      <td>74.68</td>
+      <td>1.36</td>
+      <td>74.17</td>
+      <td>battery scale (under 2 h)</td>
+    </tr>
+    <tr>
+      <td>RH8A1</td>
+      <td>60.8</td>
+      <td>1</td>
+      <td>1.17</td>
+      <td>1.41</td>
+      <td>1962/63</td>
+      <td>10.48</td>
+      <td>21.6</td>
+      <td>0.36</td>
+      <td>8.1</td>
+      <td>battery scale (under 2 h)</td>
+    </tr>
+    <tr>
+      <td>RH868</td>
+      <td>76</td>
+      <td>1.1</td>
+      <td>1.13</td>
+      <td>1.5</td>
+      <td>1962/63</td>
+      <td>10.02</td>
+      <td>52.11</td>
+      <td>0.69</td>
+      <td>20.75</td>
+      <td>battery scale (under 2 h)</td>
+    </tr>
+    <tr>
+      <td>R0A06</td>
+      <td>380</td>
+      <td>1.11</td>
+      <td>1.13</td>
+      <td>1.4</td>
+      <td>1962/63</td>
+      <td>49.86</td>
+      <td>126.19</td>
+      <td>0.33</td>
+      <td>11.8</td>
+      <td>battery scale (under 2 h)</td>
+    </tr>
+    <tr>
+      <td>RH879</td>
+      <td>58.9</td>
+      <td>1.01</td>
+      <td>1.06</td>
+      <td>1.16</td>
+      <td>1990/91</td>
+      <td>3.76</td>
+      <td>2.3</td>
+      <td>0.04</td>
+      <td>2</td>
+      <td>battery scale (under 2 h)</td>
+    </tr>
+    <tr>
+      <td>RY424</td>
+      <td>52.25</td>
+      <td>0.88</td>
+      <td>0.96</td>
+      <td>1.06</td>
+      <td>1984/85</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>within capacity</td>
+    </tr>
+    <tr>
+      <td>RWR13</td>
+      <td>106.4</td>
+      <td>0.88</td>
+      <td>0.95</td>
+      <td>1.4</td>
+      <td>1985/86</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>within capacity</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/design_sites.csv">code/reports/design_winter/design_sites.csv</a> (16 rows shown)</p>
+
+<ul>
+<li><strong>A third can be held with a battery.</strong> Of the 14 sites above capacity in the one-in-twenty
+winter, five need 4 to 50 kW and 2 to 126 kWh; two need a store of 4 and 12 hours of capacity,
+the scale of a thermal store; seven are beyond storage, above capacity for 700 to 4,500 hours
+of the year.</li>
+<li><strong>So flexibility closes the gap at the margin and not beyond.</strong> The seven need a larger
+connection or less heat to electrify: fabric, lower flow temperatures, or a hybrid system that
+keeps gas for the coldest days.</li>
+</ul>
+<h2 id="7-heat-pumps-in-the-field-heat-pump-field">7. Heat pumps in the field (<code>heat_pump_field</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/heat_pump_field.png" alt="heat_pump_field" loading="lazy"><figcaption><code>heat_pump_field</code> <a href="figures/heat_pump_field.pdf">PDF</a></figcaption></figure></div>
+
+<p>The two estates returns give each site's gas, electricity and count of heat pumps. Of 2,722
+English sites in both, 61 report their first heat pump in 2024/25 and 21 report more. Sites with
+CHP, a changed floor area or an implausible electricity change are left out.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>pair</th>
+      <th>status</th>
+      <th>sites</th>
+      <th>gas_median_pct</th>
+      <th>elec_median_pct</th>
+      <th>gas_fell_fifth_share</th>
+      <th>elec_rose_tenth_share</th>
+      <th>gas_did_pct</th>
+      <th>gas_did_lo</th>
+      <th>gas_did_hi</th>
+      <th>elec_did_pct</th>
+      <th>elec_did_lo</th>
+      <th>elec_did_hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2023/24 to 2024/25</td>
+      <td>never</td>
+      <td>1246</td>
+      <td>1.5</td>
+      <td>-0.1</td>
+      <td>0.2</td>
+      <td>0.2</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2024/25</td>
+      <td>had already</td>
+      <td>68</td>
+      <td>4.3</td>
+      <td>-0.8</td>
+      <td>0</td>
+      <td>0.2</td>
+      <td>2.8</td>
+      <td>-3.7</td>
+      <td>5.6</td>
+      <td>-0.6</td>
+      <td>-2.7</td>
+      <td>2.9</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2024/25</td>
+      <td>new</td>
+      <td>33</td>
+      <td>-1.4</td>
+      <td>3.9</td>
+      <td>0.2</td>
+      <td>0.3</td>
+      <td>-2.9</td>
+      <td>-7.4</td>
+      <td>0.9</td>
+      <td>4</td>
+      <td>-0.2</td>
+      <td>7.6</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2024/25</td>
+      <td>more</td>
+      <td>9</td>
+      <td>0</td>
+      <td>4.7</td>
+      <td>0.3</td>
+      <td>0.2</td>
+      <td>-1.5</td>
+      <td>-149.4</td>
+      <td>10.4</td>
+      <td>4.7</td>
+      <td>-2.6</td>
+      <td>18.3</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/did.csv">code/reports/heat_pump_field/did.csv</a> (4 rows shown)</p>
+
+<ul>
+<li><strong>Most reported heat pumps do not replace the gas.</strong> At the 33 usable sites with new heat
+pumps gas fell 2.9 points more than at sites without (interval −7.4 to +0.9) and electricity
+rose 4.0 points more (−0.2 to +7.6). Gas fell by a fifth or more at 21 % of them, against 16 %
+of the others. The field counts every unit, and most are small.</li>
+<li><strong>Three clean switches imply a COP of 2.5 to 3.8.</strong> 177 sites cut gas by a quarter or more on
+an unchanged floor area; 11 of them report heat pumps and three show electricity rising with
+it: Horton Hospital (gas −36 %, electricity +36 %, COP 2.5), Regent Point (−84 %, +8 %, 2.8)
+and Southfield (−100 %, +4 %, 3.8). The headroom work assumed 2.55.</li>
+<li><strong>Correction to the installation-savings reading.</strong> The three panel sites that report heat
+pumps use 32 % more electricity, but none shows gas being replaced: one has no gas, one kept
+its gas (−2 %), one changed its reporting sixfold. The 32 % is added electric load, not
+measured electrification.</li>
+</ul>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_name</th>
+      <th>site_type</th>
+      <th>status</th>
+      <th>heat_pumps_b</th>
+      <th>gas_change_pct</th>
+      <th>elec_change_pct</th>
+      <th>implied_cop</th>
+      <th>reports_heat_pump</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ROYAL NATIONAL ORTHOPAEDIC HOSPITAL (BOLSOVER STREET)</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-48.2</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>CENTRAL HEALTH CLINIC SITE</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-4.1</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>DELPHWOOD</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-14.2</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>SIMMONS HOUSE</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-40.2</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>MARLBOROUGH HOUSE, EAGLESTONE</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-47.8</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>BARNEHURST AMBULANCE STATION</td>
+      <td>Support Facility</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>0</td>
+      <td>390.2</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>FURNESS BUSINESS PARK</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>31.3</td>
+      <td>22.2</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>ROTHESAY</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>51.4</td>
+      <td>4.7</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>SHARPS / LAMBETH NORTH MAP TEAM</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>14.5</td>
+      <td>0</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>THE PARKWAY CENTRE</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-5.5</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>SOUTHFIELD</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>new</td>
+      <td>1</td>
+      <td>-100</td>
+      <td>4.4</td>
+      <td>3.8</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>BRAIN INJURY REHABILITATION (SID WATKINS UNIT)</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-7.6</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>MILLOM HOSPITAL</td>
+      <td>Community hospital (with inpatient beds)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-8.4</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>ALBION PLACE</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>22.5</td>
+      <td>2.9</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>HORTONWOOD JOINT LOAN STORE</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-25.5</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>BRIDGE HOUSE</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-96.5</td>
+      <td>-4.5</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>RUTLAND MEMORIAL HOSPITAL</td>
+      <td>Community hospital (with inpatient beds)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-95.6</td>
+      <td>8.7</td>
+      <td>17.8</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>EDWARD STREET HOSPITAL</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-95.6</td>
+      <td>22.3</td>
+      <td>12.2</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>WESTERN EYE HOSPITAL</td>
+      <td>Specialist hospital (acute only)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-94.1</td>
+      <td>64.7</td>
+      <td>1.8</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>HAUGHTON HOUSE, ASHTON-UNDER-LYNE</td>
+      <td>Unoccupied</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-94.1</td>
+      <td>-48.4</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/switchers.csv">code/reports/heat_pump_field/switchers.csv</a> (20 rows shown)</p>
+
+<p>The 2025/26 return was published on 15 October 2026 behind a page that refuses scripted requests.
+Downloaded by hand into <code>code/data/external/eric_2025_26/</code> and loaded with
+<code>sense-energy build-eric --year 2025_26</code>, it gives the first full year after the 2024/25
+installations; this analysis picks the new pair of years up by itself.</p>
+<h2 id="8-the-solar-programme-from-the-meter-solar-programme-spring-">8. The solar programme from the meter (<code>solar_programme_spring</code>, <code>solar_metered_vs_reported</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/solar_programme_spring.png" alt="solar_programme_spring" loading="lazy"><figcaption><code>solar_programme_spring</code> <a href="figures/solar_programme_spring.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_metered_vs_reported.png" alt="solar_metered_vs_reported" loading="lazy"><figcaption><code>solar_metered_vs_reported</code> <a href="figures/solar_metered_vs_reported.pdf">PDF</a></figcaption></figure></div>
+
+<p>Great British Energy's first project funds rooftop solar at NHS sites: £100 million for 187 site
+postcodes in 78 trusts, announced on 21 March 2025. Ten panel sites in eight of our trusts are on
+the list. Most arrays came after the summer of 2025, so the sunshine slope is estimated on a
+spring window (1 March to 8 May) for 2023 to 2026.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>site_name</th>
+      <th>group</th>
+      <th>trust_funding_gbp</th>
+      <th>trust_sites_funded</th>
+      <th>sun_2025_pct</th>
+      <th>sun_2026_pct</th>
+      <th>change_pct</th>
+      <th>z</th>
+      <th>break_down</th>
+      <th>day_kw</th>
+      <th>implied_kwp</th>
+      <th>implied_kwp_se</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RQXM1</td>
+      <td>Homerton University Hospital</td>
+      <td></td>
+      <td>1413000</td>
+      <td>1</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>RD130</td>
+      <td>Royal United Hospital</td>
+      <td></td>
+      <td>295000</td>
+      <td>1</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>R0A07</td>
+      <td>Wythenshawe Hospital</td>
+      <td>on-site CHP</td>
+      <td>2076000</td>
+      <td>3</td>
+      <td>-8.8</td>
+      <td>-8.7</td>
+      <td>0</td>
+      <td>0</td>
+      <td>False</td>
+      <td>175.6</td>
+      <td>-0.7</td>
+      <td>28.4</td>
+    </tr>
+    <tr>
+      <td>R0A02</td>
+      <td>Manchester Royal Infirmary</td>
+      <td>outpatient</td>
+      <td>2076000</td>
+      <td>3</td>
+      <td>2.1</td>
+      <td>1.9</td>
+      <td>-0.3</td>
+      <td>-0.2</td>
+      <td>False</td>
+      <td>47.7</td>
+      <td>2</td>
+      <td>10.7</td>
+    </tr>
+    <tr>
+      <td>RWR62</td>
+      <td>The Stewarts</td>
+      <td>outpatient</td>
+      <td>300000</td>
+      <td>4</td>
+      <td>0.8</td>
+      <td>-15.9</td>
+      <td>-16.7</td>
+      <td>-4.2</td>
+      <td>True</td>
+      <td>5</td>
+      <td>12.6</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>RQY08</td>
+      <td>Tolworth Hospital</td>
+      <td>inpatient</td>
+      <td>296000</td>
+      <td>1</td>
+      <td>-2.2</td>
+      <td>0.2</td>
+      <td>2.4</td>
+      <td>0.8</td>
+      <td>False</td>
+      <td>150.4</td>
+      <td>-53.7</td>
+      <td>63.5</td>
+    </tr>
+    <tr>
+      <td>RL131</td>
+      <td>Robert Jones &amp; Agnes Hunt Orthopaedic Hospital</td>
+      <td>on-site CHP</td>
+      <td>2407000</td>
+      <td>1</td>
+      <td>-17.8</td>
+      <td>-15.6</td>
+      <td>2.2</td>
+      <td>0.5</td>
+      <td>False</td>
+      <td>390.9</td>
+      <td>-130.8</td>
+      <td>250.9</td>
+    </tr>
+    <tr>
+      <td>RYEA8</td>
+      <td>Winchester &amp; Eastleigh Resource Centre</td>
+      <td>outpatient</td>
+      <td>1193000</td>
+      <td>4</td>
+      <td>-6.7</td>
+      <td>-5.4</td>
+      <td>1.2</td>
+      <td>0.3</td>
+      <td>False</td>
+      <td>7.1</td>
+      <td>-1.3</td>
+      <td>4.3</td>
+    </tr>
+    <tr>
+      <td>RYEH2</td>
+      <td>Didcot Workshop</td>
+      <td>outpatient</td>
+      <td>1193000</td>
+      <td>4</td>
+      <td>-4.6</td>
+      <td>-0.6</td>
+      <td>4</td>
+      <td>1.8</td>
+      <td>False</td>
+      <td>5.5</td>
+      <td>-3.3</td>
+      <td>1.9</td>
+    </tr>
+    <tr>
+      <td>RFSDA</td>
+      <td>Chesterfield  Royal Hospital</td>
+      <td>inpatient</td>
+      <td>6581000</td>
+      <td>1</td>
+      <td>-2</td>
+      <td>0.7</td>
+      <td>2.7</td>
+      <td>1.8</td>
+      <td>False</td>
+      <td>1660.6</td>
+      <td>-662.3</td>
+      <td>365.2</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/funded_sites.csv">code/reports/solar_programme/funded_sites.csv</a> (10 rows shown)</p>
+
+<ul>
+<li><strong>One funded site shows its panels by spring 2026</strong>: The Stewarts (slope +0.8 to −15.9 % per
+kWh/m², z = −4.2), sized at 13 kWp of self-consumed generation. Eight of the ten are testable.</li>
+<li><strong>Chesterfield Royal, the largest award (£6.6 million), shows nothing by 8 May 2026.</strong> An array
+of 0.9 MWp or more would be visible at that meter.</li>
+<li><strong>Two sites off the list break as well</strong>: 99 Waverley Road (31 kWp, already flagged in summer
+2025) and London House (54 kWp).</li>
+<li><strong>Short windows are noisy.</strong> Six sites move the other way beyond the same threshold, so a
+spring break near it is a lead, not a finding; the funded list is what makes The Stewarts
+credible.</li>
+<li><strong>The meter measures the solar a site consumes.</strong> A break of the slope is a size: panels of k
+kWp lower daytime demand by k × 0.8 / 12 kW per kWh/m². At St George's Hospital the meter gives
+215 kWp against 230 kWp implied by the generation the return reports; where the array is larger
+than the daytime load the meter sees only the part consumed on site: 52 of 93 kWp at Potters
+Bar, 349 of 684 kWp at Bridlington, 8 of 61 kWp at Church Hill House.</li>
+</ul>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>site_name</th>
+      <th>change_pct</th>
+      <th>day_kw</th>
+      <th>implied_kwp</th>
+      <th>implied_kwp_level</th>
+      <th>eric_solar_mwh_2024_25</th>
+      <th>eric_total_kwp</th>
+      <th>metered_share_of_reported</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RKB03</td>
+      <td>Hospital Of St Cross</td>
+      <td>-2.5</td>
+      <td>386.9</td>
+      <td>143.3</td>
+      <td>144</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>RRE11</td>
+      <td>St.georges Hospital</td>
+      <td>-4.9</td>
+      <td>161.8</td>
+      <td>118</td>
+      <td>215</td>
+      <td>177.5</td>
+      <td>230.1</td>
+      <td>0.9</td>
+    </tr>
+    <tr>
+      <td>RYX37</td>
+      <td>Potters Bar Community Hospital</td>
+      <td>-15.3</td>
+      <td>22.2</td>
+      <td>51.1</td>
+      <td>51.8</td>
+      <td>76.5</td>
+      <td>92.7</td>
+      <td>0.6</td>
+    </tr>
+    <tr>
+      <td>RY412</td>
+      <td>Queen Victoria Memorial Hospital</td>
+      <td>-16.7</td>
+      <td>7.8</td>
+      <td>19.6</td>
+      <td>21.3</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>RWRD7</td>
+      <td>99 Waverely Road</td>
+      <td>-7.8</td>
+      <td>16.3</td>
+      <td>19.1</td>
+      <td>18.3</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>RWR58</td>
+      <td>St Pauls (hemel Hempstead)</td>
+      <td>-17.5</td>
+      <td>3.6</td>
+      <td>9.3</td>
+      <td>10</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>RWX58</td>
+      <td>Church Hill House</td>
+      <td>-9.5</td>
+      <td>5</td>
+      <td>7.1</td>
+      <td>7.9</td>
+      <td>50.2</td>
+      <td>60.7</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>RWR78</td>
+      <td>Adult Mental Health Unit (hampden House)</td>
+      <td>-6.4</td>
+      <td>4.3</td>
+      <td>4.1</td>
+      <td>4.7</td>
+      <td>0</td>
+      <td>0</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>RCBNH</td>
+      <td>Bridlington Hospital</td>
+      <td>4.6</td>
+      <td>119.7</td>
+      <td>-83.2</td>
+      <td>349.1</td>
+      <td>590.7</td>
+      <td>683.8</td>
+      <td>0.5</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/summer_measured.csv">code/reports/solar_programme/summer_measured.csv</a> (9 rows shown)</p>
+
+<h2 id="9-what-this-changes">9. What this changes</h2>
+<ul>
+<li>The headroom finding stands in a cold winter and gets a second half: a battery solves it at a
+third of the over-capacity sites, reinforcement or less heat at the rest.</li>
+<li>Forecast accuracy has a price tag now: the share of an achievable peak cut it captures. The
+quantile forecasts earn 2 to 3 points of it.</li>
+<li>The value of a battery is a question about the tariff. The next step is the real distribution
+charges per network area and voltage.</li>
+<li>The estates returns cannot yet measure heat pumps in the field; the 2025/26 return may.</li>
+<li>The solar watch can follow the funded programme site by site, and sizes what it finds.</li>
+</ul>
+<h2 id="figures">Figures</h2>
+<p><code>bill_shape_premium</code>, <code>battery_value</code>, <code>solar_self_consumption</code>, <code>forecast_value</code>,
+<code>forecast_value_quantile</code>, <code>design_winter_sites</code>, <code>design_winter_utilisation</code>,
+<code>design_winter_budget</code>, <code>design_winter_storage</code>, <code>heat_pump_field</code>, <code>solar_programme_spring</code>,
+<code>solar_metered_vs_reported</code>.</p>
+<div class="figrow"><figure class="inrow"><img src="figures/bill_shape_premium.png" alt="bill_shape_premium" loading="lazy"><figcaption><code>bill_shape_premium</code> <a href="figures/bill_shape_premium.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/battery_value.png" alt="battery_value" loading="lazy"><figcaption><code>battery_value</code> <a href="figures/battery_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_self_consumption.png" alt="solar_self_consumption" loading="lazy"><figcaption><code>solar_self_consumption</code> <a href="figures/solar_self_consumption.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value.png" alt="forecast_value" loading="lazy"><figcaption><code>forecast_value</code> <a href="figures/forecast_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value_quantile.png" alt="forecast_value_quantile" loading="lazy"><figcaption><code>forecast_value_quantile</code> <a href="figures/forecast_value_quantile.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_sites.png" alt="design_winter_sites" loading="lazy"><figcaption><code>design_winter_sites</code> <a href="figures/design_winter_sites.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_utilisation.png" alt="design_winter_utilisation" loading="lazy"><figcaption><code>design_winter_utilisation</code> <a href="figures/design_winter_utilisation.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_budget.png" alt="design_winter_budget" loading="lazy"><figcaption><code>design_winter_budget</code> <a href="figures/design_winter_budget.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_storage.png" alt="design_winter_storage" loading="lazy"><figcaption><code>design_winter_storage</code> <a href="figures/design_winter_storage.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_pump_field.png" alt="heat_pump_field" loading="lazy"><figcaption><code>heat_pump_field</code> <a href="figures/heat_pump_field.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_programme_spring.png" alt="solar_programme_spring" loading="lazy"><figcaption><code>solar_programme_spring</code> <a href="figures/solar_programme_spring.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_metered_vs_reported.png" alt="solar_metered_vs_reported" loading="lazy"><figcaption><code>solar_metered_vs_reported</code> <a href="figures/solar_metered_vs_reported.pdf">PDF</a></figcaption></figure></div>
+
+<p class="meta">Built from <code>doc/flexibility_and_design_winters.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+<script>
+window.addEventListener("load", function () {
+  (function () {
+    var el = document.getElementById("chart1"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Battery value by price case and year (\u00a3 per kWh of capacity per year)", "width": "container", "height": 520, "data": {"values": [{"case": "Agile A", "fy": "2023/24", "days": 366, "cycles": 2.0774991964, "value_gbp_kw_year": 175.2024930521, "value_gbp_kwh_year": 87.601246526}, {"case": "Agile A", "fy": "2024/25", "days": 365, "cycles": 1.973410556, "value_gbp_kw_year": 187.8, "value_gbp_kwh_year": 93.9}, {"case": "Agile A", "fy": "2025/26", "days": 365, "cycles": 1.8159427881, "value_gbp_kw_year": 168.6371272059, "value_gbp_kwh_year": 84.3185636029}, {"case": "Agile B", "fy": "2023/24", "days": 366, "cycles": 2.0792751527, "value_gbp_kw_year": 176.1601763798, "value_gbp_kwh_year": 88.0800881899}, {"case": "Agile B", "fy": "2024/25", "days": 365, "cycles": 1.9744258662, "value_gbp_kw_year": 190.8516102941, "value_gbp_kwh_year": 95.4258051471}, {"case": "Agile B", "fy": "2025/26", "days": 365, "cycles": 1.8169359388, "value_gbp_kw_year": 172.3602991176, "value_gbp_kwh_year": 86.1801495588}, {"case": "Agile C", "fy": "2023/24", "days": 366, "cycles": 2.0779090325, "value_gbp_kw_year": 166.6012044616, "value_gbp_kwh_year": 83.3006022308}, {"case": "Agile C", "fy": "2024/25", "days": 365, "cycles": 1.9744258662, "value_gbp_kw_year": 176.4386602941, "value_gbp_kwh_year": 88.2193301471}, {"case": "Agile C", "fy": "2025/26", "days": 365, "cycles": 1.8169359388, "value_gbp_kw_year": 157.8477791176, "value_gbp_kwh_year": 78.9238895588}, {"case": "Agile D", "fy": "2023/24", "days": 366, "cycles": 2.0779090325, "value_gbp_kw_year": 178.9241668326, "value_gbp_kwh_year": 89.4620834163}, {"case": "Agile D", "fy": "2024/25", "days": 365, "cycles": 1.9742203868, "value_gbp_kw_year": 191.90848, "value_gbp_kwh_year": 95.95424}, {"case": "Agile D", "fy": "2025/26", "days": 365, "cycles": 1.8153948429, "value_gbp_kw_year": 172.1858088235, "value_gbp_kwh_year": 86.0929044118}, {"case": "Agile E", "fy": "2023/24", "days": 366, "cycles": 2.0769185953, "value_gbp_kw_year": 167.5870098895, "value_gbp_kwh_year": 83.7935049448}, {"case": "Agile E", "fy": "2024/25", "days": 365, "cycles": 1.973410556, "value_gbp_kw_year": 180.6085, "value_gbp_kwh_year": 90.30425}, {"case": "Agile E", "fy": "2025/26", "days": 365, "cycles": 1.8159427881, "value_gbp_kw_year": 161.4007272059, "value_gbp_kwh_year": 80.7003636029}, {"case": "Agile F", "fy": "2023/24", "days": 366, "cycles": 2.0769185953, "value_gbp_kw_year": 165.7079360869, "value_gbp_kwh_year": 82.8539680435}, {"case": "Agile F", "fy": "2024/25", "days": 365, "cycles": 1.973410556, "value_gbp_kw_year": 180.6085, "value_gbp_kwh_year": 90.30425}, {"case": "Agile F", "fy": "2025/26", "days": 365, "cycles": 1.8159427881, "value_gbp_kw_year": 161.4007272059, "value_gbp_kwh_year": 80.7003636029}, {"case": "Agile G", "fy": "2023/24", "days": 366, "cycles": 2.0769185953, "value_gbp_kw_year": 167.3015021026, "value_gbp_kwh_year": 83.6507510513}, {"case": "Agile G", "fy": "2024/25", "days": 365, "cycles": 1.973410556, "value_gbp_kw_year": 180.6085, "value_gbp_kwh_year": 90.30425}, {"case": "Agile G", "fy": "2025/26", "days": 365, "cycles": 1.8159427881, "value_gbp_kw_year": 161.4007272059, "value_gbp_kwh_year": 80.7003636029}, {"case": "Agile H", "fy": "2023/24", "days": 366, "cycles": 2.0769185953, "value_gbp_kw_year": 168.1331780384, "value_gbp_kwh_year": 84.0665890192}, {"case": "Agile H", "fy": "2024/25", "days": 365, "cycles": 1.973410556, "value_gbp_kw_year": 180.6085, "value_gbp_kwh_year": 90.30425}, {"case": "Agile H", "fy": "2025/26", "days": 365, "cycles": 1.8159427881, "value_gbp_kw_year": 161.4007272059, "value_gbp_kwh_year": 80.7003636029}, {"case": "Agile J", "fy": "2023/24", "days": 366, "cycles": 2.0779090325, "value_gbp_kw_year": 172.0281131304, "value_gbp_kwh_year": 86.0140565652}, {"case": "Agile J", "fy": "2024/25", "days": 365, "cycles": 1.9742203868, "value_gbp_kw_year": 184.72848, "value_gbp_kwh_year": 92.36424}, {"case": "Agile J", "fy": "2025/26", "days": 365, "cycles": 1.8153948429, "value_gbp_kw_year": 164.9549588235, "value_gbp_kwh_year": 82.4774794118}, {"case": "Agile K", "fy": "2023/24", "days": 366, "cycles": 2.0779090325, "value_gbp_kw_year": 170.4638767346, "value_gbp_kwh_year": 85.2319383673}, {"case": "Agile K", "fy": "2024/25", "days": 365, "cycles": 1.9742203868, "value_gbp_kw_year": 184.72848, "value_gbp_kwh_year": 92.36424}, {"case": "Agile K", "fy": "2025/26", "days": 365, "cycles": 1.8153948429, "value_gbp_kw_year": 164.9549588235, "value_gbp_kwh_year": 82.4774794118}, {"case": "Agile L", "fy": "2023/24", "days": 366, "cycles": 2.0767478303, "value_gbp_kw_year": 166.7721995114, "value_gbp_kwh_year": 83.3860997557}, {"case": "Agile L", "fy": "2024/25", "days": 365, "cycles": 1.9733642224, "value_gbp_kw_year": 181.6503072059, "value_gbp_kwh_year": 90.8251536029}, {"case": "Agile L", "fy": "2025/26", "days": 365, "cycles": 1.8158058018, "value_gbp_kw_year": 161.3090461765, "value_gbp_kwh_year": 80.6545230882}, {"case": "Agile M", "fy": "2023/24", "days": 366, "cycles": 2.0785920926, "value_gbp_kw_year": 170.2238812022, "value_gbp_kwh_year": 85.1119406011}, {"case": "Agile M", "fy": "2024/25", "days": 365, "cycles": 1.9744258662, "value_gbp_kw_year": 183.6388302941, "value_gbp_kwh_year": 91.8194151471}, {"case": "Agile M", "fy": "2025/26", "days": 365, "cycles": 1.8169359388, "value_gbp_kw_year": 165.0989291176, "value_gbp_kwh_year": 82.5494645588}, {"case": "Agile N", "fy": "2023/24", "days": 366, "cycles": 2.0774991964, "value_gbp_kw_year": 173.6862396709, "value_gbp_kwh_year": 86.8431198355}, {"case": "Agile N", "fy": "2024/25", "days": 365, "cycles": 1.973410556, "value_gbp_kw_year": 187.8, "value_gbp_kwh_year": 93.9}, {"case": "Agile N", "fy": "2025/26", "days": 365, "cycles": 1.8159427881, "value_gbp_kw_year": 168.6371272059, "value_gbp_kwh_year": 84.3185636029}, {"case": "Agile P", "fy": "2023/24", "days": 366, "cycles": 2.0765087592, "value_gbp_kw_year": 173.6857131399, "value_gbp_kwh_year": 86.84285657}, {"case": "Agile P", "fy": "2024/25", "days": 365, "cycles": 1.9731244964, "value_gbp_kw_year": 192.8570988235, "value_gbp_kwh_year": 96.4285494118}, {"case": "Agile P", "fy": "2025/26", "days": 365, "cycles": 1.8158058018, "value_gbp_kw_year": 172.0830525, "value_gbp_kwh_year": 86.04152625}, {"case": "wholesale", "fy": "2023/24", "days": 358, "cycles": 1.9309521853, "value_gbp_kw_year": 44.648166366, "value_gbp_kwh_year": 22.324083183}, {"case": "wholesale", "fy": "2024/25", "days": 364, "cycles": 1.7834599224, "value_gbp_kw_year": 46.933354415, "value_gbp_kwh_year": 23.4666772075}, {"case": "wholesale", "fy": "2025/26", "days": 361, "cycles": 1.6530267232, "value_gbp_kw_year": 41.8593389969, "value_gbp_kwh_year": 20.9296694984}, {"case": "wholesale + red 10p", "fy": "2023/24", "days": 358, "cycles": 1.9642971574, "value_gbp_kw_year": 90.7837277483, "value_gbp_kwh_year": 45.3918638742}, {"case": "wholesale + red 10p", "fy": "2024/25", "days": 364, "cycles": 1.7999090983, "value_gbp_kw_year": 94.7621587056, "value_gbp_kwh_year": 47.3810793528}, {"case": "wholesale + red 10p", "fy": "2025/26", "days": 361, "cycles": 1.6753788496, "value_gbp_kw_year": 87.8604956587, "value_gbp_kwh_year": 43.9302478294}, {"case": "wholesale + red 2p", "fy": "2023/24", "days": 358, "cycles": 1.9622021853, "value_gbp_kw_year": 51.5732104603, "value_gbp_kwh_year": 25.7866052301}, {"case": "wholesale + red 2p", "fy": "2024/25", "days": 364, "cycles": 1.7967497576, "value_gbp_kw_year": 54.4353371453, "value_gbp_kwh_year": 27.2176685726}, {"case": "wholesale + red 2p", "fy": "2025/26", "days": 361, "cycles": 1.6707389604, "value_gbp_kw_year": 48.4114444957, "value_gbp_kwh_year": 24.2057222478}, {"case": "wholesale + red 5p", "fy": "2023/24", "days": 358, "cycles": 1.9642971574, "value_gbp_kw_year": 66.0322824969, "value_gbp_kwh_year": 33.0161412485}, {"case": "wholesale + red 5p", "fy": "2024/25", "days": 364, "cycles": 1.799428329, "value_gbp_kw_year": 69.3202382846, "value_gbp_kwh_year": 34.6601191423}, {"case": "wholesale + red 5p", "fy": "2025/26", "days": 361, "cycles": 1.6733012873, "value_gbp_kw_year": 62.5977623456, "value_gbp_kwh_year": 31.2988811728}]}, "mark": {"type": "bar", "tooltip": true}, "encoding": {"x": {"field": "value_gbp_kwh_year", "type": "quantitative", "title": "value_gbp_kwh_year"}, "y": {"field": "case", "type": "nominal", "title": "case"}, "color": {"field": "fy", "type": "nominal", "title": "fy"}, "yOffset": {"field": "fy"}, "tooltip": [{"field": "case", "type": "nominal"}, {"field": "fy", "type": "nominal"}, {"field": "days", "type": "quantitative"}, {"field": "cycles", "type": "quantitative"}, {"field": "value_gbp_kw_year", "type": "quantitative"}, {"field": "value_gbp_kwh_year", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
+    spec.width = Math.max(280, el.clientWidth - 90);
+    vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
+  })();
+});
+</script>
+</body>
+</html>

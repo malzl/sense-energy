@@ -52,6 +52,20 @@ YEARS = {
         "encoding": "latin-1",
         "fy": ("2024-04-01", "2025-04-01"),
     },
+    # Published 15 October 2026. The files sit behind NHS England Digital's publication page,
+    # which refuses scripted requests: download the three CSVs in a browser into
+    # external/eric_2025_26/. The names follow the 2024/25 pattern and have not been checked
+    # against the files; adjust them here if the publication changed them.
+    "2025_26": {
+        "dir": EXTERNAL_DIR / "eric_2025_26",
+        "files": {
+            "site": "ERIC_-_2025_26_-_Site_data.csv",
+            "trust": "ERIC_-_2025_26_-_Trust_data.csv",
+            "pfi": "ERIC_-_2025_26_-_PFI_data.csv",
+        },
+        "encoding": "latin-1",
+        "fy": ("2025-04-01", "2026-04-01"),
+    },
 }
 
 ELEC_COMPONENTS = [

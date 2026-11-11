@@ -1,0 +1,111 @@
+{
+  "pairs": [
+    "2023/24 to 2024/25"
+  ],
+  "sites_in_both": 2722,
+  "status_counts": {
+    "never": 2463,
+    "had already": 145,
+    "new": 61,
+    "fewer": 32,
+    "more": 21
+  },
+  "usable_counts": {
+    "never": 1246,
+    "had already": 68,
+    "new": 33,
+    "fewer": 17,
+    "more": 9
+  },
+  "new_heat_pump_sites": {
+    "sites": 33,
+    "gas_did_pct": -2.9,
+    "gas_did_ci": [
+      -7.4,
+      0.9
+    ],
+    "elec_did_pct": 4.0,
+    "elec_did_ci": [
+      -0.2,
+      7.6
+    ],
+    "gas_fell_fifth_share": 0.212,
+    "gas_fell_fifth_share_never": 0.155
+  },
+  "switchers": {
+    "sites": 177,
+    "reporting_heat_pumps": 11,
+    "heat_pump_sites_with_plausible_cop": 3,
+    "median_implied_cop": 2.77,
+    "implied_cops": [
+      3.84,
+      2.77,
+      2.5
+    ]
+  },
+  "slope": [
+    {
+      "pair": "2023/24 to 2024/25",
+      "status": "new or more",
+      "sites": 42,
+      "slope": -0.068,
+      "slope_lo": -0.146,
+      "slope_hi": 0.025,
+      "implied_cop": null,
+      "implied_cop_lo": 33.828,
+      "implied_cop_hi": null
+    },
+    {
+      "pair": "2023/24 to 2024/25",
+      "status": "never",
+      "sites": 1246,
+      "slope": -0.012,
+      "slope_lo": -0.025,
+      "slope_hi": 0.001,
+      "implied_cop": null,
+      "implied_cop_lo": 848.812,
+      "implied_cop_hi": null
+    }
+  ],
+  "panel_sites": [
+    {
+      "site_code": "RREOX",
+      "site_name": "STAFORDSHIRE AND STOKE ON TRENT WELLBEING SERVICE",
+      "chp_site": false,
+      "heat_pumps_a": 0,
+      "heat_pumps_b": 1,
+      "nac_change_pct": 43.0,
+      "gas_kwh_a": 124580.0,
+      "gas_kwh_b": 121521.0,
+      "gas_change_pct": -2.5,
+      "elec_change_pct": 15.4,
+      "plausible": true
+    },
+    {
+      "site_code": "RYV03",
+      "site_name": "PRINCESS OF WALES HOSPITAL",
+      "chp_site": false,
+      "heat_pumps_a": 1,
+      "heat_pumps_b": 2,
+      "nac_change_pct": 19.2,
+      "gas_kwh_a": 329384.0,
+      "gas_kwh_b": 1963910.0,
+      "gas_change_pct": 496.2,
+      "elec_change_pct": 462.6,
+      "plausible": false
+    },
+    {
+      "site_code": "W6J9Z",
+      "site_name": "LONDON HOUSE",
+      "chp_site": false,
+      "heat_pumps_a": 0,
+      "heat_pumps_b": 1,
+      "nac_change_pct": 30.5,
+      "gas_kwh_a": 0.0,
+      "gas_kwh_b": 0.0,
+      "gas_change_pct": null,
+      "elec_change_pct": 29.7,
+      "plausible": true
+    }
+  ]
+}

@@ -407,11 +407,11 @@ One engine answers six questions: the site-level response to weather by hour of 
 
 \begin{itemize}
 \item \textbf{The heat response lives in the afternoon and the red band.} A degree of daily mean above 20\,$^\circ$C adds 0.4\,\% at night and 2.5\,\% between 12:00 and 19:00; at the median site a fifth of the response (22\,\%) falls in 16:00--19:00, 1.8 times the band's share of the day, and on hot days the peak moves later at 37 of 81 sites. The JEPA counterfactual machine gets the size of a 5\,$^\circ$C warmer day roughly right (+5.4 against +4.3\,\%) but not its timing.
-\item \textbf{Measured savings.} On weather-normalised annual consumption, 2023/24 against 2025/26: heat pumps add 32\,\% against unchanged sites (interval 18 to 51), LED saves 0.6\,\% per ten points of coverage ($p = 0.05$), new solar about 8 points (three sites, interval wide).
+\item \textbf{Measured savings.} On weather-normalised annual consumption, 2023/24 against 2025/26: the three sites that report heat pumps use 32\,\% more than unchanged sites (interval 18 to 51; added electric load, since the returns show no gas replaced at any of them), LED saves 0.6\,\% per ten points of coverage ($p = 0.05$), new solar about 8 points (three sites, interval wide).
 \item \textbf{Warming binds less than electrification.} With every day 4\,$^\circ$C warmer, annual electricity falls 1.2\,\% at the median site (less heating outweighs more cooling) and the median summer peak stays at 0.33 of capacity; one site exceeds its capacity and a second reaches 94\,\%. No site's summer peak reaches its winter peak with heat pumps.
-\item \textbf{The 2025 heatwaves} added 4.3\,\% to demand at 56 sites without CHP (43\,MWh over 370 site-days, at 4.3\,$^\circ$C above normal) and 12\,\% to grid import at 17 CHP sites (180\,MWh), whose heat-led plants turn down.
+\item \textbf{The 2025 heatwaves} added 4.4\,\% to demand at 56 sites without CHP (23\,MWh over 370 site-days, at 4.3\,$^\circ$C above normal) and 12\,\% to grid import at 17 CHP sites (180\,MWh), whose heat-led plants turn down.
 \item \textbf{Solar can be watched from the meter.} A downward break in a site's sunshine slope (8 of 107 sites) flags three of the four sites whose returns report new or grown solar and dates the installations; it also flags sites without reported solar (panels owned by a landlord or third party do not enter the return). LED leaves at most a faint opposite trace.
-\item \textbf{CHP dispatch differs plant by plant.} Against sites without CHP, 10 of 23 plants are heat-led, 7 follow the power price within the day and 15 cut import by 3 to 18\,\% in the working-day red band; four import more then. The pooled CHP coefficients equal the placebo's, so the group average hides the behaviours.
+\item \textbf{CHP dispatch differs plant by plant.} Against sites without CHP, 10 of 23 plants are heat-led, 6 follow the power price within the day and 15 cut import by 3 to 18\,\% in the working-day red band; four import more then. The pooled CHP coefficients equal the placebo's, so the group average hides the behaviours.
 \end{itemize}
 
 \begin{figblock}\centering
@@ -428,6 +428,41 @@ One engine answers six questions: the site-level response to weather by hour of 
 \begin{center}\includegraphics[width=0.5\textwidth]{chp_dispatch_red}\end{center}
 \captionof{figure}{Each CHP site's working-day red-band import against sites without CHP, with 95\,\% intervals; coloured where the plant avoids the red band.}
 \end{figblock}
+
+\section{Flexibility, design winters and what the meters can verify}
+Four pieces of modelling on data already in the project (11 November 2026): the cost of each site's load shape and the value of a battery and of rooftop solar against it; what a day-ahead forecast is worth in a peak-shaving decision; the heat-pump headroom under every winter since 1960, with the storage that would hold a site under its connection; and two checks from the estates returns and the meter, on heat pumps and on the hospital solar programme.
+
+\begin{figblock}
+\pair[0.9]{design_winter_sites}{design_winter_storage}
+\captionof{figure}{Left: sites above their connection's capacity with heat pumps under the weather of each year since 1960 (31 sites; the reference year's demand re-weathered day for day). Right: the store that would hold each over-capacity site under its connection in the one-in-twenty winter, in hours of the connection's capacity; dashed lines at 2 and 24 hours.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{The headroom result holds in a cold winter.} Hourly ERA5 temperature from 1960 at the panel's grid cells puts 10 to 15 of the 31 sites above capacity with heat pumps in each of the last 30 winters, 14 in the one-in-twenty winter and 19 in 1962/63; the reference year 2023/24, the second-mildest of the 30, gives 13. The peak follows a winter's coldest hours, not its mean. Without heat pumps no site passes its capacity even in the one-in-twenty winter (peak $+4$\,\% at the median site).
+\item \textbf{Storage closes the gap at a third of the sites.} Of the 14 sites above capacity in the one-in-twenty winter, five need a battery of 4 to 50\,kW and 2 to 126\,kWh, two a store of 4 and 12 hours of capacity, and seven are beyond storage, above capacity for 700 to 4,500 hours of the year: they need a larger connection or less heat to electrify.
+\item \textbf{Electrification makes the budget weather-sensitive.} Across the last 30 weather years today's annual electricity varies by 0.3\,\% (standard deviation, median site); with heat pumps by 3.0\,\%.
+\end{itemize}
+
+\begin{figblock}
+\pair[0.9]{forecast_value}{battery_value}
+\captionof{figure}{Left: the share of the peak cut achievable with perfect foresight that a battery captures when its threshold is planned on each model's day-ahead forecast (91 sites, 69 days; battery of 20\,\% of mean demand, two hours). Right: annual value of a two-hour battery per kWh of capacity under each price case, 2024/25; the red-band charges are scenario values, the Agile bar is the median of the regional tariffs with their range.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{A forecast's value, measured in a decision.} A battery defending a threshold planned on the forecast captures 40\,\% of the achievable peak cut with seasonal naive, 48\,\% with LightGBM and 53\,\% with Chronos-2 and forecast weather: six points of nMAE are thirteen points of value. Planning on the 70\,\% quantile adds about two points; the 90\,\% quantile loses a quarter of the value. On a fifth of site-days the battery achieves next to nothing even with the best model.
+\item \textbf{The tariff sets a battery's value.} At the wholesale index a two-hour battery earns \pounds 23 per kWh of capacity a year (an upper bound, with perfect knowledge of the day's prices), \pounds 35 with a 5\,p/kWh red-band charge and about \pounds 90 on an Agile-style retail tariff; the load forecast plays no part. The panel's 118\,GWh cost \pounds 9.9 million a year at the index; the median site pays 4\,\% above the time-average price and uses 10\,\% of its energy in the red band.
+\end{itemize}
+
+\begin{figblock}
+\pair[0.9]{solar_self_consumption}{solar_programme_spring}
+\captionof{figure}{Left: rooftop solar against the real half-hourly load of the sites without CHP, 2024/25, by array size relative to mean demand (medians and interquartile range). Right: the sunshine slope of spring daytime demand by year at the panel sites on the Great British Energy solar list and at the sites that break downwards from 2025 to 2026.}
+\end{figblock}
+
+\begin{itemize}
+\item \textbf{Hospitals use everything a roof can make.} Arrays up to 1\,kWp per kW of mean demand are consumed entirely on site (96\,\% at 2\,kWp per kW) and cover 9\,\% of demand; roof area, not load, is the limit.
+\item \textbf{The solar programme can be followed from the meter.} Ten panel sites are on the list of 187 funded site postcodes. By spring 2026 one of the eight testable sites shows its panels (The Stewarts, about 13\,kWp of self-consumed generation); the largest award, Chesterfield Royal Hospital (\pounds 6.6 million), shows nothing by 8 May 2026, where an array of 0.9\,MWp would be visible. Where the returns report generation, the meter-based size agrees at the site whose array is smaller than its load (St George's Hospital, 215 against 230\,kWp) and is the self-consumed part elsewhere.
+\item \textbf{Heat pumps in the returns mostly do not replace gas.} At 33 English sites that report their first heat pump in 2024/25, gas fell 2.9 points more than elsewhere (interval $-7.4$ to $+0.9$). Three sites with a clean switch imply a COP of 2.5 to 3.8, against the 2.55 assumed in the headroom work. The 2025/26 return (published 15 October 2026) gives the first full year after these installations.
+\end{itemize}
 
 \section{Estates returns}
 ERIC 2023/24 reports electricity, gas, floor area, connection capacity and building characteristics for 2,869 English NHS sites.

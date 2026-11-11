@@ -17,6 +17,7 @@ import json
 import time
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -225,6 +226,21 @@ def fetch_elexon_mid(
         .sort_values(["provider", "datetime"])
         .reset_index(drop=True)
     )
+
+
+#: The market index provider that trades. N2EX reports zero volume and a zero price in 99.8 % of
+#: settlement periods, so averaging or joining both providers halves the price or duplicates rows.
+MID_PROVIDER = "APXMIDP"
+
+
+def load_mid(path: Path | None = None) -> pd.DataFrame:
+    """Half-hourly market index price (GBP/MWh, UTC), one row per settlement period: the
+    ``MID_PROVIDER`` rows of ``interim/prices_elexon_mid.parquet`` with traded volume."""
+    p = pd.read_parquet(path or INTERIM_DIR / "prices_elexon_mid.parquet")
+    p = p[(p["provider"] == MID_PROVIDER) & (p["volume_mwh"] > 0)]
+    p = p[["datetime", "price_gbp_mwh"]].copy()
+    p["datetime"] = pd.to_datetime(p["datetime"], utc=True)
+    return p.drop_duplicates("datetime").sort_values("datetime").reset_index(drop=True)
 
 
 # --------------------------------------------------------------------------- #

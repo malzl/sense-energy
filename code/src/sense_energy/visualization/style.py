@@ -298,6 +298,67 @@ COVERAGE_FLAG_COLORS = {
 }
 #: Electrification scenario: today's demand and demand with all gas heat from heat pumps.
 SCENARIO_COLORS = {"today": "#7A7A7A", "with heat pumps": "#D55E00"}
+#: Price cases of the flexibility analysis (analysis/flexibility.py); fixed order and colours.
+PRICE_CASE_ORDER = (
+    "wholesale",
+    "wholesale + red 2p",
+    "wholesale + red 5p",
+    "wholesale + red 10p",
+    "Agile",
+)
+PRICE_CASE_NAMES = {
+    "wholesale": "wholesale index",
+    "wholesale + red 2p": "+ 2p red band",
+    "wholesale + red 5p": "+ 5p red band",
+    "wholesale + red 10p": "+ 10p red band",
+    "Agile": "Agile tariff",
+}
+PRICE_CASE_COLORS = {
+    "wholesale": "#7A7A7A",
+    "wholesale + red 2p": "#0072B2",
+    "wholesale + red 5p": "#0072B2",
+    "wholesale + red 10p": "#0072B2",
+    "Agile": "#E69F00",
+}
+#: Storage that holds a site under its connection (analysis/design_winter.py).
+STORE_CLASS_ORDER = (
+    "battery scale (under 2 h)",
+    "thermal store scale (2 to 24 h)",
+    "beyond storage (over 24 h)",
+)
+STORE_CLASS_COLORS = {
+    "within capacity": "#B8B8B8",
+    "battery scale (under 2 h)": "#009E73",
+    "thermal store scale (2 to 24 h)": "#E69F00",
+    "beyond storage (over 24 h)": "#D55E00",
+}
+#: Weather years of the design-winter analysis.
+WEATHER_YEAR_COLORS = {
+    "last 30 winters": "#0072B2",
+    "earlier winters": "#B8B8B8",
+    "reference year": "#000000",
+}
+#: Winters shown for each site: the reference year, the one-in-twenty winter, the worst on record.
+DESIGN_CASE_COLORS = {
+    "reference year": "#7A7A7A",
+    "one-in-twenty winter": "#0072B2",
+    "worst winter on record": "#D55E00",
+}
+DESIGN_CASE_MARKERS = {
+    "reference year": "o",
+    "one-in-twenty winter": "^",
+    "worst winter on record": "s",
+}
+#: Heat-pump status between two estates returns (analysis/heat_pump_field.py).
+HEAT_PUMP_STATUS_COLORS = {"no heat pump": "#B8B8B8", "new heat pumps": "#D55E00"}
+#: Solar programme sites (analysis/solar_programme.py).
+SOLAR_PROGRAMME_COLORS = {
+    "funded, break": "#D55E00",
+    "funded, no break": "#7A7A7A",
+    "not funded, break": "#0072B2",
+}
+#: Threshold plans of the peak-shaving test (analysis/flexibility.py).
+PLAN_NAMES = {"point": "planned on the median", "q70": "planned on the 70 % quantile"}
 #: Extreme-weather event types (analysis/weather_events.py); fixed order and colours.
 WEATHER_EVENT_ORDER = ("heatwave", "cold spell", "snow", "heavy rain", "high wind")
 WEATHER_EVENT_COLORS = {

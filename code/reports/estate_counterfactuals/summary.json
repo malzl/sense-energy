@@ -49,11 +49,11 @@
     "no_chp": {
       "sites": 56,
       "site_days": 370,
-      "kwh_attr": 43426,
-      "share_pct": 4.33,
+      "kwh_attr": 23048,
+      "share_pct": 4.41,
       "median_site_day_share_pct": 2.05,
       "cost_gbp_wholesale": 2089,
-      "co2_t": 6.0,
+      "co2_t": 3.2,
       "mean_t_excess_c": 4.26
     },
     "chp_import": {
@@ -61,7 +61,7 @@
       "site_days": 127,
       "kwh_attr": 179991,
       "share_pct": 12.06,
-      "cost_gbp_wholesale": 8137,
+      "cost_gbp_wholesale": 15813,
       "co2_t": 24.5
     }
   },
