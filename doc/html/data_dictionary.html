@@ -1539,6 +1539,11 @@ remain; this source supplies the full 51-member spread from Jan 2023.</p>
   <td>ERIC 2024/25 (1 Apr 2024 – 31 Mar 2025, published 16 Oct 2025; NHS England files in <code>external/eric_2024_25/</code>, latin-1, column names normalised to the 2023/24 spelling), 2,901 sites and 207 trusts, same columns as 2023/24 plus <code>occupied_floor_area_m2</code>, <code>chp_elec_output_kwh</code>, <code>chp_thermal_output_kwh</code>, <code>chp_gas_input_kwh</code>, <code>chp_other_input_kwh</code>, <code>chp_elec_purchased_kwh</code>, <code>chp_thermal_purchased_kwh</code>, <code>chp_thermal_wasted_kwh</code>, <code>exported_elec_kwh</code>, <code>exported_thermal_kwh</code>, <code>chp_elec_kw</code>, <code>chp_thermal_kw</code>, and an age band 2025–2034; the headline <code>elec_headline_kwh</code> field was dropped from the collection (missing). <code>collection</code> names the year. Built by <code>sense-energy build-eric --year 2024_25</code></td>
 </tr>
 <tr>
+  <td><code>eric_2025_26_site.parquet</code>, <code>eric_2025_26_trust.parquet</code></td>
+  <td><code>site_code</code> / <code>trust_code</code></td>
+  <td>ERIC 2025/26 (1 Apr 2025 – 31 Mar 2026, published 15 Oct 2026; 2,923 sites, 205 trusts). The files were downloaded in a browser, because the publication page refuses scripted requests, and unpacked into <code>external/eric_2025_26/</code> with the original zip; site and PFI tables are the publication's second version. They carry field codes on the first row and field names on the second (<code>header: 1</code> in <code>data/eric.py</code>), and the field names match 2024/25. <code>sense-energy build-eric --year 2025_26</code></td>
+</tr>
+<tr>
   <td><code>eric_2023_24_postcodes.parquet</code></td>
   <td><code>postcode</code></td>
   <td>postcode centroid cache for the ERIC sites</td>
@@ -1899,11 +1904,11 @@ modified Copernicus Climate Change Service information). <code>sense-energy fetc
 </tr>
 <tr>
   <td><code>heat_pump_field/</code></td>
-  <td><code>site_changes.csv</code> (every English site in both returns: heat-pump status, changes in gas, electricity and floor area, plausibility), <code>did.csv</code>, <code>switchers.csv</code> (gas down a quarter or more: implied COP), <code>slope.csv</code>, <code>panel_sites.csv</code>, <code>summary.json</code></td>
+  <td><code>site_changes.csv</code> (every English site in two returns, one block per comparison in <code>pair</code>: the consecutive pairs and the full-year comparison 2023/24 to 2025/26 for heat pumps installed in 2024/25; heat-pump status, changes in gas, electricity and floor area, plausibility), <code>did.csv</code>, <code>switchers.csv</code> (gas down a quarter or more: implied COP), <code>slope.csv</code>, <code>panel_sites.csv</code>, <code>summary.json</code></td>
 </tr>
 <tr>
   <td><code>solar_programme/</code></td>
-  <td><code>spring_slopes.csv</code> (site × spring 2023 – 2026 sunshine slope), <code>spring_breaks.csv</code> (change 2025 to 2026, implied kWp), <code>funded_sites.csv</code> (panel sites on the Great British Energy list), <code>summer_measured.csv</code> (meter-sized arrays against reported generation), <code>summary.json</code></td>
+  <td><code>spring_slopes.csv</code> (site × spring 2023 – 2026 sunshine slope), <code>spring_breaks.csv</code> (change to spring 2026 from spring 2025 and from spring 2024, implied kWp), <code>funded_sites.csv</code> (panel sites on the Great British Energy list, with their reported solar generation), <code>returns_check.csv</code> (every English site in the 2024/25 and 2025/26 returns: reported solar generation, funded postcode or not), <code>summer_measured.csv</code> (meter-sized arrays against reported generation), <code>summary.json</code></td>
 </tr>
 </tbody>
 </table>

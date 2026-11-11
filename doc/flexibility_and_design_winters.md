@@ -13,8 +13,9 @@ connections in a cold winter and not only in 2023/24; what the estates returns s
 did; and whether the funded hospital solar arrays can be seen from the meter.
 
 New data: ERA5 hourly temperature from 1960 at the panel's 59 grid cells (Copernicus point
-time series; contains modified Copernicus Climate Change Service information) and the list of
-NHS sites funded by Great British Energy (GOV.UK, Open Government Licence v3.0).
+time series; contains modified Copernicus Climate Change Service information), the list of NHS
+sites funded by Great British Energy (GOV.UK, Open Government Licence v3.0) and the 2025/26
+estates return (NHS England, published 15 October 2026).
 
 ## 1. What the load shape costs (`bill_shape_premium`)
 
@@ -144,55 +145,87 @@ Classes by the hours of the connection's capacity the store holds (scenario boun
 
 ## 7. Heat pumps in the field (`heat_pump_field`)
 
-The two estates returns give each site's gas, electricity and count of heat pumps. Of 2,722
-English sites in both, 61 report their first heat pump in 2024/25 and 21 report more. Sites with
-CHP, a changed floor area or an implausible electricity change are left out.
+The three estates returns (2023/24, 2024/25, 2025/26) give each site's gas, electricity and count
+of heat pumps. A site that reports its first heat pump in 2024/25 has a full year without it
+(2023/24) and a full year with it (2025/26); 48 English sites do, 23 of them usable (no CHP, an
+unchanged floor area, a plausible electricity change, gas in the first year). Sites that never
+report a heat pump are the comparison.
 
-{{table: code/reports/heat_pump_field/did.csv | round=1}}
+{{table: code/reports/heat_pump_field/did.csv | cols=pair,status,sites,gas_median_pct,elec_median_pct,gas_did_pct,gas_did_lo,gas_did_hi,elec_did_pct,elec_did_lo,elec_did_hi,gas_fell_fifth_share | round=1}}
 
-- **Most reported heat pumps do not replace the gas.** At the 33 usable sites with new heat
-  pumps gas fell 2.9 points more than at sites without (interval −7.4 to +0.9) and electricity
-  rose 4.0 points more (−0.2 to +7.6). Gas fell by a fifth or more at 21 % of them, against 16 %
-  of the others. The field counts every unit, and most are small.
-- **Three clean switches imply a COP of 2.5 to 3.8.** 177 sites cut gas by a quarter or more on
-  an unchanged floor area; 11 of them report heat pumps and three show electricity rising with
-  it: Horton Hospital (gas −36 %, electricity +36 %, COP 2.5), Regent Point (−84 %, +8 %, 2.8)
-  and Southfield (−100 %, +4 %, 3.8). The headroom work assumed 2.55.
+- **A full year later the heat pumps show.** Against sites without, the 23 sites use 8.3 points
+  more electricity (interval +3.5 to +14.6) and 9.4 points less gas (−21.0 to +7.3, not
+  significant); gas fell by a fifth or more at 35 % of them, against 22 %.
+- **The installation year hides it.** The same question asked within the installation year gives
+  +4.0 points of electricity and −2.9 of gas for 2024/25 (33 sites, neither significant), because
+  the pumps ran for part of the year. The 2025/26 installers (15 sites) already show gas down 12.0
+  points (−35.1 to −0.5).
+- **It is partial electrification.** A tenth of the gas, not all of it: the typical site added
+  heat pumps to a gas system. With gas at 2.2 times electricity at these sites, a 9 % fall in gas
+  and an 8 % rise in electricity are what a COP near 2 would give; the gas estimate is too
+  uncertain to make that a measurement.
+- **Thirteen clean switches: a median COP of 2.8.** Across the three comparisons 13 sites that
+  report heat pumps cut gas by a quarter or more on an unchanged floor area while electricity
+  rose. Their implied COPs spread from 1.3 to 7.4 (quartiles 1.9 and 6.0), because annual returns
+  are coarse; in the full-year comparison four sit between 2.7 and 3.3 (Horton Hospital, Regent
+  Point, Austen House, Taunton Ambulance Station). The headroom work assumed 2.55.
 - **Correction to the installation-savings reading.** The three panel sites that report heat
   pumps use 32 % more electricity, but none shows gas being replaced: one has no gas, one kept
   its gas (−2 %), one changed its reporting sixfold. The 32 % is added electric load, not
   measured electrification.
 
-{{table: code/reports/heat_pump_field/switchers.csv | cols=site_name,site_type,status,heat_pumps_b,gas_change_pct,elec_change_pct,implied_cop,reports_heat_pump | sort=gas_change_pct | round=1 | head=20}}
+{{table: code/reports/heat_pump_field/switchers.csv | cols=pair,site_name,site_type,status,heat_pumps_b,gas_change_pct,elec_change_pct,implied_cop,reports_heat_pump | sort=gas_change_pct | round=1 | head=30}}
 
-The 2025/26 return was published on 15 October 2026 behind a page that refuses scripted requests.
-Downloaded by hand into `code/data/external/eric_2025_26/` and loaded with
-`sense-energy build-eric --year 2025_26`, it gives the first full year after the 2024/25
-installations; this analysis picks the new pair of years up by itself.
+The 2025/26 return (published 15 October 2026, site table in its second version) was downloaded
+by hand, because its page refuses scripted requests, and is loaded with
+`sense-energy build-eric --year 2025_26`.
 
-## 8. The solar programme from the meter (`solar_programme_spring`, `solar_metered_vs_reported`)
+## 8. The solar programme from the meter and the returns (`solar_programme_spring`, `solar_programme_returns`, `solar_metered_vs_reported`)
 
-Great British Energy's first project funds rooftop solar at NHS sites: £100 million for 187 site
-postcodes in 78 trusts, announced on 21 March 2025. Ten panel sites in eight of our trusts are on
-the list. Most arrays came after the summer of 2025, so the sunshine slope is estimated on a
-spring window (1 March to 8 May) for 2023 to 2026.
+Great British Energy's first project funds rooftop solar at NHS sites: £100 million for 181 site
+postcodes in 78 trusts, announced on 21 March 2025. Two views of it: the estates returns, for
+every funded site in England, and the meter, for the ten panel sites on the list.
 
-{{table: code/reports/solar_programme/funded_sites.csv | cols=site_code,site_name,group,trust_funding_gbp,trust_sites_funded,sun_2025_pct,sun_2026_pct,change_pct,z,break_down,day_kw,implied_kwp,implied_kwp_se | round=1}}
+**In the returns.** 142 of the funded postcodes match a site in both the 2024/25 and 2025/26
+returns (217 sites).
 
-- **One funded site shows its panels by spring 2026**: The Stewarts (slope +0.8 to −15.9 % per
-  kWh/m², z = −4.2), sized at 13 kWp of self-consumed generation. Eight of the ten are testable.
-- **Chesterfield Royal, the largest award (£6.6 million), shows nothing by 8 May 2026.** An array
-  of 0.9 MWp or more would be visible at that meter.
-- **Two sites off the list break as well**: 99 Waverley Road (31 kWp, already flagged in summer
-  2025) and London House (54 kWp).
-- **Short windows are noisy.** Six sites move the other way beyond the same threshold, so a
-  spring break near it is a lead, not a finding; the funded list is what makes The Stewarts
-  credible.
-- **The meter measures the solar a site consumes.** A break of the slope is a size: panels of k
-  kWp lower daytime demand by k × 0.8 / 12 kW per kWh/m². At St George's Hospital the meter gives
-  215 kWp against 230 kWp implied by the generation the return reports; where the array is larger
-  than the daytime load the meter sees only the part consumed on site: 52 of 93 kWp at Potters
-  Bar, 349 of 684 kWp at Bridlington, 8 of 61 kWp at Church Hill House.
+- **Funded sites report 84 % more solar generation in 2025/26**, 3.0 to 5.5 GWh, against 39 %
+  at all other sites (22.7 to 31.7 GWh). They are 8 % of the sites and 22 % of the national
+  increase.
+- **22 of the 142 funded postcodes show new or grown generation** by March 2026; 44 report any
+  solar, 35 the year before. Most of the programme is still to appear: the return's year ends a
+  year after the announcement, and an array switched on during the year reports a part-year.
+
+{{table: code/reports/solar_programme/returns_check.csv | cols=site_name,trust_code,site_type,funded,solar_generated_kwh_a,solar_generated_kwh_b,added_kwh,new,grew | sort=-added_kwh | round=0 | head=25}}
+
+**At the meter.** The sunshine slope is estimated on a spring window (1 March to 8 May) for 2023
+to 2026, and the spring of 2026 is compared with the spring of 2025 and with the spring of 2024,
+the last one before the programme (an array switched on during 2025 already shows in spring
+2025). Eight of the ten funded panel sites are testable.
+
+{{table: code/reports/solar_programme/funded_sites.csv | cols=site_code,site_name,group,trust_funding_gbp,sun_2024_pct,sun_2025_pct,sun_2026_pct,change_since_baseline_pct,z_since_baseline,break_any,day_kw,implied_kwp_since_baseline,eric_solar_mwh_before,eric_solar_mwh_after | round=1}}
+
+- **Three funded sites show their panels**: The Stewarts (slope +2.0 to −15.9 % per kWh/m²,
+  z = −4.3, 13 kWp of self-consumed generation), Winchester and Eastleigh Resource Centre (−0.8 to
+  −5.4, z = −2.9) and Wythenshawe Hospital (−6.4 to −8.7, z = −2.7, 62 kWp).
+- **The returns agree where both speak.** Wythenshawe reports 61 MWh more generation, about
+  70 kWp, against 62 kWp from the meter; Winchester and Eastleigh reports its first 54 MWh. The
+  three testable funded sites that report no solar (Chesterfield Royal, Tolworth, Didcot) show
+  nothing at the meter either. Chesterfield Royal has the largest award (£6.6 million); an array
+  of 0.9 MWp would be visible there, and by 8 May 2026 none is.
+- **The meter measures the solar a site consumes.** Robert Jones and Agnes Hunt doubled its
+  reported generation (843 to 1,729 MWh) and the meter shows no change: a CHP site whose import
+  is already near zero on sunny days exports the rest. A break of the slope is a size: panels of
+  k kWp lower daytime demand by k × 0.8 / 12 kW per kWh/m². At St George's Hospital the meter
+  gives 215 kWp against 230 kWp implied by the generation the return reports; where the array is
+  larger than the daytime load the meter sees only the part consumed on site: 52 of 93 kWp at
+  Potters Bar, 349 of 684 kWp at Bridlington, 8 of 61 kWp at Church Hill House.
+- **Sites off the list break as well**: St Paul's Hemel Hempstead, Mardon House, 99 Waverley
+  Road, Royal Leamington Spa, London House and Little Plumstead, sized at 15 to 200 kWp.
+- **Short windows are noisy.** Against spring 2024, nine sites break downwards and eleven
+  upwards, the upward ones up to z = 3.7. The five downward breaks at z = −4 or beyond stand on
+  their own; Wythenshawe and Winchester are within the noise and rest on the returns'
+  confirmation.
 
 {{table: code/reports/solar_programme/summer_measured.csv | cols=site_code,site_name,change_pct,day_kw,implied_kwp,implied_kwp_level,eric_solar_mwh_2024_25,eric_total_kwp,metered_share_of_reported | round=1}}
 
@@ -204,12 +237,15 @@ spring window (1 March to 8 May) for 2023 to 2026.
   quantile forecasts earn 2 to 3 points of it.
 - The value of a battery is a question about the tariff. The next step is the real distribution
   charges per network area and voltage.
-- The estates returns cannot yet measure heat pumps in the field; the 2025/26 return may.
-- The solar watch can follow the funded programme site by site, and sizes what it finds.
+- The estates returns do measure heat pumps once a full year is compared with a full year: 8
+  points more electricity, about a tenth less gas. They show partial electrification, which is a
+  smaller load than the headroom scenario of replacing all gas heat.
+- The solar programme can be followed two ways: the returns for every funded site, the meter
+  for the date and the self-consumed size. By March 2026 a sixth of the funded postcodes show it.
 
 ## Figures
 
 `bill_shape_premium`, `battery_value`, `solar_self_consumption`, `forecast_value`,
 `forecast_value_quantile`, `design_winter_sites`, `design_winter_utilisation`,
 `design_winter_budget`, `design_winter_storage`, `heat_pump_field`, `solar_programme_spring`,
-`solar_metered_vs_reported`.
+`solar_programme_returns`, `solar_metered_vs_reported`.

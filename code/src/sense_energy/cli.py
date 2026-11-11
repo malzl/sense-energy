@@ -613,7 +613,9 @@ def heat_pump_field_cmd() -> None:
 
     s = run()["summary"]
     click.echo(
-        json.dumps({k: s[k] for k in ("new_heat_pump_sites", "switchers", "slope")}, indent=1)
+        json.dumps(
+            {k: s[k] for k in ("new_heat_pump_sites", "switchers", "implied_cop_all")}, indent=1
+        )
     )
 
 

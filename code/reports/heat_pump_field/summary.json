@@ -1,47 +1,149 @@
 {
   "pairs": [
-    "2023/24 to 2024/25"
+    "2023/24 to 2024/25",
+    "2024/25 to 2025/26",
+    "2023/24 to 2025/26, installed 2024/25"
   ],
-  "sites_in_both": 2722,
+  "sites": {
+    "2023/24 to 2024/25": 2722,
+    "2024/25 to 2025/26": 2807,
+    "2023/24 to 2025/26, installed 2024/25": 2640
+  },
   "status_counts": {
-    "never": 2463,
-    "had already": 145,
-    "new": 61,
-    "fewer": 32,
-    "more": 21
+    "2023/24 to 2024/25": {
+      "never": 2463,
+      "had already": 145,
+      "new": 61,
+      "fewer": 32,
+      "more": 21
+    },
+    "2024/25 to 2025/26": {
+      "never": 2529,
+      "had already": 181,
+      "fewer": 39,
+      "new": 32,
+      "more": 26
+    },
+    "2023/24 to 2025/26, installed 2024/25": {
+      "never": 2352,
+      "other": 116,
+      "had already": 107,
+      "new": 48,
+      "more": 17
+    }
   },
   "usable_counts": {
-    "never": 1246,
-    "had already": 68,
-    "new": 33,
-    "fewer": 17,
-    "more": 9
+    "2023/24 to 2024/25": {
+      "never": 1246,
+      "had already": 68,
+      "new": 33,
+      "fewer": 17,
+      "more": 9
+    },
+    "2024/25 to 2025/26": {
+      "never": 1296,
+      "had already": 80,
+      "fewer": 22,
+      "new": 15,
+      "more": 12
+    },
+    "2023/24 to 2025/26, installed 2024/25": {
+      "never": 1128,
+      "other": 46,
+      "had already": 41,
+      "new": 23,
+      "more": 5
+    }
   },
   "new_heat_pump_sites": {
-    "sites": 33,
-    "gas_did_pct": -2.9,
-    "gas_did_ci": [
-      -7.4,
-      0.9
-    ],
-    "elec_did_pct": 4.0,
-    "elec_did_ci": [
-      -0.2,
-      7.6
-    ],
-    "gas_fell_fifth_share": 0.212,
-    "gas_fell_fifth_share_never": 0.155
+    "2023/24 to 2024/25": {
+      "sites": 33,
+      "gas_did_pct": -2.9,
+      "gas_did_ci": [
+        -7.4,
+        0.9
+      ],
+      "elec_did_pct": 4.0,
+      "elec_did_ci": [
+        -0.2,
+        7.6
+      ],
+      "gas_fell_fifth_share": 0.212,
+      "gas_fell_fifth_share_never": 0.155
+    },
+    "2024/25 to 2025/26": {
+      "sites": 15,
+      "gas_did_pct": -12.0,
+      "gas_did_ci": [
+        -35.1,
+        -0.5
+      ],
+      "elec_did_pct": 6.5,
+      "elec_did_ci": [
+        -1.4,
+        49.4
+      ],
+      "gas_fell_fifth_share": 0.467,
+      "gas_fell_fifth_share_never": 0.17
+    },
+    "2023/24 to 2025/26, installed 2024/25": {
+      "sites": 23,
+      "gas_did_pct": -9.4,
+      "gas_did_ci": [
+        -21.0,
+        7.3
+      ],
+      "elec_did_pct": 8.3,
+      "elec_did_ci": [
+        3.5,
+        14.6
+      ],
+      "gas_fell_fifth_share": 0.348,
+      "gas_fell_fifth_share_never": 0.215
+    }
   },
   "switchers": {
-    "sites": 177,
-    "reporting_heat_pumps": 11,
-    "heat_pump_sites_with_plausible_cop": 3,
-    "median_implied_cop": 2.77,
-    "implied_cops": [
-      3.84,
-      2.77,
-      2.5
-    ]
+    "2023/24 to 2024/25": {
+      "sites": 177,
+      "reporting_heat_pumps": 11,
+      "implied_cops": {
+        "SOUTHFIELD": 3.84,
+        "REGENT POINT": 2.77,
+        "HORTON HOSPITAL": 2.5
+      }
+    },
+    "2024/25 to 2025/26": {
+      "sites": 192,
+      "reporting_heat_pumps": 16,
+      "implied_cops": {
+        "THE LIFE ROOMS": 2.01,
+        "MARKET STREET HC": 1.31,
+        "AUSTEN HOUSE": 1.48,
+        "TAUNTON AMBULANCE STATION": 6.03,
+        "NORTH BRISTOL OPERATIONS CENTRE (HART)": 1.87,
+        "OTHER REPORTABLE SITES": 5.4,
+        "BROOKLANDS HOSPITAL": 7.38,
+        "PALLION AMBULANCE STATION": 1.34
+      }
+    },
+    "2023/24 to 2025/26, installed 2024/25": {
+      "sites": 201,
+      "reporting_heat_pumps": 16,
+      "implied_cops": {
+        "REGENT POINT": 3.07,
+        "AUSTEN HOUSE": 3.27,
+        "MARKET STREET HC": 1.4,
+        "TAUNTON AMBULANCE STATION": 3.03,
+        "NORTH BRISTOL OPERATIONS CENTRE (HART)": 1.29,
+        "BASSETLAW DISTRICT GENERAL HOSPITAL": 6.27,
+        "HORTON HOSPITAL": 2.72,
+        "PARKVIEW CLINIC": 7.41
+      }
+    }
+  },
+  "implied_cop_all": {
+    "sites": 13,
+    "median": 2.77
   },
   "slope": [
     {
@@ -64,6 +166,50 @@
       "slope_hi": 0.001,
       "implied_cop": null,
       "implied_cop_lo": 848.812,
+      "implied_cop_hi": null
+    },
+    {
+      "pair": "2024/25 to 2025/26",
+      "status": "new or more",
+      "sites": 27,
+      "slope": 0.129,
+      "slope_lo": 0.001,
+      "slope_hi": 0.332,
+      "implied_cop": 6.574,
+      "implied_cop_lo": 2.563,
+      "implied_cop_hi": 1316.505
+    },
+    {
+      "pair": "2024/25 to 2025/26",
+      "status": "never",
+      "sites": 1296,
+      "slope": -0.012,
+      "slope_lo": -0.024,
+      "slope_hi": -0.001,
+      "implied_cop": null,
+      "implied_cop_lo": null,
+      "implied_cop_hi": null
+    },
+    {
+      "pair": "2023/24 to 2025/26, installed 2024/25",
+      "status": "new or more",
+      "sites": 28,
+      "slope": 0.048,
+      "slope_lo": -0.065,
+      "slope_hi": 0.183,
+      "implied_cop": 17.634,
+      "implied_cop_lo": 4.651,
+      "implied_cop_hi": null
+    },
+    {
+      "pair": "2023/24 to 2025/26, installed 2024/25",
+      "status": "never",
+      "sites": 1128,
+      "slope": -0.007,
+      "slope_lo": -0.023,
+      "slope_hi": 0.007,
+      "implied_cop": null,
+      "implied_cop_lo": 114.834,
       "implied_cop_hi": null
     }
   ],

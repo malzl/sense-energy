@@ -1,4 +1,4 @@
-"""Estates Returns Information Collection (ERIC) 2023/24, site and trust tables.
+"""Estates Returns Information Collection (ERIC) 2023/24 to 2025/26, site and trust tables.
 
 Source: the ESC-provided extract in ``external/eric/`` (NHS England Digital,
 financial year 1 April 2023 - 31 March 2024). The loader keeps the fields the
@@ -52,18 +52,19 @@ YEARS = {
         "encoding": "latin-1",
         "fy": ("2024-04-01", "2025-04-01"),
     },
-    # Published 15 October 2026. The files sit behind NHS England Digital's publication page,
-    # which refuses scripted requests: download the three CSVs in a browser into
-    # external/eric_2025_26/. The names follow the 2024/25 pattern and have not been checked
-    # against the files; adjust them here if the publication changed them.
+    # Published 15 October 2026 (site and PFI tables in their second version). The files sit
+    # behind NHS England Digital's publication page, which refuses scripted requests: they were
+    # downloaded in a browser and unpacked into external/eric_2025_26/. They carry the field
+    # codes on the first row and the field names on the second.
     "2025_26": {
         "dir": EXTERNAL_DIR / "eric_2025_26",
         "files": {
-            "site": "ERIC_-_2025_26_-_Site_data.csv",
-            "trust": "ERIC_-_2025_26_-_Trust_data.csv",
-            "pfi": "ERIC_-_2025_26_-_PFI_data.csv",
+            "site": "ERIC - 2025_26 - Site data - v2.csv",
+            "trust": "ERIC - 2025_26 - Trust data.csv",
+            "pfi": "ERIC - 2025_26 - PFI data - v2.csv",
         },
         "encoding": "latin-1",
+        "header": 1,
         "fy": ("2025-04-01", "2026-04-01"),
     },
 }
@@ -165,7 +166,10 @@ def _path(kind: str, year: str):
 
 def load_site(path=None, year: str = "2023_24") -> pd.DataFrame:
     raw = pd.read_csv(
-        path or _path("site", year), low_memory=False, encoding=YEARS[year]["encoding"]
+        path or _path("site", year),
+        low_memory=False,
+        encoding=YEARS[year]["encoding"],
+        header=YEARS[year].get("header", 0),
     )
     raw = normalise_columns(raw)
     out = pd.DataFrame(
@@ -199,7 +203,10 @@ def load_site(path=None, year: str = "2023_24") -> pd.DataFrame:
 
 def load_trust(path=None, year: str = "2023_24") -> pd.DataFrame:
     raw = pd.read_csv(
-        path or _path("trust", year), low_memory=False, encoding=YEARS[year]["encoding"]
+        path or _path("trust", year),
+        low_memory=False,
+        encoding=YEARS[year]["encoding"],
+        header=YEARS[year].get("header", 0),
     )
     raw = normalise_columns(raw)
     out = raw.rename(columns={"Trust Code": "trust_code", "Trust Name": "trust_name"})

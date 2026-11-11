@@ -1,5 +1,6 @@
 """Sunshine slope of spring daytime demand (1 March to 8 May) by year at the panel sites on the
-Great British Energy solar list and at the sites that break downwards from 2025 to 2026.
+Great British Energy solar list and at the other sites that break downwards by spring 2026,
+against spring 2025 or against spring 2024, the last spring before the programme.
 
 analysis/solar_programme.py (spring_slopes.csv, spring_breaks.csv).
 """
@@ -12,9 +13,9 @@ from sense_energy.visualization import style
 s = pd.read_csv(SOLAR / "spring_slopes.csv")
 b = pd.read_csv(SOLAR / "spring_breaks.csv").set_index("site_code")
 b["role"] = None
-b.loc[b["funded"] & b["break_down"], "role"] = "funded, break"
-b.loc[b["funded"] & ~b["break_down"], "role"] = "funded, no break"
-b.loc[~b["funded"] & b["break_down"], "role"] = "not funded, break"
+b.loc[b["funded"] & b["break_any"], "role"] = "funded, break"
+b.loc[b["funded"] & ~b["break_any"], "role"] = "funded, no break"
+b.loc[~b["funded"] & b["break_any"], "role"] = "not funded, break"
 s["role"] = s["site_code"].map(b["role"])
 s = s.dropna(subset=["role"])
 fig, ax = style.figure(style.SINGLE_COLUMN)

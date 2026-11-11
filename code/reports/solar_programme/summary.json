@@ -11,8 +11,14 @@
   "funded_break_sites": [
     "RWR62"
   ],
+  "funded_sites_with_break_since_baseline": 3,
+  "funded_break_sites_since_baseline": [
+    "R0A07",
+    "RWR62",
+    "RYEA8"
+  ],
   "spring_watch": {
-    "sites": 114,
+    "sites": 118,
     "breaks_down": 3,
     "breaks_up": 6,
     "breaks_down_not_funded": [
@@ -23,35 +29,78 @@
       "RWR62": 13.0,
       "RWRD7": 31.0,
       "W6J9Z": 54.0
-    }
+    },
+    "since_baseline_breaks_down": 9,
+    "since_baseline_breaks_up": 11,
+    "since_baseline_breaks_down_sites": [
+      "R0A07",
+      "RH868",
+      "RJC46",
+      "RWR58",
+      "RWR62",
+      "RWRD7",
+      "RWRF3",
+      "RYEA8",
+      "W6J9Z"
+    ]
+  },
+  "returns_check": {
+    "returns": [
+      "2024/25",
+      "2025/26"
+    ],
+    "funded_postcodes": 181,
+    "funded_postcodes_matched": 142,
+    "funded_postcodes_new_or_grown": 22,
+    "funded_postcodes_reporting_solar_before": 35,
+    "funded_postcodes_reporting_solar_after": 44,
+    "funded": {
+      "sites": 217,
+      "reporting_solar_before": 36,
+      "reporting_solar_after": 46,
+      "gwh_before": 2.98,
+      "gwh_after": 5.47,
+      "growth_pct": 83.5
+    },
+    "not_funded": {
+      "sites": 2590,
+      "reporting_solar_before": 217,
+      "reporting_solar_after": 273,
+      "gwh_before": 22.72,
+      "gwh_after": 31.65,
+      "growth_pct": 39.3
+    },
+    "funded_added_gwh": 2.49,
+    "funded_share_of_added_pct": 21.8,
+    "funded_share_of_sites_pct": 7.7
   },
   "summer_measured": {
     "sites": 9,
     "sites_with_reported_generation": 4,
     "metered_vs_reported_kwp": {
       "RRE11": {
-        "implied_kwp_level": 215.0,
-        "eric_total_kwp": 230.0,
-        "metered_share_of_reported": 1.0,
-        "day_kw": 162.0
+        "implied_kwp_level": 214.97,
+        "eric_total_kwp": 230.08,
+        "metered_share_of_reported": 0.93,
+        "day_kw": 161.81
       },
       "RYX37": {
-        "implied_kwp_level": 52.0,
-        "eric_total_kwp": 93.0,
-        "metered_share_of_reported": 1.0,
-        "day_kw": 22.0
+        "implied_kwp_level": 51.8,
+        "eric_total_kwp": 92.68,
+        "metered_share_of_reported": 0.56,
+        "day_kw": 22.21
       },
       "RWX58": {
-        "implied_kwp_level": 8.0,
-        "eric_total_kwp": 61.0,
-        "metered_share_of_reported": 0.0,
-        "day_kw": 5.0
+        "implied_kwp_level": 7.91,
+        "eric_total_kwp": 60.68,
+        "metered_share_of_reported": 0.13,
+        "day_kw": 5.01
       },
       "RCBNH": {
-        "implied_kwp_level": 349.0,
-        "eric_total_kwp": 684.0,
-        "metered_share_of_reported": 1.0,
-        "day_kw": 120.0
+        "implied_kwp_level": 349.11,
+        "eric_total_kwp": 683.77,
+        "metered_share_of_reported": 0.51,
+        "day_kw": 119.73
       }
     }
   }

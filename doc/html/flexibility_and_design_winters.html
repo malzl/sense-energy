@@ -31,7 +31,7 @@
   <a class="h2" href="#5-design-winters-design-winter-sites-design-winter-utilisati">5. Design winters (design_winter_sites, design_winter_utilisation, design_winter_budget)</a>
   <a class="h2" href="#6-storage-against-reinforcement-design-winter-storage">6. Storage against reinforcement (design_winter_storage)</a>
   <a class="h2" href="#7-heat-pumps-in-the-field-heat-pump-field">7. Heat pumps in the field (heat_pump_field)</a>
-  <a class="h2" href="#8-the-solar-programme-from-the-meter-solar-programme-spring-">8. The solar programme from the meter (solar_programme_spring, solar_metered_vs_reported)</a>
+  <a class="h2" href="#8-the-solar-programme-from-the-meter-and-the-returns-solar-p">8. The solar programme from the meter and the returns (solar_programme_spring, solar_programme_returns, solar_metered_vs_reported)</a>
   <a class="h2" href="#9-what-this-changes">9. What this changes</a>
   <a class="h2" href="#figures">Figures</a>
   </div>
@@ -49,8 +49,9 @@ worth against it; what a load forecast is worth in a decision; whether heat pump
 connections in a cold winter and not only in 2023/24; what the estates returns say heat pumps
 did; and whether the funded hospital solar arrays can be seen from the meter.</p>
 <p>New data: ERA5 hourly temperature from 1960 at the panel's 59 grid cells (Copernicus point
-time series; contains modified Copernicus Climate Change Service information) and the list of
-NHS sites funded by Great British Energy (GOV.UK, Open Government Licence v3.0).</p>
+time series; contains modified Copernicus Climate Change Service information), the list of NHS
+sites funded by Great British Energy (GOV.UK, Open Government Licence v3.0) and the 2025/26
+estates return (NHS England, published 15 October 2026).</p>
 <h2 id="1-what-the-load-shape-costs-bill-shape-premium">1. What the load shape costs (<code>bill_shape_premium</code>)</h2>
 <div class="figrow"><figure class="inrow"><img src="figures/bill_shape_premium.png" alt="bill_shape_premium" loading="lazy"><figcaption><code>bill_shape_premium</code> <a href="figures/bill_shape_premium.pdf">PDF</a></figcaption></figure></div>
 
@@ -1296,9 +1297,11 @@ keeps gas for the coldest days.</li>
 <h2 id="7-heat-pumps-in-the-field-heat-pump-field">7. Heat pumps in the field (<code>heat_pump_field</code>)</h2>
 <div class="figrow"><figure class="inrow"><img src="figures/heat_pump_field.png" alt="heat_pump_field" loading="lazy"><figcaption><code>heat_pump_field</code> <a href="figures/heat_pump_field.pdf">PDF</a></figcaption></figure></div>
 
-<p>The two estates returns give each site's gas, electricity and count of heat pumps. Of 2,722
-English sites in both, 61 report their first heat pump in 2024/25 and 21 report more. Sites with
-CHP, a changed floor area or an implausible electricity change are left out.</p>
+<p>The three estates returns (2023/24, 2024/25, 2025/26) give each site's gas, electricity and count
+of heat pumps. A site that reports its first heat pump in 2024/25 has a full year without it
+(2023/24) and a full year with it (2025/26); 48 English sites do, 23 of them usable (no CHP, an
+unchanged floor area, a plausible electricity change, gas in the first year). Sites that never
+report a heat pump are the comparison.</p>
 <table class="dataframe data">
   <thead>
     <tr style="text-align: right;">
@@ -1307,14 +1310,13 @@ CHP, a changed floor area or an implausible electricity change are left out.</p>
       <th>sites</th>
       <th>gas_median_pct</th>
       <th>elec_median_pct</th>
-      <th>gas_fell_fifth_share</th>
-      <th>elec_rose_tenth_share</th>
       <th>gas_did_pct</th>
       <th>gas_did_lo</th>
       <th>gas_did_hi</th>
       <th>elec_did_pct</th>
       <th>elec_did_lo</th>
       <th>elec_did_hi</th>
+      <th>gas_fell_fifth_share</th>
     </tr>
   </thead>
   <tbody>
@@ -1324,14 +1326,13 @@ CHP, a changed floor area or an implausible electricity change are left out.</p>
       <td>1246</td>
       <td>1.5</td>
       <td>-0.1</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
       <td>0.2</td>
-      <td>0.2</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
     </tr>
     <tr>
       <td>2023/24 to 2024/25</td>
@@ -1339,14 +1340,13 @@ CHP, a changed floor area or an implausible electricity change are left out.</p>
       <td>68</td>
       <td>4.3</td>
       <td>-0.8</td>
-      <td>0</td>
-      <td>0.2</td>
       <td>2.8</td>
       <td>-3.7</td>
       <td>5.6</td>
       <td>-0.6</td>
       <td>-2.7</td>
       <td>2.9</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>2023/24 to 2024/25</td>
@@ -1354,14 +1354,13 @@ CHP, a changed floor area or an implausible electricity change are left out.</p>
       <td>33</td>
       <td>-1.4</td>
       <td>3.9</td>
-      <td>0.2</td>
-      <td>0.3</td>
       <td>-2.9</td>
       <td>-7.4</td>
       <td>0.9</td>
       <td>4</td>
       <td>-0.2</td>
       <td>7.6</td>
+      <td>0.2</td>
     </tr>
     <tr>
       <td>2023/24 to 2024/25</td>
@@ -1369,35 +1368,155 @@ CHP, a changed floor area or an implausible electricity change are left out.</p>
       <td>9</td>
       <td>0</td>
       <td>4.7</td>
-      <td>0.3</td>
-      <td>0.2</td>
       <td>-1.5</td>
       <td>-149.4</td>
       <td>10.4</td>
       <td>4.7</td>
       <td>-2.6</td>
       <td>18.3</td>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>never</td>
+      <td>1296</td>
+      <td>-5.4</td>
+      <td>-1</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>had already</td>
+      <td>80</td>
+      <td>-4</td>
+      <td>0.1</td>
+      <td>1.5</td>
+      <td>-3.3</td>
+      <td>5.8</td>
+      <td>1.1</td>
+      <td>-0.4</td>
+      <td>3.5</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>new</td>
+      <td>15</td>
+      <td>-16.1</td>
+      <td>5.6</td>
+      <td>-12</td>
+      <td>-35.1</td>
+      <td>-0.5</td>
+      <td>6.5</td>
+      <td>-1.4</td>
+      <td>49.4</td>
+      <td>0.5</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>more</td>
+      <td>12</td>
+      <td>-7.6</td>
+      <td>-1.7</td>
+      <td>-2.3</td>
+      <td>-10.1</td>
+      <td>18</td>
+      <td>-0.7</td>
+      <td>-6.5</td>
+      <td>8.9</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>never</td>
+      <td>1128</td>
+      <td>-4.6</td>
+      <td>-2</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>had already</td>
+      <td>41</td>
+      <td>-5.4</td>
+      <td>-3.3</td>
+      <td>-0.9</td>
+      <td>-5.2</td>
+      <td>4.9</td>
+      <td>-1.3</td>
+      <td>-4.9</td>
+      <td>4.5</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>new</td>
+      <td>23</td>
+      <td>-13.1</td>
+      <td>6.5</td>
+      <td>-9.4</td>
+      <td>-21</td>
+      <td>7.3</td>
+      <td>8.3</td>
+      <td>3.5</td>
+      <td>14.6</td>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>more</td>
+      <td>5</td>
+      <td>10.4</td>
+      <td>-10.5</td>
+      <td>14.6</td>
+      <td>-159.2</td>
+      <td>58.6</td>
+      <td>-9</td>
+      <td>-17.5</td>
+      <td>67.6</td>
+      <td>0.2</td>
     </tr>
   </tbody>
-</table><p class="source">source: <a href="data/did.csv">code/reports/heat_pump_field/did.csv</a> (4 rows shown)</p>
+</table><p class="source">source: <a href="data/did.csv">code/reports/heat_pump_field/did.csv</a> (12 rows shown)</p>
 
 <ul>
-<li><strong>Most reported heat pumps do not replace the gas.</strong> At the 33 usable sites with new heat
-pumps gas fell 2.9 points more than at sites without (interval −7.4 to +0.9) and electricity
-rose 4.0 points more (−0.2 to +7.6). Gas fell by a fifth or more at 21 % of them, against 16 %
-of the others. The field counts every unit, and most are small.</li>
-<li><strong>Three clean switches imply a COP of 2.5 to 3.8.</strong> 177 sites cut gas by a quarter or more on
-an unchanged floor area; 11 of them report heat pumps and three show electricity rising with
-it: Horton Hospital (gas −36 %, electricity +36 %, COP 2.5), Regent Point (−84 %, +8 %, 2.8)
-and Southfield (−100 %, +4 %, 3.8). The headroom work assumed 2.55.</li>
+<li><strong>A full year later the heat pumps show.</strong> Against sites without, the 23 sites use 8.3 points
+more electricity (interval +3.5 to +14.6) and 9.4 points less gas (−21.0 to +7.3, not
+significant); gas fell by a fifth or more at 35 % of them, against 22 %.</li>
+<li><strong>The installation year hides it.</strong> The same question asked within the installation year gives
++4.0 points of electricity and −2.9 of gas for 2024/25 (33 sites, neither significant), because
+the pumps ran for part of the year. The 2025/26 installers (15 sites) already show gas down 12.0
+points (−35.1 to −0.5).</li>
+<li><strong>It is partial electrification.</strong> A tenth of the gas, not all of it: the typical site added
+heat pumps to a gas system. With gas at 2.2 times electricity at these sites, a 9 % fall in gas
+and an 8 % rise in electricity are what a COP near 2 would give; the gas estimate is too
+uncertain to make that a measurement.</li>
+<li><strong>Thirteen clean switches: a median COP of 2.8.</strong> Across the three comparisons 13 sites that
+report heat pumps cut gas by a quarter or more on an unchanged floor area while electricity
+rose. Their implied COPs spread from 1.3 to 7.4 (quartiles 1.9 and 6.0), because annual returns
+are coarse; in the full-year comparison four sit between 2.7 and 3.3 (Horton Hospital, Regent
+Point, Austen House, Taunton Ambulance Station). The headroom work assumed 2.55.</li>
 <li><strong>Correction to the installation-savings reading.</strong> The three panel sites that report heat
 pumps use 32 % more electricity, but none shows gas being replaced: one has no gas, one kept
 its gas (−2 %), one changed its reporting sixfold. The 32 % is added electric load, not
 measured electrification.</li>
 </ul>
-<table class="dataframe data">
+<details class="table"><summary>Table: 30 rows</summary><table class="dataframe data">
   <thead>
     <tr style="text-align: right;">
+      <th>pair</th>
       <th>site_name</th>
       <th>site_type</th>
       <th>status</th>
@@ -1410,6 +1529,7 @@ measured electrification.</li>
   </thead>
   <tbody>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>ROYAL NATIONAL ORTHOPAEDIC HOSPITAL (BOLSOVER STREET)</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1420,6 +1540,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>CENTRAL HEALTH CLINIC SITE</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1430,6 +1551,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>DELPHWOOD</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1440,6 +1562,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>SIMMONS HOUSE</td>
       <td>Mental Health (including Specialist services)</td>
       <td>never</td>
@@ -1450,6 +1573,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>MARLBOROUGH HOUSE, EAGLESTONE</td>
       <td>Mental Health (including Specialist services)</td>
       <td>never</td>
@@ -1460,6 +1584,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>BARNEHURST AMBULANCE STATION</td>
       <td>Support Facility</td>
       <td>never</td>
@@ -1470,6 +1595,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>FURNESS BUSINESS PARK</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1480,6 +1606,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>ROTHESAY</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1490,6 +1617,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>SHARPS / LAMBETH NORTH MAP TEAM</td>
       <td>Mental Health (including Specialist services)</td>
       <td>never</td>
@@ -1500,6 +1628,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>THE PARKWAY CENTRE</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1510,6 +1639,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>SOUTHFIELD</td>
       <td>Mental Health (including Specialist services)</td>
       <td>new</td>
@@ -1520,6 +1650,7 @@ measured electrification.</li>
       <td>True</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>BRAIN INJURY REHABILITATION (SID WATKINS UNIT)</td>
       <td>Mental Health (including Specialist services)</td>
       <td>never</td>
@@ -1530,6 +1661,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>MILLOM HOSPITAL</td>
       <td>Community hospital (with inpatient beds)</td>
       <td>never</td>
@@ -1540,6 +1672,7 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
+      <td>2023/24 to 2024/25</td>
       <td>ALBION PLACE</td>
       <td>Non inpatient</td>
       <td>never</td>
@@ -1550,79 +1683,500 @@ measured electrification.</li>
       <td>False</td>
     </tr>
     <tr>
-      <td>HORTONWOOD JOINT LOAN STORE</td>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>WICHELLOWS WHARF (MENTAL HEALTH SERVICES)</td>
       <td>Non inpatient</td>
       <td>never</td>
       <td>0</td>
       <td>-100</td>
-      <td>-25.5</td>
+      <td>-41.8</td>
       <td></td>
       <td>False</td>
     </tr>
     <tr>
-      <td>BRIDGE HOUSE</td>
-      <td>Mental Health (including Specialist services)</td>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>RESIDENCIES</td>
+      <td>Non inpatient</td>
       <td>never</td>
       <td>0</td>
-      <td>-96.5</td>
-      <td>-4.5</td>
+      <td>-100</td>
+      <td>17.6</td>
+      <td>0.9</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>DELPHWOOD</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-11</td>
       <td></td>
       <td>False</td>
     </tr>
     <tr>
-      <td>RUTLAND MEMORIAL HOSPITAL</td>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>PULROSS INTERMEDIATE CARE CENTRE</td>
       <td>Community hospital (with inpatient beds)</td>
       <td>never</td>
       <td>0</td>
-      <td>-95.6</td>
-      <td>8.7</td>
-      <td>17.8</td>
+      <td>-100</td>
+      <td>1.8</td>
+      <td>14.4</td>
       <td>False</td>
     </tr>
     <tr>
-      <td>EDWARD STREET HOSPITAL</td>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>ROTHESAY</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>33.1</td>
+      <td>6.8</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>REGENT POINT</td>
+      <td>Non inpatient</td>
+      <td>new</td>
+      <td>5</td>
+      <td>-100</td>
+      <td>6.6</td>
+      <td>3.1</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>SOUTHFIELD</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>new</td>
+      <td>1</td>
+      <td>-100</td>
+      <td>-1.6</td>
+      <td>38.2</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2023/24 to 2025/26, installed 2024/25</td>
+      <td>SHARPS / LAMBETH NORTH MAP TEAM</td>
       <td>Mental Health (including Specialist services)</td>
       <td>never</td>
       <td>0</td>
-      <td>-95.6</td>
-      <td>22.3</td>
-      <td>12.2</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <td>WESTERN EYE HOSPITAL</td>
-      <td>Specialist hospital (acute only)</td>
-      <td>never</td>
-      <td>0</td>
-      <td>-94.1</td>
-      <td>64.7</td>
-      <td>1.8</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <td>HAUGHTON HOUSE, ASHTON-UNDER-LYNE</td>
-      <td>Unoccupied</td>
-      <td>never</td>
-      <td>0</td>
-      <td>-94.1</td>
-      <td>-48.4</td>
+      <td>-100</td>
+      <td>-57.3</td>
       <td></td>
       <td>False</td>
     </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>CIRTEK HOUSE</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>103.8</td>
+      <td>0</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>SCAS LOGISTICS &amp; PHARMACY UNIT</td>
+      <td>Support Facility</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>6.3</td>
+      <td>7.2</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>WICHELLOWS WHARF (MENTAL HEALTH SERVICES)</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-42.4</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>RESIDENCIES</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>10.2</td>
+      <td>0.3</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>PULROSS INTERMEDIATE CARE CENTRE</td>
+      <td>Community hospital (with inpatient beds)</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>-7.6</td>
+      <td></td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>THE LIFE ROOMS</td>
+      <td>Non inpatient</td>
+      <td>new</td>
+      <td>1</td>
+      <td>-100</td>
+      <td>63.6</td>
+      <td>2</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>REGENT POINT</td>
+      <td>Non inpatient</td>
+      <td>had already</td>
+      <td>5</td>
+      <td>-100</td>
+      <td>-1.2</td>
+      <td></td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>2024/25 to 2025/26</td>
+      <td>CAMDEN KENTISH TOWN CORE TEAM</td>
+      <td>Non inpatient</td>
+      <td>never</td>
+      <td>0</td>
+      <td>-100</td>
+      <td>12.9</td>
+      <td>10.8</td>
+      <td>False</td>
+    </tr>
   </tbody>
-</table><p class="source">source: <a href="data/switchers.csv">code/reports/heat_pump_field/switchers.csv</a> (20 rows shown)</p>
+</table></details><p class="source">source: <a href="data/switchers.csv">code/reports/heat_pump_field/switchers.csv</a> (30 rows shown)</p>
 
-<p>The 2025/26 return was published on 15 October 2026 behind a page that refuses scripted requests.
-Downloaded by hand into <code>code/data/external/eric_2025_26/</code> and loaded with
-<code>sense-energy build-eric --year 2025_26</code>, it gives the first full year after the 2024/25
-installations; this analysis picks the new pair of years up by itself.</p>
-<h2 id="8-the-solar-programme-from-the-meter-solar-programme-spring-">8. The solar programme from the meter (<code>solar_programme_spring</code>, <code>solar_metered_vs_reported</code>)</h2>
-<div class="figrow"><figure class="inrow"><img src="figures/solar_programme_spring.png" alt="solar_programme_spring" loading="lazy"><figcaption><code>solar_programme_spring</code> <a href="figures/solar_programme_spring.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_metered_vs_reported.png" alt="solar_metered_vs_reported" loading="lazy"><figcaption><code>solar_metered_vs_reported</code> <a href="figures/solar_metered_vs_reported.pdf">PDF</a></figcaption></figure></div>
+<p>The 2025/26 return (published 15 October 2026, site table in its second version) was downloaded
+by hand, because its page refuses scripted requests, and is loaded with
+<code>sense-energy build-eric --year 2025_26</code>.</p>
+<h2 id="8-the-solar-programme-from-the-meter-and-the-returns-solar-p">8. The solar programme from the meter and the returns (<code>solar_programme_spring</code>, <code>solar_programme_returns</code>, <code>solar_metered_vs_reported</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/solar_programme_spring.png" alt="solar_programme_spring" loading="lazy"><figcaption><code>solar_programme_spring</code> <a href="figures/solar_programme_spring.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_programme_returns.png" alt="solar_programme_returns" loading="lazy"><figcaption><code>solar_programme_returns</code> <a href="figures/solar_programme_returns.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_metered_vs_reported.png" alt="solar_metered_vs_reported" loading="lazy"><figcaption><code>solar_metered_vs_reported</code> <a href="figures/solar_metered_vs_reported.pdf">PDF</a></figcaption></figure></div>
 
-<p>Great British Energy's first project funds rooftop solar at NHS sites: £100 million for 187 site
-postcodes in 78 trusts, announced on 21 March 2025. Ten panel sites in eight of our trusts are on
-the list. Most arrays came after the summer of 2025, so the sunshine slope is estimated on a
-spring window (1 March to 8 May) for 2023 to 2026.</p>
+<p>Great British Energy's first project funds rooftop solar at NHS sites: £100 million for 181 site
+postcodes in 78 trusts, announced on 21 March 2025. Two views of it: the estates returns, for
+every funded site in England, and the meter, for the ten panel sites on the list.</p>
+<p><strong>In the returns.</strong> 142 of the funded postcodes match a site in both the 2024/25 and 2025/26
+returns (217 sites).</p>
+<ul>
+<li><strong>Funded sites report 84 % more solar generation in 2025/26</strong>, 3.0 to 5.5 GWh, against 39 %
+at all other sites (22.7 to 31.7 GWh). They are 8 % of the sites and 22 % of the national
+increase.</li>
+<li><strong>22 of the 142 funded postcodes show new or grown generation</strong> by March 2026; 44 report any
+solar, 35 the year before. Most of the programme is still to appear: the return's year ends a
+year after the announcement, and an array switched on during the year reports a part-year.</li>
+</ul>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_name</th>
+      <th>trust_code</th>
+      <th>site_type</th>
+      <th>funded</th>
+      <th>solar_generated_kwh_a</th>
+      <th>solar_generated_kwh_b</th>
+      <th>added_kwh</th>
+      <th>new</th>
+      <th>grew</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SOUTHAMPTON GENERAL HOSPITAL</td>
+      <td>RHM</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>62232</td>
+      <td>1650451</td>
+      <td>1588219</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>NEW CROSS HOSPITAL</td>
+      <td>RL4</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>3754011</td>
+      <td>5244405</td>
+      <td>1490394</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>ROBERT JONES &amp; AGNES HUNT ORTHOPAEDIC HOSPITAL</td>
+      <td>RL1</td>
+      <td>Specialist hospital (acute only)</td>
+      <td>True</td>
+      <td>843105</td>
+      <td>172919</td>
+      <td>886085</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>EASTBOURNE DISTRICT GENERAL HOSPITAL</td>
+      <td>RXC</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>0</td>
+      <td>836181</td>
+      <td>836181</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>NORTH TYNESIDE GENERAL HOSPITAL</td>
+      <td>RTF</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>3791</td>
+      <td>712358</td>
+      <td>708567</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>SALISBURY DISTRICT HOSPITAL</td>
+      <td>RNZ</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>231245</td>
+      <td>865266</td>
+      <td>634021</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>ROYAL SURREY COUNTY HOSPITAL</td>
+      <td>RA2</td>
+      <td>General acute hospital</td>
+      <td>True</td>
+      <td>5522</td>
+      <td>346314</td>
+      <td>340792</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>HELLESDON HOSPITAL</td>
+      <td>RMY</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>False</td>
+      <td>36</td>
+      <td>350113</td>
+      <td>314113</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>GREAT WESTERN HOSPITAL</td>
+      <td>RN3</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>0</td>
+      <td>280723</td>
+      <td>280723</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>TEWKESBURY GENERAL HOSPITAL</td>
+      <td>RTQ</td>
+      <td>Community hospital (with inpatient beds)</td>
+      <td>False</td>
+      <td>1514</td>
+      <td>265331</td>
+      <td>250191</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>NORTHERN GENERAL HOSPITAL</td>
+      <td>RHQ</td>
+      <td>General acute hospital</td>
+      <td>True</td>
+      <td>264829</td>
+      <td>5128</td>
+      <td>247971</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>NORTHGATE HOSPITAL</td>
+      <td>RX4</td>
+      <td>Mental Health and Learning Disabilities</td>
+      <td>False</td>
+      <td>78766</td>
+      <td>32499</td>
+      <td>246224</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>UNIVERSITY HOSPITAL AINTREE</td>
+      <td>REM</td>
+      <td>General acute hospital</td>
+      <td>True</td>
+      <td>0</td>
+      <td>238056</td>
+      <td>238056</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>BIRMINGHAM WOMEN'S HOSPITAL</td>
+      <td>RQ3</td>
+      <td>Specialist hospital (acute only)</td>
+      <td>False</td>
+      <td>13109</td>
+      <td>232625</td>
+      <td>219516</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>HORTON HOSPITAL</td>
+      <td>RTH</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>0</td>
+      <td>208794</td>
+      <td>208794</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>WATFORD GENERAL HOSPITAL</td>
+      <td>RWG</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>23264</td>
+      <td>432005</td>
+      <td>199365</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>TRUST HQ, SOWTON INDUSTRIAL ESTATE, EXETER</td>
+      <td>RYF</td>
+      <td>Support Facility</td>
+      <td>False</td>
+      <td>12259</td>
+      <td>198466</td>
+      <td>186207</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>WARWICK HOSPITAL</td>
+      <td>RJC</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>2461</td>
+      <td>200683</td>
+      <td>176073</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>HEARTLANDS HOSPITAL</td>
+      <td>RRK</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>127175</td>
+      <td>292575</td>
+      <td>1654</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>FOREST OF DEAN COMMUNITY HOSPITAL</td>
+      <td>RTQ</td>
+      <td>Community hospital (with inpatient beds)</td>
+      <td>False</td>
+      <td>0</td>
+      <td>163</td>
+      <td>163</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>ST HELENS HOSPITAL</td>
+      <td>RBN</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>12414</td>
+      <td>170085</td>
+      <td>157671</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>HOSPITAL OF ST CROSS</td>
+      <td>RKB</td>
+      <td>General acute hospital</td>
+      <td>False</td>
+      <td>0</td>
+      <td>148027</td>
+      <td>148027</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>UNIT 7/8, SILVER FOX WAY, COBALT BUSINESS PARK</td>
+      <td>RTF</td>
+      <td>Non inpatient</td>
+      <td>False</td>
+      <td>0</td>
+      <td>134107</td>
+      <td>134107</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>FREEMAN HOSPITAL</td>
+      <td>RTD</td>
+      <td>Specialist hospital (acute only)</td>
+      <td>True</td>
+      <td>0</td>
+      <td>11072</td>
+      <td>11072</td>
+      <td>True</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>CALLINGTON ROAD HOSPITAL</td>
+      <td>RVN</td>
+      <td>Mental Health (including Specialist services)</td>
+      <td>False</td>
+      <td>187901</td>
+      <td>297885</td>
+      <td>109984</td>
+      <td>False</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/returns_check.csv">code/reports/solar_programme/returns_check.csv</a> (25 rows shown)</p>
+
+<p><strong>At the meter.</strong> The sunshine slope is estimated on a spring window (1 March to 8 May) for 2023
+to 2026, and the spring of 2026 is compared with the spring of 2025 and with the spring of 2024,
+the last one before the programme (an array switched on during 2025 already shows in spring
+2025). Eight of the ten funded panel sites are testable.</p>
 <table class="dataframe data">
   <thead>
     <tr style="text-align: right;">
@@ -1630,15 +2184,16 @@ spring window (1 March to 8 May) for 2023 to 2026.</p>
       <th>site_name</th>
       <th>group</th>
       <th>trust_funding_gbp</th>
-      <th>trust_sites_funded</th>
+      <th>sun_2024_pct</th>
       <th>sun_2025_pct</th>
       <th>sun_2026_pct</th>
-      <th>change_pct</th>
-      <th>z</th>
-      <th>break_down</th>
+      <th>change_since_baseline_pct</th>
+      <th>z_since_baseline</th>
+      <th>break_any</th>
       <th>day_kw</th>
-      <th>implied_kwp</th>
-      <th>implied_kwp_se</th>
+      <th>implied_kwp_since_baseline</th>
+      <th>eric_solar_mwh_before</th>
+      <th>eric_solar_mwh_after</th>
     </tr>
   </thead>
   <tbody>
@@ -1647,7 +2202,6 @@ spring window (1 March to 8 May) for 2023 to 2026.</p>
       <td>Homerton University Hospital</td>
       <td></td>
       <td>1413000</td>
-      <td>1</td>
       <td></td>
       <td></td>
       <td></td>
@@ -1656,13 +2210,14 @@ spring window (1 March to 8 May) for 2023 to 2026.</p>
       <td></td>
       <td></td>
       <td></td>
+      <td>0</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>RD130</td>
       <td>Royal United Hospital</td>
       <td></td>
       <td>295000</td>
-      <td>1</td>
       <td></td>
       <td></td>
       <td></td>
@@ -1671,145 +2226,162 @@ spring window (1 March to 8 May) for 2023 to 2026.</p>
       <td></td>
       <td></td>
       <td></td>
+      <td>51.4</td>
+      <td>102.6</td>
     </tr>
     <tr>
       <td>R0A07</td>
       <td>Wythenshawe Hospital</td>
       <td>on-site CHP</td>
       <td>2076000</td>
-      <td>3</td>
+      <td>-6.4</td>
       <td>-8.8</td>
       <td>-8.7</td>
-      <td>0</td>
-      <td>0</td>
-      <td>False</td>
+      <td>-2.4</td>
+      <td>-2.7</td>
+      <td>True</td>
       <td>175.6</td>
-      <td>-0.7</td>
-      <td>28.4</td>
+      <td>61.9</td>
+      <td>380.9</td>
+      <td>441.6</td>
     </tr>
     <tr>
       <td>R0A02</td>
       <td>Manchester Royal Infirmary</td>
       <td>outpatient</td>
       <td>2076000</td>
-      <td>3</td>
+      <td>-1.3</td>
       <td>2.1</td>
       <td>1.9</td>
-      <td>-0.3</td>
-      <td>-0.2</td>
+      <td>3.2</td>
+      <td>3.2</td>
       <td>False</td>
       <td>47.7</td>
-      <td>2</td>
-      <td>10.7</td>
+      <td>-22.7</td>
+      <td></td>
+      <td></td>
     </tr>
     <tr>
       <td>RWR62</td>
       <td>The Stewarts</td>
       <td>outpatient</td>
       <td>300000</td>
-      <td>4</td>
+      <td>2</td>
       <td>0.8</td>
       <td>-15.9</td>
-      <td>-16.7</td>
-      <td>-4.2</td>
+      <td>-17.9</td>
+      <td>-4.3</td>
       <td>True</td>
       <td>5</td>
-      <td>12.6</td>
-      <td>3</td>
+      <td>13.5</td>
+      <td></td>
+      <td></td>
     </tr>
     <tr>
       <td>RQY08</td>
       <td>Tolworth Hospital</td>
       <td>inpatient</td>
       <td>296000</td>
-      <td>1</td>
+      <td>-0.5</td>
       <td>-2.2</td>
       <td>0.2</td>
-      <td>2.4</td>
-      <td>0.8</td>
+      <td>0.7</td>
+      <td>0.3</td>
       <td>False</td>
       <td>150.4</td>
-      <td>-53.7</td>
-      <td>63.5</td>
+      <td>-16.5</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>RL131</td>
       <td>Robert Jones &amp; Agnes Hunt Orthopaedic Hospital</td>
       <td>on-site CHP</td>
       <td>2407000</td>
-      <td>1</td>
+      <td>-14</td>
       <td>-17.8</td>
       <td>-15.6</td>
-      <td>2.2</td>
-      <td>0.5</td>
+      <td>-1.6</td>
+      <td>-0.4</td>
       <td>False</td>
       <td>390.9</td>
-      <td>-130.8</td>
-      <td>250.9</td>
+      <td>92.5</td>
+      <td>843.1</td>
+      <td>1729.2</td>
     </tr>
     <tr>
       <td>RYEA8</td>
       <td>Winchester &amp; Eastleigh Resource Centre</td>
       <td>outpatient</td>
       <td>1193000</td>
-      <td>4</td>
+      <td>-0.8</td>
       <td>-6.7</td>
       <td>-5.4</td>
-      <td>1.2</td>
-      <td>0.3</td>
-      <td>False</td>
+      <td>-4.6</td>
+      <td>-2.9</td>
+      <td>True</td>
       <td>7.1</td>
-      <td>-1.3</td>
-      <td>4.3</td>
+      <td>4.9</td>
+      <td>0</td>
+      <td>54</td>
     </tr>
     <tr>
       <td>RYEH2</td>
       <td>Didcot Workshop</td>
       <td>outpatient</td>
       <td>1193000</td>
-      <td>4</td>
+      <td>-0.5</td>
       <td>-4.6</td>
       <td>-0.6</td>
-      <td>4</td>
-      <td>1.8</td>
+      <td>-0.1</td>
+      <td>-0.1</td>
       <td>False</td>
       <td>5.5</td>
-      <td>-3.3</td>
-      <td>1.9</td>
+      <td>0.1</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
     <tr>
       <td>RFSDA</td>
       <td>Chesterfield  Royal Hospital</td>
       <td>inpatient</td>
       <td>6581000</td>
-      <td>1</td>
+      <td>0.6</td>
       <td>-2</td>
       <td>0.7</td>
-      <td>2.7</td>
-      <td>1.8</td>
+      <td>0.1</td>
+      <td>0.1</td>
       <td>False</td>
       <td>1660.6</td>
-      <td>-662.3</td>
-      <td>365.2</td>
+      <td>-37.3</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
   </tbody>
 </table><p class="source">source: <a href="data/funded_sites.csv">code/reports/solar_programme/funded_sites.csv</a> (10 rows shown)</p>
 
 <ul>
-<li><strong>One funded site shows its panels by spring 2026</strong>: The Stewarts (slope +0.8 to −15.9 % per
-kWh/m², z = −4.2), sized at 13 kWp of self-consumed generation. Eight of the ten are testable.</li>
-<li><strong>Chesterfield Royal, the largest award (£6.6 million), shows nothing by 8 May 2026.</strong> An array
-of 0.9 MWp or more would be visible at that meter.</li>
-<li><strong>Two sites off the list break as well</strong>: 99 Waverley Road (31 kWp, already flagged in summer
-2025) and London House (54 kWp).</li>
-<li><strong>Short windows are noisy.</strong> Six sites move the other way beyond the same threshold, so a
-spring break near it is a lead, not a finding; the funded list is what makes The Stewarts
-credible.</li>
-<li><strong>The meter measures the solar a site consumes.</strong> A break of the slope is a size: panels of k
-kWp lower daytime demand by k × 0.8 / 12 kW per kWh/m². At St George's Hospital the meter gives
-215 kWp against 230 kWp implied by the generation the return reports; where the array is larger
-than the daytime load the meter sees only the part consumed on site: 52 of 93 kWp at Potters
-Bar, 349 of 684 kWp at Bridlington, 8 of 61 kWp at Church Hill House.</li>
+<li><strong>Three funded sites show their panels</strong>: The Stewarts (slope +2.0 to −15.9 % per kWh/m²,
+z = −4.3, 13 kWp of self-consumed generation), Winchester and Eastleigh Resource Centre (−0.8 to
+−5.4, z = −2.9) and Wythenshawe Hospital (−6.4 to −8.7, z = −2.7, 62 kWp).</li>
+<li><strong>The returns agree where both speak.</strong> Wythenshawe reports 61 MWh more generation, about
+70 kWp, against 62 kWp from the meter; Winchester and Eastleigh reports its first 54 MWh. The
+three testable funded sites that report no solar (Chesterfield Royal, Tolworth, Didcot) show
+nothing at the meter either. Chesterfield Royal has the largest award (£6.6 million); an array
+of 0.9 MWp would be visible there, and by 8 May 2026 none is.</li>
+<li><strong>The meter measures the solar a site consumes.</strong> Robert Jones and Agnes Hunt doubled its
+reported generation (843 to 1,729 MWh) and the meter shows no change: a CHP site whose import
+is already near zero on sunny days exports the rest. A break of the slope is a size: panels of
+k kWp lower daytime demand by k × 0.8 / 12 kW per kWh/m². At St George's Hospital the meter
+gives 215 kWp against 230 kWp implied by the generation the return reports; where the array is
+larger than the daytime load the meter sees only the part consumed on site: 52 of 93 kWp at
+Potters Bar, 349 of 684 kWp at Bridlington, 8 of 61 kWp at Church Hill House.</li>
+<li><strong>Sites off the list break as well</strong>: St Paul's Hemel Hempstead, Mardon House, 99 Waverley
+Road, Royal Leamington Spa, London House and Little Plumstead, sized at 15 to 200 kWp.</li>
+<li><strong>Short windows are noisy.</strong> Against spring 2024, nine sites break downwards and eleven
+upwards, the upward ones up to z = 3.7. The five downward breaks at z = −4 or beyond stand on
+their own; Wythenshawe and Winchester are within the noise and rest on the returns'
+confirmation.</li>
 </ul>
 <table class="dataframe data">
   <thead>
@@ -1936,15 +2508,18 @@ third of the over-capacity sites, reinforcement or less heat at the rest.</li>
 quantile forecasts earn 2 to 3 points of it.</li>
 <li>The value of a battery is a question about the tariff. The next step is the real distribution
 charges per network area and voltage.</li>
-<li>The estates returns cannot yet measure heat pumps in the field; the 2025/26 return may.</li>
-<li>The solar watch can follow the funded programme site by site, and sizes what it finds.</li>
+<li>The estates returns do measure heat pumps once a full year is compared with a full year: 8
+points more electricity, about a tenth less gas. They show partial electrification, which is a
+smaller load than the headroom scenario of replacing all gas heat.</li>
+<li>The solar programme can be followed two ways: the returns for every funded site, the meter
+for the date and the self-consumed size. By March 2026 a sixth of the funded postcodes show it.</li>
 </ul>
 <h2 id="figures">Figures</h2>
 <p><code>bill_shape_premium</code>, <code>battery_value</code>, <code>solar_self_consumption</code>, <code>forecast_value</code>,
 <code>forecast_value_quantile</code>, <code>design_winter_sites</code>, <code>design_winter_utilisation</code>,
 <code>design_winter_budget</code>, <code>design_winter_storage</code>, <code>heat_pump_field</code>, <code>solar_programme_spring</code>,
-<code>solar_metered_vs_reported</code>.</p>
-<div class="figrow"><figure class="inrow"><img src="figures/bill_shape_premium.png" alt="bill_shape_premium" loading="lazy"><figcaption><code>bill_shape_premium</code> <a href="figures/bill_shape_premium.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/battery_value.png" alt="battery_value" loading="lazy"><figcaption><code>battery_value</code> <a href="figures/battery_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_self_consumption.png" alt="solar_self_consumption" loading="lazy"><figcaption><code>solar_self_consumption</code> <a href="figures/solar_self_consumption.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value.png" alt="forecast_value" loading="lazy"><figcaption><code>forecast_value</code> <a href="figures/forecast_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value_quantile.png" alt="forecast_value_quantile" loading="lazy"><figcaption><code>forecast_value_quantile</code> <a href="figures/forecast_value_quantile.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_sites.png" alt="design_winter_sites" loading="lazy"><figcaption><code>design_winter_sites</code> <a href="figures/design_winter_sites.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_utilisation.png" alt="design_winter_utilisation" loading="lazy"><figcaption><code>design_winter_utilisation</code> <a href="figures/design_winter_utilisation.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_budget.png" alt="design_winter_budget" loading="lazy"><figcaption><code>design_winter_budget</code> <a href="figures/design_winter_budget.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_storage.png" alt="design_winter_storage" loading="lazy"><figcaption><code>design_winter_storage</code> <a href="figures/design_winter_storage.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_pump_field.png" alt="heat_pump_field" loading="lazy"><figcaption><code>heat_pump_field</code> <a href="figures/heat_pump_field.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_programme_spring.png" alt="solar_programme_spring" loading="lazy"><figcaption><code>solar_programme_spring</code> <a href="figures/solar_programme_spring.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_metered_vs_reported.png" alt="solar_metered_vs_reported" loading="lazy"><figcaption><code>solar_metered_vs_reported</code> <a href="figures/solar_metered_vs_reported.pdf">PDF</a></figcaption></figure></div>
+<code>solar_programme_returns</code>, <code>solar_metered_vs_reported</code>.</p>
+<div class="figrow"><figure class="inrow"><img src="figures/bill_shape_premium.png" alt="bill_shape_premium" loading="lazy"><figcaption><code>bill_shape_premium</code> <a href="figures/bill_shape_premium.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/battery_value.png" alt="battery_value" loading="lazy"><figcaption><code>battery_value</code> <a href="figures/battery_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_self_consumption.png" alt="solar_self_consumption" loading="lazy"><figcaption><code>solar_self_consumption</code> <a href="figures/solar_self_consumption.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value.png" alt="forecast_value" loading="lazy"><figcaption><code>forecast_value</code> <a href="figures/forecast_value.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/forecast_value_quantile.png" alt="forecast_value_quantile" loading="lazy"><figcaption><code>forecast_value_quantile</code> <a href="figures/forecast_value_quantile.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_sites.png" alt="design_winter_sites" loading="lazy"><figcaption><code>design_winter_sites</code> <a href="figures/design_winter_sites.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_utilisation.png" alt="design_winter_utilisation" loading="lazy"><figcaption><code>design_winter_utilisation</code> <a href="figures/design_winter_utilisation.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_budget.png" alt="design_winter_budget" loading="lazy"><figcaption><code>design_winter_budget</code> <a href="figures/design_winter_budget.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/design_winter_storage.png" alt="design_winter_storage" loading="lazy"><figcaption><code>design_winter_storage</code> <a href="figures/design_winter_storage.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/heat_pump_field.png" alt="heat_pump_field" loading="lazy"><figcaption><code>heat_pump_field</code> <a href="figures/heat_pump_field.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_programme_spring.png" alt="solar_programme_spring" loading="lazy"><figcaption><code>solar_programme_spring</code> <a href="figures/solar_programme_spring.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_programme_returns.png" alt="solar_programme_returns" loading="lazy"><figcaption><code>solar_programme_returns</code> <a href="figures/solar_programme_returns.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/solar_metered_vs_reported.png" alt="solar_metered_vs_reported" loading="lazy"><figcaption><code>solar_metered_vs_reported</code> <a href="figures/solar_metered_vs_reported.pdf">PDF</a></figcaption></figure></div>
 
 <p class="meta">Built from <code>doc/flexibility_and_design_winters.md</code> by <code>sense-energy build-docs</code>.</p>
 </main>

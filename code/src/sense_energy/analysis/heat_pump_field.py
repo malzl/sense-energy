@@ -54,9 +54,22 @@ def year_pairs() -> list[tuple[str, str]]:
     return list(zip(have[:-1], have[1:], strict=True))
 
 
-def changes(before: str, after: str) -> pd.DataFrame:
+def year_triples() -> list[tuple[str, str, str]]:
+    """(before, installation year, after) for every three consecutive returns on disk: the
+    comparison of a full year before with a full year after."""
+    from ..data.eric import YEARS
+
+    have = [y for y in YEARS if (INTERIM_DIR / f"eric_{y}_site.parquet").exists()]
+    return list(zip(have[:-2], have[1:-1], have[2:], strict=True))
+
+
+def changes(before: str, after: str, installed: str | None = None) -> pd.DataFrame:
     """One row per site in both returns: heat-pump status and the changes in gas, electricity
-    and floor area, with the plausibility flag."""
+    and floor area, with the plausibility flag.
+
+    With ``installed`` (the return between the two), the status is that of the installation year:
+    ``new`` is a first heat pump reported in ``installed`` and still reported in ``after``, so
+    ``before`` and ``after`` are a full year without and a full year with it."""
     a = pd.read_parquet(INTERIM_DIR / f"eric_{before}_site.parquet")
     b = pd.read_parquet(INTERIM_DIR / f"eric_{after}_site.parquet")
     cols = ["site_code", "elec_kwh", "gas_kwh", "gia_m2", "heat_pumps", "chp_units"]
@@ -67,20 +80,42 @@ def changes(before: str, after: str) -> pd.DataFrame:
         for s in ("_a", "_b"):
             m[c + s] = m[c + s].fillna(0.0)
     hp_a, hp_b = m["heat_pumps_a"], m["heat_pumps_b"]
-    m["status"] = np.select(
-        [(hp_a == 0) & (hp_b > 0), (hp_a > 0) & (hp_b > hp_a), (hp_a > 0) & (hp_b == hp_a)],
-        ["new", "more", "had already"],
-        default="never",
-    )
-    m.loc[hp_b < hp_a, "status"] = "fewer"
-    m["pair"] = f"{before.replace('_', '/')} to {after.replace('_', '/')}"
+    label = f"{before.replace('_', '/')} to {after.replace('_', '/')}"
+    if installed is None:
+        m["status"] = np.select(
+            [(hp_a == 0) & (hp_b > 0), (hp_a > 0) & (hp_b > hp_a), (hp_a > 0) & (hp_b == hp_a)],
+            ["new", "more", "had already"],
+            default="never",
+        )
+        m.loc[hp_b < hp_a, "status"] = "fewer"
+        m["chp_units_m"] = 0.0
+    else:
+        mid = pd.read_parquet(INTERIM_DIR / f"eric_{installed}_site.parquet")
+        mid = mid[["site_code", "heat_pumps", "chp_units"]].rename(
+            columns={"heat_pumps": "heat_pumps_m", "chp_units": "chp_units_m"}
+        )
+        m = m.merge(mid, on="site_code")
+        m[["heat_pumps_m", "chp_units_m"]] = m[["heat_pumps_m", "chp_units_m"]].fillna(0.0)
+        hp_a, hp_m, hp_b = m["heat_pumps_a"], m["heat_pumps_m"], m["heat_pumps_b"]
+        m["status"] = np.select(
+            [
+                (hp_a == 0) & (hp_m > 0) & (hp_b > 0),
+                (hp_a > 0) & (hp_m > hp_a) & (hp_b >= hp_m),
+                (hp_a > 0) & (hp_m == hp_a) & (hp_b == hp_a),
+                (hp_a == 0) & (hp_m == 0) & (hp_b == 0),
+            ],
+            ["new", "more", "had already", "never"],
+            default="other",
+        )
+        label += f", installed {installed.replace('_', '/')}"
+    m["pair"] = label
     with np.errstate(divide="ignore", invalid="ignore"):
         m["dlog_elec"] = np.log(m["elec_kwh_b"] / m["elec_kwh_a"])
         m["dlog_gas"] = np.log(m["gas_kwh_b"] / m["gas_kwh_a"])
         m["dlog_area"] = np.log(m["gia_m2_b"] / m["gia_m2_a"])
     m["d_elec_kwh"] = m["elec_kwh_b"] - m["elec_kwh_a"]
     m["d_gas_kwh"] = m["gas_kwh_b"] - m["gas_kwh_a"]
-    m["no_chp"] = (m["chp_units_a"] == 0) & (m["chp_units_b"] == 0)
+    m["no_chp"] = (m["chp_units_a"] == 0) & (m["chp_units_b"] == 0) & (m["chp_units_m"] == 0)
     m["plausible"] = (
         (m["elec_kwh_a"] > 0)
         & (m["elec_kwh_b"] > 0)
@@ -216,10 +251,26 @@ def panel_sites(m: pd.DataFrame) -> pd.DataFrame:
     ]
 
 
+def _new_summary(d: pd.DataFrame, pair: str) -> dict | None:
+    g = d[d["pair"] == pair]
+    if not (g["status"] == "new").any():
+        return None
+    new, never = g[g["status"] == "new"].iloc[0], g[g["status"] == "never"].iloc[0]
+    return {
+        "sites": int(new["sites"]),
+        "gas_did_pct": round(float(new["gas_did_pct"]), 1),
+        "gas_did_ci": [round(float(new["gas_did_lo"]), 1), round(float(new["gas_did_hi"]), 1)],
+        "elec_did_pct": round(float(new["elec_did_pct"]), 1),
+        "elec_did_ci": [round(float(new["elec_did_lo"]), 1), round(float(new["elec_did_hi"]), 1)],
+        "gas_fell_fifth_share": round(float(new["gas_fell_fifth_share"]), 3),
+        "gas_fell_fifth_share_never": round(float(never["gas_fell_fifth_share"]), 3),
+    }
+
+
 def run() -> dict:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    pairs = year_pairs()
-    all_m = [changes(a, b) for a, b in pairs]
+    all_m = [changes(a, b) for a, b in year_pairs()]
+    all_m += [changes(a, b, installed=mid) for a, mid, b in year_triples()]
     m = pd.concat(all_m, ignore_index=True)
     m.drop(columns=["trust_name"]).to_csv(OUT_DIR / "site_changes.csv", index=False)
     d = pd.concat([did(x) for x in all_m], ignore_index=True)
@@ -231,42 +282,40 @@ def run() -> dict:
     ps = panel_sites(all_m[0])
     ps.to_csv(OUT_DIR / "panel_sites.csv", index=False)
 
-    first = all_m[0]
     hp_sw = sw[sw["reports_heat_pump"] & sw["implied_cop"].between(1.0, 8.0)]
-    new = d[d["status"] == "new"].iloc[0] if (d["status"] == "new").any() else None
-    never = d[d["status"] == "never"].iloc[0]
+    labels = [x["pair"].iloc[0] for x in all_m]
     summary = {
-        "pairs": [x["pair"].iloc[0] for x in all_m],
-        "sites_in_both": int(len(first)),
-        "status_counts": first["status"].value_counts().to_dict(),
-        "usable_counts": first[first["usable"]]["status"].value_counts().to_dict(),
-        "new_heat_pump_sites": None
-        if new is None
-        else {
-            "sites": int(new["sites"]),
-            "gas_did_pct": round(float(new["gas_did_pct"]), 1),
-            "gas_did_ci": [round(float(new["gas_did_lo"]), 1), round(float(new["gas_did_hi"]), 1)],
-            "elec_did_pct": round(float(new["elec_did_pct"]), 1),
-            "elec_did_ci": [
-                round(float(new["elec_did_lo"]), 1),
-                round(float(new["elec_did_hi"]), 1),
-            ],
-            "gas_fell_fifth_share": round(float(new["gas_fell_fifth_share"]), 3),
-            "gas_fell_fifth_share_never": round(float(never["gas_fell_fifth_share"]), 3),
+        "pairs": labels,
+        "sites": {x["pair"].iloc[0]: int(len(x)) for x in all_m},
+        "status_counts": {x["pair"].iloc[0]: x["status"].value_counts().to_dict() for x in all_m},
+        "usable_counts": {
+            x["pair"].iloc[0]: x[x["usable"]]["status"].value_counts().to_dict() for x in all_m
         },
+        "new_heat_pump_sites": {lab: _new_summary(d, lab) for lab in labels},
         "switchers": {
-            "sites": int(len(sw)),
-            "reporting_heat_pumps": int(sw["reports_heat_pump"].sum()),
-            "heat_pump_sites_with_plausible_cop": int(len(hp_sw)),
-            "median_implied_cop": round(float(hp_sw["implied_cop"].median()), 2)
+            lab: {
+                "sites": int((sw["pair"] == lab).sum()),
+                "reporting_heat_pumps": int(sw.loc[sw["pair"] == lab, "reports_heat_pump"].sum()),
+                "implied_cops": dict(
+                    zip(
+                        hp_sw.loc[hp_sw["pair"] == lab, "site_name"],
+                        hp_sw.loc[hp_sw["pair"] == lab, "implied_cop"].round(2),
+                        strict=True,
+                    )
+                ),
+            }
+            for lab in labels
+        },
+        "implied_cop_all": {
+            "sites": int(hp_sw["site_code"].nunique()),
+            "median": round(float(hp_sw.drop_duplicates("site_code")["implied_cop"].median()), 2)
             if len(hp_sw)
             else None,
-            "implied_cops": hp_sw["implied_cop"].round(2).tolist(),
         },
         "slope": sl.round(3).to_dict(orient="records"),
         "panel_sites": ps.round(1).to_dict(orient="records"),
     }
     text = json.dumps(summary, indent=2, default=float).replace("NaN", "null")
     (OUT_DIR / "summary.json").write_text(text + "\n")
-    logger.info("heat pumps in the field: %s", json.dumps(summary["switchers"]))
+    logger.info("heat pumps in the field: %s", json.dumps(summary["implied_cop_all"]))
     return {"summary": summary}

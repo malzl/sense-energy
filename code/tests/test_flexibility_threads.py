@@ -152,3 +152,58 @@ def test_era5_cells_and_daily_stats():
     d = ets.daily_stats(h).set_index("date")
     assert d.loc["2000-01-02", "t_max"] == 23.0 and d.loc["2000-01-02", "t_mean"] == 11.5
     assert len(d) == 3
+
+
+def test_full_year_comparison_uses_the_installation_year(tmp_path, monkeypatch):
+    monkeypatch.setattr(hpf, "INTERIM_DIR", tmp_path)
+    base = {
+        "elec_kwh": 100e3,
+        "gas_kwh": 400e3,
+        "gia_m2": 1000.0,
+        "chp_units": 0.0,
+        "site_name": "s",
+        "site_type": "t",
+        "trust_name": "x",
+    }
+    codes = ["installed", "late", "never"]
+    hp = {"2023_24": [0, 0, 0], "2024_25": [2, 0, 0], "2025_26": [2, 1, 0]}
+    for year, counts in hp.items():
+        d = pd.DataFrame(
+            [
+                {"site_code": c, "heat_pumps": float(k), **base}
+                for c, k in zip(codes, counts, strict=True)
+            ]
+        )
+        d.to_parquet(tmp_path / f"eric_{year}_site.parquet")
+    m = hpf.changes("2023_24", "2025_26", installed="2024_25").set_index("site_code")
+    assert m.loc["installed", "status"] == "new"
+    assert m.loc["late", "status"] == "other"  # first reported after the installation year
+    assert m.loc["never", "status"] == "never"
+    assert "installed 2024/25" in m["pair"].iloc[0]
+
+
+def test_returns_check_splits_funded_postcodes(tmp_path, monkeypatch):
+    monkeypatch.setattr(sp, "INTERIM_DIR", tmp_path)
+    gbe = tmp_path / "gbe.csv"
+    gbe.write_text(
+        "ODS Trust Code,Trust name,Region,Postcode(s), No. , Funding , Savings \n"
+        "RXX,SOME TRUST,LONDON,AB1 2CD,1,100000,x\n",
+        encoding="latin-1",
+    )
+    monkeypatch.setattr(sp, "GBE_FILE", gbe)
+    monkeypatch.setattr(sp.funded_postcodes, "__defaults__", (gbe,))
+    cols = {"site_name": "s", "trust_code": "RXX", "site_type": "t"}
+    a = pd.DataFrame(
+        [
+            {"site_code": "F", "postcode": "AB1 2CD", "solar_generated_kwh": 0.0, **cols},
+            {"site_code": "N", "postcode": "ZZ9 9ZZ", "solar_generated_kwh": 100.0, **cols},
+        ]
+    )
+    b = a.copy()
+    b["solar_generated_kwh"] = [50.0, 110.0]
+    a.to_parquet(tmp_path / "eric_2024_25_site.parquet")
+    b.to_parquet(tmp_path / "eric_2025_26_site.parquet")
+    table, s = sp.returns_check()
+    assert s["funded_postcodes_new_or_grown"] == 1 and s["funded"]["sites"] == 1
+    assert s["funded_share_of_added_pct"] == pytest.approx(100 * 50 / 60, abs=0.1)
+    assert table.set_index("site_code").loc["F", "new"]

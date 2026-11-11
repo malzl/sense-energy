@@ -8,6 +8,11 @@ slope is estimated here on a spring window (1 March to 8 May, the last day of th
 2023 to 2026, with the same design: daytime (06:00-18:00) demand on site x spring x solar
 radiation, site x (cold dose, heat dose), specification B's fixed effects, Driscoll-Kraay errors.
 CHP sites are kept (their meters record import) and marked.
+The spring of 2026 is compared with the spring before it and with the spring of 2024, the last one
+before the programme.
+
+``returns_check`` looks at the programme in the estates returns: the solar generation every
+English site reports for 2024/25 and 2025/26, at funded postcodes and elsewhere.
 
 A break in the slope has a size. Panels of ``k`` kWp generate ``PR x G`` kWh per kWp on a day with
 ``G`` kWh/m2, nearly all inside the daytime window, so they lower the window's mean demand by
@@ -42,6 +47,7 @@ WINDOW = ((3, 1), (5, 8))  # 1 March to 8 May
 MIN_DAYS = 45
 DAY_WINDOW_H = 12.0
 BREAK_PTS, BREAK_Z = sw.BREAK_PTS, sw.BREAK_Z
+BASELINE_SPRING = 2024  # the last spring before the programme was announced (21 March 2025)
 
 
 def _norm(pc: str) -> str:
@@ -148,23 +154,103 @@ def implied_kwp(change_pct: pd.Series, day_kw: pd.Series) -> pd.Series:
 
 
 def breaks(slopes: pd.DataFrame, last: int = SPRINGS[-1]) -> pd.DataFrame:
-    """Change of each site's slope from the previous spring to the last one."""
+    """Change of each site's slope to the last spring: from the spring before it, and from
+    ``BASELINE_SPRING``, the last spring before the programme was announced (an array switched
+    on during 2025 already shows in the spring of 2025)."""
     p = slopes.pivot(index="site_code", columns="spring", values=["slope_pct", "se_pct", "day_kw"])
     out = pd.DataFrame(index=p.index)
     for y in SPRINGS:
         out[f"sun_{y}_pct"] = p.get(("slope_pct", y), np.nan)
-    prev = last - 1
-    out["change_pct"] = p[("slope_pct", last)] - p[("slope_pct", prev)]
-    out["change_se"] = np.sqrt(p[("se_pct", last)] ** 2 + p[("se_pct", prev)] ** 2)
-    out["z"] = out["change_pct"] / out["change_se"]
-    out["break_down"] = (out["change_pct"] < BREAK_PTS) & (out["z"] < BREAK_Z)
-    out["break_up"] = (out["change_pct"] > -BREAK_PTS) & (out["z"] > -BREAK_Z)
     out["day_kw"] = p[("day_kw", last)]
-    out["implied_kwp"] = implied_kwp(out["change_pct"], out["day_kw"])
-    out["implied_kwp_se"] = (
-        DAY_WINDOW_H * out["change_se"] / 100 * out["day_kw"] / fx.PERFORMANCE_RATIO
+    for prev, tag in ((last - 1, ""), (BASELINE_SPRING, "_since_baseline")):
+        ch = p[("slope_pct", last)] - p[("slope_pct", prev)]
+        se = np.sqrt(p[("se_pct", last)] ** 2 + p[("se_pct", prev)] ** 2)
+        out[f"change{tag}_pct"] = ch
+        out[f"change{tag}_se"] = se
+        out[f"z{tag}"] = ch / se
+        out[f"break_down{tag}"] = (ch < BREAK_PTS) & (ch / se < BREAK_Z)
+        out[f"break_up{tag}"] = (ch > -BREAK_PTS) & (ch / se > -BREAK_Z)
+        out[f"implied_kwp{tag}"] = implied_kwp(ch, out["day_kw"])
+        out[f"implied_kwp{tag}_se"] = DAY_WINDOW_H * se / 100 * out["day_kw"] / fx.PERFORMANCE_RATIO
+    out["break_any"] = out["break_down"] | out["break_down_since_baseline"]
+    return out.dropna(subset=["change_pct", "change_since_baseline_pct"], how="all")
+
+
+def returns_check(before: str = "2024_25", after: str = "2025_26") -> tuple[pd.DataFrame, dict]:
+    """The programme in the estates returns: solar generation reported by every English site in
+    both returns, at funded postcodes and elsewhere."""
+    pa, pb = (INTERIM_DIR / f"eric_{y}_site.parquet" for y in (before, after))
+    if not (pa.exists() and pb.exists()):
+        return pd.DataFrame(), {}
+    a, b = pd.read_parquet(pa), pd.read_parquet(pb)
+    m = a[["site_code", "solar_generated_kwh"]].merge(
+        b[["site_code", "site_name", "trust_code", "postcode", "site_type", "solar_generated_kwh"]],
+        on="site_code",
+        suffixes=("_a", "_b"),
     )
-    return out.dropna(subset=["change_pct"])
+    for c in ("solar_generated_kwh_a", "solar_generated_kwh_b"):
+        m[c] = m[c].fillna(0.0)
+    fp = funded_postcodes()
+    m["postcode_norm"] = m["postcode"].map(_norm)
+    m["funded"] = m["postcode_norm"].isin(set(fp["postcode_norm"]))
+    m["added_kwh"] = m["solar_generated_kwh_b"] - m["solar_generated_kwh_a"]
+    m["new"] = (m["solar_generated_kwh_a"] == 0) & (m["solar_generated_kwh_b"] > 0)
+    m["grew"] = (m["solar_generated_kwh_a"] > 0) & (
+        m["solar_generated_kwh_b"] > 1.5 * m["solar_generated_kwh_a"]
+    )
+    pc = (
+        m[m["funded"]]
+        .groupby("postcode_norm")
+        .agg(
+            new=("new", "any"),
+            grew=("grew", "any"),
+            before=("solar_generated_kwh_a", "sum"),
+            after=("solar_generated_kwh_b", "sum"),
+        )
+    )
+
+    def part(g: pd.DataFrame) -> dict:
+        return {
+            "sites": int(len(g)),
+            "reporting_solar_before": int((g["solar_generated_kwh_a"] > 0).sum()),
+            "reporting_solar_after": int((g["solar_generated_kwh_b"] > 0).sum()),
+            "gwh_before": round(float(g["solar_generated_kwh_a"].sum() / 1e6), 2),
+            "gwh_after": round(float(g["solar_generated_kwh_b"].sum() / 1e6), 2),
+            "growth_pct": round(
+                100
+                * float(g["solar_generated_kwh_b"].sum() / g["solar_generated_kwh_a"].sum() - 1),
+                1,
+            ),
+        }
+
+    total_added = float(m["added_kwh"].sum())
+    funded_added = float(m.loc[m["funded"], "added_kwh"].sum())
+    summary = {
+        "returns": [before.replace("_", "/"), after.replace("_", "/")],
+        "funded_postcodes": int(fp["postcode_norm"].nunique()),
+        "funded_postcodes_matched": int(len(pc)),
+        "funded_postcodes_new_or_grown": int((pc["new"] | pc["grew"]).sum()),
+        "funded_postcodes_reporting_solar_before": int((pc["before"] > 0).sum()),
+        "funded_postcodes_reporting_solar_after": int((pc["after"] > 0).sum()),
+        "funded": part(m[m["funded"]]),
+        "not_funded": part(m[~m["funded"]]),
+        "funded_added_gwh": round(funded_added / 1e6, 2),
+        "funded_share_of_added_pct": round(100 * funded_added / total_added, 1),
+        "funded_share_of_sites_pct": round(100 * float(m["funded"].mean()), 1),
+    }
+    cols = [
+        "site_code",
+        "site_name",
+        "trust_code",
+        "site_type",
+        "funded",
+        "solar_generated_kwh_a",
+        "solar_generated_kwh_b",
+        "added_kwh",
+        "new",
+        "grew",
+    ]
+    return m[cols].sort_values("added_kwh", ascending=False), summary
 
 
 def site_yield(sites: list[str]) -> pd.Series:
@@ -261,20 +347,32 @@ def run() -> dict:
                 "change_pct",
                 "z",
                 "break_down",
+                "change_since_baseline_pct",
+                "z_since_baseline",
+                "break_down_since_baseline",
+                "break_any",
                 "day_kw",
                 "implied_kwp",
                 "implied_kwp_se",
+                "implied_kwp_since_baseline",
+                "implied_kwp_since_baseline_se",
                 "implied_mwh_year",
             ]
         ],
         how="left",
     )
+    returns, returns_summary = returns_check()
+    if len(returns):
+        r = returns.set_index("site_code")
+        fund["eric_solar_mwh_before"] = r["solar_generated_kwh_a"].reindex(fund.index) / 1000.0
+        fund["eric_solar_mwh_after"] = r["solar_generated_kwh_b"].reindex(fund.index) / 1000.0
+        returns.to_csv(OUT_DIR / "returns_check.csv", index=False)
     fund.to_csv(OUT_DIR / "funded_sites.csv")
     measured = summer_measured()
     measured.to_csv(OUT_DIR / "summer_measured.csv", index=False)
 
     fp = funded_postcodes()
-    tested = fund.dropna(subset=["change_pct"])
+    tested = fund.dropna(subset=["change_pct", "change_since_baseline_pct"], how="all")
     both = measured[measured["eric_total_kwp"] > 0]
     summary = {
         "programme": {
@@ -289,13 +387,21 @@ def run() -> dict:
         "funded_sites_tested": int(len(tested)),
         "funded_sites_with_break": int(tested["break_down"].sum()),
         "funded_break_sites": tested.index[tested["break_down"]].tolist(),
+        "funded_sites_with_break_since_baseline": int(tested["break_down_since_baseline"].sum()),
+        "funded_break_sites_since_baseline": tested.index[
+            tested["break_down_since_baseline"].fillna(False).astype(bool)
+        ].tolist(),
         "spring_watch": {
             "sites": int(len(b)),
             "breaks_down": int(b["break_down"].sum()),
             "breaks_up": int(b["break_up"].sum()),
             "breaks_down_not_funded": b.index[b["break_down"] & ~b["funded"]].tolist(),
             "implied_kwp_at_breaks": b.loc[b["break_down"], "implied_kwp"].round(0).to_dict(),
+            "since_baseline_breaks_down": int(b["break_down_since_baseline"].sum()),
+            "since_baseline_breaks_up": int(b["break_up_since_baseline"].sum()),
+            "since_baseline_breaks_down_sites": b.index[b["break_down_since_baseline"]].tolist(),
         },
+        "returns_check": returns_summary,
         "summer_measured": {
             "sites": int(len(measured)),
             "sites_with_reported_generation": int(len(both)),
