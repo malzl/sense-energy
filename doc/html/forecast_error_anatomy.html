@@ -1,0 +1,3271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where the day-ahead error sits, and what can remove it · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
+  <a href="forecast_error_anatomy.html" class="current">Where the day-ahead error sits, and what can remove it</a>
+  <a href="heat_cold_wave_paper_check.html">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
+
+  <div class="toc"><a class="h2" href="#the-answers-in-short">The answers in short</a>
+  <a class="h2" href="#1-level-and-shape-level-oracle-models">1. Level and shape (level_oracle_models)</a>
+  <a class="h2" href="#2-decisions-value-plans">2. Decisions (value_plans)</a>
+  <a class="h2" href="#3-on-site-generation-error-share-groups-error-by-step-chp-si">3. On-site generation (error_share_groups, error_by_step, chp_size_adjusted)</a>
+  <a class="h2" href="#4-doctor-strikes-as-a-shock-to-activity-strike-effect-strike">4. Doctor strikes as a shock to activity (strike_effect, strike_profile)</a>
+  <a class="h2" href="#5-footfall-footfall-partial-footfall-elasticity-mobility-for">5. Footfall (footfall_partial, footfall_elasticity, mobility_forecast_difference)</a>
+  <a class="h2" href="#6-kinds-of-day-every-day-of-the-test-window-daily-error-by-k">6. Kinds of day, every day of the test window (daily_error_by_kind)</a>
+  <a class="h2" href="#7-heat-and-cold-waves-wave-error-wave-value">7. Heat and cold waves (wave_error, wave_value)</a>
+  <a class="h2" href="#8-history-and-issue-time-context-length-issue-time-error-iss">8. History and issue time (context_length, issue_time_error, issue_value)</a>
+  <a class="h2" href="#9-what-this-says-about-the-research-avenue">9. What this says about the research avenue</a>
+  <a class="h2" href="#10-limits">10. Limits</a>
+  <a class="h2" href="#reproduce">Reproduce</a>
+  </div>
+</nav>
+<main>
+<h1>Where the day-ahead error sits, and what can remove it</h1>
+<p>The test of the two hypotheses behind the forecast finding of the kickoff deck, 14 November
+2026, all on CPU. Commands: <code>forecast-probes</code> (new forecasts), <code>forecast-anatomy</code> (tables).
+Modules: <code>code/src/sense_energy/analysis/forecast_anatomy.py</code>,
+<code>experiments/forecast_probe.py</code>, <code>data/strikes.py</code>. Tables in
+<code>code/reports/forecast_anatomy/</code>, figures from <code>code/scripts/forecast_anatomy/</code>.</p>
+<p>The proof of concept (<code>doc/poc_results.md</code>) ended with a research avenue, &quot;train a compact
+prior-data fitted network with occupancy and mobility signals; measure it in decisions, not
+only in error&quot;, and two hypotheses:</p>
+<ul>
+<li><strong>H1.</strong> Occupancy and mobility signals decrease the error on atypical days.</li>
+<li><strong>H2.</strong> On-site generation causes most of the rest of the error.</li>
+</ul>
+<p>What the page answers: where the error of the best models is (which sites, which days, level
+or shape, error or decision value); whether activity moves electricity at all (doctor strikes,
+footfall); what more history or a later issue time gives; and what heat and cold waves do.</p>
+<p>New forecasts, all Chronos-2 with no training: every day of the test window (91 sites, 342
+days, 31,122 forecasts), four shorter histories, two issue times on the target day, and seven
+variants with footfall at the three sites that have it. New data: the dates of the national
+doctor strikes (British Medical Association and government notices).</p>
+<h2 id="the-answers-in-short">The answers in short</h2>
+<ul>
+<li><strong>H2 holds, in part.</strong> The 12 sites with on-site CHP have 50 % of the metered demand and
+79 % of the forecast error in kWh; three of them have 57 %. Half of that is their size: over
+their total demand (import plus reported generation) the error is 6.4 %, where sites of that
+size without a plant have about 3.4 %. What the plant adds is 37 % of all the panel's error.</li>
+<li><strong>The plant error is steps.</strong> On 15 % of their days the import of a CHP site steps by more
+than its own mean within two hours, with no pattern from the last four weeks. Those days are
+2 % of all site-days and hold 42 % of all error. A forecast issued at 06:00 on the day itself
+does not see them either: the error at these sites falls from 19.1 % to 17.1 %.</li>
+<li><strong>H1 has no support.</strong> On 34 doctor-strike weekdays away from holidays, demand between 08:00
+and 18:00 changes by −0.4 % (95 % interval −1.6 to +0.8); no hour of the day moves by 2 %.
+The elasticity of demand to daily footfall is 0.00 at the three sites with counts. A model
+that is given the true footfall of the target day forecasts no better: +0.006 points of error
+(−0.012 to +0.024), where calendar, price and weather inputs take 0.86 points off.</li>
+<li><strong>A daily signal has little to give.</strong> A perfect forecast of each day's mean level takes the
+error of the best model from 11.5 % to 10.1 % and its decision value from 53 % to 63 % of the
+achievable peak cut. The rest is the shape of the day.</li>
+<li><strong>History: two weeks are enough.</strong> 12.7 % error with two weeks of context, 12.2 % with six;
+one week gives 16.4 %.</li>
+<li><strong>Heat waves cost value, not accuracy.</strong> Against the other days of the same site and month,
+heat-wave days have 14.7 % against 13.2 % error, but a battery that plans on the forecast
+keeps 33 % against 50 % of the achievable peak cut. With forecast weather among the inputs
+the best model keeps 40 %.</li>
+<li><strong>The research avenue changes.</strong> The compact models trained on the panel are behind the
+pre-trained ones (13.7 to 14.6 % against 11.5 %), and the signals the avenue named carry no
+information for electricity. The signal that is missing is the state of the plant.</li>
+</ul>
+<h2 id="1-level-and-shape-level-oracle-models">1. Level and shape (<code>level_oracle_models</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/level_oracle_models.png" alt="level_oracle_models" loading="lazy"><figcaption><code>level_oracle_models</code> <a href="figures/level_oracle_models.pdf">PDF</a></figcaption></figure></div>
+
+<p>For each site-day the forecast is rescaled to the day's true mean. The error that is left is
+shape; the part that went is what any daily signal (occupancy, footfall, plant state as a
+daily value) could give at most. A signal that changes the class of the day's shape, such as
+a holiday flag, can give more.</p>
+<figure class="single"><img src="figures/level_oracle_models.png" alt="level_oracle_models" loading="lazy"><figcaption>Day-ahead error of each model (filled) and of the same forecast with the day's true level (open). 91 sites, 69 test days, site mean of the normalised absolute error. <code>level_oracle_models</code> <a href="figures/level_oracle_models.pdf">PDF</a></figcaption></figure>
+
+<div class="chart" id="chart1"></div><p class="source">interactive; source: <a href="data/table_models.csv">code/reports/forecast_anatomy/table_models.csv</a></p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>level_share_pct</th>
+      <th>captured_point_pct</th>
+      <th>captured_q70_pct</th>
+      <th>captured_level_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>11.5</td>
+      <td>10.1</td>
+      <td>19.5</td>
+      <td>53.3</td>
+      <td>55.2</td>
+      <td>63.2</td>
+    </tr>
+    <tr>
+      <td>timesfm3_ifs</td>
+      <td>11.7</td>
+      <td>10.2</td>
+      <td>21</td>
+      <td>49.8</td>
+      <td>52.8</td>
+      <td>61</td>
+    </tr>
+    <tr>
+      <td>tabpfn_ts_ifs</td>
+      <td>12.1</td>
+      <td>10.7</td>
+      <td>16</td>
+      <td>50.8</td>
+      <td>53.7</td>
+      <td>61.2</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>12.2</td>
+      <td>10.6</td>
+      <td>19.6</td>
+      <td>51.1</td>
+      <td>52.7</td>
+      <td>61.6</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>13</td>
+      <td>11</td>
+      <td>28.2</td>
+      <td>47.7</td>
+      <td>47.2</td>
+      <td>55.3</td>
+    </tr>
+    <tr>
+      <td>tnp</td>
+      <td>13.7</td>
+      <td>11.3</td>
+      <td>29</td>
+      <td>49.3</td>
+      <td>40.3</td>
+      <td>58.2</td>
+    </tr>
+    <tr>
+      <td>tnp_ifs</td>
+      <td>14</td>
+      <td>11.4</td>
+      <td>32</td>
+      <td>47.5</td>
+      <td>42.5</td>
+      <td>53.8</td>
+    </tr>
+    <tr>
+      <td>pttnp</td>
+      <td>14.1</td>
+      <td>11.7</td>
+      <td>31.4</td>
+      <td>47.4</td>
+      <td>38.6</td>
+      <td>60.5</td>
+    </tr>
+    <tr>
+      <td>gtnp</td>
+      <td>14.6</td>
+      <td>12.3</td>
+      <td>28.3</td>
+      <td>46.9</td>
+      <td>42.5</td>
+      <td>52.7</td>
+    </tr>
+    <tr>
+      <td>seasonal_naive</td>
+      <td>18.4</td>
+      <td>14.2</td>
+      <td>40.1</td>
+      <td>40.1</td>
+      <td></td>
+      <td>55.1</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_models.csv">code/reports/forecast_anatomy/table_models.csv</a> (10 rows shown)</p>
+
+<ul>
+<li><strong>A fifth of the error of the pre-trained models is level</strong>: 11.5 % becomes 10.1 % for
+Chronos-2 with forecast weather. The models trained on the panel have more to gain (28 to
+32 % of their error is level), the seasonal naive forecast 40 %.</li>
+<li><strong>With the true level the models are within two points of each other</strong> (10.1 to 12.3 %).
+What separates them today is mostly how well they place the level of the day.</li>
+</ul>
+<h2 id="2-decisions-value-plans">2. Decisions (<code>value_plans</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/value_plans.png" alt="value_plans" loading="lazy"><figcaption><code>value_plans</code> <a href="figures/value_plans.pdf">PDF</a></figcaption></figure></div>
+
+<p>The decision is the one of <code>doc/flexibility_and_design_winters.md</code>: a battery (20 % of mean
+demand, two hours) sets a threshold for the day from the forecast and defends it in real time.
+The score is the share of the peak cut that perfect foresight achieves.</p>
+<figure class="single"><img src="figures/value_plans.png" alt="value_plans" loading="lazy"><figcaption>Share of the achievable peak cut by plan: on the median forecast, on its 70 % quantile, and on the median with the day's true level. <code>value_plans</code> <a href="figures/value_plans.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>sites</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>level_share_pct</th>
+      <th>error_share_pct</th>
+      <th>demand_share_pct</th>
+      <th>captured_point_pct</th>
+      <th>captured_q70_pct</th>
+      <th>captured_level_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>inpatient</td>
+      <td>33</td>
+      <td>10.4</td>
+      <td>9.5</td>
+      <td>13.6</td>
+      <td>12.4</td>
+      <td>35</td>
+      <td>57.5</td>
+      <td>63.1</td>
+      <td>67.6</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>12</td>
+      <td>15.5</td>
+      <td>13.3</td>
+      <td>20.6</td>
+      <td>78.6</td>
+      <td>50.3</td>
+      <td>52</td>
+      <td>51.4</td>
+      <td>61.4</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>46</td>
+      <td>11.3</td>
+      <td>9.6</td>
+      <td>17.7</td>
+      <td>9</td>
+      <td>14.8</td>
+      <td>49</td>
+      <td>52.3</td>
+      <td>60.6</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_groups.csv">code/reports/forecast_anatomy/table_groups.csv</a> (3 rows shown)</p>
+
+<ul>
+<li><strong>53 % with the best forecast, 55 % with its 70 % quantile, 63 % with the true daily level.</strong>
+A perfect daily signal is worth ten points; 37 points stay out of reach of any signal that
+only moves the level.</li>
+<li><strong>By group</strong>: inpatient sites 57.5 % (63.1 % on the quantile), CHP sites 52.0 % (51.4 %),
+outpatient sites 49.0 % (52.3 %). Planning on a high quantile helps where the error is noise
+and not where it is a plant.</li>
+</ul>
+<h2 id="3-on-site-generation-error-share-groups-error-by-step-chp-si">3. On-site generation (<code>error_share_groups</code>, <code>error_by_step</code>, <code>chp_size_adjusted</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/error_share_groups.png" alt="error_share_groups" loading="lazy"><figcaption><code>error_share_groups</code> <a href="figures/error_share_groups.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/error_by_step.png" alt="error_by_step" loading="lazy"><figcaption><code>error_by_step</code> <a href="figures/error_by_step.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/chp_size_adjusted.png" alt="chp_size_adjusted" loading="lazy"><figcaption><code>chp_size_adjusted</code> <a href="figures/chp_size_adjusted.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/error_share_groups.png" alt="error_share_groups" loading="lazy"><figcaption>Share of the panel's metered demand and of its forecast error by site group, best model. <code>error_share_groups</code> <a href="figures/error_share_groups.pdf">PDF</a></figcaption></figure>
+
+<p><strong>Steps.</strong> For each site-day: the largest difference between the mean of the next two hours and
+the mean of the last two hours, after the site's usual profile (median of the same half-hour
+and weekday in the last four weeks) is taken out, as a share of the site's mean demand.</p>
+<figure class="single"><img src="figures/error_by_step.png" alt="error_by_step" loading="lazy"><figcaption>Share of the panel's error by the size of the day's largest unexplained step, by site group. Best model, 69 test days. <code>error_by_step</code> <a href="figures/error_by_step.pdf">PDF</a></figcaption></figure>
+
+<div class="chart" id="chart2"></div><p class="source">interactive; source: <a href="data/error_by_group_step.csv">code/reports/forecast_anatomy/error_by_group_step.csv</a></p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>step_bin</th>
+      <th>site_days</th>
+      <th>day_share_of_group_pct</th>
+      <th>nmae_kwh_weighted_pct</th>
+      <th>error_share_pct</th>
+      <th>demand_share_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>inpatient</td>
+      <td>under 10 %</td>
+      <td>433</td>
+      <td>19.6</td>
+      <td>2.3</td>
+      <td>4.5</td>
+      <td>23.2</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>10 to 25 %</td>
+      <td>658</td>
+      <td>29.7</td>
+      <td>6.2</td>
+      <td>3.9</td>
+      <td>7.6</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>25 to 50 %</td>
+      <td>661</td>
+      <td>29.9</td>
+      <td>10.1</td>
+      <td>2.6</td>
+      <td>3.1</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>50 to 100 %</td>
+      <td>379</td>
+      <td>17.1</td>
+      <td>16.1</td>
+      <td>1.1</td>
+      <td>0.8</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>over 100 %</td>
+      <td>81</td>
+      <td>3.7</td>
+      <td>19.7</td>
+      <td>0.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>under 10 %</td>
+      <td>172</td>
+      <td>21</td>
+      <td>3.7</td>
+      <td>2.8</td>
+      <td>9.2</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>10 to 25 %</td>
+      <td>208</td>
+      <td>25.3</td>
+      <td>11.6</td>
+      <td>10.9</td>
+      <td>11.3</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>25 to 50 %</td>
+      <td>167</td>
+      <td>20.3</td>
+      <td>12.6</td>
+      <td>7.5</td>
+      <td>7.2</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>50 to 100 %</td>
+      <td>156</td>
+      <td>19</td>
+      <td>18.2</td>
+      <td>14.4</td>
+      <td>9.6</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>over 100 %</td>
+      <td>118</td>
+      <td>14.4</td>
+      <td>39.9</td>
+      <td>43.1</td>
+      <td>13.1</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>under 10 %</td>
+      <td>628</td>
+      <td>20.5</td>
+      <td>4.4</td>
+      <td>1.4</td>
+      <td>3.9</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>10 to 25 %</td>
+      <td>1104</td>
+      <td>36.1</td>
+      <td>6.3</td>
+      <td>3.9</td>
+      <td>7.6</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>25 to 50 %</td>
+      <td>710</td>
+      <td>23.2</td>
+      <td>10.8</td>
+      <td>1.8</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>50 to 100 %</td>
+      <td>401</td>
+      <td>13.1</td>
+      <td>19</td>
+      <td>1</td>
+      <td>0.7</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>over 100 %</td>
+      <td>218</td>
+      <td>7.1</td>
+      <td>21</td>
+      <td>0.7</td>
+      <td>0.4</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/error_by_group_step.csv">code/reports/forecast_anatomy/error_by_group_step.csv</a> (15 rows shown)</p>
+
+<ul>
+<li><strong>Steps larger than the site's mean demand: 14 % of CHP site-days, 43 % of all error</strong> (69
+test days; 15 % and 42 % on all 342 days). On these days the error is 40 % of the import. At
+sites without CHP such days are 4 to 7 % of the days and 1 % of the error.</li>
+<li><strong>The steps are a plant that starts or stops.</strong> In the example the import is 0.4 MW at
+night, 2.7 MW from 09:00 to 18:00 and 0.4 MW again; the forecast peaks at 0.8 MW.</li>
+</ul>
+<figure class="single"><img src="figures/switch_day_example.png" alt="switch_day_example" loading="lazy"><figcaption>One CHP site on 27 January 2026: observed grid import, the day-ahead median of the best model and its 80 % interval. <code>switch_day_example</code> <a href="figures/switch_day_example.pdf">PDF</a></figcaption></figure>
+
+<p><strong>Size.</strong> The meter of a CHP site records import. With the plant's reported share of the
+site's electricity (estates returns, <code>chp_dispatch</code>), total demand is import / (1 − share). The
+error of a site without a plant falls with its size (slope −0.21 in logs); the line gives the
+error to expect at the total demand of each CHP site.</p>
+<figure class="single"><img src="figures/chp_size_adjusted.png" alt="chp_size_adjusted" loading="lazy"><figcaption>Error against site size. Blue: sites without CHP and their fitted line. Filled: CHP sites, error over import. Open: the same error over total demand. <code>chp_size_adjusted</code> <a href="figures/chp_size_adjusted.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>mean_kw</th>
+      <th>chp_share</th>
+      <th>total_kw</th>
+      <th>nmae_pct</th>
+      <th>error_of_total_pct</th>
+      <th>expected_nmae_pct</th>
+      <th>error_mwh</th>
+      <th>expected_error_mwh</th>
+      <th>plant_added_mwh</th>
+      <th>error_share_pct</th>
+      <th>big_step_days</th>
+      <th>days</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RH801</td>
+      <td>1015.73</td>
+      <td>0.64</td>
+      <td>2803.87</td>
+      <td>22.98</td>
+      <td>8.33</td>
+      <td>3.13</td>
+      <td>386.61</td>
+      <td>145.25</td>
+      <td>241.37</td>
+      <td>21.46</td>
+      <td>14</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RXN02</td>
+      <td>769.18</td>
+      <td>0.78</td>
+      <td>3535.87</td>
+      <td>26.26</td>
+      <td>5.71</td>
+      <td>2.98</td>
+      <td>334.43</td>
+      <td>174.3</td>
+      <td>160.13</td>
+      <td>18.57</td>
+      <td>27</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RKB01</td>
+      <td>843.02</td>
+      <td>0.76</td>
+      <td>3556</td>
+      <td>22.5</td>
+      <td>5.33</td>
+      <td>2.97</td>
+      <td>300.42</td>
+      <td>167.47</td>
+      <td>132.95</td>
+      <td>16.68</td>
+      <td>18</td>
+      <td>66</td>
+    </tr>
+    <tr>
+      <td>R0A66</td>
+      <td>603.13</td>
+      <td>0.48</td>
+      <td>1149.29</td>
+      <td>12.65</td>
+      <td>6.64</td>
+      <td>3.79</td>
+      <td>126.32</td>
+      <td>72.04</td>
+      <td>54.28</td>
+      <td>7.01</td>
+      <td>13</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RL131</td>
+      <td>425.45</td>
+      <td>0.43</td>
+      <td>744.27</td>
+      <td>17.48</td>
+      <td>9.99</td>
+      <td>4.15</td>
+      <td>123.12</td>
+      <td>51.2</td>
+      <td>71.93</td>
+      <td>6.84</td>
+      <td>5</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RXN01</td>
+      <td>239.04</td>
+      <td>0.61</td>
+      <td>620.35</td>
+      <td>16.74</td>
+      <td>6.45</td>
+      <td>4.32</td>
+      <td>66.25</td>
+      <td>44.37</td>
+      <td>21.88</td>
+      <td>3.68</td>
+      <td>9</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>R0A07</td>
+      <td>191.07</td>
+      <td>0.68</td>
+      <td>598.61</td>
+      <td>6.66</td>
+      <td>2.12</td>
+      <td>4.35</td>
+      <td>20.45</td>
+      <td>41.89</td>
+      <td>-21.44</td>
+      <td>1.14</td>
+      <td>0</td>
+      <td>67</td>
+    </tr>
+    <tr>
+      <td>RRERS</td>
+      <td>51.1</td>
+      <td>0.49</td>
+      <td>99.48</td>
+      <td>22.83</td>
+      <td>11.73</td>
+      <td>6.39</td>
+      <td>19.04</td>
+      <td>10.37</td>
+      <td>8.67</td>
+      <td>1.06</td>
+      <td>25</td>
+      <td>68</td>
+    </tr>
+    <tr>
+      <td>RJC46</td>
+      <td>110.09</td>
+      <td>0</td>
+      <td>110.35</td>
+      <td>10.35</td>
+      <td>10.32</td>
+      <td>6.25</td>
+      <td>18.86</td>
+      <td>11.42</td>
+      <td>7.44</td>
+      <td>1.05</td>
+      <td>3</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RQ301</td>
+      <td>281.19</td>
+      <td></td>
+      <td>281.19</td>
+      <td>2.59</td>
+      <td>2.59</td>
+      <td>5.12</td>
+      <td>12.07</td>
+      <td>23.82</td>
+      <td>-11.75</td>
+      <td>0.67</td>
+      <td>0</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RN325</td>
+      <td>24.81</td>
+      <td></td>
+      <td>24.81</td>
+      <td>15.66</td>
+      <td>15.66</td>
+      <td>8.6</td>
+      <td>6.44</td>
+      <td>3.53</td>
+      <td>2.9</td>
+      <td>0.36</td>
+      <td>3</td>
+      <td>69</td>
+    </tr>
+    <tr>
+      <td>RYX08</td>
+      <td>12.87</td>
+      <td></td>
+      <td>12.87</td>
+      <td>9.35</td>
+      <td>9.35</td>
+      <td>9.89</td>
+      <td>1.99</td>
+      <td>2.11</td>
+      <td>-0.12</td>
+      <td>0.11</td>
+      <td>1</td>
+      <td>69</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/chp_size_adjusted.csv">code/reports/forecast_anatomy/chp_size_adjusted.csv</a> (12 rows shown)</p>
+
+<ul>
+<li><strong>CHP sites: 50 % of the import, 75 % of the total demand, 79 % of the error.</strong> Their error
+is 18.9 % of import and 6.4 % of total demand; sites without a plant would have 3.4 % at that
+size. The plant adds 47 % of these sites' error, which is 37 % of the panel's.</li>
+<li><strong>The line is extrapolated.</strong> The largest site without CHP has 1.5 MW and an error of 1.9 %;
+the three largest CHP sites have 2.8 to 3.5 MW of total demand. With that site's rate in
+place of the line for those three, the plant's part is 47 %.</li>
+<li><strong>One CHP site has no excess</strong>: a plant that runs flat (capacity factor 0.84, no large step
+in 67 test days) leaves an import that is forecast better than its size predicts (2.1 %
+against 4.4 %). The error comes with the switching, not with the plant.</li>
+<li><strong>Known-ahead inputs help a little more where the plant follows no signal</strong>: calendar, price
+and weather take 0.9 points off at the nine sites whose plant follows price or the red band
+and 1.3 points at the three that do not (<code>chp_dispatch_gain.csv</code>).</li>
+</ul>
+<h2 id="4-doctor-strikes-as-a-shock-to-activity-strike-effect-strike">4. Doctor strikes as a shock to activity (<code>strike_effect</code>, <code>strike_profile</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/strike_effect.png" alt="strike_effect" loading="lazy"><figcaption><code>strike_effect</code> <a href="figures/strike_effect.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/strike_profile.png" alt="strike_profile" loading="lazy"><figcaption><code>strike_profile</code> <a href="figures/strike_profile.pdf">PDF</a></figcaption></figure></div>
+
+<p>Nineteen national rounds of industrial action by junior (resident) doctors and consultants fall
+inside the record: 70 strike days, of which 34 are weekdays away from holidays, 18 are weekdays
+next to Christmas or Easter and 18 are weekend days. On these days hospitals cancelled elective
+operations and outpatient appointments in large numbers. Daily demand against the same site,
+month and weekday, with weather by site group and calendar controls; pseudo-strikes one week
+before and after as placebos; standard errors clustered by site and date.</p>
+<figure class="single"><img src="figures/strike_effect.png" alt="strike_effect" loading="lazy"><figcaption>Change in demand between 08:00 and 18:00 on strike days and on the placebo days, all sites, with 95 % intervals. <code>strike_effect</code> <a href="figures/strike_effect.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 35 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>outcome</th>
+      <th>term</th>
+      <th>site_type</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>effect_pct</th>
+      <th>lo_pct</th>
+      <th>hi_pct</th>
+      <th>p</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, away from holidays</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>3562</td>
+      <td>34</td>
+      <td>-0.68</td>
+      <td>-1.62</td>
+      <td>0.27</td>
+      <td>0.16</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, next to Christmas or Easter</td>
+      <td>all sites</td>
+      <td>131</td>
+      <td>1899</td>
+      <td>18</td>
+      <td>-1.29</td>
+      <td>-2.71</td>
+      <td>0.15</td>
+      <td>0.08</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekend day</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>2032</td>
+      <td>18</td>
+      <td>-1.39</td>
+      <td>-2.9</td>
+      <td>0.15</td>
+      <td>0.08</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>one week before (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4046</td>
+      <td>38</td>
+      <td>0.05</td>
+      <td>-0.87</td>
+      <td>0.99</td>
+      <td>0.91</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>one week after (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4634</td>
+      <td>44</td>
+      <td>-0.25</td>
+      <td>-1.17</td>
+      <td>0.69</td>
+      <td>0.61</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>3562</td>
+      <td>34</td>
+      <td>-0.4</td>
+      <td>-1.6</td>
+      <td>0.81</td>
+      <td>0.52</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, next to Christmas or Easter</td>
+      <td>all sites</td>
+      <td>131</td>
+      <td>1899</td>
+      <td>18</td>
+      <td>-2.2</td>
+      <td>-3.96</td>
+      <td>-0.4</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekend day</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>2032</td>
+      <td>18</td>
+      <td>-0.84</td>
+      <td>-2.87</td>
+      <td>1.24</td>
+      <td>0.43</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>one week before (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4046</td>
+      <td>38</td>
+      <td>-0.07</td>
+      <td>-1.19</td>
+      <td>1.06</td>
+      <td>0.9</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>one week after (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4634</td>
+      <td>44</td>
+      <td>-0.13</td>
+      <td>-1.3</td>
+      <td>1.06</td>
+      <td>0.83</td>
+    </tr>
+    <tr>
+      <td>00:00 to 06:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>3560</td>
+      <td>34</td>
+      <td>-0.91</td>
+      <td>-1.78</td>
+      <td>-0.04</td>
+      <td>0.04</td>
+    </tr>
+    <tr>
+      <td>00:00 to 06:00</td>
+      <td>strike weekday, next to Christmas or Easter</td>
+      <td>all sites</td>
+      <td>131</td>
+      <td>1899</td>
+      <td>18</td>
+      <td>-0.77</td>
+      <td>-2.22</td>
+      <td>0.7</td>
+      <td>0.31</td>
+    </tr>
+    <tr>
+      <td>00:00 to 06:00</td>
+      <td>strike weekend day</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>2030</td>
+      <td>18</td>
+      <td>-1.29</td>
+      <td>-3.1</td>
+      <td>0.56</td>
+      <td>0.17</td>
+    </tr>
+    <tr>
+      <td>00:00 to 06:00</td>
+      <td>one week before (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4046</td>
+      <td>38</td>
+      <td>-0.03</td>
+      <td>-1.03</td>
+      <td>0.98</td>
+      <td>0.95</td>
+    </tr>
+    <tr>
+      <td>00:00 to 06:00</td>
+      <td>one week after (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4634</td>
+      <td>44</td>
+      <td>-0.55</td>
+      <td>-1.63</td>
+      <td>0.54</td>
+      <td>0.32</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, away from holidays</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>3560</td>
+      <td>34</td>
+      <td>0.56</td>
+      <td>-0.44</td>
+      <td>1.57</td>
+      <td>0.27</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, next to Christmas or Easter</td>
+      <td>all sites</td>
+      <td>131</td>
+      <td>1899</td>
+      <td>18</td>
+      <td>-1.46</td>
+      <td>-2.95</td>
+      <td>0.06</td>
+      <td>0.06</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekend day</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>2030</td>
+      <td>18</td>
+      <td>0.47</td>
+      <td>-1.44</td>
+      <td>2.41</td>
+      <td>0.63</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>one week before (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4046</td>
+      <td>38</td>
+      <td>-0.07</td>
+      <td>-0.99</td>
+      <td>0.86</td>
+      <td>0.89</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>one week after (placebo)</td>
+      <td>all sites</td>
+      <td>132</td>
+      <td>4634</td>
+      <td>44</td>
+      <td>0.43</td>
+      <td>-0.69</td>
+      <td>1.55</td>
+      <td>0.46</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, away from holidays</td>
+      <td>acute, no CHP</td>
+      <td>36</td>
+      <td>860</td>
+      <td>34</td>
+      <td>-0.59</td>
+      <td>-1.8</td>
+      <td>0.64</td>
+      <td>0.35</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>acute, no CHP</td>
+      <td>36</td>
+      <td>860</td>
+      <td>34</td>
+      <td>-0.42</td>
+      <td>-2.05</td>
+      <td>1.23</td>
+      <td>0.61</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, away from holidays</td>
+      <td>acute, no CHP</td>
+      <td>36</td>
+      <td>860</td>
+      <td>34</td>
+      <td>0.78</td>
+      <td>-0.64</td>
+      <td>2.23</td>
+      <td>0.29</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, away from holidays</td>
+      <td>acute, CHP import</td>
+      <td>20</td>
+      <td>464</td>
+      <td>34</td>
+      <td>-1.71</td>
+      <td>-5.4</td>
+      <td>2.13</td>
+      <td>0.38</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>acute, CHP import</td>
+      <td>20</td>
+      <td>464</td>
+      <td>34</td>
+      <td>-0.86</td>
+      <td>-5.12</td>
+      <td>3.59</td>
+      <td>0.7</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, away from holidays</td>
+      <td>acute, CHP import</td>
+      <td>20</td>
+      <td>462</td>
+      <td>34</td>
+      <td>1.36</td>
+      <td>-2.56</td>
+      <td>5.42</td>
+      <td>0.5</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, away from holidays</td>
+      <td>mental health</td>
+      <td>37</td>
+      <td>1206</td>
+      <td>34</td>
+      <td>0.08</td>
+      <td>-1.06</td>
+      <td>1.22</td>
+      <td>0.9</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>mental health</td>
+      <td>37</td>
+      <td>1206</td>
+      <td>34</td>
+      <td>0.07</td>
+      <td>-1.41</td>
+      <td>1.57</td>
+      <td>0.93</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, away from holidays</td>
+      <td>mental health</td>
+      <td>37</td>
+      <td>1206</td>
+      <td>34</td>
+      <td>0.28</td>
+      <td>-0.89</td>
+      <td>1.47</td>
+      <td>0.64</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, away from holidays</td>
+      <td>community</td>
+      <td>31</td>
+      <td>882</td>
+      <td>34</td>
+      <td>-0.94</td>
+      <td>-1.85</td>
+      <td>-0.02</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>community</td>
+      <td>31</td>
+      <td>882</td>
+      <td>34</td>
+      <td>-0.39</td>
+      <td>-1.8</td>
+      <td>1.04</td>
+      <td>0.59</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, away from holidays</td>
+      <td>community</td>
+      <td>31</td>
+      <td>882</td>
+      <td>34</td>
+      <td>0.48</td>
+      <td>-1.37</td>
+      <td>2.36</td>
+      <td>0.61</td>
+    </tr>
+    <tr>
+      <td>whole day</td>
+      <td>strike weekday, away from holidays</td>
+      <td>ambulance</td>
+      <td>8</td>
+      <td>150</td>
+      <td>34</td>
+      <td>-0.73</td>
+      <td>-1.99</td>
+      <td>0.54</td>
+      <td>0.26</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00</td>
+      <td>strike weekday, away from holidays</td>
+      <td>ambulance</td>
+      <td>8</td>
+      <td>150</td>
+      <td>34</td>
+      <td>-1.13</td>
+      <td>-3.23</td>
+      <td>1.02</td>
+      <td>0.3</td>
+    </tr>
+    <tr>
+      <td>08:00 to 18:00 against night</td>
+      <td>strike weekday, away from holidays</td>
+      <td>ambulance</td>
+      <td>8</td>
+      <td>150</td>
+      <td>34</td>
+      <td>-1.47</td>
+      <td>-3.45</td>
+      <td>0.56</td>
+      <td>0.16</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/strike_effect.csv">code/reports/forecast_anatomy/strike_effect.csv</a> (35 rows shown)</p>
+
+<ul>
+<li><strong>No effect of the working day.</strong> 08:00 to 18:00: −0.40 % (−1.60 to +0.81). Whole day:
+−0.68 % (−1.62 to +0.27). Working hours against the night of the same day: +0.56 % (−0.44
+to +1.57), the wrong sign for an activity effect.</li>
+<li><strong>Hour by hour nothing moves by 2 %.</strong> The largest value is −1.9 % at 08:00 (interval −4.1
+to +0.4); the week after, with no strike, shows −1.5 % in the same hour.</li>
+<li><strong>Next to Christmas and Easter the working hours are 2.2 % lower</strong> (−4.0 to −0.4). Those
+weeks drift with the holidays whether there is a strike or not, which is why they are kept
+apart.</li>
+<li><strong>By site type</strong> the acute sites without CHP show −0.42 % (−2.05 to +1.23) in working
+hours; no type shows an effect in working hours.</li>
+<li><strong>The forecast is not too high on strike days.</strong> In the every-day run its median bias is
+−0.9 to −1.6 % on strike days against −0.2 to −0.5 % on typical days.</li>
+</ul>
+<figure class="single"><img src="figures/strike_profile.png" alt="strike_profile" loading="lazy"><figcaption>The strike effect by hour of the day with its 95 % interval; the pseudo-strikes one week before and after as lines. <code>strike_profile</code> <a href="figures/strike_profile.pdf">PDF</a></figcaption></figure>
+
+<h2 id="5-footfall-footfall-partial-footfall-elasticity-mobility-for">5. Footfall (<code>footfall_partial</code>, <code>footfall_elasticity</code>, <code>mobility_forecast_difference</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/footfall_partial.png" alt="footfall_partial" loading="lazy"><figcaption><code>footfall_partial</code> <a href="figures/footfall_partial.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/footfall_elasticity.png" alt="footfall_elasticity" loading="lazy"><figcaption><code>footfall_elasticity</code> <a href="figures/footfall_elasticity.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/mobility_forecast_difference.png" alt="mobility_forecast_difference" loading="lazy"><figcaption><code>mobility_forecast_difference</code> <a href="figures/mobility_forecast_difference.pdf">PDF</a></figcaption></figure></div>
+
+<p>Daily footfall counts exist for three sites of one trust in 2024 (The Oxford Partnership,
+research licence).</p>
+<p><strong>In a regression.</strong> Log daily demand on log daily footfall within month and weekday, weather
+and holidays held fixed, Newey-West standard errors; the footfall of the university campus in
+the same city as the placebo.</p>
+<figure class="single"><img src="figures/footfall_partial.png" alt="footfall_partial" loading="lazy"><figcaption>Daily demand against daily footfall, both with month, weekday, weather and holidays taken out. <code>footfall_partial</code> <a href="figures/footfall_partial.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>site_code</th>
+      <th>model</th>
+      <th>term</th>
+      <th>days</th>
+      <th>elasticity</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>p</th>
+      <th>partial_r2</th>
+      <th>raw_corr</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RH801</td>
+      <td>own footfall</td>
+      <td>log_visits</td>
+      <td>366</td>
+      <td>-0.002</td>
+      <td>-0.182</td>
+      <td>0.178</td>
+      <td>0.982</td>
+      <td>0</td>
+      <td>0.018</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>campus footfall (placebo)</td>
+      <td>log_uni</td>
+      <td>366</td>
+      <td>0.277</td>
+      <td>0.097</td>
+      <td>0.457</td>
+      <td>0.003</td>
+      <td>0.038</td>
+      <td>0.131</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>both</td>
+      <td>log_visits</td>
+      <td>366</td>
+      <td>-0.226</td>
+      <td>-0.472</td>
+      <td>0.02</td>
+      <td>0.072</td>
+      <td>0.049</td>
+      <td>0.018</td>
+    </tr>
+    <tr>
+      <td>RH801</td>
+      <td>both</td>
+      <td>log_uni</td>
+      <td>366</td>
+      <td>0.357</td>
+      <td>0.128</td>
+      <td>0.587</td>
+      <td>0.002</td>
+      <td>0.049</td>
+      <td>0.131</td>
+    </tr>
+    <tr>
+      <td>RH802</td>
+      <td>own footfall</td>
+      <td>log_visits</td>
+      <td>366</td>
+      <td>-0.012</td>
+      <td>-0.047</td>
+      <td>0.023</td>
+      <td>0.5</td>
+      <td>0.002</td>
+      <td>0.43</td>
+    </tr>
+    <tr>
+      <td>RH802</td>
+      <td>campus footfall (placebo)</td>
+      <td>log_uni</td>
+      <td>366</td>
+      <td>-0.019</td>
+      <td>-0.048</td>
+      <td>0.011</td>
+      <td>0.214</td>
+      <td>0.008</td>
+      <td>0.503</td>
+    </tr>
+    <tr>
+      <td>RH802</td>
+      <td>both</td>
+      <td>log_visits</td>
+      <td>366</td>
+      <td>-0.003</td>
+      <td>-0.039</td>
+      <td>0.034</td>
+      <td>0.887</td>
+      <td>0.008</td>
+      <td>0.43</td>
+    </tr>
+    <tr>
+      <td>RH802</td>
+      <td>both</td>
+      <td>log_uni</td>
+      <td>366</td>
+      <td>-0.018</td>
+      <td>-0.05</td>
+      <td>0.014</td>
+      <td>0.268</td>
+      <td>0.008</td>
+      <td>0.503</td>
+    </tr>
+    <tr>
+      <td>RH8K6</td>
+      <td>own footfall</td>
+      <td>log_visits</td>
+      <td>366</td>
+      <td>0.001</td>
+      <td>-0.028</td>
+      <td>0.029</td>
+      <td>0.965</td>
+      <td>0</td>
+      <td>0.503</td>
+    </tr>
+    <tr>
+      <td>RH8K6</td>
+      <td>campus footfall (placebo)</td>
+      <td>log_uni</td>
+      <td>366</td>
+      <td>-0.01</td>
+      <td>-0.044</td>
+      <td>0.025</td>
+      <td>0.578</td>
+      <td>0.001</td>
+      <td>0.416</td>
+    </tr>
+    <tr>
+      <td>RH8K6</td>
+      <td>both</td>
+      <td>log_visits</td>
+      <td>366</td>
+      <td>0.006</td>
+      <td>-0.027</td>
+      <td>0.038</td>
+      <td>0.74</td>
+      <td>0.002</td>
+      <td>0.503</td>
+    </tr>
+    <tr>
+      <td>RH8K6</td>
+      <td>both</td>
+      <td>log_uni</td>
+      <td>366</td>
+      <td>-0.012</td>
+      <td>-0.052</td>
+      <td>0.027</td>
+      <td>0.546</td>
+      <td>0.002</td>
+      <td>0.416</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/mobility_regression.csv">code/reports/forecast_anatomy/mobility_regression.csv</a> (12 rows shown)</p>
+
+<ul>
+<li><strong>Elasticity 0.00 at all three sites</strong>: −0.002 (−0.18 to +0.18) at the CHP site, −0.012
+(−0.047 to +0.023) and +0.001 (−0.028 to +0.029) at the other two. The raw correlations of
+0.43 and 0.50 are the weekly rhythm that both series share.</li>
+<li><strong>The placebo is &quot;significant&quot; at the CHP site</strong> (0.28, p = 0.003): a warning about what a
+noisy import series can show.</li>
+</ul>
+<p><strong>In the forecast.</strong> Chronos-2 for every day from 13 February to 31 December 2024 with the
+proof of concept's inputs (calendar, price, weather) and the footfall added in context: the
+count of the last complete day; the count of the target day itself (a perfect footfall
+forecast); the campus count of the target day (placebo); and the last two again with one week
+of history. Paired differences with 95 % intervals from resampling weeks.</p>
+<figure class="single"><img src="figures/mobility_forecast_difference.png" alt="mobility_forecast_difference" loading="lazy"><figcaption>Change in error when the model gets the footfall, two sites without CHP. Below zero the footfall helps. <code>mobility_forecast_difference</code> <a href="figures/mobility_forecast_difference.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>sites</th>
+      <th>kind</th>
+      <th>model</th>
+      <th>site_days</th>
+      <th>nmae_pct</th>
+      <th>crps_pct</th>
+      <th>coverage_80</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_base</td>
+      <td>969</td>
+      <td>10.859</td>
+      <td>8.966</td>
+      <td>0.768</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_base_ctx336</td>
+      <td>969</td>
+      <td>14.147</td>
+      <td>11.497</td>
+      <td>0.774</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>969</td>
+      <td>10.871</td>
+      <td>8.983</td>
+      <td>0.77</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle_ctx336</td>
+      <td>969</td>
+      <td>14.234</td>
+      <td>11.529</td>
+      <td>0.787</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_plain</td>
+      <td>969</td>
+      <td>11.759</td>
+      <td>9.63</td>
+      <td>0.764</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_prev_day</td>
+      <td>969</td>
+      <td>10.885</td>
+      <td>8.993</td>
+      <td>0.773</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_uni_oracle</td>
+      <td>969</td>
+      <td>10.842</td>
+      <td>8.966</td>
+      <td>0.771</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_base</td>
+      <td>39</td>
+      <td>8.173</td>
+      <td>6.35</td>
+      <td>0.779</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_base_ctx336</td>
+      <td>39</td>
+      <td>11.058</td>
+      <td>8.862</td>
+      <td>0.783</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_oracle</td>
+      <td>39</td>
+      <td>8.141</td>
+      <td>6.309</td>
+      <td>0.784</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_oracle_ctx336</td>
+      <td>39</td>
+      <td>10.41</td>
+      <td>8.572</td>
+      <td>0.819</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_plain</td>
+      <td>39</td>
+      <td>12.428</td>
+      <td>10.219</td>
+      <td>0.658</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_prev_day</td>
+      <td>39</td>
+      <td>8.162</td>
+      <td>6.372</td>
+      <td>0.785</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>holiday or Christmas</td>
+      <td>mob_uni_oracle</td>
+      <td>39</td>
+      <td>8.358</td>
+      <td>6.453</td>
+      <td>0.778</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_mobility.csv">code/reports/forecast_anatomy/table_mobility.csv</a> (14 rows shown)</p>
+
+<details class="table"><summary>Table: 48 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>sites</th>
+      <th>kind</th>
+      <th>model</th>
+      <th>against</th>
+      <th>metric</th>
+      <th>diff_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.026</td>
+      <td>-0.037</td>
+      <td>0.095</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.027</td>
+      <td>-0.014</td>
+      <td>0.071</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.011</td>
+      <td>-0.029</td>
+      <td>0.057</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.016</td>
+      <td>-0.013</td>
+      <td>0.046</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>-0.017</td>
+      <td>-0.062</td>
+      <td>0.028</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>-0.001</td>
+      <td>-0.034</td>
+      <td>0.033</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>nMAE</td>
+      <td>0.028</td>
+      <td>-0.023</td>
+      <td>0.078</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>CRPS</td>
+      <td>0.017</td>
+      <td>-0.02</td>
+      <td>0.052</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>nMAE</td>
+      <td>0.086</td>
+      <td>0.008</td>
+      <td>0.168</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>CRPS</td>
+      <td>0.032</td>
+      <td>-0.024</td>
+      <td>0.086</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>nMAE</td>
+      <td>-0.9</td>
+      <td>-1.286</td>
+      <td>-0.525</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>all days</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>CRPS</td>
+      <td>-0.664</td>
+      <td>-0.978</td>
+      <td>-0.344</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>-0.027</td>
+      <td>-0.132</td>
+      <td>0.089</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.001</td>
+      <td>-0.073</td>
+      <td>0.072</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.009</td>
+      <td>-0.092</td>
+      <td>0.154</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.024</td>
+      <td>-0.048</td>
+      <td>0.119</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.012</td>
+      <td>-0.1</td>
+      <td>0.132</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.023</td>
+      <td>-0.046</td>
+      <td>0.102</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>nMAE</td>
+      <td>-0.003</td>
+      <td>-0.079</td>
+      <td>0.078</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>CRPS</td>
+      <td>0.001</td>
+      <td>-0.059</td>
+      <td>0.064</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>nMAE</td>
+      <td>0.061</td>
+      <td>-0.111</td>
+      <td>0.235</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>CRPS</td>
+      <td>0.035</td>
+      <td>-0.088</td>
+      <td>0.157</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>nMAE</td>
+      <td>-1.348</td>
+      <td>-2.042</td>
+      <td>-0.688</td>
+    </tr>
+    <tr>
+      <td>all three sites</td>
+      <td>not typical</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>CRPS</td>
+      <td>-1.003</td>
+      <td>-1.603</td>
+      <td>-0.433</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.01</td>
+      <td>-0.013</td>
+      <td>0.036</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.012</td>
+      <td>-0.006</td>
+      <td>0.031</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.006</td>
+      <td>-0.012</td>
+      <td>0.024</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.006</td>
+      <td>-0.007</td>
+      <td>0.019</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.002</td>
+      <td>-0.024</td>
+      <td>0.026</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.003</td>
+      <td>-0.017</td>
+      <td>0.021</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>nMAE</td>
+      <td>0.004</td>
+      <td>-0.025</td>
+      <td>0.034</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>CRPS</td>
+      <td>0.003</td>
+      <td>-0.019</td>
+      <td>0.026</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>nMAE</td>
+      <td>0.032</td>
+      <td>-0.052</td>
+      <td>0.115</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>CRPS</td>
+      <td>0.013</td>
+      <td>-0.046</td>
+      <td>0.072</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>nMAE</td>
+      <td>-0.861</td>
+      <td>-1.119</td>
+      <td>-0.615</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>all days</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>CRPS</td>
+      <td>-0.679</td>
+      <td>-0.875</td>
+      <td>-0.493</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.023</td>
+      <td>-0.012</td>
+      <td>0.065</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_prev_day</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.021</td>
+      <td>-0.005</td>
+      <td>0.053</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>-0.001</td>
+      <td>-0.041</td>
+      <td>0.034</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>-0.001</td>
+      <td>-0.029</td>
+      <td>0.023</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>nMAE</td>
+      <td>0.036</td>
+      <td>-0.001</td>
+      <td>0.071</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_uni_oracle</td>
+      <td>mob_base</td>
+      <td>CRPS</td>
+      <td>0.026</td>
+      <td>-0.004</td>
+      <td>0.054</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>nMAE</td>
+      <td>-0.038</td>
+      <td>-0.089</td>
+      <td>0.014</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_oracle</td>
+      <td>mob_uni_oracle</td>
+      <td>CRPS</td>
+      <td>-0.027</td>
+      <td>-0.066</td>
+      <td>0.015</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>nMAE</td>
+      <td>0.059</td>
+      <td>-0.071</td>
+      <td>0.178</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_oracle_ctx336</td>
+      <td>mob_base_ctx336</td>
+      <td>CRPS</td>
+      <td>0.025</td>
+      <td>-0.067</td>
+      <td>0.108</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>nMAE</td>
+      <td>-1.023</td>
+      <td>-1.426</td>
+      <td>-0.681</td>
+    </tr>
+    <tr>
+      <td>two sites without CHP</td>
+      <td>not typical</td>
+      <td>mob_base</td>
+      <td>mob_plain</td>
+      <td>CRPS</td>
+      <td>-0.834</td>
+      <td>-1.18</td>
+      <td>-0.552</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/mobility_differences.csv">code/reports/forecast_anatomy/mobility_differences.csv</a> (48 rows shown)</p>
+
+<ul>
+<li><strong>A perfect footfall forecast adds nothing</strong>: 5.589 % against 5.583 % at the two sites
+without CHP, +0.006 points (−0.012 to +0.024). On the days that are not typical (holidays,
+strike days, unusual counts): −0.001 (−0.041 to +0.034).</li>
+<li><strong>The count of the last full day adds nothing</strong> (+0.010, −0.013 to +0.036), and the campus
+placebo does the same as the site's own count (+0.002).</li>
+<li><strong>With one week of history it does not help either</strong>: 8.44 % against 8.41 %.</li>
+<li><strong>The model does use inputs that carry information</strong>: calendar, price and weather take 0.86
+points off (−1.12 to −0.62).</li>
+</ul>
+<h2 id="6-kinds-of-day-every-day-of-the-test-window-daily-error-by-k">6. Kinds of day, every day of the test window (<code>daily_error_by_kind</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/daily_error_by_kind.png" alt="daily_error_by_kind" loading="lazy"><figcaption><code>daily_error_by_kind</code> <a href="figures/daily_error_by_kind.pdf">PDF</a></figcaption></figure></div>
+
+<p>One forecast per site for each of the 342 test days, Chronos-2 without covariates. A day has
+one kind, in this order: holiday or Christmas; doctor strike; hot or cold day (maximum of 28 °C
+or more, mean of 2 °C or less); level shift (the day's mean differs by more than 15 % from the
+same weekday of the last four weeks); typical.</p>
+<figure class="single"><img src="figures/daily_error_by_kind.png" alt="daily_error_by_kind" loading="lazy"><figcaption>Error by kind of day, forecast (filled) and forecast with the day's true level (open). 30,875 site-days. <code>daily_error_by_kind</code> <a href="figures/daily_error_by_kind.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>kind</th>
+      <th>site_days</th>
+      <th>day_share_pct</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>level_share_pct</th>
+      <th>error_share_pct</th>
+      <th>demand_share_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>holiday or Christmas</td>
+      <td>1165</td>
+      <td>3.8</td>
+      <td>20.1</td>
+      <td>14.6</td>
+      <td>29.9</td>
+      <td>7.4</td>
+      <td>3.9</td>
+    </tr>
+    <tr>
+      <td>hot or cold day</td>
+      <td>1436</td>
+      <td>4.7</td>
+      <td>13.4</td>
+      <td>11.2</td>
+      <td>19</td>
+      <td>4.8</td>
+      <td>4.7</td>
+    </tr>
+    <tr>
+      <td>level shift</td>
+      <td>6763</td>
+      <td>21.9</td>
+      <td>15.7</td>
+      <td>13.2</td>
+      <td>21.1</td>
+      <td>52.8</td>
+      <td>28.2</td>
+    </tr>
+    <tr>
+      <td>strike day</td>
+      <td>909</td>
+      <td>2.9</td>
+      <td>12.7</td>
+      <td>10.4</td>
+      <td>28</td>
+      <td>3.2</td>
+      <td>2.9</td>
+    </tr>
+    <tr>
+      <td>strike day near holidays</td>
+      <td>983</td>
+      <td>3.2</td>
+      <td>12.8</td>
+      <td>11.3</td>
+      <td>9.6</td>
+      <td>2.4</td>
+      <td>2.8</td>
+    </tr>
+    <tr>
+      <td>typical</td>
+      <td>19619</td>
+      <td>63.5</td>
+      <td>10.1</td>
+      <td>9.2</td>
+      <td>12.7</td>
+      <td>29.4</td>
+      <td>57.4</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/daily_error_by_kind.csv">code/reports/forecast_anatomy/daily_error_by_kind.csv</a> (6 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>kind</th>
+      <th>site_days</th>
+      <th>captured_point_pct</th>
+      <th>captured_q70_pct</th>
+      <th>captured_level_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>holiday or Christmas</td>
+      <td>1143</td>
+      <td>34.3</td>
+      <td>32</td>
+      <td>50.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>hot or cold day</td>
+      <td>1395</td>
+      <td>38.3</td>
+      <td>45</td>
+      <td>57.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>level shift</td>
+      <td>6503</td>
+      <td>43.6</td>
+      <td>44.4</td>
+      <td>54.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>strike day</td>
+      <td>894</td>
+      <td>48.4</td>
+      <td>49.1</td>
+      <td>61.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>strike day near holidays</td>
+      <td>951</td>
+      <td>50.7</td>
+      <td>52.7</td>
+      <td>57.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>typical</td>
+      <td>19233</td>
+      <td>55.6</td>
+      <td>59.2</td>
+      <td>65.1</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/daily_value_by_kind.csv">code/reports/forecast_anatomy/daily_value_by_kind.csv</a> (6 rows shown)</p>
+
+<ul>
+<li><strong>Typical days: 64 % of the days, 29 % of the error, 10.1 %.</strong></li>
+<li><strong>Level-shift days: 22 % of the days, 53 % of the error</strong>, and 49 points of the 53 are at
+the CHP sites. With the true level their error is still 13.2 %.</li>
+<li><strong>Holidays: 4 % of the days, 7 % of the error, 20.1 %</strong>, and here the level is the problem
+(14.6 % with the true level). This run has no calendar input; with it the best model has
+12 to 23 % on holidays, so the calendar flag helps but does not solve them.</li>
+<li><strong>Strike days: 12.7 %</strong> against 12.3 % on all days, with no sign of lower demand
+(section 4).</li>
+</ul>
+<h2 id="7-heat-and-cold-waves-wave-error-wave-value">7. Heat and cold waves (<code>wave_error</code>, <code>wave_value</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/wave_error.png" alt="wave_error" loading="lazy"><figcaption><code>wave_error</code> <a href="figures/wave_error.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/wave_value.png" alt="wave_value" loading="lazy"><figcaption><code>wave_value</code> <a href="figures/wave_value.pdf">PDF</a></figcaption></figure></div>
+
+<p>With the label of Lu et al. (2026): a wave day has a site temperature (mean of the day's
+highest and lowest hour) beyond the 5th or 95th percentile of the site's days before the test
+window. The summer of 2025 made 9.7 % of the test site-days heat-wave days; 2.6 % are cold-wave
+days. The comparison is with the other days of the same site and calendar month, so the season
+is not counted as weather. The paper itself is checked in <code>doc/heat_cold_wave_paper_check.md</code>.</p>
+<figure class="single"><img src="figures/wave_error.png" alt="wave_error" loading="lazy"><figcaption>Error on heat-wave and cold-wave days (filled) against the other days of the same site and month (open), by site group. <code>wave_error</code> <a href="figures/wave_error.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>matched_to</th>
+      <th>group</th>
+      <th>wave</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>median_bias_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold wave</td>
+      <td>all sites</td>
+      <td>cold wave</td>
+      <td>91</td>
+      <td>817</td>
+      <td>13.6</td>
+      <td>11.2</td>
+      <td>-3.3</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>91</td>
+      <td>7803</td>
+      <td>11.4</td>
+      <td>9.5</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>inpatient</td>
+      <td>cold wave</td>
+      <td>33</td>
+      <td>285</td>
+      <td>11.4</td>
+      <td>9.4</td>
+      <td>-3.4</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>33</td>
+      <td>2760</td>
+      <td>10.1</td>
+      <td>8.7</td>
+      <td>-0.4</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>on-site CHP</td>
+      <td>cold wave</td>
+      <td>12</td>
+      <td>118</td>
+      <td>16.8</td>
+      <td>14.4</td>
+      <td>-2.2</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>12</td>
+      <td>1200</td>
+      <td>13.9</td>
+      <td>11.8</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>outpatient</td>
+      <td>cold wave</td>
+      <td>46</td>
+      <td>414</td>
+      <td>14.3</td>
+      <td>11.7</td>
+      <td>-3.6</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>46</td>
+      <td>3843</td>
+      <td>11.7</td>
+      <td>9.5</td>
+      <td>-0.1</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>all sites</td>
+      <td>heat wave</td>
+      <td>91</td>
+      <td>2990</td>
+      <td>14.7</td>
+      <td>13</td>
+      <td>-1.6</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>91</td>
+      <td>7349</td>
+      <td>13.2</td>
+      <td>12.2</td>
+      <td>-0.4</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>inpatient</td>
+      <td>heat wave</td>
+      <td>33</td>
+      <td>1093</td>
+      <td>13.7</td>
+      <td>12.7</td>
+      <td>-2.3</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>33</td>
+      <td>2756</td>
+      <td>12.3</td>
+      <td>12</td>
+      <td>-0.7</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>on-site CHP</td>
+      <td>heat wave</td>
+      <td>12</td>
+      <td>376</td>
+      <td>24.3</td>
+      <td>21</td>
+      <td>-5</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>12</td>
+      <td>897</td>
+      <td>20</td>
+      <td>18</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>outpatient</td>
+      <td>heat wave</td>
+      <td>46</td>
+      <td>1521</td>
+      <td>12.9</td>
+      <td>11.1</td>
+      <td>-0.8</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>46</td>
+      <td>3696</td>
+      <td>12.1</td>
+      <td>10.8</td>
+      <td>-0.3</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/daily_error_wave_matched.csv">code/reports/forecast_anatomy/daily_error_wave_matched.csv</a> (16 rows shown)</p>
+
+<figure class="single"><img src="figures/wave_value.png" alt="wave_value" loading="lazy"><figcaption>Share of the achievable peak cut on wave days and on the other days of the same site and month, by plan. All sites. <code>wave_value</code> <a href="figures/wave_value.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>group</th>
+      <th>wave</th>
+      <th>site_days</th>
+      <th>captured_point_pct</th>
+      <th>captured_q70_pct</th>
+      <th>captured_level_pct</th>
+      <th>matched_to</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>all sites</td>
+      <td>cold wave</td>
+      <td>808</td>
+      <td>43.6</td>
+      <td>48.2</td>
+      <td>59.1</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>7643</td>
+      <td>53</td>
+      <td>55.3</td>
+      <td>62.9</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>inpatient</td>
+      <td>cold wave</td>
+      <td>281</td>
+      <td>48.9</td>
+      <td>56</td>
+      <td>65.8</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>2723</td>
+      <td>55.5</td>
+      <td>60.6</td>
+      <td>65.5</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>on-site CHP</td>
+      <td>cold wave</td>
+      <td>116</td>
+      <td>42.1</td>
+      <td>44.3</td>
+      <td>55.3</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>1110</td>
+      <td>53</td>
+      <td>54.1</td>
+      <td>62.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>outpatient</td>
+      <td>cold wave</td>
+      <td>411</td>
+      <td>38.1</td>
+      <td>45.5</td>
+      <td>58.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>3810</td>
+      <td>48.7</td>
+      <td>50.4</td>
+      <td>59.2</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>all sites</td>
+      <td>heat wave</td>
+      <td>2893</td>
+      <td>32.9</td>
+      <td>39.8</td>
+      <td>50.7</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>7136</td>
+      <td>49.9</td>
+      <td>51</td>
+      <td>60.1</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>inpatient</td>
+      <td>heat wave</td>
+      <td>1062</td>
+      <td>36.4</td>
+      <td>44.2</td>
+      <td>56.9</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>2711</td>
+      <td>55.5</td>
+      <td>59</td>
+      <td>65.5</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>on-site CHP</td>
+      <td>heat wave</td>
+      <td>352</td>
+      <td>29.6</td>
+      <td>35.8</td>
+      <td>46.6</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>860</td>
+      <td>47</td>
+      <td>45.5</td>
+      <td>56.7</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>outpatient</td>
+      <td>heat wave</td>
+      <td>1479</td>
+      <td>37.6</td>
+      <td>44.9</td>
+      <td>52.6</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_daily</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>3565</td>
+      <td>47.6</td>
+      <td>51.9</td>
+      <td>59.8</td>
+      <td>heat wave</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/daily_value_wave_matched.csv">code/reports/forecast_anatomy/daily_value_wave_matched.csv</a> (16 rows shown)</p>
+
+<details class="table"><summary>Table: 48 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>group</th>
+      <th>wave</th>
+      <th>site_days</th>
+      <th>captured_point_pct</th>
+      <th>captured_q70_pct</th>
+      <th>captured_level_pct</th>
+      <th>matched_to</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all sites</td>
+      <td>cold wave</td>
+      <td>85</td>
+      <td>53</td>
+      <td>57.5</td>
+      <td>61</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>419</td>
+      <td>62.1</td>
+      <td>58.3</td>
+      <td>61.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>inpatient</td>
+      <td>cold wave</td>
+      <td>33</td>
+      <td>58.4</td>
+      <td>63.5</td>
+      <td>67.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>159</td>
+      <td>64.5</td>
+      <td>66.3</td>
+      <td>70</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>on-site CHP</td>
+      <td>cold wave</td>
+      <td>8</td>
+      <td>49.1</td>
+      <td>55.5</td>
+      <td>55.5</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>40</td>
+      <td>64.3</td>
+      <td>53.8</td>
+      <td>56.2</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>outpatient</td>
+      <td>cold wave</td>
+      <td>44</td>
+      <td>51.5</td>
+      <td>49.7</td>
+      <td>60.8</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>220</td>
+      <td>51.2</td>
+      <td>52</td>
+      <td>56.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all sites</td>
+      <td>heat wave</td>
+      <td>599</td>
+      <td>40</td>
+      <td>40.3</td>
+      <td>48.2</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>1413</td>
+      <td>50</td>
+      <td>54.9</td>
+      <td>63.1</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>inpatient</td>
+      <td>heat wave</td>
+      <td>214</td>
+      <td>41.7</td>
+      <td>47.5</td>
+      <td>53.6</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>542</td>
+      <td>54.9</td>
+      <td>60.9</td>
+      <td>64.3</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>on-site CHP</td>
+      <td>heat wave</td>
+      <td>72</td>
+      <td>38.9</td>
+      <td>35.4</td>
+      <td>44.3</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>159</td>
+      <td>46.5</td>
+      <td>51.1</td>
+      <td>62.6</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>outpatient</td>
+      <td>heat wave</td>
+      <td>313</td>
+      <td>40.4</td>
+      <td>42.5</td>
+      <td>50.5</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>712</td>
+      <td>50.3</td>
+      <td>54.4</td>
+      <td>62.5</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>all sites</td>
+      <td>cold wave</td>
+      <td>85</td>
+      <td>10.3</td>
+      <td>29.6</td>
+      <td>49.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>419</td>
+      <td>58.3</td>
+      <td>53.5</td>
+      <td>60.6</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>inpatient</td>
+      <td>cold wave</td>
+      <td>33</td>
+      <td>15.7</td>
+      <td>23.7</td>
+      <td>36.6</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>159</td>
+      <td>62.8</td>
+      <td>58.2</td>
+      <td>60</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>on-site CHP</td>
+      <td>cold wave</td>
+      <td>8</td>
+      <td>4.8</td>
+      <td>37.9</td>
+      <td>65.4</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>40</td>
+      <td>57.2</td>
+      <td>53.8</td>
+      <td>61.7</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>outpatient</td>
+      <td>cold wave</td>
+      <td>44</td>
+      <td>12.8</td>
+      <td>21.2</td>
+      <td>37.4</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>220</td>
+      <td>51</td>
+      <td>42</td>
+      <td>59.2</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>all sites</td>
+      <td>heat wave</td>
+      <td>599</td>
+      <td>31.9</td>
+      <td>37.5</td>
+      <td>51.2</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>1413</td>
+      <td>50.5</td>
+      <td>51.3</td>
+      <td>62.7</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>inpatient</td>
+      <td>heat wave</td>
+      <td>214</td>
+      <td>40.4</td>
+      <td>46.4</td>
+      <td>57.7</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>542</td>
+      <td>57.3</td>
+      <td>60</td>
+      <td>66.2</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>on-site CHP</td>
+      <td>heat wave</td>
+      <td>72</td>
+      <td>26.4</td>
+      <td>31</td>
+      <td>46.7</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>159</td>
+      <td>46.3</td>
+      <td>45.5</td>
+      <td>60.5</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>outpatient</td>
+      <td>heat wave</td>
+      <td>313</td>
+      <td>33.6</td>
+      <td>42.2</td>
+      <td>53.4</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>712</td>
+      <td>49.4</td>
+      <td>50.9</td>
+      <td>61.9</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>all sites</td>
+      <td>cold wave</td>
+      <td>85</td>
+      <td>55.7</td>
+      <td>66.6</td>
+      <td>62.3</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>419</td>
+      <td>44.4</td>
+      <td>43.8</td>
+      <td>51.9</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>inpatient</td>
+      <td>cold wave</td>
+      <td>33</td>
+      <td>63.1</td>
+      <td>75.5</td>
+      <td>71.5</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>159</td>
+      <td>54.7</td>
+      <td>56</td>
+      <td>62.1</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>on-site CHP</td>
+      <td>cold wave</td>
+      <td>8</td>
+      <td>50.9</td>
+      <td>68.5</td>
+      <td>55.8</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>40</td>
+      <td>35.9</td>
+      <td>32.3</td>
+      <td>43.6</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>outpatient</td>
+      <td>cold wave</td>
+      <td>44</td>
+      <td>52</td>
+      <td>42.2</td>
+      <td>59</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>220</td>
+      <td>42.5</td>
+      <td>45.2</td>
+      <td>50.1</td>
+      <td>cold wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>all sites</td>
+      <td>heat wave</td>
+      <td>599</td>
+      <td>41.9</td>
+      <td>39.4</td>
+      <td>47.1</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>1413</td>
+      <td>50.5</td>
+      <td>47.9</td>
+      <td>57.5</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>inpatient</td>
+      <td>heat wave</td>
+      <td>214</td>
+      <td>50.3</td>
+      <td>54.1</td>
+      <td>59.8</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>542</td>
+      <td>57.3</td>
+      <td>57.8</td>
+      <td>66.4</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>on-site CHP</td>
+      <td>heat wave</td>
+      <td>72</td>
+      <td>37.6</td>
+      <td>28.4</td>
+      <td>39</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>159</td>
+      <td>46.4</td>
+      <td>40.6</td>
+      <td>51</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>outpatient</td>
+      <td>heat wave</td>
+      <td>313</td>
+      <td>39</td>
+      <td>47.3</td>
+      <td>49.2</td>
+      <td>heat wave</td>
+    </tr>
+    <tr>
+      <td>lightgbm_ifs</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>712</td>
+      <td>49.1</td>
+      <td>49.8</td>
+      <td>59</td>
+      <td>heat wave</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/value_wave_matched_stored.csv">code/reports/forecast_anatomy/value_wave_matched_stored.csv</a> (48 rows shown)</p>
+
+<ul>
+<li><strong>Error: a little more.</strong> Heat-wave days 14.7 % against 13.2 %, cold-wave days 13.6 %
+against 11.4 %. The forecast is too low on both (median bias −1.6 % and −3.3 %). Bringing
+the wave days to the error of their neighbours would remove 4.9 % of the panel's error (heat
+3.6 %, cold 1.3 %).</li>
+<li><strong>Value: a third less.</strong> On heat-wave days the plan on the forecast keeps 32.9 % of the
+achievable peak cut against 49.9 % on the other days of the same months; on cold-wave days
+43.6 % against 53.0 %. A forecast that is a few per cent low sets the threshold too low and
+the battery is empty before the peak.</li>
+<li><strong>Weather inputs recover part of it.</strong> On the 69 stored test days the best model, which has
+the weather forecast, keeps 40.0 % on heat-wave days against 50.0 %; the same model without
+weather 31.9 % against 50.5 %; LightGBM with weather 41.9 % against 50.5 %.</li>
+<li><strong>The level is half of the loss.</strong> With the true daily level the plan keeps 50.7 % on
+heat-wave days against 60.1 %.</li>
+</ul>
+<h2 id="8-history-and-issue-time-context-length-issue-time-error-iss">8. History and issue time (<code>context_length</code>, <code>issue_time_error</code>, <code>issue_value</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/context_length.png" alt="context_length" loading="lazy"><figcaption><code>context_length</code> <a href="figures/context_length.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/issue_time_error.png" alt="issue_time_error" loading="lazy"><figcaption><code>issue_time_error</code> <a href="figures/issue_time_error.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/issue_value.png" alt="issue_value" loading="lazy"><figcaption><code>issue_value</code> <a href="figures/issue_value.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/context_length.png" alt="context_length" loading="lazy"><figcaption>Error of Chronos-2 without covariates by the history it gets, by site group. <code>context_length</code> <a href="figures/context_length.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>days</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>captured_point_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>31.1</td>
+      <td>24.9</td>
+      <td>27.2</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>21.7</td>
+      <td>17.8</td>
+      <td>32.5</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>16.4</td>
+      <td>13.3</td>
+      <td>39</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>12.7</td>
+      <td>11</td>
+      <td>47.9</td>
+    </tr>
+    <tr>
+      <td>42</td>
+      <td>12.2</td>
+      <td>10.6</td>
+      <td>51.1</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_context.csv">code/reports/forecast_anatomy/table_context.csv</a> (5 rows shown)</p>
+
+<ul>
+<li><strong>Two weeks are enough</strong>: 12.7 % with two weeks, 12.2 % with six. One week (one example of
+each weekday) gives 16.4 %, one day 31.1 %. A site that starts to deliver data has a usable
+forecast after a fortnight.</li>
+</ul>
+<p><strong>Issue time.</strong> The same model issued at 00:00 and at 06:00 on the target day for the rest of
+that day, scored on the periods that all three issues forecast (from 06:30). For the decision,
+the battery defends the day-ahead threshold until the new issue and then a new threshold, the
+lowest that it can hold on the new forecast from its state of charge.</p>
+<figure class="single"><img src="figures/issue_time_error.png" alt="issue_time_error" loading="lazy"><figcaption>Error by issue time on the common periods, by site group. <code>issue_time_error</code> <a href="figures/issue_time_error.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/issue_value.png" alt="issue_value" loading="lazy"><figcaption>Share of the achievable peak cut by the time of the last plan, by site group. <code>issue_value</code> <a href="figures/issue_value.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>issue</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>captured_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all sites</td>
+      <td>00:00 on the day</td>
+      <td>91</td>
+      <td>6206</td>
+      <td>12.9</td>
+      <td>10.9</td>
+      <td>51.8</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>06:00 on the day</td>
+      <td>91</td>
+      <td>6206</td>
+      <td>12.8</td>
+      <td>10.9</td>
+      <td>53.1</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>16:30 the day before</td>
+      <td>91</td>
+      <td>6206</td>
+      <td>13.5</td>
+      <td>11</td>
+      <td>51.1</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>00:00 on the day</td>
+      <td>33</td>
+      <td>2253</td>
+      <td>12.2</td>
+      <td>10.8</td>
+      <td>56</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>00:00 on the day</td>
+      <td>12</td>
+      <td>819</td>
+      <td>16.9</td>
+      <td>14.6</td>
+      <td>50.6</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>00:00 on the day</td>
+      <td>46</td>
+      <td>3131</td>
+      <td>12.4</td>
+      <td>9.9</td>
+      <td>47.6</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>06:00 on the day</td>
+      <td>33</td>
+      <td>2253</td>
+      <td>12.1</td>
+      <td>10.9</td>
+      <td>56.8</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>06:00 on the day</td>
+      <td>12</td>
+      <td>819</td>
+      <td>17.1</td>
+      <td>14.7</td>
+      <td>52.1</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>06:00 on the day</td>
+      <td>46</td>
+      <td>3131</td>
+      <td>12.1</td>
+      <td>9.9</td>
+      <td>49.1</td>
+    </tr>
+    <tr>
+      <td>inpatient</td>
+      <td>16:30 the day before</td>
+      <td>33</td>
+      <td>2253</td>
+      <td>12.5</td>
+      <td>10.8</td>
+      <td>56.6</td>
+    </tr>
+    <tr>
+      <td>on-site CHP</td>
+      <td>16:30 the day before</td>
+      <td>12</td>
+      <td>819</td>
+      <td>19.1</td>
+      <td>15.3</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <td>outpatient</td>
+      <td>16:30 the day before</td>
+      <td>46</td>
+      <td>3131</td>
+      <td>12.7</td>
+      <td>10</td>
+      <td>47.1</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_issue.csv">code/reports/forecast_anatomy/table_issue.csv</a> (12 rows shown)</p>
+
+<ul>
+<li><strong>A later issue helps a little</strong>: 13.5 % the day before, 12.9 % at midnight, 12.8 % at 06:00.
+At CHP sites 19.1 %, 16.9 % and 17.1 %: the plant switches later in the day, after the issue.</li>
+<li><strong>In value two points</strong>: 51.1 %, 51.8 % and 53.1 % of the achievable peak cut.</li>
+</ul>
+<h2 id="9-what-this-says-about-the-research-avenue">9. What this says about the research avenue</h2>
+<ul>
+<li><strong>Occupancy and mobility: drop them as forecast inputs for electricity.</strong> Two independent
+shocks to activity (strikes at 132 sites, footfall at three) leave demand where it was, and
+a perfect daily level signal is bounded at 1.5 points of error. Daily bed occupancy remains
+untested (see limits), but it would have to act differently from elective activity and
+footfall to matter.</li>
+<li><strong>A compact model: the panel does not ask for one yet.</strong> The three neural-process models
+trained on the panel (1.1 to 1.5 million parameters) have 13.7 to 14.6 % against 11.5 % for
+the pre-trained model, and two weeks of context already give the pre-trained model its
+accuracy. Training a prior-fitted network needs the GPUs, which are off limits for now; what
+it would have to add is plant state, and no such input exists yet.</li>
+<li><strong>Plant state is the avenue.</strong> Thirty-seven per cent of the error is added by plants, on 2 %
+of the site-days. The sites know when a plant is down for service, and half-hourly
+generation meters exist. A schedule or a generation series for two or three CHP sites would
+show how much of this can be forecast.</li>
+<li><strong>Decisions, not error, show the weather problem.</strong> Heat waves take a tenth more error and a
+third of the value. Any method for rare days should be scored on the decision.</li>
+</ul>
+<h2 id="10-limits">10. Limits</h2>
+<ul>
+<li><strong>One panel, one test period.</strong> 91 sites, June 2025 to May 2026. The 12 CHP sites are few,
+and three of them carry most of the result.</li>
+<li><strong>The plant share comes from the estates returns</strong>, reported per year by the trusts, for 9
+of the 12 CHP sites; the size comparison is extrapolated beyond the largest site without CHP.</li>
+<li><strong>Strikes are not occupancy.</strong> They cut elective and outpatient work; inpatients stayed.
+Daily bed occupancy was not tested: the published daily figures (urgent and emergency care
+situation reports, winter months, per trust) sit behind a bot check on the NHS England site
+and need a manual download; the other public series are monthly or quarterly.</li>
+<li><strong>Footfall is three sites of one trust in one year.</strong></li>
+<li><strong>The decision is one decision</strong>: a peak cut with a small battery and a threshold for the
+day. Other decisions weigh errors differently.</li>
+<li><strong>The every-day run has no covariates</strong>; sections 6 and 7 use it for its sample, and the 69
+stored days for the models with inputs.</li>
+</ul>
+<h2 id="reproduce">Reproduce</h2>
+<pre><code>CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-probes --which context  --threads 10   #  8 minutes
+CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-probes --which daily    --threads 10   # 53 minutes
+CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-probes --which intraday --threads 8    # 20 minutes
+CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-probes --which mobility --threads 10   # 90 minutes
+CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-anatomy                                #  5 minutes
+python code/scripts/forecast_anatomy/run_all.py
+</code></pre>
+<p class="meta">Built from <code>doc/forecast_error_anatomy.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+<script>
+window.addEventListener("load", function () {
+  (function () {
+    var el = document.getElementById("chart1"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Day-ahead error by model, 91 sites and 69 test days", "width": "container", "height": 300, "data": {"values": [{"model": "chronos2_ifs", "nmae_pct": 11.5405798207, "nmae_level_oracle_pct": 10.0502012736, "level_share_pct": 19.4651449989, "captured_point_pct": 53.3097490837, "captured_q70_pct": 55.2289366522, "captured_level_pct": 63.2038882996}, {"model": "timesfm3_ifs", "nmae_pct": 11.7244231098, "nmae_level_oracle_pct": 10.2365371041, "level_share_pct": 20.989843161, "captured_point_pct": 49.8417401144, "captured_q70_pct": 52.8134821835, "captured_level_pct": 61.0223736831}, {"model": "tabpfn_ts_ifs", "nmae_pct": 12.1220606236, "nmae_level_oracle_pct": 10.6556112722, "level_share_pct": 15.976191961, "captured_point_pct": 50.7640466623, "captured_q70_pct": 53.7356610357, "captured_level_pct": 61.2041983787}, {"model": "chronos2", "nmae_pct": 12.1954422297, "nmae_level_oracle_pct": 10.5705349397, "level_share_pct": 19.5858772418, "captured_point_pct": 51.1105942358, "captured_q70_pct": 52.6761728127, "captured_level_pct": 61.5993719712}, {"model": "lightgbm_ifs", "nmae_pct": 13.0317342966, "nmae_level_oracle_pct": 11.0407888734, "level_share_pct": 28.1897378701, "captured_point_pct": 47.7321043545, "captured_q70_pct": 47.1764588259, "captured_level_pct": 55.253864189}, {"model": "tnp", "nmae_pct": 13.6554945305, "nmae_level_oracle_pct": 11.2572677789, "level_share_pct": 28.9724019592, "captured_point_pct": 49.2579353728, "captured_q70_pct": 40.3496309178, "captured_level_pct": 58.1935717104}, {"model": "tnp_ifs", "nmae_pct": 13.9715673219, "nmae_level_oracle_pct": 11.4084735059, "level_share_pct": 31.9753886227, "captured_point_pct": 47.4884479093, "captured_q70_pct": 42.4714843025, "captured_level_pct": 53.7607162855}, {"model": "pttnp", "nmae_pct": 14.1479201372, "nmae_level_oracle_pct": 11.6588078292, "level_share_pct": 31.4489444457, "captured_point_pct": 47.3777712867, "captured_q70_pct": 38.6003509045, "captured_level_pct": 60.4791428572}, {"model": "gtnp", "nmae_pct": 14.6015290517, "nmae_level_oracle_pct": 12.2526684422, "level_share_pct": 28.3120317375, "captured_point_pct": 46.8838525188, "captured_q70_pct": 42.4932682682, "captured_level_pct": 52.710046056}, {"model": "seasonal_naive", "nmae_pct": 18.4391825288, "nmae_level_oracle_pct": 14.1930115577, "level_share_pct": 40.0856640806, "captured_point_pct": 40.1258451679, "captured_q70_pct": null, "captured_level_pct": 55.1325484048}]}, "mark": {"type": "bar", "tooltip": true}, "encoding": {"x": {"field": "nmae_pct", "type": "quantitative", "title": "Normalised absolute error (%)"}, "y": {"field": "model", "type": "nominal", "title": "model"}, "tooltip": [{"field": "model", "type": "nominal"}, {"field": "nmae_pct", "type": "quantitative"}, {"field": "nmae_level_oracle_pct", "type": "quantitative"}, {"field": "level_share_pct", "type": "quantitative"}, {"field": "captured_point_pct", "type": "quantitative"}, {"field": "captured_q70_pct", "type": "quantitative"}, {"field": "captured_level_pct", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
+    spec.width = Math.max(280, el.clientWidth - 90);
+    vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
+  })();
+  (function () {
+    var el = document.getElementById("chart2"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Where the error is: by size of the day's largest unexplained step", "width": "container", "height": 320, "data": {"values": [{"group": "inpatient", "step_bin": "under 10 %", "site_days": 433, "error_mwh": 80.3365155208, "demand_mwh": 3457.934626987, "nmae_kwh_weighted_pct": 2.3232514257, "error_share_pct": 4.4605895465, "demand_share_pct": 23.2360105203, "day_share_pct": 7.1053495241, "day_share_of_group_pct": 19.575045208}, {"group": "inpatient", "step_bin": "10 to 25 %", "site_days": 658, "error_mwh": 70.0971639725, "demand_mwh": 1134.038100019, "nmae_kwh_weighted_pct": 6.1812000824, "error_share_pct": 3.892061721, "demand_share_pct": 7.6203063577, "day_share_pct": 10.7975057434, "day_share_of_group_pct": 29.746835443}, {"group": "inpatient", "step_bin": "25 to 50 %", "site_days": 661, "error_mwh": 46.8252847831, "demand_mwh": 461.6353466362, "nmae_kwh_weighted_pct": 10.143349101, "error_share_pct": 2.599918287, "demand_share_pct": 3.1020146209, "day_share_pct": 10.8467344929, "day_share_of_group_pct": 29.8824593128}, {"group": "inpatient", "step_bin": "50 to 100 %", "site_days": 379, "error_mwh": 20.001801726, "demand_mwh": 124.4973220045, "nmae_kwh_weighted_pct": 16.0660497784, "error_share_pct": 1.1105762692, "demand_share_pct": 0.8365748332, "day_share_pct": 6.2192320315, "day_share_of_group_pct": 17.1338155515}, {"group": "inpatient", "step_bin": "over 100 %", "site_days": 81, "error_mwh": 6.3203136086, "demand_mwh": 32.0352450509, "nmae_kwh_weighted_pct": 19.7292500762, "error_share_pct": 0.3509279016, "demand_share_pct": 0.2152647089, "day_share_pct": 1.3291762389, "day_share_of_group_pct": 3.6618444846}, {"group": "on-site CHP", "step_bin": "under 10 %", "site_days": 172, "error_mwh": 49.9641331561, "demand_mwh": 1362.6343720727, "nmae_kwh_weighted_pct": 3.6667307225, "error_share_pct": 2.7741991125, "demand_share_pct": 9.1563866933, "day_share_pct": 2.8224483098, "day_share_of_group_pct": 20.9500609013}, {"group": "on-site CHP", "step_bin": "10 to 25 %", "site_days": 208, "error_mwh": 195.7034574611, "demand_mwh": 1688.1113097646, "nmae_kwh_weighted_pct": 11.5930422555, "error_share_pct": 10.8662018873, "demand_share_pct": 11.343468395, "day_share_pct": 3.4131933049, "day_share_of_group_pct": 25.3349573691}, {"group": "on-site CHP", "step_bin": "25 to 50 %", "site_days": 167, "error_mwh": 135.0218931221, "demand_mwh": 1069.2501161643, "nmae_kwh_weighted_pct": 12.6277183496, "error_share_pct": 7.4969301457, "demand_share_pct": 7.1849556536, "day_share_pct": 2.7404003938, "day_share_of_group_pct": 20.341047503}, {"group": "on-site CHP", "step_bin": "50 to 100 %", "site_days": 156, "error_mwh": 259.2695608604, "demand_mwh": 1428.3247662586, "nmae_kwh_weighted_pct": 18.1520034508, "error_share_pct": 14.3956342319, "demand_share_pct": 9.5978012529, "day_share_pct": 2.5598949787, "day_share_of_group_pct": 19.0012180268}, {"group": "on-site CHP", "step_bin": "over 100 %", "site_days": 118, "error_mwh": 776.0366294871, "demand_mwh": 1942.5527118016, "nmae_kwh_weighted_pct": 39.9493215691, "error_share_pct": 43.0885115537, "demand_share_pct": 13.0532182116, "day_share_pct": 1.9363308172, "day_share_of_group_pct": 14.3727161998}, {"group": "outpatient", "step_bin": "under 10 %", "site_days": 628, "error_mwh": 25.7352433579, "demand_mwh": 586.7083500581, "nmae_kwh_weighted_pct": 4.3863775512, "error_share_pct": 1.4289188018, "demand_share_pct": 3.9424578151, "day_share_pct": 10.3052182475, "day_share_of_group_pct": 20.5161711859}, {"group": "outpatient", "step_bin": "10 to 25 %", "site_days": 1104, "error_mwh": 70.8933731308, "demand_mwh": 1127.8259834873, "nmae_kwh_weighted_pct": 6.2858432213, "error_share_pct": 3.9362702882, "demand_share_pct": 7.5785632883, "day_share_pct": 18.116179849, "day_share_of_group_pct": 36.0666448873}, {"group": "outpatient", "step_bin": "25 to 50 %", "site_days": 710, "error_mwh": 32.8362971142, "demand_mwh": 304.6913229451, "nmae_kwh_weighted_pct": 10.7769058852, "error_share_pct": 1.8231963722, "demand_share_pct": 2.047410246, "day_share_pct": 11.6508040696, "day_share_of_group_pct": 23.1950343025}, {"group": "outpatient", "step_bin": "50 to 100 %", "site_days": 401, "error_mwh": 18.5446437372, "demand_mwh": 97.5765353244, "nmae_kwh_weighted_pct": 19.0052287423, "error_share_pct": 1.0296693037, "demand_share_pct": 0.6556773467, "day_share_pct": 6.5802428618, "day_share_of_group_pct": 13.1002940216}, {"group": "outpatient", "step_bin": "over 100 %", "site_days": 218, "error_mwh": 13.442783504, "demand_mwh": 63.9753416743, "nmae_kwh_weighted_pct": 21.012445033, "error_share_pct": 0.7463945777, "demand_share_pct": 0.4298900565, "day_share_pct": 3.5772891369, "day_share_of_group_pct": 7.1218556027}]}, "mark": {"type": "bar", "tooltip": true}, "encoding": {"x": {"field": "step_bin", "type": "nominal", "title": "Largest unexplained step of the day (share of mean demand)"}, "y": {"field": "error_share_pct", "type": "quantitative", "title": "Share of the panel's error (%)"}, "color": {"field": "group", "type": "nominal", "title": "group"}, "xOffset": {"field": "group"}, "tooltip": [{"field": "group", "type": "nominal"}, {"field": "step_bin", "type": "nominal"}, {"field": "site_days", "type": "quantitative"}, {"field": "error_mwh", "type": "quantitative"}, {"field": "demand_mwh", "type": "quantitative"}, {"field": "nmae_kwh_weighted_pct", "type": "quantitative"}, {"field": "error_share_pct", "type": "quantitative"}, {"field": "demand_share_pct", "type": "quantitative"}, {"field": "day_share_pct", "type": "quantitative"}, {"field": "day_share_of_group_pct", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
+    spec.width = Math.max(280, el.clientWidth - 90);
+    vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
+  })();
+});
+</script>
+</body>
+</html>

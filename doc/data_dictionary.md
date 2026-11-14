@@ -780,3 +780,55 @@ postcodes, sites funded, award, estimated lifetime savings.
 Market index price: `data.prices.load_mid` returns one row per half-hour from the traded provider
 (`APXMIDP`); the other provider in `prices_elexon_mid.parquet` (`N2EXMIDP`) is zero in 99.8 % of
 periods and must not be averaged or joined in.
+
+## Forecast error anatomy
+
+Write-up: [forecast_error_anatomy.md](forecast_error_anatomy.md).
+
+`data.strikes.strike_days()`: the calendar days of the national strikes by junior (resident)
+doctors and consultants inside the record, one row per day: `date`, `junior`, `consultant`,
+`round` (first day of the round). 19 rounds, 70 days; sources and one corrected date in the
+module's docstring.
+
+New forecasts in `code/reports/forecast_anatomy/`, in the proof of concept's long format
+(`model`, `site_code`, `origin`, `target`, `lead_hours`, `point`, `q10` … `q90`, kWh per
+half-hour), all Chronos-2 with no training:
+
+| File | Models | Content |
+|---|---|---|
+| `forecasts_daily.parquet` | `chronos2_daily` | every day of the test window, 91 sites, no covariates |
+| `forecasts_context.parquet` | `chronos2_ctx48`, `_ctx144`, `_ctx336`, `_ctx672` | the 69 test days with 1 day, 3 days, 1 week and 2 weeks of history |
+| `forecasts_intraday.parquet` | `chronos2_issue00`, `chronos2_issue06` | the 69 test days issued at 00:00 and at 06:00 on the target day, for the rest of that day |
+| `forecasts_mobility.parquet` | `mob_plain`, `mob_base`, `mob_prev_day`, `mob_oracle`, `mob_uni_oracle`, `mob_base_ctx336`, `mob_oracle_ctx336` | the three footfall sites, every day from 13 February to 31 December 2024, without covariates, with the known-ahead covariates, and with footfall added (last full day; target day; campus placebo; the last two with one week of history) |
+
+| Table | Content |
+|---|---|
+| `day_table.csv` | site × day: mean demand, the level expected from the same weekday of the last four weeks, `kind` (typical, level shift, holiday or Christmas, strike day, strike day near holidays, hot or cold day), `wave` (cold wave, heat wave, other days: site temperature beyond the 5th or 95th percentile of the days before the test window), `step_rel` (largest unexplained two-hour step over mean demand), `step_ratio` (the same over the site's ordinary step), `big_step`, `switch` |
+| `error_overall.csv`, `error_by_group*.csv`, `table_models.csv`, `table_groups.csv` | error of the ten stored models: `nmae_pct`, `nmae_level_oracle_pct` (forecast rescaled to the day's true mean), `level_share_pct`, and the shares of the panel's error, demand and site-days |
+| `value_*.csv` | share of the achievable peak cut with the threshold planned on the median (`captured_point_pct`), on the 70 % quantile and on the median with the true level |
+| `error_by_site.csv`, `chp_size_adjusted.csv` | per site: error, demand, place, plant share; for CHP sites the total demand, the error expected at that size without a plant and what the plant adds |
+| `error_by_group_step.csv`, `example_days.csv` | error by size of the largest unexplained step; observed and forecast half-hours of the three sites with the most error |
+| `strike_effect.csv`, `strike_profile.csv` | change in demand on strike days by outcome, term and site type; the same by hour of the day |
+| `mobility_regression.csv`, `mobility_partial.csv`, `mobility_scores.csv`, `mobility_differences.csv`, `table_mobility.csv` | footfall: elasticities, residuals, scores of the forecast variants and their paired differences |
+| `daily_*.csv`, `daily_site_days.parquet` | the every-day run by kind of day, by wave, by step, and wave days against the same site and month (`*_wave_matched.csv`) |
+| `context.csv`, `table_context.csv`, `issue_time.csv`, `issue_value.csv`, `table_issue.csv` | error and decision value by length of history and by issue time |
+| `summary.json` | the headline numbers |
+
+## Check of Lu et al. (2026), heat and cold waves
+
+Write-up: [heat_cold_wave_paper_check.md](heat_cold_wave_paper_check.md).
+
+`code/data/external/esdf/`: the public part of the paper's repository
+(github.com/hkuedl/Heat-Cold_Wave_Load_Forecasting, MIT licence, commit 0036608 of 14 October
+2026): `Data/reformed_data_updated/` (hourly load and temperature of 18 European countries,
+19 PJM zones, 8 ERCOT zones and 2 Indian states), `europe/results/` and `pjm/results/` (the
+paper's saved forecasts, `true` and `forecasted` in units of the training range),
+`main_results.xlsx` (reported errors), `code/` (the paper's Python files, read only).
+
+| Table (`code/reports/esdf_check/`) | Content |
+|---|---|
+| `scores.csv` | region × series × model × set of days (`paper window`, `all test days`, `hot and cold days`, `other days`): `mae` and `rmse` in units of the training load range, `nmae_mean_pct` over the mean load of the scored days |
+| `summary.csv`, `table_europe.csv`, `table_pjm.csv` | means over the series, and the number of series in which a model is below ESDF (LSTM) |
+| `daily_errors.csv` | every model's error on every test day of every series, with the wave flags and the scored window |
+| `samples_check.csv`, `reproduction.csv`, `published_window_errors.csv` | the rebuilt samples against the paper's saved values; reported against recomputed window errors |
+| `table_holidays_europe.csv` | error on public holidays against the other days |

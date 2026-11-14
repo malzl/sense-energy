@@ -1,0 +1,1611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Load forecasts under heat and cold waves: a check of Lu et al. (2026) · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script><script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
+  <a href="forecast_error_anatomy.html">Where the day-ahead error sits, and what can remove it</a>
+  <a href="heat_cold_wave_paper_check.html" class="current">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
+
+  <div class="toc"><a class="h2" href="#the-answers-in-short">The answers in short</a>
+  <a class="h2" href="#1-what-the-paper-proposes">1. What the paper proposes</a>
+  <a class="h2" href="#2-what-the-code-scores">2. What the code scores</a>
+  <a class="h2" href="#3-the-reported-numbers-reproduce-from-the-saved-forecasts">3. The reported numbers reproduce from the saved forecasts</a>
+  <a class="h2" href="#4-beyond-the-scored-window">4. Beyond the scored window</a>
+  <a class="h2" href="#5-references-that-the-paper-does-not-have">5. References that the paper does not have</a>
+  <a class="h2" href="#6-what-follows-for-the-nhs-panel">6. What follows for the NHS panel</a>
+  <a class="h2" href="#7-limits-of-this-check">7. Limits of this check</a>
+  <a class="h2" href="#reproduce">Reproduce</a>
+  </div>
+</nav>
+<main>
+<h1>Load forecasts under heat and cold waves: a check of Lu et al. (2026)</h1>
+<p>A reading of &quot;Electricity load forecasting under extreme heat and cold waves&quot; (Lu, Qin, Zhou,
+Bai, Wen, Kang and Wang, <em>Nature Communications</em> 17, 10041, published 21 August 2026) and of its
+code, with an independent check on the paper's own public data, 14 November 2026, on CPU.
+Command: <code>esdf-check</code>. Module: <code>code/src/sense_energy/experiments/esdf_check.py</code>. Tables in
+<code>code/reports/esdf_check/</code>, figures from <code>code/scripts/esdf_check/</code>. The paper's repository
+(github.com/hkuedl/Heat-Cold_Wave_Load_Forecasting, MIT licence, commit 0036608 of 14 October
+2026) is kept in <code>code/data/external/esdf/</code>: its public data (Europe, PJM), its saved forecasts
+and its Python files. The paper's code was read, not run.</p>
+<p>What the page answers: what the paper does and what its code scores; whether its numbers hold
+on the days that it does not score; how references that it leaves out do on the same samples;
+and what follows for the NHS panel.</p>
+<h2 id="the-answers-in-short">The answers in short</h2>
+<ul>
+<li><strong>The method works, by about a tenth.</strong> Over all days of the paper's test periods, the
+proposed model has 9 % less error than the same network without it (Europe 2.61 against 2.86,
+PJM 3.33 against 3.65, in per cent of the load range). That holds on hot days, cold days and
+ordinary days alike.</li>
+<li><strong>The headline gain comes from one window per region.</strong> The paper reports the error on 8
+consecutive days for all 18 European countries (25 February to 4 March 2018) and on 15
+consecutive days for all 19 PJM zones (29 June to 13 July 2023). In Europe the method is 20 %
+ahead of its best baseline inside that window and 4 % ahead on the 297 test days.</li>
+<li><strong>In PJM the scored window is not a heat wave.</strong> By the 95th percentile of the training
+period, 1.5 of its 15 days are hot. The processed PJM file has no data from 25 July to
+1 September 2023, the hottest weeks of that summer.</li>
+<li><strong>A model with no training is level with it.</strong> Chronos-2, given four weeks of history and the
+same temperature, has 11 % less error than the method in Europe (13 of 18 countries) and 6.5 %
+more in PJM (better in 6 of 19 zones). With the paper's seven days of history it is clearly
+worse. A gradient-boosted model and a linear regression with the paper's inputs do not reach
+the method.</li>
+<li><strong>The large errors are public holidays.</strong> They are 3.8 % of the European test days and
+12.5 % of the method's error; every model is 2.5 to 4.4 times worse on them. No model in
+the paper gets the calendar.</li>
+<li><strong>For the NHS panel the lever is small in error and large in value.</strong> Heat-wave and
+cold-wave days hold 19 % of our forecast error on 12 % of the site-days; against the same
+site and month their excess is 5 % of all error, where days on which a plant starts or stops
+hold 42 %. But on heat-wave days the forecast keeps 33 % of the achievable peak cut against
+50 % on the other days of the same months (section 6).</li>
+</ul>
+<h2 id="1-what-the-paper-proposes">1. What the paper proposes</h2>
+<p>Extreme Synthesis-Disentanglement Forecasting (ESDF), in three stages:</p>
+<ol>
+<li><strong>Synthesis.</strong> A score-based diffusion model (U-Net, variance-exploding SDE, 1,000 steps,
+predictor-corrector sampling) learns the joint distribution of eight days of hourly load and
+temperature. A classifier on noisy samples (cold wave, heat wave, other) steers sampling
+towards extreme regimes. The model makes as many synthetic samples as there are real ones
+(1,200 per European country, 800 per PJM zone).</li>
+<li><strong>Disentanglement.</strong> A domain separation network: one shared encoder and one private encoder
+each for real and synthetic samples, a forecast head and a reconstruction head. The loss is
+the L1 forecast error on both domains, 0.1 times the reconstruction error, a maximum mean
+discrepancy term that aligns the shared codes (weight 0.5 or 1) and an orthogonality penalty
+between shared and private codes (weight 0.5 or 1).</li>
+<li><strong>Inference.</strong> The shared and the real-domain encoder with the real-domain head.</li>
+</ol>
+<p>The paper reports 80 series in six regions (Europe 18, PJM 19, Texas, Guangdong 20, Hunan 14,
+India 2), an accuracy of 97.1 % (one minus the normalised error) and 9.8 to 33.5 % less
+normalised absolute error than the strongest baseline of each region. Baselines: MLP, LSTM,
+CNN, N-BEATS, ImpactNet, Informer, Autoformer. Public data: Europe (Open Power System Data)
+and PJM; the Chinese series are not released.</p>
+<h2 id="2-what-the-code-scores">2. What the code scores</h2>
+<p>Read from <code>forecasting_using_generated_samples/</code> (Europe) and
+<code>forecasting_using_generated_samples_PJM/</code>; line numbers at commit 0036608.</p>
+<table>
+<thead>
+<tr>
+  <th>Point</th>
+  <th>What the code does</th>
+  <th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Task</td>
+  <td>The 24 hourly loads of day D from the hourly load and temperature of D−7 to D−1 and the <strong>observed</strong> temperature of D. One sample is an 8 × 24 slice.</td>
+  <td><code>Forecasting_model_training.py</code>, <code>train_dataloader</code>; <code>model(x, label[:, 24:48])</code></td>
+</tr>
+<tr>
+  <td>Unit</td>
+  <td>Load is scaled to 0–1 by the minimum and maximum of the training period. A reported error of 0.03 is 3 % of that range, about 2.3 % of mean load in Europe and 3.4 % in PJM.</td>
+  <td><code>data_scaler</code></td>
+</tr>
+<tr>
+  <td>Test set</td>
+  <td>Samples of the last year, but the reported error is taken on <code>[24·day : 24·(day+period)]</code>: <code>day = 19, period = 8</code> (Europe), <code>day = 22, period = 15</code> (PJM). One window, the same for every series of the region.</td>
+  <td>lines 29–30; PJM lines 33–34</td>
+</tr>
+<tr>
+  <td>Wave label</td>
+  <td>Daily temperature is the mean of the day's highest and lowest hour. A day is a heat (cold) wave day when a positive excess over the 95th (below the 5th) percentile exists; the acceleration term only scales the index, so no duration rule is in effect.</td>
+  <td><code>Dataset_Loader_2D.py</code> lines 53–62</td>
+</tr>
+<tr>
+  <td>Guidance</td>
+  <td>The weight of the classifier gradient is <code>numda = 0</code> in the published Europe code and 10 in the PJM code. With 0 the Europe &quot;cold wave&quot; samples are unconditional draws.</td>
+  <td><code>diff_Model_2D.py</code> line 12</td>
+</tr>
+<tr>
+  <td>Validation</td>
+  <td>A random 20 % of the training samples (the paper says 10 %). Neighbouring samples share seven of eight days, so the validation set is not independent of the training set.</td>
+  <td>line 132</td>
+</tr>
+<tr>
+  <td>Seeds</td>
+  <td>One seed (2) for every run.</td>
+  <td>throughout</td>
+</tr>
+<tr>
+  <td>Test curve</td>
+  <td>The test error is computed after every epoch for the convergence figures. The saved model is the one with the best validation loss.</td>
+  <td><code>training_process</code>, <code>training_process_dsn</code></td>
+</tr>
+<tr>
+  <td>PJM data</td>
+  <td>The processed file has 113 of the 153 days from May to September 2023: 25 July to 1 September and 16 September are missing. Test samples are 7 June to 20 July.</td>
+  <td><code>Data/.../PJM_reformed_data/</code></td>
+</tr>
+</tbody>
+</table>
+<p>The samples were rebuilt from the paper's loaders and compared with the <code>true</code> column of its
+saved forecasts: <strong>all 37 public series match exactly</strong> (297 samples per European country, 44
+per PJM zone).</p>
+<details class="table"><summary>Table: 37 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>series</th>
+      <th>samples</th>
+      <th>paper_samples</th>
+      <th>max_abs_diff_true</th>
+      <th>hot_days</th>
+      <th>cold_days</th>
+      <th>window_first_day</th>
+      <th>window_last_day</th>
+      <th>window_hot_or_cold_days</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>europe</td>
+      <td>Belgium</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>39</td>
+      <td>18</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Croatia</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>13</td>
+      <td>14</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Denmark</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>55</td>
+      <td>25</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Finland</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>44</td>
+      <td>31</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>France</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>23</td>
+      <td>19</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Germany</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>32</td>
+      <td>22</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Hungary</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>13</td>
+      <td>10</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Ireland</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>55</td>
+      <td>21</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Italy</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>12</td>
+      <td>11</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Latvia</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>45</td>
+      <td>28</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Lithuania</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>34</td>
+      <td>25</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Netherlands</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>37</td>
+      <td>20</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Norway</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>54</td>
+      <td>21</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Poland</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>24</td>
+      <td>19</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Romania</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>0</td>
+      <td>8</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Slovenia</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>13</td>
+      <td>26</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Sweden</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>55</td>
+      <td>26</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Switzerland</td>
+      <td>297</td>
+      <td>297</td>
+      <td>0</td>
+      <td>14</td>
+      <td>11</td>
+      <td>2018-02-25</td>
+      <td>2018-03-04</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Allegheny Power System</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>American Electric Power Co., Inc</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Atlantic Electric Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Baltimore Gas and Electric Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>ComEd</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>4</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Dayton Power and Light Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Delmarva Power and Light</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Dominion Energy</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Duke Energy Ohio</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Duquesne Light</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>East Kentucky Power Coop</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>2</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>First Energy - Pennsylvania Electric Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Jersey Central Power and Light Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Metropolitan Edison Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Orion Energy</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Pennsylvania Electric Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Pennsylvania Power and Light Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Potomac Electric Power</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Public Service Electric and Gas Company</td>
+      <td>44</td>
+      <td>44</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>2023-06-29</td>
+      <td>2023-07-13</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/samples_check.csv">code/reports/esdf_check/samples_check.csv</a> (37 rows shown)</p>
+
+<h2 id="3-the-reported-numbers-reproduce-from-the-saved-forecasts">3. The reported numbers reproduce from the saved forecasts</h2>
+<p>The window error recomputed from the repository's saved forecasts against the paper's results
+workbook, mean over the series of the region:</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>region</th>
+      <th>model</th>
+      <th>reported_mae</th>
+      <th>recomputed_mae</th>
+      <th>difference_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>europe</td>
+      <td>Autoformer</td>
+      <td>0.064</td>
+      <td>0.064</td>
+      <td>-0.0001</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>CNN</td>
+      <td>0.0407</td>
+      <td>0.0397</td>
+      <td>-2.3497</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>ImpactNet</td>
+      <td>0.0355</td>
+      <td>0.0355</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>Informer</td>
+      <td>0.0345</td>
+      <td>0.0345</td>
+      <td>-0.0001</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>LSTM</td>
+      <td>0.0331</td>
+      <td>0.0329</td>
+      <td>-0.7877</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>MLP</td>
+      <td>0.0447</td>
+      <td>0.0482</td>
+      <td>7.8029</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>N-BEATS</td>
+      <td>0.0329</td>
+      <td>0.0329</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>europe</td>
+      <td>ESDF (LSTM)</td>
+      <td>0.0248</td>
+      <td>0.0262</td>
+      <td>5.4885</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Autoformer</td>
+      <td>0.0578</td>
+      <td>0.0578</td>
+      <td>-0.0001</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>CNN</td>
+      <td>0.0456</td>
+      <td>0.0456</td>
+      <td>-0.0001</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>ImpactNet</td>
+      <td>0.0412</td>
+      <td>0.0412</td>
+      <td>0.0002</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>Informer</td>
+      <td>0.0491</td>
+      <td>0.0491</td>
+      <td>-0.0001</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>LSTM</td>
+      <td>0.0374</td>
+      <td>0.0374</td>
+      <td>-0.0001</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>MLP</td>
+      <td>0.0467</td>
+      <td>0.0467</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>N-BEATS</td>
+      <td>0.0456</td>
+      <td>0.0456</td>
+      <td>-0.0002</td>
+    </tr>
+    <tr>
+      <td>pjm</td>
+      <td>ESDF (LSTM)</td>
+      <td>0.0341</td>
+      <td>0.0341</td>
+      <td>0.0002</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/reproduction.csv">code/reports/esdf_check/reproduction.csv</a> (16 rows shown)</p>
+
+<p>All eight PJM numbers and the four Europe baselines that have one saved run reproduce exactly.
+The Europe numbers of the method and of its three backbones differ by 1 to 8 % between the
+workbook and the saved files (another run).</p>
+<h2 id="4-beyond-the-scored-window">4. Beyond the scored window</h2>
+<p>Error in per cent of the training range, mean over the series; <code>window</code> is what the paper
+reports, <code>all_days</code> every test day, <code>hot_cold_days</code> the days whose temperature is beyond the 5th
+or 95th percentile of the training period (Europe: 31 hot and 20 cold days per country of 297;
+PJM: 3 hot days of 44). The last columns count the series in which a model is below ESDF (LSTM).</p>
+<p><strong>Europe, 18 countries, test days 6 February to 29 November 2018</strong></p>
+<figure class="single"><img src="figures/esdf_subsets_europe.png" alt="esdf_subsets_europe" loading="lazy"><figcaption>Europe: error on the paper's scored window (filled) and on all 297 test days (open). Grey: the paper's baselines; vermilion: the paper's method; colours: references that the paper does not have. <code>esdf_subsets_europe</code> <a href="figures/esdf_subsets_europe.pdf">PDF</a></figcaption></figure>
+
+<div class="chart" id="chart1"></div><p class="source">interactive; source: <a href="data/table_europe.csv">code/reports/esdf_check/table_europe.csv</a></p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>window_mae_pct</th>
+      <th>all_days_mae_pct</th>
+      <th>hot_cold_days_mae_pct</th>
+      <th>other_days_mae_pct</th>
+      <th>window_vs_esdf_pct</th>
+      <th>all_days_vs_esdf_pct</th>
+      <th>series_below_esdf_window</th>
+      <th>series_below_esdf_all_days</th>
+      <th>series</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Week before</td>
+      <td>7.38</td>
+      <td>5.14</td>
+      <td>5.23</td>
+      <td>5.2</td>
+      <td>181.81</td>
+      <td>97.3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>MLP</td>
+      <td>4.82</td>
+      <td>2.93</td>
+      <td>3.45</td>
+      <td>2.84</td>
+      <td>84.02</td>
+      <td>12.5</td>
+      <td>1</td>
+      <td>0</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>CNN</td>
+      <td>3.97</td>
+      <td>3.21</td>
+      <td>3.4</td>
+      <td>3.19</td>
+      <td>51.67</td>
+      <td>23.34</td>
+      <td>1</td>
+      <td>0</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>LSTM</td>
+      <td>3.29</td>
+      <td>2.86</td>
+      <td>2.97</td>
+      <td>2.86</td>
+      <td>25.56</td>
+      <td>9.92</td>
+      <td>6</td>
+      <td>4</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>LSTM + synthetic</td>
+      <td>3.18</td>
+      <td>2.68</td>
+      <td>2.86</td>
+      <td>2.65</td>
+      <td>21.34</td>
+      <td>2.85</td>
+      <td>5</td>
+      <td>8</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>N-BEATS</td>
+      <td>3.29</td>
+      <td>2.71</td>
+      <td>2.81</td>
+      <td>2.71</td>
+      <td>25.8</td>
+      <td>4</td>
+      <td>4</td>
+      <td>6</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>ImpactNet</td>
+      <td>3.55</td>
+      <td>2.89</td>
+      <td>3.01</td>
+      <td>2.87</td>
+      <td>35.56</td>
+      <td>10.88</td>
+      <td>4</td>
+      <td>4</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Informer</td>
+      <td>3.45</td>
+      <td>2.9</td>
+      <td>2.95</td>
+      <td>2.88</td>
+      <td>31.89</td>
+      <td>11.15</td>
+      <td>3</td>
+      <td>3</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Autoformer</td>
+      <td>6.4</td>
+      <td>3.88</td>
+      <td>4.81</td>
+      <td>3.75</td>
+      <td>144.42</td>
+      <td>48.83</td>
+      <td>0</td>
+      <td>0</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>ESDF (MLP)</td>
+      <td>2.91</td>
+      <td>2.65</td>
+      <td>2.57</td>
+      <td>2.67</td>
+      <td>11.09</td>
+      <td>1.76</td>
+      <td>4</td>
+      <td>7</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>ESDF (CNN)</td>
+      <td>2.64</td>
+      <td>2.73</td>
+      <td>2.6</td>
+      <td>2.75</td>
+      <td>0.72</td>
+      <td>4.74</td>
+      <td>6</td>
+      <td>5</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>ESDF (LSTM)</td>
+      <td>2.62</td>
+      <td>2.61</td>
+      <td>2.51</td>
+      <td>2.62</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Linear regression</td>
+      <td>3.49</td>
+      <td>3.38</td>
+      <td>3.24</td>
+      <td>3.4</td>
+      <td>33.31</td>
+      <td>29.66</td>
+      <td>5</td>
+      <td>1</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>LightGBM</td>
+      <td>3.75</td>
+      <td>2.97</td>
+      <td>2.98</td>
+      <td>2.99</td>
+      <td>43.16</td>
+      <td>14.17</td>
+      <td>3</td>
+      <td>1</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Chronos-2, 7 days</td>
+      <td>3.88</td>
+      <td>3.51</td>
+      <td>3.22</td>
+      <td>3.6</td>
+      <td>48.37</td>
+      <td>34.86</td>
+      <td>3</td>
+      <td>1</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>Chronos-2, 4 weeks</td>
+      <td>2.22</td>
+      <td>2.33</td>
+      <td>1.99</td>
+      <td>2.41</td>
+      <td>-15.1</td>
+      <td>-10.61</td>
+      <td>13</td>
+      <td>13</td>
+      <td>18</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_europe.csv">code/reports/esdf_check/table_europe.csv</a> (16 rows shown)</p>
+
+<p><strong>PJM, 19 zones, test days 7 June to 20 July 2023</strong></p>
+<figure class="single"><img src="figures/esdf_subsets_pjm.png" alt="esdf_subsets_pjm" loading="lazy"><figcaption>PJM: error on the paper's scored window (filled) and on all 44 test days (open). <code>esdf_subsets_pjm</code> <a href="figures/esdf_subsets_pjm.pdf">PDF</a></figcaption></figure>
+
+<div class="chart" id="chart2"></div><p class="source">interactive; source: <a href="data/table_pjm.csv">code/reports/esdf_check/table_pjm.csv</a></p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>window_mae_pct</th>
+      <th>all_days_mae_pct</th>
+      <th>hot_cold_days_mae_pct</th>
+      <th>other_days_mae_pct</th>
+      <th>window_vs_esdf_pct</th>
+      <th>all_days_vs_esdf_pct</th>
+      <th>series_below_esdf_window</th>
+      <th>series_below_esdf_all_days</th>
+      <th>series</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Week before</td>
+      <td>9.08</td>
+      <td>8.23</td>
+      <td>5.92</td>
+      <td>8.39</td>
+      <td>166.39</td>
+      <td>147.41</td>
+      <td>0</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>MLP</td>
+      <td>4.67</td>
+      <td>4.94</td>
+      <td>4.28</td>
+      <td>4.98</td>
+      <td>36.96</td>
+      <td>48.65</td>
+      <td>0</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>CNN</td>
+      <td>4.56</td>
+      <td>4.54</td>
+      <td>4.27</td>
+      <td>4.55</td>
+      <td>33.62</td>
+      <td>36.39</td>
+      <td>0</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>LSTM</td>
+      <td>3.74</td>
+      <td>3.65</td>
+      <td>3.68</td>
+      <td>3.64</td>
+      <td>9.76</td>
+      <td>9.67</td>
+      <td>4</td>
+      <td>3</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>LSTM + synthetic</td>
+      <td>3.89</td>
+      <td>3.74</td>
+      <td>3.51</td>
+      <td>3.74</td>
+      <td>14.09</td>
+      <td>12.37</td>
+      <td>4</td>
+      <td>5</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>N-BEATS</td>
+      <td>4.56</td>
+      <td>4.73</td>
+      <td>4.38</td>
+      <td>4.75</td>
+      <td>33.57</td>
+      <td>42.33</td>
+      <td>1</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>ImpactNet</td>
+      <td>4.12</td>
+      <td>4.06</td>
+      <td>3.59</td>
+      <td>4.08</td>
+      <td>20.72</td>
+      <td>21.94</td>
+      <td>3</td>
+      <td>1</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>Informer</td>
+      <td>4.91</td>
+      <td>4.56</td>
+      <td>4.88</td>
+      <td>4.54</td>
+      <td>43.98</td>
+      <td>37.19</td>
+      <td>3</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>Autoformer</td>
+      <td>5.78</td>
+      <td>5.77</td>
+      <td>5.71</td>
+      <td>5.76</td>
+      <td>69.51</td>
+      <td>73.42</td>
+      <td>0</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>ESDF (MLP)</td>
+      <td>3.69</td>
+      <td>3.52</td>
+      <td>3.33</td>
+      <td>3.53</td>
+      <td>8.11</td>
+      <td>5.82</td>
+      <td>5</td>
+      <td>4</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>ESDF (CNN)</td>
+      <td>3.62</td>
+      <td>3.46</td>
+      <td>3.09</td>
+      <td>3.48</td>
+      <td>6.21</td>
+      <td>3.92</td>
+      <td>3</td>
+      <td>3</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>ESDF (LSTM)</td>
+      <td>3.41</td>
+      <td>3.33</td>
+      <td>2.98</td>
+      <td>3.34</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>Linear regression</td>
+      <td>4.51</td>
+      <td>4.36</td>
+      <td>4.11</td>
+      <td>4.37</td>
+      <td>32.36</td>
+      <td>31.01</td>
+      <td>0</td>
+      <td>1</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>LightGBM</td>
+      <td>3.79</td>
+      <td>3.64</td>
+      <td>3.31</td>
+      <td>3.66</td>
+      <td>11.04</td>
+      <td>9.52</td>
+      <td>3</td>
+      <td>2</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>Chronos-2, 7 days</td>
+      <td>4.28</td>
+      <td>4.2</td>
+      <td>3.57</td>
+      <td>4.23</td>
+      <td>25.46</td>
+      <td>26.14</td>
+      <td>1</td>
+      <td>0</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>Chronos-2, 4 weeks</td>
+      <td>3.66</td>
+      <td>3.54</td>
+      <td>3.08</td>
+      <td>3.57</td>
+      <td>7.36</td>
+      <td>6.47</td>
+      <td>6</td>
+      <td>6</td>
+      <td>19</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_pjm.csv">code/reports/esdf_check/table_pjm.csv</a> (16 rows shown)</p>
+
+<ul>
+<li><strong>Against its own backbone the method gains about 9 % everywhere.</strong> ESDF (LSTM) against
+the LSTM: Europe 2.61 against 2.86 on all days, PJM 3.33 against 3.65. The gain is not
+specific to extremes: in PJM it is 8.8 % inside the window and 8.8 % on all days.</li>
+<li><strong>The Europe headline is a window effect.</strong> Inside the eight days the method is 20 % below
+the best baseline (2.62 against 3.29); on all test days it is 4 % below N-BEATS (2.61 against
+2.71) and 3 % below the LSTM with the synthetic samples simply added (2.68).</li>
+<li><strong>Eighty series are not eighty tests.</strong> The 18 European countries are scored on the same
+eight days of one cold spell, the 19 PJM zones on the same fifteen days. With one seed and no
+interval, the number of independent events behind the public results is two.</li>
+</ul>
+<figure class="single"><img src="figures/esdf_gain.png" alt="esdf_gain" loading="lazy"><figcaption>Error of ESDF (LSTM) relative to the LSTM without synthetic samples, one point per series, by set of days. Bars: medians. Below zero the method is better. <code>esdf_gain</code> <a href="figures/esdf_gain.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/esdf_daily_europe.png" alt="esdf_daily_europe" loading="lazy"><figcaption>Europe: error on every test day, mean over the 18 countries. Shaded: the eight days that the paper scores. The spikes are public holidays (2 April, 1 May, 10 and 21 May, 15 August, 1 November). <code>esdf_daily_europe</code> <a href="figures/esdf_daily_europe.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/esdf_daily_pjm.png" alt="esdf_daily_pjm" loading="lazy"><figcaption>PJM: error on every test day, mean over the 19 zones. Shaded: the fifteen days that the paper scores. <code>esdf_daily_pjm</code> <a href="figures/esdf_daily_pjm.pdf">PDF</a></figcaption></figure>
+
+<h2 id="5-references-that-the-paper-does-not-have">5. References that the paper does not have</h2>
+<p>All get the paper's inputs: the seven days of hourly load and temperature and the observed
+temperature of the target day (<code>Week before</code> uses the load only).</p>
+<ul>
+<li><strong>Chronos-2 with no training and four weeks of history: 11 % below the method in Europe,
+6.5 % above it in PJM.</strong> Europe: 2.33 against 2.61 on all days (better in 13 of 18 countries), 1.99
+against 2.51 on hot and cold days (15 of 18), 2.22 against 2.62 in the scored window. PJM:
+3.54 against 3.33 (better in 6 of 19 zones).</li>
+<li><strong>With the paper's seven days it is not enough</strong>: 3.51 (Europe) and 4.20 (PJM). One week of
+context holds one example of each weekday.</li>
+<li><strong>Trained references with the paper's inputs stay behind</strong>: LightGBM 2.97 and 3.64, a linear
+regression per hour 3.38 and 4.36. The paper's neural baselines are not weak for this task.</li>
+<li><strong>Why PJM differs.</strong> PJM summer load follows temperature closely, and the method has learnt
+that response from two years of the zone; a model that reads four weeks in context has not.
+A second reading cannot be excluded: the European national loads of 2015 to 2018 are public
+and can be in the training data of a pre-trained model. On the NHS panel, which no public
+model can have seen, the same model also leads (<code>doc/poc_results.md</code>).</li>
+</ul>
+<p><strong>Public holidays.</strong> No model of the paper sees the calendar. On the public holidays of the 18
+countries (3.8 % of the test days) every model has 2.5 to 4.4 times its error of the other
+days, and the method is worse than its backbone there (10.2 against 8.6):</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>holiday_mae_pct</th>
+      <th>other_days_mae_pct</th>
+      <th>holiday_share_of_days_pct</th>
+      <th>holiday_share_of_error_pct</th>
+      <th>holiday_over_other</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Week before</td>
+      <td>14.87</td>
+      <td>4.83</td>
+      <td>3.76</td>
+      <td>9.57</td>
+      <td>3.08</td>
+    </tr>
+    <tr>
+      <td>MLP</td>
+      <td>10.08</td>
+      <td>2.7</td>
+      <td>3.76</td>
+      <td>11.25</td>
+      <td>3.73</td>
+    </tr>
+    <tr>
+      <td>CNN</td>
+      <td>9.3</td>
+      <td>3.02</td>
+      <td>3.76</td>
+      <td>9.48</td>
+      <td>3.08</td>
+    </tr>
+    <tr>
+      <td>LSTM</td>
+      <td>8.6</td>
+      <td>2.68</td>
+      <td>3.76</td>
+      <td>10.07</td>
+      <td>3.21</td>
+    </tr>
+    <tr>
+      <td>LSTM + synthetic</td>
+      <td>8.62</td>
+      <td>2.5</td>
+      <td>3.76</td>
+      <td>10.52</td>
+      <td>3.45</td>
+    </tr>
+    <tr>
+      <td>N-BEATS</td>
+      <td>8.3</td>
+      <td>2.53</td>
+      <td>3.76</td>
+      <td>10.36</td>
+      <td>3.29</td>
+    </tr>
+    <tr>
+      <td>ImpactNet</td>
+      <td>8.9</td>
+      <td>2.7</td>
+      <td>3.76</td>
+      <td>10.06</td>
+      <td>3.29</td>
+    </tr>
+    <tr>
+      <td>Informer</td>
+      <td>8.75</td>
+      <td>2.71</td>
+      <td>3.76</td>
+      <td>10.34</td>
+      <td>3.23</td>
+    </tr>
+    <tr>
+      <td>Autoformer</td>
+      <td>9.93</td>
+      <td>3.69</td>
+      <td>3.76</td>
+      <td>8.16</td>
+      <td>2.69</td>
+    </tr>
+    <tr>
+      <td>ESDF (MLP)</td>
+      <td>10.38</td>
+      <td>2.41</td>
+      <td>3.76</td>
+      <td>12.52</td>
+      <td>4.31</td>
+    </tr>
+    <tr>
+      <td>ESDF (CNN)</td>
+      <td>10.89</td>
+      <td>2.48</td>
+      <td>3.76</td>
+      <td>12.51</td>
+      <td>4.4</td>
+    </tr>
+    <tr>
+      <td>ESDF (LSTM)</td>
+      <td>10.2</td>
+      <td>2.37</td>
+      <td>3.76</td>
+      <td>12.55</td>
+      <td>4.3</td>
+    </tr>
+    <tr>
+      <td>Linear regression</td>
+      <td>9.77</td>
+      <td>3.18</td>
+      <td>3.76</td>
+      <td>9.11</td>
+      <td>3.07</td>
+    </tr>
+    <tr>
+      <td>LightGBM</td>
+      <td>10.38</td>
+      <td>2.74</td>
+      <td>3.76</td>
+      <td>11.25</td>
+      <td>3.79</td>
+    </tr>
+    <tr>
+      <td>Chronos-2, 7 days</td>
+      <td>8.27</td>
+      <td>3.37</td>
+      <td>3.76</td>
+      <td>7.42</td>
+      <td>2.45</td>
+    </tr>
+    <tr>
+      <td>Chronos-2, 4 weeks</td>
+      <td>9.34</td>
+      <td>2.11</td>
+      <td>3.76</td>
+      <td>12.66</td>
+      <td>4.42</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_holidays_europe.csv">code/reports/esdf_check/table_holidays_europe.csv</a> (16 rows shown)</p>
+
+<h2 id="6-what-follows-for-the-nhs-panel">6. What follows for the NHS panel</h2>
+<p>The paper's premise is that models fail on rare extreme days. Tested on the panel with a
+forecast for every day of the test window (91 sites, 342 days, Chronos-2 without covariates;
+<code>doc/forecast_error_anatomy.md</code>), with the paper's labels (site temperature beyond the 5th or
+95th percentile of the days before June 2025):</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>matched_to</th>
+      <th>group</th>
+      <th>wave</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>nmae_pct</th>
+      <th>nmae_level_oracle_pct</th>
+      <th>median_bias_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold wave</td>
+      <td>all sites</td>
+      <td>cold wave</td>
+      <td>91</td>
+      <td>817</td>
+      <td>13.6</td>
+      <td>11.2</td>
+      <td>-3.3</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>91</td>
+      <td>7803</td>
+      <td>11.4</td>
+      <td>9.5</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>inpatient</td>
+      <td>cold wave</td>
+      <td>33</td>
+      <td>285</td>
+      <td>11.4</td>
+      <td>9.4</td>
+      <td>-3.4</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>33</td>
+      <td>2760</td>
+      <td>10.1</td>
+      <td>8.7</td>
+      <td>-0.4</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>on-site CHP</td>
+      <td>cold wave</td>
+      <td>12</td>
+      <td>118</td>
+      <td>16.8</td>
+      <td>14.4</td>
+      <td>-2.2</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>12</td>
+      <td>1200</td>
+      <td>13.9</td>
+      <td>11.8</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>outpatient</td>
+      <td>cold wave</td>
+      <td>46</td>
+      <td>414</td>
+      <td>14.3</td>
+      <td>11.7</td>
+      <td>-3.6</td>
+    </tr>
+    <tr>
+      <td>cold wave</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>46</td>
+      <td>3843</td>
+      <td>11.7</td>
+      <td>9.5</td>
+      <td>-0.1</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>all sites</td>
+      <td>heat wave</td>
+      <td>91</td>
+      <td>2990</td>
+      <td>14.7</td>
+      <td>13</td>
+      <td>-1.6</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>all sites</td>
+      <td>other days</td>
+      <td>91</td>
+      <td>7349</td>
+      <td>13.2</td>
+      <td>12.2</td>
+      <td>-0.4</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>inpatient</td>
+      <td>heat wave</td>
+      <td>33</td>
+      <td>1093</td>
+      <td>13.7</td>
+      <td>12.7</td>
+      <td>-2.3</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>inpatient</td>
+      <td>other days</td>
+      <td>33</td>
+      <td>2756</td>
+      <td>12.3</td>
+      <td>12</td>
+      <td>-0.7</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>on-site CHP</td>
+      <td>heat wave</td>
+      <td>12</td>
+      <td>376</td>
+      <td>24.3</td>
+      <td>21</td>
+      <td>-5</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>on-site CHP</td>
+      <td>other days</td>
+      <td>12</td>
+      <td>897</td>
+      <td>20</td>
+      <td>18</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>outpatient</td>
+      <td>heat wave</td>
+      <td>46</td>
+      <td>1521</td>
+      <td>12.9</td>
+      <td>11.1</td>
+      <td>-0.8</td>
+    </tr>
+    <tr>
+      <td>heat wave</td>
+      <td>outpatient</td>
+      <td>other days</td>
+      <td>46</td>
+      <td>3696</td>
+      <td>12.1</td>
+      <td>10.8</td>
+      <td>-0.3</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/daily_error_wave_matched.csv">code/reports/forecast_anatomy/daily_error_wave_matched.csv</a> (16 rows shown)</p>
+
+<ul>
+<li><strong>The premise holds, mildly.</strong> Against the other days of the same site and month, heat-wave
+days have 14.7 % against 13.2 % error and cold-wave days 13.6 % against 11.4 %. The forecast
+is too low on both (median bias −1.6 % and −3.3 %).</li>
+<li><strong>The lever is small in error terms.</strong> Heat-wave days were 9.7 % of the site-days of this
+test window (the summer of 2025) and hold 14.9 % of the error; cold-wave days 2.6 % and 4.0 %.
+Bringing them to the error of their neighbours removes 4.9 % of the panel's error (heat
+3.6 %, cold 1.3 %). Days with a plant start or stop hold 42 %.</li>
+<li><strong>The lever is larger in decision terms.</strong> On heat-wave days the battery that plans on the
+forecast keeps 32.9 % of the achievable peak cut against 49.9 % on the other days of the
+same site and month; on cold-wave days 43.6 % against 53.0 %. With forecast weather among
+the inputs the best model keeps 40.0 % on heat-wave days (section 7 of the forecast page).</li>
+<li><strong>What transfers.</strong> For the bulk of the error, nothing: it comes from plant state, which no
+sample generator can supply. For heat-wave days the method is a candidate, because there the
+forecast is low by a few per cent and the cost is in the decision; its gain on regional loads
+is a tenth, and the test would be the peak cut on heat-wave days, not the mean error. Worth
+keeping in any case: scoring on every day and by kind of day, a reference with no training in
+every comparison, and the calendar among the inputs.</li>
+</ul>
+<h2 id="7-limits-of-this-check">7. Limits of this check</h2>
+<ul>
+<li>Only the public series were checked: Europe and PJM, 37 of the paper's 80. The Chinese series
+that carry the cold-wave and heat-wave results for Guangdong and Hunan are not released.</li>
+<li>The method was scored from the saved forecasts of the repository, not retrained. One run per
+model, as in the paper; the differences of a few per cent between models are inside what a
+second seed could move.</li>
+<li>The references use fixed settings and no tuning. A tuned gradient-boosted model or a
+fine-tuned pre-trained model can do better than shown.</li>
+<li>The observed temperature of the target day is an input of every model, as in the paper. With
+a weather forecast the errors of all models rise.</li>
+</ul>
+<h2 id="reproduce">Reproduce</h2>
+<pre><code>git clone https://github.com/hkuedl/Heat-Cold_Wave_Load_Forecasting   # into code/data/external/esdf
+.venv/bin/python -I -m sense_energy.cli esdf-check --threads 8        # 12 minutes on 8 CPU threads
+.venv/bin/python code/scripts/esdf_check/run_all.py
+</code></pre>
+<p class="meta">Built from <code>doc/heat_cold_wave_paper_check.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+<script>
+window.addEventListener("load", function () {
+  (function () {
+    var el = document.getElementById("chart1"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "Europe, 18 countries, all 297 test days", "width": "container", "height": 420, "data": {"values": [{"model": "Week before", "window_mae_pct": 7.3761383629, "all_days_mae_pct": 5.1413066536, "hot_cold_days_mae_pct": 5.2346022437, "other_days_mae_pct": 5.1997870008, "window_vs_esdf_pct": 181.810070691, "all_days_vs_esdf_pct": 97.3042450407, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 18}, {"model": "MLP", "window_mae_pct": 4.8166108896, "all_days_mae_pct": 2.9315346824, "hot_cold_days_mae_pct": 3.4469561455, "other_days_mae_pct": 2.8416813875, "window_vs_esdf_pct": 84.0216910936, "all_days_vs_esdf_pct": 12.5014079699, "series_below_esdf_window": 1, "series_below_esdf_all_days": 0, "series": 18}, {"model": "CNN", "window_mae_pct": 3.9698210998, "all_days_mae_pct": 3.2140235835, "hot_cold_days_mae_pct": 3.4031462943, "other_days_mae_pct": 3.1866692844, "window_vs_esdf_pct": 51.6695470893, "all_days_vs_esdf_pct": 23.3422823064, "series_below_esdf_window": 1, "series_below_esdf_all_days": 0, "series": 18}, {"model": "LSTM", "window_mae_pct": 3.2863588182, "all_days_mae_pct": 2.8642751094, "hot_cold_days_mae_pct": 2.9697461012, "other_days_mae_pct": 2.8576753812, "window_vs_esdf_pct": 25.5574347034, "all_days_vs_esdf_pct": 9.9202354821, "series_below_esdf_window": 6, "series_below_esdf_all_days": 4, "series": 18}, {"model": "LSTM + synthetic", "window_mae_pct": 3.1760147659, "all_days_mae_pct": 2.6800330399, "hot_cold_days_mae_pct": 2.8561440234, "other_days_mae_pct": 2.6523555002, "window_vs_esdf_pct": 21.3416698108, "all_days_vs_esdf_pct": 2.8497094716, "series_below_esdf_window": 5, "series_below_esdf_all_days": 8, "series": 18}, {"model": "N-BEATS", "window_mae_pct": 3.2926068739, "all_days_mae_pct": 2.7100769094, "hot_cold_days_mae_pct": 2.8109736085, "other_days_mae_pct": 2.7120163377, "window_vs_esdf_pct": 25.7961456563, "all_days_vs_esdf_pct": 4.0026815439, "series_below_esdf_window": 4, "series_below_esdf_all_days": 6, "series": 18}, {"model": "ImpactNet", "window_mae_pct": 3.5481388147, "all_days_mae_pct": 2.8892860995, "hot_cold_days_mae_pct": 3.0133730002, "other_days_mae_pct": 2.8737264748, "window_vs_esdf_pct": 35.5589064375, "all_days_vs_esdf_pct": 10.8800643471, "series_below_esdf_window": 4, "series_below_esdf_all_days": 4, "series": 18}, {"model": "Informer", "window_mae_pct": 3.4520806468, "all_days_mae_pct": 2.8963567366, "hot_cold_days_mae_pct": 2.9465704881, "other_days_mae_pct": 2.8839195463, "window_vs_esdf_pct": 31.8889428665, "all_days_vs_esdf_pct": 11.1514091224, "series_below_esdf_window": 3, "series_below_esdf_all_days": 3, "series": 18}, {"model": "Autoformer", "window_mae_pct": 6.3973926411, "all_days_mae_pct": 3.8780775213, "hot_cold_days_mae_pct": 4.8120293131, "other_days_mae_pct": 3.7453714699, "window_vs_esdf_pct": 144.4164661429, "all_days_vs_esdf_pct": 48.8262049148, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 18}, {"model": "ESDF (MLP)", "window_mae_pct": 2.9076285209, "all_days_mae_pct": 2.6515676283, "hot_cold_days_mae_pct": 2.565172242, "other_days_mae_pct": 2.665028533, "window_vs_esdf_pct": 11.0878021398, "all_days_vs_esdf_pct": 1.7573127474, "series_below_esdf_window": 4, "series_below_esdf_all_days": 7, "series": 18}, {"model": "ESDF (CNN)", "window_mae_pct": 2.6363002487, "all_days_mae_pct": 2.7292707342, "hot_cold_days_mae_pct": 2.5953325961, "other_days_mae_pct": 2.7546525656, "window_vs_esdf_pct": 0.7215324454, "all_days_vs_esdf_pct": 4.7392692171, "series_below_esdf_window": 6, "series_below_esdf_all_days": 5, "series": 18}, {"model": "ESDF (LSTM)", "window_mae_pct": 2.617414752, "all_days_mae_pct": 2.6057759946, "hot_cold_days_mae_pct": 2.5138680477, "other_days_mae_pct": 2.6244190836, "window_vs_esdf_pct": 0.0, "all_days_vs_esdf_pct": 0.0, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 18}, {"model": "Linear regression", "window_mae_pct": 3.4892194632, "all_days_mae_pct": 3.3785760366, "hot_cold_days_mae_pct": 3.2430828974, "other_days_mae_pct": 3.4000225358, "window_vs_esdf_pct": 33.3078550316, "all_days_vs_esdf_pct": 29.6571940029, "series_below_esdf_window": 5, "series_below_esdf_all_days": 1, "series": 18}, {"model": "LightGBM", "window_mae_pct": 3.7469625991, "all_days_mae_pct": 2.9749849824, "hot_cold_days_mae_pct": 2.9789997051, "other_days_mae_pct": 2.9882046013, "window_vs_esdf_pct": 43.1550959305, "all_days_vs_esdf_pct": 14.1688690262, "series_below_esdf_window": 3, "series_below_esdf_all_days": 1, "series": 18}, {"model": "Chronos-2, 7 days", "window_mae_pct": 3.8833678402, "all_days_mae_pct": 3.514101583, "hot_cold_days_mae_pct": 3.2202598687, "other_days_mae_pct": 3.6025356902, "window_vs_esdf_pct": 48.3665451665, "all_days_vs_esdf_pct": 34.8581608805, "series_below_esdf_window": 3, "series_below_esdf_all_days": 1, "series": 18}, {"model": "Chronos-2, 4 weeks", "window_mae_pct": 2.2222714104, "all_days_mae_pct": 2.3292741782, "hot_cold_days_mae_pct": 1.9905635003, "other_days_mae_pct": 2.4082996343, "window_vs_esdf_pct": -15.0967033907, "all_days_vs_esdf_pct": -10.6111122744, "series_below_esdf_window": 13, "series_below_esdf_all_days": 13, "series": 18}]}, "mark": {"type": "bar", "tooltip": true}, "encoding": {"x": {"field": "all_days_mae_pct", "type": "quantitative", "title": "Mean absolute error on all test days (% of the training load range)"}, "y": {"field": "model", "type": "nominal", "title": "model"}, "tooltip": [{"field": "model", "type": "nominal"}, {"field": "window_mae_pct", "type": "quantitative"}, {"field": "all_days_mae_pct", "type": "quantitative"}, {"field": "hot_cold_days_mae_pct", "type": "quantitative"}, {"field": "other_days_mae_pct", "type": "quantitative"}, {"field": "window_vs_esdf_pct", "type": "quantitative"}, {"field": "all_days_vs_esdf_pct", "type": "quantitative"}, {"field": "series_below_esdf_window", "type": "quantitative"}, {"field": "series_below_esdf_all_days", "type": "quantitative"}, {"field": "series", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
+    spec.width = Math.max(280, el.clientWidth - 90);
+    vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
+  })();
+  (function () {
+    var el = document.getElementById("chart2"), spec = {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "title": "PJM, 19 zones, all 44 test days", "width": "container", "height": 420, "data": {"values": [{"model": "Week before", "window_mae_pct": 9.0849719335, "all_days_mae_pct": 8.2290735981, "hot_cold_days_mae_pct": 5.9156638993, "other_days_mae_pct": 8.3908852321, "window_vs_esdf_pct": 166.3944148445, "all_days_vs_esdf_pct": 147.4076134351, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 19}, {"model": "MLP", "window_mae_pct": 4.6706473515, "all_days_mae_pct": 4.9441831504, "hot_cold_days_mae_pct": 4.2830862081, "other_days_mae_pct": 4.9810310278, "window_vs_esdf_pct": 36.9552242157, "all_days_vs_esdf_pct": 48.6471762643, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 19}, {"model": "CNN", "window_mae_pct": 4.5567501323, "all_days_mae_pct": 4.5363574602, "hot_cold_days_mae_pct": 4.2680697666, "other_days_mae_pct": 4.5535028272, "window_vs_esdf_pct": 33.6154689267, "all_days_vs_esdf_pct": 36.3858713303, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 19}, {"model": "LSTM", "window_mae_pct": 3.7432980034, "all_days_mae_pct": 3.6478570764, "hot_cold_days_mae_pct": 3.684274618, "other_days_mae_pct": 3.6425670572, "window_vs_esdf_pct": 9.762989749, "all_days_vs_esdf_pct": 9.6730516086, "series_below_esdf_window": 4, "series_below_esdf_all_days": 3, "series": 19}, {"model": "LSTM + synthetic", "window_mae_pct": 3.8909621176, "all_days_mae_pct": 3.7376675781, "hot_cold_days_mae_pct": 3.513088629, "other_days_mae_pct": 3.74444442, "window_vs_esdf_pct": 14.0928760253, "all_days_vs_esdf_pct": 12.3732099734, "series_below_esdf_window": 4, "series_below_esdf_all_days": 5, "series": 19}, {"model": "N-BEATS", "window_mae_pct": 4.5550868734, "all_days_mae_pct": 4.7339574439, "hot_cold_days_mae_pct": 4.3782474728, "other_days_mae_pct": 4.7538736957, "window_vs_esdf_pct": 33.566697958, "all_days_vs_esdf_pct": 42.3267272232, "series_below_esdf_window": 1, "series_below_esdf_all_days": 0, "series": 19}, {"model": "ImpactNet", "window_mae_pct": 4.1168956534, "all_days_mae_pct": 4.0557641119, "hot_cold_days_mae_pct": 3.5852833441, "other_days_mae_pct": 4.082460144, "window_vs_esdf_pct": 20.7178202189, "all_days_vs_esdf_pct": 21.9368021962, "series_below_esdf_window": 3, "series_below_esdf_all_days": 1, "series": 19}, {"model": "Informer", "window_mae_pct": 4.9101161259, "all_days_mae_pct": 4.5631423845, "hot_cold_days_mae_pct": 4.8837325957, "other_days_mae_pct": 4.5394561656, "window_vs_esdf_pct": 43.9770559278, "all_days_vs_esdf_pct": 37.1911617577, "series_below_esdf_window": 3, "series_below_esdf_all_days": 0, "series": 19}, {"model": "Autoformer", "window_mae_pct": 5.780959841, "all_days_mae_pct": 5.7682366017, "hot_cold_days_mae_pct": 5.7134689132, "other_days_mae_pct": 5.7648322549, "window_vs_esdf_pct": 69.512401949, "all_days_vs_esdf_pct": 73.4223949218, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 19}, {"model": "ESDF (MLP)", "window_mae_pct": 3.6870709058, "all_days_mae_pct": 3.5198437694, "hot_cold_days_mae_pct": 3.3260301338, "other_days_mae_pct": 3.5279537687, "window_vs_esdf_pct": 8.1142686661, "all_days_vs_esdf_pct": 5.8243235123, "series_below_esdf_window": 5, "series_below_esdf_all_days": 4, "series": 19}, {"model": "ESDF (CNN)", "window_mae_pct": 3.6221089453, "all_days_mae_pct": 3.4564548386, "hot_cold_days_mae_pct": 3.0859903319, "other_days_mae_pct": 3.4750904665, "window_vs_esdf_pct": 6.209419252, "all_days_vs_esdf_pct": 3.9185313347, "series_below_esdf_window": 3, "series_below_esdf_all_days": 3, "series": 19}, {"model": "ESDF (LSTM)", "window_mae_pct": 3.4103462487, "all_days_mae_pct": 3.3261197923, "hot_cold_days_mae_pct": 2.9793684193, "other_days_mae_pct": 3.3428484493, "window_vs_esdf_pct": 0.0, "all_days_vs_esdf_pct": 0.0, "series_below_esdf_window": 0, "series_below_esdf_all_days": 0, "series": 19}, {"model": "Linear regression", "window_mae_pct": 4.5139494633, "all_days_mae_pct": 4.3575746503, "hot_cold_days_mae_pct": 4.1066835733, "other_days_mae_pct": 4.3681670353, "window_vs_esdf_pct": 32.3604447788, "all_days_vs_esdf_pct": 31.0107549474, "series_below_esdf_window": 0, "series_below_esdf_all_days": 1, "series": 19}, {"model": "LightGBM", "window_mae_pct": 3.7867749537, "all_days_mae_pct": 3.6426679338, "hot_cold_days_mae_pct": 3.3053597927, "other_days_mae_pct": 3.6612913006, "window_vs_esdf_pct": 11.0378441817, "all_days_vs_esdf_pct": 9.5170397134, "series_below_esdf_window": 3, "series_below_esdf_all_days": 2, "series": 19}, {"model": "Chronos-2, 7 days", "window_mae_pct": 4.2787615863, "all_days_mae_pct": 4.1954123999, "hot_cold_days_mae_pct": 3.5709944145, "other_days_mae_pct": 4.2305593747, "window_vs_esdf_pct": 25.4641398344, "all_days_vs_esdf_pct": 26.1353367268, "series_below_esdf_window": 1, "series_below_esdf_all_days": 0, "series": 19}, {"model": "Chronos-2, 4 weeks", "window_mae_pct": 3.6613160596, "all_days_mae_pct": 3.5414809799, "hot_cold_days_mae_pct": 3.0828376489, "other_days_mae_pct": 3.5713744418, "window_vs_esdf_pct": 7.3590712653, "all_days_vs_esdf_pct": 6.4748476029, "series_below_esdf_window": 6, "series_below_esdf_all_days": 6, "series": 19}]}, "mark": {"type": "bar", "tooltip": true}, "encoding": {"x": {"field": "all_days_mae_pct", "type": "quantitative", "title": "Mean absolute error on all test days (% of the training load range)"}, "y": {"field": "model", "type": "nominal", "title": "model"}, "tooltip": [{"field": "model", "type": "nominal"}, {"field": "window_mae_pct", "type": "quantitative"}, {"field": "all_days_mae_pct", "type": "quantitative"}, {"field": "hot_cold_days_mae_pct", "type": "quantitative"}, {"field": "other_days_mae_pct", "type": "quantitative"}, {"field": "window_vs_esdf_pct", "type": "quantitative"}, {"field": "all_days_vs_esdf_pct", "type": "quantitative"}, {"field": "series_below_esdf_window", "type": "quantitative"}, {"field": "series_below_esdf_all_days", "type": "quantitative"}, {"field": "series", "type": "quantitative"}]}, "config": {"font": "Helvetica, Arial, sans-serif", "range": {"category": ["#0072B2", "#D55E00", "#009E73", "#E69F00", "#56B4E9", "#CC79A7", "#F0E442", "#7A7A7A"]}, "axis": {"labelFontSize": 12, "titleFontSize": 13}, "legend": {"orient": "bottom"}}};
+    spec.width = Math.max(280, el.clientWidth - 90);
+    vegaEmbed(el, spec, {actions: {export: true, source: false, compiled: false, editor: false}});
+  })();
+});
+</script>
+</body>
+</html>

@@ -636,6 +636,55 @@ def solar_programme_cmd() -> None:
     click.echo(json.dumps(run()["summary"], indent=1))
 
 
+@cli.command("forecast-probes")
+@click.option(
+    "--which",
+    type=click.Choice(["daily", "context", "mobility", "intraday"]),
+    required=True,
+    help="daily: every test day; context: shorter histories; mobility: footfall in context; "
+    "intraday: issued on the target day.",
+)
+@click.option("--threads", default=12, show_default=True)
+@click.option("--limit", default=None, type=int, help="Debug: only the first n origins.")
+def forecast_probes_cmd(which: str, threads: int, limit: int | None) -> None:
+    """Chronos-2 on the CPU: every test day, shorter histories, or footfall given in context."""
+    from .experiments import forecast_probe as fp
+
+    run = {
+        "daily": fp.run_daily,
+        "context": fp.run_context,
+        "mobility": fp.run_mobility,
+        "intraday": fp.run_intraday,
+    }[which]
+    out = run(threads, limit)
+    click.echo(f"{which}: {len(out):,} forecast rows, models {sorted(out['model'].unique())}")
+
+
+@cli.command("forecast-anatomy")
+def forecast_anatomy_cmd() -> None:
+    """Where the day-ahead error sits: site group, kind of day, level and shape, strikes, footfall."""
+    from .analysis.forecast_anatomy import run
+
+    s = run()["summary"]
+    click.echo(json.dumps({k: s[k] for k in ("stored_best_model", "strike") if k in s}, indent=1))
+
+
+@cli.command("esdf-check")
+@click.option("--chronos/--no-chronos", default=True, help="Run Chronos-2 zero-shot (CPU).")
+@click.option("--threads", default=8, show_default=True)
+@click.option("--limit", default=None, type=int, help="First n series per region (smoke test).")
+@click.option("--tables-only", is_flag=True, help="Rebuild the write-up tables from saved scores.")
+def esdf_check_cmd(chronos: bool, threads: int, limit: int | None, tables_only: bool) -> None:
+    """Check the heat and cold wave paper (Lu et al. 2026) on its own data and saved forecasts."""
+    from .experiments.esdf_check import run, tables
+
+    if tables_only:
+        for name, table in tables().items():
+            click.echo(f"{name}\n{table.round(2).to_string(index=False)}")
+        return
+    click.echo(json.dumps(run(chronos=chronos, threads=threads, limit=limit), indent=1))
+
+
 @cli.command("solar-watch")
 def solar_watch_cmd() -> None:
     """Breaks in each site's sunshine response, summer by summer (new solar behind the meter)."""

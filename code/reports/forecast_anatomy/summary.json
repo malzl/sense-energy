@@ -1,0 +1,818 @@
+{
+  "sites": 91,
+  "heat_wave_value_stored_forecasts": {
+    "chronos2_ifs": {
+      "heat wave": 40.0,
+      "other days": 50.0
+    },
+    "chronos2": {
+      "heat wave": 31.9,
+      "other days": 50.5
+    },
+    "lightgbm_ifs": {
+      "heat wave": 41.9,
+      "other days": 50.5
+    }
+  },
+  "stored_best_model": {
+    "model": "chronos2_ifs",
+    "nmae_pct": 11.54,
+    "nmae_level_oracle_pct": 10.05,
+    "level_share_of_error_pct": 19.5,
+    "by_group": {
+      "inpatient": {
+        "sites": 33,
+        "nmae_pct": 10.4,
+        "nmae_level_oracle_pct": 9.5,
+        "level_share_pct": 13.6,
+        "error_share_pct": 12.4,
+        "demand_share_pct": 35.0
+      },
+      "on-site CHP": {
+        "sites": 12,
+        "nmae_pct": 15.5,
+        "nmae_level_oracle_pct": 13.3,
+        "level_share_pct": 20.6,
+        "error_share_pct": 78.6,
+        "demand_share_pct": 50.3
+      },
+      "outpatient": {
+        "sites": 46,
+        "nmae_pct": 11.3,
+        "nmae_level_oracle_pct": 9.6,
+        "level_share_pct": 17.7,
+        "error_share_pct": 9.0,
+        "demand_share_pct": 14.8
+      }
+    },
+    "chp_error_share_pct": 78.6,
+    "error_cut_if_chp_like_inpatient_pct": 60.8,
+    "value": {
+      "model": "chronos2_ifs",
+      "all": "all sites",
+      "site_days": 6107,
+      "captured_point_pct": 53.3,
+      "captured_q70_pct": 55.2,
+      "captured_level_pct": 63.2
+    },
+    "value_by_group": {
+      "inpatient": {
+        "site_days": 2220,
+        "captured_point_pct": 57.5,
+        "captured_q70_pct": 63.1,
+        "captured_level_pct": 67.6
+      },
+      "on-site CHP": {
+        "site_days": 796,
+        "captured_point_pct": 52.0,
+        "captured_q70_pct": 51.4,
+        "captured_level_pct": 61.4
+      },
+      "outpatient": {
+        "site_days": 3091,
+        "captured_point_pct": 49.0,
+        "captured_q70_pct": 52.3,
+        "captured_level_pct": 60.6
+      }
+    }
+  },
+  "plant_switch_days": {
+    "on-site CHP": {
+      "share_of_days_pct": 13.7,
+      "share_of_group_error_pct": 42.1,
+      "nmae_switch_pct": 29.1,
+      "nmae_other_pct": 12.0
+    },
+    "inpatient": {
+      "share_of_days_pct": 4.6,
+      "share_of_group_error_pct": 7.3,
+      "nmae_switch_pct": 19.1,
+      "nmae_other_pct": 10.0
+    },
+    "outpatient": {
+      "share_of_days_pct": 4.7,
+      "share_of_group_error_pct": 7.5,
+      "nmae_switch_pct": 22.4,
+      "nmae_other_pct": 10.7
+    }
+  },
+  "chp_dispatch_gain": [
+    {
+      "dispatch": "follows price or red band",
+      "sites": 9,
+      "nmae_plain_pct": 15.87,
+      "nmae_covariates_pct": 14.97,
+      "gain_pts": 0.9
+    },
+    {
+      "dispatch": "heat-led or no pattern",
+      "sites": 3,
+      "nmae_plain_pct": 18.36,
+      "nmae_covariates_pct": 17.09,
+      "gain_pts": 1.28
+    }
+  ],
+  "plant": {
+    "sites_without_plant": 79,
+    "error_falls_with_size_slope": -0.214,
+    "chp_sites": 12,
+    "chp_sites_with_reported_share": 9,
+    "chp_error_share_pct": 78.6,
+    "chp_share_of_import_pct": 50.3,
+    "chp_share_of_total_demand_pct": 74.9,
+    "chp_error_of_import_pct": 18.9,
+    "chp_error_of_total_demand_pct": 6.4,
+    "expected_error_of_total_demand_pct": 3.4,
+    "plant_added_share_of_all_error_pct": 37.1,
+    "plant_added_share_of_chp_error_pct": 47.2,
+    "top_three_sites_share_of_all_error_pct": 56.7
+  },
+  "steps_larger_than_mean_demand": {
+    "inpatient": {
+      "site_days": 81,
+      "day_share_of_group_pct": 3.7,
+      "error_share_pct": 0.4,
+      "nmae_kwh_weighted_pct": 19.7
+    },
+    "on-site CHP": {
+      "site_days": 118,
+      "day_share_of_group_pct": 14.4,
+      "error_share_pct": 43.1,
+      "nmae_kwh_weighted_pct": 39.9
+    },
+    "outpatient": {
+      "site_days": 218,
+      "day_share_of_group_pct": 7.1,
+      "error_share_pct": 0.7,
+      "nmae_kwh_weighted_pct": 21.0
+    }
+  },
+  "heat_and_cold_waves_stored": {
+    "all sites": {
+      "cold wave": {
+        "site_days": 85,
+        "nmae_pct": 11.3,
+        "nmae_level_oracle_pct": 9.3,
+        "error_share_pct": 1.2
+      },
+      "heat wave": {
+        "site_days": 622,
+        "nmae_pct": 14.7,
+        "nmae_level_oracle_pct": 12.5,
+        "error_share_pct": 14.5
+      },
+      "other days": {
+        "site_days": 5521,
+        "nmae_pct": 11.3,
+        "nmae_level_oracle_pct": 9.9,
+        "error_share_pct": 84.4
+      }
+    },
+    "on-site CHP": {
+      "cold wave": {
+        "site_days": 8,
+        "nmae_pct": 13.8,
+        "nmae_level_oracle_pct": 11.7,
+        "error_share_pct": 0.8
+      },
+      "heat wave": {
+        "site_days": 78,
+        "nmae_pct": 20.5,
+        "nmae_level_oracle_pct": 18.5,
+        "error_share_pct": 11.4
+      },
+      "other days": {
+        "site_days": 736,
+        "nmae_pct": 15.1,
+        "nmae_level_oracle_pct": 12.9,
+        "error_share_pct": 66.4
+      }
+    },
+    "inpatient": {
+      "cold wave": {
+        "site_days": 33,
+        "nmae_pct": 8.5,
+        "nmae_level_oracle_pct": 7.8,
+        "error_share_pct": 0.2
+      },
+      "heat wave": {
+        "site_days": 224,
+        "nmae_pct": 13.6,
+        "nmae_level_oracle_pct": 11.9,
+        "error_share_pct": 1.9
+      },
+      "other days": {
+        "site_days": 2010,
+        "nmae_pct": 10.2,
+        "nmae_level_oracle_pct": 9.3,
+        "error_share_pct": 10.3
+      }
+    },
+    "outpatient": {
+      "cold wave": {
+        "site_days": 44,
+        "nmae_pct": 12.8,
+        "nmae_level_oracle_pct": 10.0,
+        "error_share_pct": 0.2
+      },
+      "heat wave": {
+        "site_days": 320,
+        "nmae_pct": 14.0,
+        "nmae_level_oracle_pct": 11.4,
+        "error_share_pct": 1.1
+      },
+      "other days": {
+        "site_days": 2775,
+        "nmae_pct": 11.0,
+        "nmae_level_oracle_pct": 9.5,
+        "error_share_pct": 7.7
+      }
+    }
+  },
+  "compact_models": {
+    "chronos2": {
+      "nmae_pct": 12.2,
+      "captured_point_pct": 51.1,
+      "captured_q70_pct": 52.7
+    },
+    "gtnp": {
+      "nmae_pct": 14.6,
+      "captured_point_pct": 46.9,
+      "captured_q70_pct": 42.5
+    },
+    "pttnp": {
+      "nmae_pct": 14.1,
+      "captured_point_pct": 47.4,
+      "captured_q70_pct": 38.6
+    },
+    "tnp": {
+      "nmae_pct": 13.7,
+      "captured_point_pct": 49.3,
+      "captured_q70_pct": 40.3
+    },
+    "tnp_ifs": {
+      "nmae_pct": 14.0,
+      "captured_point_pct": 47.5,
+      "captured_q70_pct": 42.5
+    }
+  },
+  "wave_excess_share_of_all_error_pct": {
+    "cold wave": 1.3,
+    "heat wave": 3.6
+  },
+  "waves_against_same_site_and_month": {
+    "cold wave": {
+      "cold wave": {
+        "site_days": 817.0,
+        "nmae_pct": 13.6,
+        "nmae_level_oracle_pct": 11.2,
+        "median_bias_pct": -3.3,
+        "captured_point_pct": 43.6,
+        "captured_q70_pct": 48.2,
+        "captured_level_pct": 59.1
+      },
+      "other days": {
+        "site_days": 7803.0,
+        "nmae_pct": 11.4,
+        "nmae_level_oracle_pct": 9.5,
+        "median_bias_pct": -0.2,
+        "captured_point_pct": 53.0,
+        "captured_q70_pct": 55.3,
+        "captured_level_pct": 62.9
+      }
+    },
+    "heat wave": {
+      "heat wave": {
+        "site_days": 2990.0,
+        "nmae_pct": 14.7,
+        "nmae_level_oracle_pct": 13.0,
+        "median_bias_pct": -1.6,
+        "captured_point_pct": 32.9,
+        "captured_q70_pct": 39.8,
+        "captured_level_pct": 50.7
+      },
+      "other days": {
+        "site_days": 7349.0,
+        "nmae_pct": 13.2,
+        "nmae_level_oracle_pct": 12.2,
+        "median_bias_pct": -0.4,
+        "captured_point_pct": 49.9,
+        "captured_q70_pct": 51.0,
+        "captured_level_pct": 60.1
+      }
+    }
+  },
+  "heat_and_cold_waves_every_day": {
+    "all sites": {
+      "cold wave": {
+        "site_days": 817,
+        "day_share_pct": 2.6,
+        "nmae_pct": 13.6,
+        "nmae_level_oracle_pct": 11.2,
+        "error_share_pct": 4.0
+      },
+      "heat wave": {
+        "site_days": 2990,
+        "day_share_pct": 9.7,
+        "nmae_pct": 14.7,
+        "nmae_level_oracle_pct": 13.0,
+        "error_share_pct": 14.9
+      },
+      "other days": {
+        "site_days": 27068,
+        "day_share_pct": 87.7,
+        "nmae_pct": 12.0,
+        "nmae_level_oracle_pct": 10.5,
+        "error_share_pct": 81.1
+      }
+    },
+    "on-site CHP": {
+      "cold wave": {
+        "site_days": 118,
+        "day_share_pct": 0.4,
+        "nmae_pct": 16.8,
+        "nmae_level_oracle_pct": 14.4,
+        "error_share_pct": 3.2
+      },
+      "heat wave": {
+        "site_days": 376,
+        "day_share_pct": 1.2,
+        "nmae_pct": 24.3,
+        "nmae_level_oracle_pct": 21.0,
+        "error_share_pct": 12.2
+      },
+      "other days": {
+        "site_days": 3575,
+        "day_share_pct": 11.6,
+        "nmae_pct": 16.0,
+        "nmae_level_oracle_pct": 13.9,
+        "error_share_pct": 62.7
+      }
+    },
+    "inpatient": {
+      "cold wave": {
+        "site_days": 285,
+        "day_share_pct": 0.9,
+        "nmae_pct": 11.4,
+        "nmae_level_oracle_pct": 9.4,
+        "error_share_pct": 0.4
+      },
+      "heat wave": {
+        "site_days": 1093,
+        "day_share_pct": 3.5,
+        "nmae_pct": 13.7,
+        "nmae_level_oracle_pct": 12.7,
+        "error_share_pct": 1.8
+      },
+      "other days": {
+        "site_days": 9848,
+        "day_share_pct": 31.9,
+        "nmae_pct": 10.9,
+        "nmae_level_oracle_pct": 10.0,
+        "error_share_pct": 11.0
+      }
+    },
+    "outpatient": {
+      "cold wave": {
+        "site_days": 414,
+        "day_share_pct": 1.3,
+        "nmae_pct": 14.3,
+        "nmae_level_oracle_pct": 11.7,
+        "error_share_pct": 0.4
+      },
+      "heat wave": {
+        "site_days": 1521,
+        "day_share_pct": 4.9,
+        "nmae_pct": 12.9,
+        "nmae_level_oracle_pct": 11.1,
+        "error_share_pct": 0.9
+      },
+      "other days": {
+        "site_days": 13645,
+        "day_share_pct": 44.2,
+        "nmae_pct": 11.7,
+        "nmae_level_oracle_pct": 9.9,
+        "error_share_pct": 7.5
+      }
+    }
+  },
+  "daily": {
+    "site_days": 30875,
+    "days": 342,
+    "by_kind": {
+      "holiday or Christmas": {
+        "site_days": 1165,
+        "day_share_pct": 3.8,
+        "nmae_pct": 20.1,
+        "nmae_level_oracle_pct": 14.6,
+        "error_share_pct": 7.4
+      },
+      "hot or cold day": {
+        "site_days": 1436,
+        "day_share_pct": 4.7,
+        "nmae_pct": 13.4,
+        "nmae_level_oracle_pct": 11.2,
+        "error_share_pct": 4.8
+      },
+      "level shift": {
+        "site_days": 6763,
+        "day_share_pct": 21.9,
+        "nmae_pct": 15.7,
+        "nmae_level_oracle_pct": 13.2,
+        "error_share_pct": 52.8
+      },
+      "strike day": {
+        "site_days": 909,
+        "day_share_pct": 2.9,
+        "nmae_pct": 12.7,
+        "nmae_level_oracle_pct": 10.4,
+        "error_share_pct": 3.2
+      },
+      "strike day near holidays": {
+        "site_days": 983,
+        "day_share_pct": 3.2,
+        "nmae_pct": 12.8,
+        "nmae_level_oracle_pct": 11.3,
+        "error_share_pct": 2.4
+      },
+      "typical": {
+        "site_days": 19619,
+        "day_share_pct": 63.5,
+        "nmae_pct": 10.1,
+        "nmae_level_oracle_pct": 9.2,
+        "error_share_pct": 29.4
+      }
+    },
+    "by_group": {
+      "inpatient": {
+        "nmae_pct": 11.2,
+        "nmae_level_oracle_pct": 10.2,
+        "level_share_pct": 15.8,
+        "error_share_pct": 13.2
+      },
+      "on-site CHP": {
+        "nmae_pct": 16.8,
+        "nmae_level_oracle_pct": 14.6,
+        "level_share_pct": 19.7,
+        "error_share_pct": 78.1
+      },
+      "outpatient": {
+        "nmae_pct": 11.9,
+        "nmae_level_oracle_pct": 10.1,
+        "level_share_pct": 19.2,
+        "error_share_pct": 8.8
+      }
+    }
+  },
+  "context": {
+    "48": {
+      "nmae_pct": 31.13,
+      "captured_pct": 27.2
+    },
+    "144": {
+      "nmae_pct": 21.7,
+      "captured_pct": 32.5
+    },
+    "336": {
+      "nmae_pct": 16.39,
+      "captured_pct": 39.0
+    },
+    "672": {
+      "nmae_pct": 12.73,
+      "captured_pct": 47.9
+    },
+    "2016": {
+      "nmae_pct": 12.2,
+      "captured_pct": 51.1
+    }
+  },
+  "issue_time": {
+    "all sites": {
+      "00:00 on the day": 12.92,
+      "06:00 on the day": 12.77,
+      "16:30 the day before": 13.5
+    },
+    "on-site CHP": {
+      "00:00 on the day": 16.94,
+      "06:00 on the day": 17.08,
+      "16:30 the day before": 19.14
+    },
+    "inpatient": {
+      "00:00 on the day": 12.24,
+      "06:00 on the day": 12.09,
+      "16:30 the day before": 12.52
+    },
+    "outpatient": {
+      "00:00 on the day": 12.35,
+      "06:00 on the day": 12.14,
+      "16:30 the day before": 12.75
+    }
+  },
+  "issue_value_captured_pct": {
+    "all sites": {
+      "16:30 the day before": 51.1,
+      "00:00 on the day": 51.8,
+      "06:00 on the day": 53.1
+    },
+    "on-site CHP": {
+      "16:30 the day before": 49.0,
+      "00:00 on the day": 50.6,
+      "06:00 on the day": 52.1
+    },
+    "inpatient": {
+      "16:30 the day before": 56.6,
+      "00:00 on the day": 56.0,
+      "06:00 on the day": 56.8
+    },
+    "outpatient": {
+      "16:30 the day before": 47.1,
+      "00:00 on the day": 47.6,
+      "06:00 on the day": 49.1
+    }
+  },
+  "strike_profile": {
+    "largest_effect_pct": 1.88,
+    "hours_significant_at_5_pct": 4,
+    "working_hours_8_to_18_mean_pct": -0.42
+  },
+  "strike": {
+    "strike_days_in_record": 70,
+    "away_from_holidays_by_outcome": {
+      "whole day": {
+        "days": 34,
+        "site_days": 3562,
+        "effect_pct": -0.678,
+        "lo_pct": -1.62,
+        "hi_pct": 0.274,
+        "p": 0.164
+      },
+      "08:00 to 18:00": {
+        "days": 34,
+        "site_days": 3562,
+        "effect_pct": -0.401,
+        "lo_pct": -1.602,
+        "hi_pct": 0.813,
+        "p": 0.517
+      },
+      "00:00 to 06:00": {
+        "days": 34,
+        "site_days": 3560,
+        "effect_pct": -0.914,
+        "lo_pct": -1.776,
+        "hi_pct": -0.044,
+        "p": 0.042
+      },
+      "08:00 to 18:00 against night": {
+        "days": 34,
+        "site_days": 3560,
+        "effect_pct": 0.564,
+        "lo_pct": -0.435,
+        "hi_pct": 1.573,
+        "p": 0.272
+      }
+    },
+    "whole_day_all_terms": {
+      "strike weekday, away from holidays": {
+        "days": 34,
+        "effect_pct": -0.678,
+        "lo_pct": -1.62,
+        "hi_pct": 0.274,
+        "p": 0.164
+      },
+      "strike weekday, next to Christmas or Easter": {
+        "days": 18,
+        "effect_pct": -1.289,
+        "lo_pct": -2.711,
+        "hi_pct": 0.154,
+        "p": 0.082
+      },
+      "strike weekend day": {
+        "days": 18,
+        "effect_pct": -1.388,
+        "lo_pct": -2.904,
+        "hi_pct": 0.151,
+        "p": 0.079
+      },
+      "one week before (placebo)": {
+        "days": 38,
+        "effect_pct": 0.055,
+        "lo_pct": -0.874,
+        "hi_pct": 0.992,
+        "p": 0.908
+      },
+      "one week after (placebo)": {
+        "days": 44,
+        "effect_pct": -0.246,
+        "lo_pct": -1.171,
+        "hi_pct": 0.688,
+        "p": 0.605
+      }
+    },
+    "by_site_type_working_hours_against_night": {
+      "acute, no CHP": {
+        "sites": 36,
+        "effect_pct": 0.783,
+        "lo_pct": -0.644,
+        "hi_pct": 2.231,
+        "p": 0.286
+      },
+      "acute, CHP import": {
+        "sites": 20,
+        "effect_pct": 1.355,
+        "lo_pct": -2.558,
+        "hi_pct": 5.425,
+        "p": 0.504
+      },
+      "mental health": {
+        "sites": 37,
+        "effect_pct": 0.284,
+        "lo_pct": -0.887,
+        "hi_pct": 1.469,
+        "p": 0.636
+      },
+      "community": {
+        "sites": 31,
+        "effect_pct": 0.479,
+        "lo_pct": -1.366,
+        "hi_pct": 2.358,
+        "p": 0.614
+      },
+      "ambulance": {
+        "sites": 8,
+        "effect_pct": -1.468,
+        "lo_pct": -3.452,
+        "hi_pct": 0.557,
+        "p": 0.156
+      }
+    }
+  },
+  "mobility_regression": {
+    "RH801": {
+      "elasticity": -0.002,
+      "lo": -0.182,
+      "hi": 0.178,
+      "p": 0.982,
+      "partial_r2": 0.0,
+      "raw_corr": 0.018
+    },
+    "RH802": {
+      "elasticity": -0.012,
+      "lo": -0.047,
+      "hi": 0.023,
+      "p": 0.5,
+      "partial_r2": 0.002,
+      "raw_corr": 0.43
+    },
+    "RH8K6": {
+      "elasticity": 0.001,
+      "lo": -0.028,
+      "hi": 0.029,
+      "p": 0.965,
+      "partial_r2": 0.0,
+      "raw_corr": 0.503
+    }
+  },
+  "mobility_forecast": {
+    "variants": [
+      "mob_base",
+      "mob_base_ctx336",
+      "mob_oracle",
+      "mob_oracle_ctx336",
+      "mob_plain",
+      "mob_prev_day",
+      "mob_uni_oracle"
+    ],
+    "site_days_two_sites": 646,
+    "two_sites_without_chp_nmae_pct": {
+      "mob_base": 5.583,
+      "mob_base_ctx336": 8.407,
+      "mob_oracle": 5.589,
+      "mob_oracle_ctx336": 8.439,
+      "mob_plain": 6.444,
+      "mob_prev_day": 5.594,
+      "mob_uni_oracle": 5.585
+    },
+    "differences": [
+      {
+        "sites": "two sites without CHP",
+        "kind": "all days",
+        "model": "mob_prev_day",
+        "against": "mob_base",
+        "metric": "nMAE",
+        "diff_pts": 0.01,
+        "lo": -0.013,
+        "hi": 0.036
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "all days",
+        "model": "mob_oracle",
+        "against": "mob_base",
+        "metric": "nMAE",
+        "diff_pts": 0.006,
+        "lo": -0.012,
+        "hi": 0.024
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "all days",
+        "model": "mob_uni_oracle",
+        "against": "mob_base",
+        "metric": "nMAE",
+        "diff_pts": 0.002,
+        "lo": -0.024,
+        "hi": 0.026
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "all days",
+        "model": "mob_oracle",
+        "against": "mob_uni_oracle",
+        "metric": "nMAE",
+        "diff_pts": 0.004,
+        "lo": -0.025,
+        "hi": 0.034
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "all days",
+        "model": "mob_oracle_ctx336",
+        "against": "mob_base_ctx336",
+        "metric": "nMAE",
+        "diff_pts": 0.032,
+        "lo": -0.052,
+        "hi": 0.115
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "all days",
+        "model": "mob_base",
+        "against": "mob_plain",
+        "metric": "nMAE",
+        "diff_pts": -0.861,
+        "lo": -1.119,
+        "hi": -0.615
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "not typical",
+        "model": "mob_prev_day",
+        "against": "mob_base",
+        "metric": "nMAE",
+        "diff_pts": 0.023,
+        "lo": -0.012,
+        "hi": 0.065
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "not typical",
+        "model": "mob_oracle",
+        "against": "mob_base",
+        "metric": "nMAE",
+        "diff_pts": -0.001,
+        "lo": -0.041,
+        "hi": 0.034
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "not typical",
+        "model": "mob_uni_oracle",
+        "against": "mob_base",
+        "metric": "nMAE",
+        "diff_pts": 0.036,
+        "lo": -0.001,
+        "hi": 0.071
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "not typical",
+        "model": "mob_oracle",
+        "against": "mob_uni_oracle",
+        "metric": "nMAE",
+        "diff_pts": -0.038,
+        "lo": -0.089,
+        "hi": 0.014
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "not typical",
+        "model": "mob_oracle_ctx336",
+        "against": "mob_base_ctx336",
+        "metric": "nMAE",
+        "diff_pts": 0.059,
+        "lo": -0.071,
+        "hi": 0.178
+      },
+      {
+        "sites": "two sites without CHP",
+        "kind": "not typical",
+        "model": "mob_base",
+        "against": "mob_plain",
+        "metric": "nMAE",
+        "diff_pts": -1.023,
+        "lo": -1.426,
+        "hi": -0.681
+      }
+    ]
+  }
+}

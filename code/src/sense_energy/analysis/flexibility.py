@@ -337,9 +337,10 @@ def solar_sites(
 # --------------------------------------------------------------------------- #
 
 
-def _feasible(theta, load, p_kw, e_kwh) -> np.ndarray:
-    """Whether a full battery can hold import at or below theta through each row of ``load``."""
-    soc = e_kwh.copy()
+def _feasible(theta, load, p_kw, e_kwh, soc0=None) -> np.ndarray:
+    """Whether the battery (full, or at ``soc0`` kWh) can hold import at or below theta through
+    each row of ``load``."""
+    soc = e_kwh.copy() if soc0 is None else soc0.copy()
     ok = np.ones(len(theta), dtype=bool)
     for t in range(load.shape[1]):
         over = load[:, t] - theta
@@ -352,21 +353,24 @@ def _feasible(theta, load, p_kw, e_kwh) -> np.ndarray:
     return ok
 
 
-def plan_threshold(load, p_kw, e_kwh, iters: int = 40) -> np.ndarray:
-    """Lowest import ceiling the battery can hold through each row of ``load`` (kW)."""
+def plan_threshold(load, p_kw, e_kwh, iters: int = 40, soc0=None) -> np.ndarray:
+    """Lowest import ceiling the battery can hold through each row of ``load`` (kW); the battery
+    starts full, or at ``soc0`` kWh for a plan made during the day."""
     hi = np.nanmax(load, axis=1)
     lo = np.clip(hi - p_kw, 0, None)
     for _ in range(iters):
         mid = 0.5 * (lo + hi)
-        f = _feasible(mid, load, p_kw, e_kwh)
+        f = _feasible(mid, load, p_kw, e_kwh, soc0)
         hi = np.where(f, mid, hi)
         lo = np.where(f, lo, mid)
     return hi
 
 
-def realised_peak(theta, load, p_kw, e_kwh) -> np.ndarray:
-    """Peak import when the battery defends ``theta`` in real time on the actual load."""
-    soc = e_kwh.copy()
+def realised_peak(theta, load, p_kw, e_kwh, soc0=None, return_soc: bool = False):
+    """Peak import when the battery defends ``theta`` in real time on the actual load. With
+    ``return_soc`` the state of charge at the end comes back too, so a day can be run in two
+    parts with a new threshold for the second."""
+    soc = e_kwh.copy() if soc0 is None else soc0.copy()
     peak = np.zeros(len(theta))
     for t in range(load.shape[1]):
         over = load[:, t] - theta
@@ -376,7 +380,7 @@ def realised_peak(theta, load, p_kw, e_kwh) -> np.ndarray:
         )
         soc = soc - dis * 0.5 + charge * 0.5 * ROUND_TRIP
         peak = np.maximum(peak, load[:, t] - dis + charge)
-    return peak
+    return (peak, soc) if return_soc else peak
 
 
 def load_forecasts(name: str) -> pd.DataFrame:

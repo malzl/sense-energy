@@ -18,6 +18,8 @@
   <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
   <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
   <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
+  <a href="forecast_error_anatomy.html">Where the day-ahead error sits, and what can remove it</a>
+  <a href="heat_cold_wave_paper_check.html">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
   <a href="methodology.html">Methodology</a>
   <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
   <a href="project_brief.html">Project brief</a>
@@ -69,6 +71,8 @@
   <a class="h2" href="#the-weather-normalised-estate-hourly-response-savings-warmin">The weather-normalised estate: hourly response, savings, warming, heatwaves, solar, CHP dispatch</a>
   <a class="h2" href="#long-temperature-record-code-data-external-weather-era5-time">Long temperature record: code/data/external/weather/era5_timeseries/ → interim/weather_daily_long.parquet</a>
   <a class="h2" href="#flexibility-design-winters-heat-pumps-in-the-field-solar-pro">Flexibility, design winters, heat pumps in the field, solar programme</a>
+  <a class="h2" href="#forecast-error-anatomy">Forecast error anatomy</a>
+  <a class="h2" href="#check-of-lu-et-al-2026-heat-and-cold-waves">Check of Lu et al. (2026), heat and cold waves</a>
   </div>
 </nav>
 <main>
@@ -1919,6 +1923,134 @@ postcodes, sites funded, award, estimated lifetime savings.</p>
 <p>Market index price: <code>data.prices.load_mid</code> returns one row per half-hour from the traded provider
 (<code>APXMIDP</code>); the other provider in <code>prices_elexon_mid.parquet</code> (<code>N2EXMIDP</code>) is zero in 99.8 % of
 periods and must not be averaged or joined in.</p>
+<h2 id="forecast-error-anatomy">Forecast error anatomy</h2>
+<p>Write-up: <a href="forecast_error_anatomy.md">forecast_error_anatomy.md</a>.</p>
+<p><code>data.strikes.strike_days()</code>: the calendar days of the national strikes by junior (resident)
+doctors and consultants inside the record, one row per day: <code>date</code>, <code>junior</code>, <code>consultant</code>,
+<code>round</code> (first day of the round). 19 rounds, 70 days; sources and one corrected date in the
+module's docstring.</p>
+<p>New forecasts in <code>code/reports/forecast_anatomy/</code>, in the proof of concept's long format
+(<code>model</code>, <code>site_code</code>, <code>origin</code>, <code>target</code>, <code>lead_hours</code>, <code>point</code>, <code>q10</code> … <code>q90</code>, kWh per
+half-hour), all Chronos-2 with no training:</p>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Models</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>forecasts_daily.parquet</code></td>
+  <td><code>chronos2_daily</code></td>
+  <td>every day of the test window, 91 sites, no covariates</td>
+</tr>
+<tr>
+  <td><code>forecasts_context.parquet</code></td>
+  <td><code>chronos2_ctx48</code>, <code>_ctx144</code>, <code>_ctx336</code>, <code>_ctx672</code></td>
+  <td>the 69 test days with 1 day, 3 days, 1 week and 2 weeks of history</td>
+</tr>
+<tr>
+  <td><code>forecasts_intraday.parquet</code></td>
+  <td><code>chronos2_issue00</code>, <code>chronos2_issue06</code></td>
+  <td>the 69 test days issued at 00:00 and at 06:00 on the target day, for the rest of that day</td>
+</tr>
+<tr>
+  <td><code>forecasts_mobility.parquet</code></td>
+  <td><code>mob_plain</code>, <code>mob_base</code>, <code>mob_prev_day</code>, <code>mob_oracle</code>, <code>mob_uni_oracle</code>, <code>mob_base_ctx336</code>, <code>mob_oracle_ctx336</code></td>
+  <td>the three footfall sites, every day from 13 February to 31 December 2024, without covariates, with the known-ahead covariates, and with footfall added (last full day; target day; campus placebo; the last two with one week of history)</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>day_table.csv</code></td>
+  <td>site × day: mean demand, the level expected from the same weekday of the last four weeks, <code>kind</code> (typical, level shift, holiday or Christmas, strike day, strike day near holidays, hot or cold day), <code>wave</code> (cold wave, heat wave, other days: site temperature beyond the 5th or 95th percentile of the days before the test window), <code>step_rel</code> (largest unexplained two-hour step over mean demand), <code>step_ratio</code> (the same over the site's ordinary step), <code>big_step</code>, <code>switch</code></td>
+</tr>
+<tr>
+  <td><code>error_overall.csv</code>, <code>error_by_group*.csv</code>, <code>table_models.csv</code>, <code>table_groups.csv</code></td>
+  <td>error of the ten stored models: <code>nmae_pct</code>, <code>nmae_level_oracle_pct</code> (forecast rescaled to the day's true mean), <code>level_share_pct</code>, and the shares of the panel's error, demand and site-days</td>
+</tr>
+<tr>
+  <td><code>value_*.csv</code></td>
+  <td>share of the achievable peak cut with the threshold planned on the median (<code>captured_point_pct</code>), on the 70 % quantile and on the median with the true level</td>
+</tr>
+<tr>
+  <td><code>error_by_site.csv</code>, <code>chp_size_adjusted.csv</code></td>
+  <td>per site: error, demand, place, plant share; for CHP sites the total demand, the error expected at that size without a plant and what the plant adds</td>
+</tr>
+<tr>
+  <td><code>error_by_group_step.csv</code>, <code>example_days.csv</code></td>
+  <td>error by size of the largest unexplained step; observed and forecast half-hours of the three sites with the most error</td>
+</tr>
+<tr>
+  <td><code>strike_effect.csv</code>, <code>strike_profile.csv</code></td>
+  <td>change in demand on strike days by outcome, term and site type; the same by hour of the day</td>
+</tr>
+<tr>
+  <td><code>mobility_regression.csv</code>, <code>mobility_partial.csv</code>, <code>mobility_scores.csv</code>, <code>mobility_differences.csv</code>, <code>table_mobility.csv</code></td>
+  <td>footfall: elasticities, residuals, scores of the forecast variants and their paired differences</td>
+</tr>
+<tr>
+  <td><code>daily_*.csv</code>, <code>daily_site_days.parquet</code></td>
+  <td>the every-day run by kind of day, by wave, by step, and wave days against the same site and month (<code>*_wave_matched.csv</code>)</td>
+</tr>
+<tr>
+  <td><code>context.csv</code>, <code>table_context.csv</code>, <code>issue_time.csv</code>, <code>issue_value.csv</code>, <code>table_issue.csv</code></td>
+  <td>error and decision value by length of history and by issue time</td>
+</tr>
+<tr>
+  <td><code>summary.json</code></td>
+  <td>the headline numbers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="check-of-lu-et-al-2026-heat-and-cold-waves">Check of Lu et al. (2026), heat and cold waves</h2>
+<p>Write-up: <a href="heat_cold_wave_paper_check.md">heat_cold_wave_paper_check.md</a>.</p>
+<p><code>code/data/external/esdf/</code>: the public part of the paper's repository
+(github.com/hkuedl/Heat-Cold_Wave_Load_Forecasting, MIT licence, commit 0036608 of 14 October
+2026): <code>Data/reformed_data_updated/</code> (hourly load and temperature of 18 European countries,
+19 PJM zones, 8 ERCOT zones and 2 Indian states), <code>europe/results/</code> and <code>pjm/results/</code> (the
+paper's saved forecasts, <code>true</code> and <code>forecasted</code> in units of the training range),
+<code>main_results.xlsx</code> (reported errors), <code>code/</code> (the paper's Python files, read only).</p>
+<table>
+<thead>
+<tr>
+  <th>Table (<code>code/reports/esdf_check/</code>)</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>scores.csv</code></td>
+  <td>region × series × model × set of days (<code>paper window</code>, <code>all test days</code>, <code>hot and cold days</code>, <code>other days</code>): <code>mae</code> and <code>rmse</code> in units of the training load range, <code>nmae_mean_pct</code> over the mean load of the scored days</td>
+</tr>
+<tr>
+  <td><code>summary.csv</code>, <code>table_europe.csv</code>, <code>table_pjm.csv</code></td>
+  <td>means over the series, and the number of series in which a model is below ESDF (LSTM)</td>
+</tr>
+<tr>
+  <td><code>daily_errors.csv</code></td>
+  <td>every model's error on every test day of every series, with the wave flags and the scored window</td>
+</tr>
+<tr>
+  <td><code>samples_check.csv</code>, <code>reproduction.csv</code>, <code>published_window_errors.csv</code></td>
+  <td>the rebuilt samples against the paper's saved values; reported against recomputed window errors</td>
+</tr>
+<tr>
+  <td><code>table_holidays_europe.csv</code></td>
+  <td>error on public holidays against the other days</td>
+</tr>
+</tbody>
+</table>
 <p class="meta">Built from <code>doc/data_dictionary.md</code> by <code>sense-energy build-docs</code>.</p>
 </main>
 </div>

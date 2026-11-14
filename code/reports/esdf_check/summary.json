@@ -1,0 +1,810 @@
+{
+  "samples_match_paper": {
+    "europe": {
+      "series": 18,
+      "same_sample_count": 18,
+      "largest_difference_in_true": 1.0374220371645038e-07,
+      "window": "2018-02-25 to 2018-03-04",
+      "window_days": 8,
+      "window_days_hot_or_cold_mean": 7.222222222222222,
+      "test_days": 297.0,
+      "hot_days_mean": 31.22222222222222,
+      "cold_days_mean": 19.72222222222222
+    },
+    "pjm": {
+      "series": 19,
+      "same_sample_count": 19,
+      "largest_difference_in_true": 5.875532449461929e-08,
+      "window": "2023-06-29 to 2023-07-13",
+      "window_days": 15,
+      "window_days_hot_or_cold_mean": 1.4736842105263157,
+      "test_days": 44.0,
+      "hot_days_mean": 2.8421052631578947,
+      "cold_days_mean": 0.0
+    }
+  },
+  "europe: paper window": {
+    "Autoformer": {
+      "mae": 0.064,
+      "vs_esdf_pct": 144.4,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "CNN": {
+      "mae": 0.0397,
+      "vs_esdf_pct": 51.7,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0222,
+      "vs_esdf_pct": -15.1,
+      "series_better_than_esdf": 13,
+      "of": 18
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.0388,
+      "vs_esdf_pct": 48.4,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0264,
+      "vs_esdf_pct": 0.7,
+      "series_better_than_esdf": 6,
+      "of": 18
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0262,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0291,
+      "vs_esdf_pct": 11.1,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "ImpactNet": {
+      "mae": 0.0355,
+      "vs_esdf_pct": 35.6,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "Informer": {
+      "mae": 0.0345,
+      "vs_esdf_pct": 31.9,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "LSTM": {
+      "mae": 0.0329,
+      "vs_esdf_pct": 25.6,
+      "series_better_than_esdf": 6,
+      "of": 18
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0318,
+      "vs_esdf_pct": 21.3,
+      "series_better_than_esdf": 5,
+      "of": 18
+    },
+    "LightGBM": {
+      "mae": 0.0375,
+      "vs_esdf_pct": 43.2,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "Linear regression": {
+      "mae": 0.0349,
+      "vs_esdf_pct": 33.3,
+      "series_better_than_esdf": 5,
+      "of": 18
+    },
+    "MLP": {
+      "mae": 0.0482,
+      "vs_esdf_pct": 84.0,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "N-BEATS": {
+      "mae": 0.0329,
+      "vs_esdf_pct": 25.8,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "Week before": {
+      "mae": 0.0738,
+      "vs_esdf_pct": 181.8,
+      "series_better_than_esdf": 0,
+      "of": 18
+    }
+  },
+  "europe: all test days": {
+    "Autoformer": {
+      "mae": 0.0388,
+      "vs_esdf_pct": 48.8,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "CNN": {
+      "mae": 0.0321,
+      "vs_esdf_pct": 23.3,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0233,
+      "vs_esdf_pct": -10.6,
+      "series_better_than_esdf": 13,
+      "of": 18
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.0351,
+      "vs_esdf_pct": 34.9,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0273,
+      "vs_esdf_pct": 4.7,
+      "series_better_than_esdf": 5,
+      "of": 18
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0261,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0265,
+      "vs_esdf_pct": 1.8,
+      "series_better_than_esdf": 7,
+      "of": 18
+    },
+    "ImpactNet": {
+      "mae": 0.0289,
+      "vs_esdf_pct": 10.9,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "Informer": {
+      "mae": 0.029,
+      "vs_esdf_pct": 11.2,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "LSTM": {
+      "mae": 0.0286,
+      "vs_esdf_pct": 9.9,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0268,
+      "vs_esdf_pct": 2.8,
+      "series_better_than_esdf": 8,
+      "of": 18
+    },
+    "LightGBM": {
+      "mae": 0.0297,
+      "vs_esdf_pct": 14.2,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "Linear regression": {
+      "mae": 0.0338,
+      "vs_esdf_pct": 29.7,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "MLP": {
+      "mae": 0.0293,
+      "vs_esdf_pct": 12.5,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "N-BEATS": {
+      "mae": 0.0271,
+      "vs_esdf_pct": 4.0,
+      "series_better_than_esdf": 6,
+      "of": 18
+    },
+    "Week before": {
+      "mae": 0.0514,
+      "vs_esdf_pct": 97.3,
+      "series_better_than_esdf": 0,
+      "of": 18
+    }
+  },
+  "europe: hot and cold days": {
+    "Autoformer": {
+      "mae": 0.0481,
+      "vs_esdf_pct": 91.4,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "CNN": {
+      "mae": 0.034,
+      "vs_esdf_pct": 35.4,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0199,
+      "vs_esdf_pct": -20.8,
+      "series_better_than_esdf": 15,
+      "of": 18
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.0322,
+      "vs_esdf_pct": 28.1,
+      "series_better_than_esdf": 2,
+      "of": 18
+    },
+    "ESDF (CNN)": {
+      "mae": 0.026,
+      "vs_esdf_pct": 3.2,
+      "series_better_than_esdf": 9,
+      "of": 18
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0251,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0257,
+      "vs_esdf_pct": 2.0,
+      "series_better_than_esdf": 7,
+      "of": 18
+    },
+    "ImpactNet": {
+      "mae": 0.0301,
+      "vs_esdf_pct": 19.9,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "Informer": {
+      "mae": 0.0295,
+      "vs_esdf_pct": 17.2,
+      "series_better_than_esdf": 2,
+      "of": 18
+    },
+    "LSTM": {
+      "mae": 0.0297,
+      "vs_esdf_pct": 18.1,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0286,
+      "vs_esdf_pct": 13.6,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "LightGBM": {
+      "mae": 0.0298,
+      "vs_esdf_pct": 18.5,
+      "series_better_than_esdf": 1,
+      "of": 18
+    },
+    "Linear regression": {
+      "mae": 0.0324,
+      "vs_esdf_pct": 29.0,
+      "series_better_than_esdf": 2,
+      "of": 18
+    },
+    "MLP": {
+      "mae": 0.0345,
+      "vs_esdf_pct": 37.1,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "N-BEATS": {
+      "mae": 0.0281,
+      "vs_esdf_pct": 11.8,
+      "series_better_than_esdf": 5,
+      "of": 18
+    },
+    "Week before": {
+      "mae": 0.0523,
+      "vs_esdf_pct": 108.2,
+      "series_better_than_esdf": 0,
+      "of": 18
+    }
+  },
+  "europe: other days": {
+    "Autoformer": {
+      "mae": 0.0375,
+      "vs_esdf_pct": 42.7,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "CNN": {
+      "mae": 0.0319,
+      "vs_esdf_pct": 21.4,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0241,
+      "vs_esdf_pct": -8.2,
+      "series_better_than_esdf": 14,
+      "of": 18
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.036,
+      "vs_esdf_pct": 37.3,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0275,
+      "vs_esdf_pct": 5.0,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0262,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0267,
+      "vs_esdf_pct": 1.5,
+      "series_better_than_esdf": 9,
+      "of": 18
+    },
+    "ImpactNet": {
+      "mae": 0.0287,
+      "vs_esdf_pct": 9.5,
+      "series_better_than_esdf": 4,
+      "of": 18
+    },
+    "Informer": {
+      "mae": 0.0288,
+      "vs_esdf_pct": 9.9,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "LSTM": {
+      "mae": 0.0286,
+      "vs_esdf_pct": 8.9,
+      "series_better_than_esdf": 5,
+      "of": 18
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0265,
+      "vs_esdf_pct": 1.1,
+      "series_better_than_esdf": 10,
+      "of": 18
+    },
+    "LightGBM": {
+      "mae": 0.0299,
+      "vs_esdf_pct": 13.9,
+      "series_better_than_esdf": 2,
+      "of": 18
+    },
+    "Linear regression": {
+      "mae": 0.034,
+      "vs_esdf_pct": 29.6,
+      "series_better_than_esdf": 0,
+      "of": 18
+    },
+    "MLP": {
+      "mae": 0.0284,
+      "vs_esdf_pct": 8.3,
+      "series_better_than_esdf": 3,
+      "of": 18
+    },
+    "N-BEATS": {
+      "mae": 0.0271,
+      "vs_esdf_pct": 3.3,
+      "series_better_than_esdf": 6,
+      "of": 18
+    },
+    "Week before": {
+      "mae": 0.052,
+      "vs_esdf_pct": 98.1,
+      "series_better_than_esdf": 0,
+      "of": 18
+    }
+  },
+  "pjm: paper window": {
+    "Autoformer": {
+      "mae": 0.0578,
+      "vs_esdf_pct": 69.5,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "CNN": {
+      "mae": 0.0456,
+      "vs_esdf_pct": 33.6,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0366,
+      "vs_esdf_pct": 7.4,
+      "series_better_than_esdf": 6,
+      "of": 19
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.0428,
+      "vs_esdf_pct": 25.5,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0362,
+      "vs_esdf_pct": 6.2,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0341,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0369,
+      "vs_esdf_pct": 8.1,
+      "series_better_than_esdf": 5,
+      "of": 19
+    },
+    "ImpactNet": {
+      "mae": 0.0412,
+      "vs_esdf_pct": 20.7,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "Informer": {
+      "mae": 0.0491,
+      "vs_esdf_pct": 44.0,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "LSTM": {
+      "mae": 0.0374,
+      "vs_esdf_pct": 9.8,
+      "series_better_than_esdf": 4,
+      "of": 19
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0389,
+      "vs_esdf_pct": 14.1,
+      "series_better_than_esdf": 4,
+      "of": 19
+    },
+    "LightGBM": {
+      "mae": 0.0379,
+      "vs_esdf_pct": 11.0,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "Linear regression": {
+      "mae": 0.0451,
+      "vs_esdf_pct": 32.4,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "MLP": {
+      "mae": 0.0467,
+      "vs_esdf_pct": 37.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "N-BEATS": {
+      "mae": 0.0456,
+      "vs_esdf_pct": 33.6,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "Week before": {
+      "mae": 0.0908,
+      "vs_esdf_pct": 166.4,
+      "series_better_than_esdf": 0,
+      "of": 19
+    }
+  },
+  "pjm: all test days": {
+    "Autoformer": {
+      "mae": 0.0577,
+      "vs_esdf_pct": 73.4,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "CNN": {
+      "mae": 0.0454,
+      "vs_esdf_pct": 36.4,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0354,
+      "vs_esdf_pct": 6.5,
+      "series_better_than_esdf": 6,
+      "of": 19
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.042,
+      "vs_esdf_pct": 26.1,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0346,
+      "vs_esdf_pct": 3.9,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0333,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0352,
+      "vs_esdf_pct": 5.8,
+      "series_better_than_esdf": 4,
+      "of": 19
+    },
+    "ImpactNet": {
+      "mae": 0.0406,
+      "vs_esdf_pct": 21.9,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "Informer": {
+      "mae": 0.0456,
+      "vs_esdf_pct": 37.2,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "LSTM": {
+      "mae": 0.0365,
+      "vs_esdf_pct": 9.7,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0374,
+      "vs_esdf_pct": 12.4,
+      "series_better_than_esdf": 5,
+      "of": 19
+    },
+    "LightGBM": {
+      "mae": 0.0364,
+      "vs_esdf_pct": 9.5,
+      "series_better_than_esdf": 2,
+      "of": 19
+    },
+    "Linear regression": {
+      "mae": 0.0436,
+      "vs_esdf_pct": 31.0,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "MLP": {
+      "mae": 0.0494,
+      "vs_esdf_pct": 48.6,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "N-BEATS": {
+      "mae": 0.0473,
+      "vs_esdf_pct": 42.3,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "Week before": {
+      "mae": 0.0823,
+      "vs_esdf_pct": 147.4,
+      "series_better_than_esdf": 0,
+      "of": 19
+    }
+  },
+  "pjm: hot and cold days": {
+    "Autoformer": {
+      "mae": 0.0571,
+      "vs_esdf_pct": 91.8,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "CNN": {
+      "mae": 0.0427,
+      "vs_esdf_pct": 43.3,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0308,
+      "vs_esdf_pct": 3.5,
+      "series_better_than_esdf": 7,
+      "of": 19
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.0357,
+      "vs_esdf_pct": 19.9,
+      "series_better_than_esdf": 4,
+      "of": 19
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0309,
+      "vs_esdf_pct": 3.6,
+      "series_better_than_esdf": 8,
+      "of": 19
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0298,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0333,
+      "vs_esdf_pct": 11.6,
+      "series_better_than_esdf": 6,
+      "of": 19
+    },
+    "ImpactNet": {
+      "mae": 0.0359,
+      "vs_esdf_pct": 20.3,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "Informer": {
+      "mae": 0.0488,
+      "vs_esdf_pct": 63.9,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "LSTM": {
+      "mae": 0.0368,
+      "vs_esdf_pct": 23.7,
+      "series_better_than_esdf": 5,
+      "of": 19
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0351,
+      "vs_esdf_pct": 17.9,
+      "series_better_than_esdf": 8,
+      "of": 19
+    },
+    "LightGBM": {
+      "mae": 0.0331,
+      "vs_esdf_pct": 10.9,
+      "series_better_than_esdf": 5,
+      "of": 19
+    },
+    "Linear regression": {
+      "mae": 0.0411,
+      "vs_esdf_pct": 37.8,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "MLP": {
+      "mae": 0.0428,
+      "vs_esdf_pct": 43.8,
+      "series_better_than_esdf": 2,
+      "of": 19
+    },
+    "N-BEATS": {
+      "mae": 0.0438,
+      "vs_esdf_pct": 47.0,
+      "series_better_than_esdf": 2,
+      "of": 19
+    },
+    "Week before": {
+      "mae": 0.0592,
+      "vs_esdf_pct": 98.6,
+      "series_better_than_esdf": 3,
+      "of": 19
+    }
+  },
+  "pjm: other days": {
+    "Autoformer": {
+      "mae": 0.0576,
+      "vs_esdf_pct": 72.5,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "CNN": {
+      "mae": 0.0455,
+      "vs_esdf_pct": 36.2,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "Chronos-2, 4 weeks": {
+      "mae": 0.0357,
+      "vs_esdf_pct": 6.8,
+      "series_better_than_esdf": 6,
+      "of": 19
+    },
+    "Chronos-2, 7 days": {
+      "mae": 0.0423,
+      "vs_esdf_pct": 26.6,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "ESDF (CNN)": {
+      "mae": 0.0348,
+      "vs_esdf_pct": 4.0,
+      "series_better_than_esdf": 4,
+      "of": 19
+    },
+    "ESDF (LSTM)": {
+      "mae": 0.0334,
+      "vs_esdf_pct": 0.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "ESDF (MLP)": {
+      "mae": 0.0353,
+      "vs_esdf_pct": 5.5,
+      "series_better_than_esdf": 4,
+      "of": 19
+    },
+    "ImpactNet": {
+      "mae": 0.0408,
+      "vs_esdf_pct": 22.1,
+      "series_better_than_esdf": 2,
+      "of": 19
+    },
+    "Informer": {
+      "mae": 0.0454,
+      "vs_esdf_pct": 35.8,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "LSTM": {
+      "mae": 0.0364,
+      "vs_esdf_pct": 9.0,
+      "series_better_than_esdf": 3,
+      "of": 19
+    },
+    "LSTM + synthetic": {
+      "mae": 0.0374,
+      "vs_esdf_pct": 12.0,
+      "series_better_than_esdf": 5,
+      "of": 19
+    },
+    "LightGBM": {
+      "mae": 0.0366,
+      "vs_esdf_pct": 9.5,
+      "series_better_than_esdf": 2,
+      "of": 19
+    },
+    "Linear regression": {
+      "mae": 0.0437,
+      "vs_esdf_pct": 30.7,
+      "series_better_than_esdf": 1,
+      "of": 19
+    },
+    "MLP": {
+      "mae": 0.0498,
+      "vs_esdf_pct": 49.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "N-BEATS": {
+      "mae": 0.0475,
+      "vs_esdf_pct": 42.2,
+      "series_better_than_esdf": 0,
+      "of": 19
+    },
+    "Week before": {
+      "mae": 0.0839,
+      "vs_esdf_pct": 151.0,
+      "series_better_than_esdf": 0,
+      "of": 19
+    }
+  }
+}

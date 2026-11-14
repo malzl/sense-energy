@@ -358,7 +358,101 @@ SOLAR_PROGRAMME_COLORS = {
     "not funded, break": "#0072B2",
 }
 #: Threshold plans of the peak-shaving test (analysis/flexibility.py).
-PLAN_NAMES = {"point": "planned on the median", "q70": "planned on the 70 % quantile"}
+PLAN_NAMES = {
+    "point": "planned on the median",
+    "q70": "planned on the 70 % quantile",
+    "level": "planned on the median with the day's true level",
+}
+PLAN_MARKERS = {"point": "o", "q70": "D", "level": "|"}
+
+# Where the forecast error sits (analysis/forecast_anatomy.py)
+ERROR_PART_NAMES = {"forecast": "forecast", "level": "forecast with the day's true level"}
+STEP_ORDER = ("under 10 %", "10 to 25 %", "25 to 50 %", "50 to 100 %", "over 100 %")
+WAVE_ORDER = ("cold wave", "other days", "heat wave")
+WAVE_COLORS = {"cold wave": "#0072B2", "other days": "#7A7A7A", "heat wave": "#D55E00"}
+DAY_KIND_ORDER = (
+    "typical",
+    "level shift",
+    "hot or cold day",
+    "holiday or Christmas",
+    "strike day",
+    "strike day near holidays",
+)
+ISSUE_ORDER = ("16:30 the day before", "00:00 on the day", "06:00 on the day")
+STRIKE_TERM_ORDER = (
+    "strike weekday, away from holidays",
+    "strike weekday, next to Christmas or Easter",
+    "strike weekend day",
+    "one week before (placebo)",
+    "one week after (placebo)",
+)
+STRIKE_TERM_COLORS = {
+    "strike weekday, away from holidays": "#0072B2",
+    "strike weekday, next to Christmas or Easter": "#56B4E9",
+    "strike weekend day": "#56B4E9",
+    "one week before (placebo)": "#7A7A7A",
+    "one week after (placebo)": "#B8B8B8",
+}
+FOOTFALL_TERM_NAMES = {
+    "own footfall": "own footfall",
+    "campus footfall (placebo)": "campus footfall",
+}
+FOOTFALL_TERM_COLORS = {"own footfall": "#0072B2", "campus footfall (placebo)": "#7A7A7A"}
+FOOTFALL_VARIANT_NAMES = {
+    "mob_prev_day": "footfall of the last full day",
+    "mob_oracle": "footfall of the target day",
+    "mob_uni_oracle": "campus footfall of the target day",
+}
+FOOTFALL_VARIANT_COLORS = {
+    "mob_prev_day": "#56B4E9",
+    "mob_oracle": "#0072B2",
+    "mob_uni_oracle": "#7A7A7A",
+}
+PLANT_SERIES_COLORS = {
+    "no on-site CHP": "#0072B2",
+    "on-site CHP, against import": "#CC79A7",
+    "on-site CHP, against total demand": "#CC79A7",
+}
+
+# The check of Lu et al. 2026 on its own data (experiments/esdf_check.py): fixed order and
+# colours. The paper's method in the PFN vermilion slot, its neural baselines grey, the
+# references that the paper does not have in their family colours.
+ESDF_METHOD_ORDER = (
+    "Week before",
+    "MLP",
+    "CNN",
+    "LSTM",
+    "LSTM + synthetic",
+    "N-BEATS",
+    "ImpactNet",
+    "Informer",
+    "Autoformer",
+    "ESDF (MLP)",
+    "ESDF (CNN)",
+    "ESDF (LSTM)",
+    "Linear regression",
+    "LightGBM",
+    "Chronos-2, 7 days",
+    "Chronos-2, 4 weeks",
+)
+ESDF_METHOD_COLORS = {
+    **{m: "#7A7A7A" for m in ESDF_METHOD_ORDER[:9]},
+    "Week before": "#B8B8B8",
+    "ESDF (MLP)": "#D55E00",
+    "ESDF (CNN)": "#D55E00",
+    "ESDF (LSTM)": "#D55E00",
+    "Linear regression": "#56B4E9",
+    "LightGBM": "#009E73",
+    "Chronos-2, 7 days": "#0072B2",
+    "Chronos-2, 4 weeks": "#0072B2",
+}
+ESDF_SUBSET_NAMES = {
+    "paper window": "the paper's scored window",
+    "all test days": "all test days",
+    "hot and cold days": "hot and cold days",
+    "other days": "other days",
+}
+ESDF_REGION_NAMES = {"europe": "Europe, 18 countries", "pjm": "PJM, 19 zones"}
 #: Extreme-weather event types (analysis/weather_events.py); fixed order and colours.
 WEATHER_EVENT_ORDER = ("heatwave", "cold spell", "snow", "heavy rain", "high wind")
 WEATHER_EVENT_COLORS = {
