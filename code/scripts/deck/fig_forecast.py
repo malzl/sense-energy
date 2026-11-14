@@ -1,8 +1,10 @@
-"""Finding 3: day-ahead error of each model (left) and the share of the possible peak cut that a
-battery gets when it plans on the model's forecast (right). 91 sites, 69 test days."""
+"""Finding 1: day-ahead error of each model (left) and the share of the possible peak cut that a
+battery gets when it plans on the model's forecast (right). The black line is the share with the
+same forecast and the correct level of each day. 91 sites, 69 test days."""
 
 import pandas as pd
-from _deck import ASH, BLUE, ORANGE, REPORTS, figure, save
+from _deck import ASH, BLUE, CHARCOAL, ORANGE, REPORTS, figure, save
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 models = {
@@ -26,6 +28,8 @@ d = pd.DataFrame(
 )
 d["nmae_pct"] = d["model"].map(nmae)
 d["captured_pct"] = d["model"].map(fv)
+lv = pd.read_csv(REPORTS / "forecast_anatomy" / "value_overall.csv").set_index("model")
+d["captured_level_pct"] = d["model"].map(lv["captured_level_pct"])
 d = d.iloc[::-1].reset_index(drop=True)
 fig, (a, c) = figure(90, 39, ncols=2, sharey=True)
 a.barh(d["label"], d["nmae_pct"], color=d["colour"], height=0.62)
@@ -33,6 +37,8 @@ a.set_xlim(0, 20)
 a.set_xticks([0, 5, 10, 15, 20])
 a.set_xlabel("Day-ahead error (%)")
 c.barh(d["label"], d["captured_pct"], color=d["colour"], height=0.62)
+for k, v in enumerate(d["captured_level_pct"]):
+    c.plot([v, v], [k - 0.36, k + 0.36], color=CHARCOAL, linewidth=1.1)
 c.set_xlim(0, 100)
 c.set_xticks([0, 25, 50, 75, 100])
 c.set_xlabel("Share of possible peak cut (%)")
@@ -44,9 +50,14 @@ handles = [
     for col, lab in (
         (ASH, "baseline"),
         (ORANGE, "trained on the sites"),
-        (BLUE, "zero-shot, no site training"),
+        (BLUE, "zero-shot"),
     )
 ]
-fig.legend(handles=handles, loc="outside upper center", ncol=3, handlelength=1.0)
-save(fig, "forecast", data=d[["model", "label", "nmae_pct", "captured_pct"]])
-print(d[["label", "nmae_pct", "captured_pct"]].round(1).to_string())
+handles.append(
+    Line2D([], [], color=CHARCOAL, linewidth=1.1, marker="|", markersize=5, linestyle="none")
+)
+handles[-1].set_label("with the correct daily level")
+fig.legend(handles=handles, loc="outside upper center", ncol=4, handlelength=1.0, columnspacing=0.9)
+cols = ["model", "label", "nmae_pct", "captured_pct", "captured_level_pct"]
+save(fig, "forecast", data=d[cols])
+print(d[cols[1:]].round(1).to_string())

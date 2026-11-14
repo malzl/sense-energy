@@ -1,4 +1,4 @@
-% Kickoff deck: four exploratory findings from the SENSE NHS electricity panel.
+% Kickoff deck: four exploratory findings on the day-ahead forecast for NHS sites.
 % Build with build.sh (pdfLaTeX, two passes). Text follows ASD-STE100 Simplified Technical English.
 % Look: the Oxford / SENSE slide template (Oxford blue, serif titles, Helvetica text).
 % Slide size 160 x 90 mm. Figures come from code/scripts/deck/ at their exact size on the slide.
@@ -15,6 +15,10 @@
 % ---- event line on the title slide: set the date when it is fixed ---------------------------
 \newcommand{\deckevent}{SENSE healthcare kickoff}
 \def\deckdate{}
+% ---- backup slides: the three earlier findings (heat pumps, hot days, verification) --------
+% \backuptrue adds them after the discussion slide
+\newif\ifbackup
+\backupfalse
 
 % ---- fonts: Charter for titles and numbers, Helvetica for text --------------------------------
 \newcommand{\titlefont}{\fontfamily{bch}\selectfont}
@@ -45,11 +49,11 @@
   \at{#1}{#2}{{\titlefont\fontsize{16}{17}\selectfont\color{oxblue}#4}}
   \node[anchor=north west,inner sep=0pt,outer sep=0pt] at ([xshift=#1mm,yshift=-#2mm-7.4mm]current page.north west) {\parbox[t]{#3mm}{\raggedright\fontsize{6.2}{7.9}\selectfont\color{ash}#5}};}
 % the three text blocks of a finding slide
-\newcommand{\blk}[2]{\lab{#1}\par\vspace{1mm}{\bodytxt\raggedright #2\par}\vspace{3.1mm}}
+\newcommand{\blk}[2]{\lab{#1}\par\vspace{1mm}{\bodytxt\raggedright #2\par}\vspace{2.5mm}}
 \newcommand{\hyp}[2]{\par\hangindent=5mm\hangafter=1\noindent\makebox[5mm][l]{\bfseries\color{oxblue}#1}#2\par\vspace{0.9mm}}
 \newcommand{\textcol}[1]{%
   \draw[stone,line width=0.35pt] ([xshift=100.4mm,yshift=-24.5mm]current page.north west) -- ++(0,-55.5mm);
-  \at{103.6}{24.4}{\parbox[t]{49.2mm}{#1}}}
+  \at{103.6}{24.0}{\parbox[t]{49.2mm}{#1}}}
 \newcommand{\bul}[1]{\par\hangindent=3.1mm\hangafter=1\noindent\makebox[3.1mm][l]{\raisebox{0.45mm}{\color{oxblue}\rule{0.95mm}{0.95mm}}}#1\par\vspace{1.5mm}}
 \newcommand{\boxcol}[3]{% x, label, content
   \fill[shell] ([xshift=#1mm,yshift=-24mm]current page.north west) rectangle ++(45.4mm,-55.5mm);
@@ -67,7 +71,7 @@
   \at{104}{79.2}{\parbox[t]{50mm}{\raggedright\fontsize{5.2}{6.8}\selectfont\color{white}134 NHS sites with half-hourly electricity data.\\ Gold: sites with on-site generation.}}
   \at{7.2}{8.6}{\lab{Smart Energy Data Service (SENSE) \enspace·\enspace SDR UK}}
   \at{7.2}{27}{\parbox[t]{88mm}{\raggedright\titlefont\fontsize{19.5}{24}\selectfont\color{oxblue}NHS site electricity demand:\\ four exploratory findings}}
-  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}First results from half-hourly data for 134 NHS sites, December 2022 to May 2026}}
+  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}What a day-ahead forecast can do, and what limits it. Half-hourly data for 134 NHS sites, 2022 to 2026}}
   \at{7.2}{60.5}{{\bfseries\fontsize{8.4}{10}\selectfont\color{oxblue}Professor Siddharth Arora \enspace·\enspace Nicolas Malz}}
   \at{7.2}{65.5}{{\fontsize{6.4}{8}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace \deckevent\ifx\deckdate\empty\else\enspace·\enspace\deckdate\fi}}
   \putlogo{oxford_logo}{7.2}{74}
@@ -76,9 +80,100 @@
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 2  Finding 1: heat electrification against the grid connection
+% 2  Finding 1: the forecast and its value
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 1 \enspace·\enspace heat electrification}
+  \slidehead{Exploratory finding 1 \enspace·\enspace forecast value}
+       {Zero-shot models lead, but get only half of the possible value}
+       {Day-ahead forecasts for 91 sites on 69 test days. Value: the peak cut of a battery that plans on the forecast.}
+  \fig{7.2}{24.6}{forecast}
+  \bignum{29}{66}{28}{11.5 \%}{error of the best model, with no site training}
+  \bignum{65.5}{66}{30}{53 \%}{of the possible peak cut, with the best forecast}
+  \textcol{%
+    \blk{Implication}{A model with no site training is the baseline to beat. Two weeks of history are sufficient. A perfect daily level increases the value to 63 \%. A new plan at 06:00 adds 2 points.}
+    \blk{Research avenue}{Train the model for the decision, not for the mean error. Find the time and the height of the peak, not the level of the day.}
+    \blk{Hypotheses}{\hyp{H1}{A model that is trained for the peak cut gets more value with the same error.}\hyp{H2}{The best quantile for the plan is different for each site.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 3  Finding 2: on-site generation
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Exploratory finding 2 \enspace·\enspace on-site generation}
+       {Sites with on-site generation have 79 \% of the forecast error}
+       {12 of the 91 sites. Map: forecast error of each site in kWh. Chart: grid import of one site on a day when its plant stops.}
+  \fig{7.2}{24.2}{error_map}
+  \fig{55.6}{24.6}{switch_day}
+  \bignum{58.4}{66}{38}{43 \%}{of all error is on 2 \% of the site-days: the days with a plant start or stop}
+  \textcol{%
+    \blk{Implication}{The meter shows demand minus generation. A plant start or stop changes the import by more than its mean in two hours. Size explains half of the error at these sites, the plant the other half.}
+    \blk{Research avenue}{Get plant schedules or generation meter data from two or three trusts. Then forecast demand and generation as two series.}
+    \blk{Hypotheses}{\hyp{H1}{With the plant schedule, the error at these sites decreases by half.}\hyp{H2}{The site knows most plant starts and stops one day before.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 4  Finding 3: patient activity
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Exploratory finding 3 \enspace·\enspace patient activity}
+       {Strikes and visitor numbers do not change electricity demand}
+       {Left: demand on 34 doctor strike days against normal days, 132 sites. Right: daily visitors against daily demand at 2 sites, 2024.}
+  \fig{7.2}{24.6}{strike_profile}
+  \fig{55.6}{24.6}{footfall}
+  \bignum{12}{66}{38}{$-$0.4 \%}{demand from 08:00 to 18:00 on strike days (95 \% interval: $-$1.6 to +0.8 \%)}
+  \bignum{60.4}{66}{37}{0.00}{change in demand for 1 \% more visitors. Mobility data: The Oxford Partnership}
+  \textcol{%
+    \blk{Implication}{On strike days, hospitals cancelled operations and appointments. Demand did not change. A model that gets the visitor count of the day is not better. Buildings and plant set the demand, not patients.}
+    \blk{Research avenue}{Do the same test with daily bed occupancy from the trusts. Do the test for gas, because heat can follow occupancy.}
+    \blk{Hypotheses}{\hyp{H1}{Daily bed occupancy explains less than 1 \% of the daily change in electricity.}\hyp{H2}{Activity changes demand only when a department closes fully.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 5  Finding 4: heat waves and cold waves
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Exploratory finding 4 \enspace·\enspace heat and cold waves}
+       {On heat-wave days the forecast loses a third of its value}
+       {91 sites, 342 test days, forecast with no weather input. Wave day: site temperature beyond the 5th or 95th percentile.}
+  \fig{7.2}{24.6}{waves}
+  \bignum{29}{66}{28}{+1.5 points}{of error on heat-wave days: 14.7 \% against 13.2 \%}
+  \bignum{65.5}{66}{30}{33 \%}{of the possible peak cut on heat-wave days. Other days: 50 \%}
+  \textcol{%
+    \blk{Implication}{The error shows little, the decision shows much. Demand is above the forecast, the plan is too low, and the battery is empty before the peak. With a weather forecast as input, the best model gets 40 \%.}
+    \blk{Research avenue}{Score forecasts for rare days in decisions. Test synthetic heat-wave days (Lu et al., 2026) and a plan on a higher quantile.}
+    \blk{Hypotheses}{\hyp{H1}{Sites with cooling plant lose the most value on heat-wave days.}\hyp{H2}{Synthetic heat-wave days recover value at sites that follow the temperature.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 6  Discussion
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Discussion}
+       {Facts, open points and questions for this session}
+       {All results are exploratory: one data panel, one test period. No trust has checked the results.}
+  \boxcol{7.2}{Facts}{%
+    \bul{134 sites in 24 trusts. Half-hourly electricity, December 2022 to May 2026.}
+    \bul{Forecast test: 91 sites, 10 models, 69 to 342 test days.}
+    \bul{12 of the 91 sites have on-site generation. Their meters show grid import only.}
+    \bul{Public load data: the zero-shot model is level with a method from 2026.}}
+  \boxcol{57.3}{Not resolved}{%
+    \bul{Plant schedules and generation meter data: we have none.}
+    \bul{Daily bed occupancy: public data are monthly or quarterly.}
+    \bul{Value is one decision here: the peak cut of a battery. Other decisions can give other results.}
+    \bul{Can we name sites in publications?}}
+  \boxcol{107.4}{Questions for this session}{%
+    \bul{Which trusts can supply plant schedules or generation meter data?}
+    \bul{Which group has daily occupancy or activity data that we can link?}
+    \bul{Which decisions do estates teams make with a forecast, and at what time?}
+    \bul{Can all groups use one site identifier and one test protocol?}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% Backup slides: the three earlier findings. Set \backuptrue at the top to add them.
+\ifbackup
+% Backup: heat electrification against the grid connection
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Earlier result \enspace·\enspace heat electrification}
        {Heat pumps put half of the sites above their grid connection}
        {Scenario: heat pumps replace all gas heat. Map: 631 sites in England. Chart: 31 panel sites in the weather of 66 years.}
   \fig{7.2}{24.2}{headroom_map}
@@ -91,10 +186,9 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 3  Finding 2: the response to hot days
+% Backup: the response to hot days
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 2 \enspace·\enspace weather response}
+  \slidehead{Earlier result \enspace·\enspace weather response}
        {Hot days increase demand at some sites and decrease it at others}
        {83 sites without on-site generation. On hot days, 33 sites use more electricity and 21 sites use less.}
   \fig{7.2}{24.2}{heat_map}
@@ -107,26 +201,9 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 4  Finding 3: the forecast
+% Backup: verification from the meter
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 3 \enspace·\enspace forecast}
-       {Zero-shot models lead, but get only half of the possible value}
-       {Day-ahead forecasts for 91 sites on 69 test days. Value: the peak cut of a battery that plans on the forecast.}
-  \fig{7.2}{24.6}{forecast}
-  \bignum{29}{66}{28}{11.5 \%}{error of the best model, with no site training}
-  \bignum{65.5}{66}{30}{53 \%}{of the possible peak cut, with the best forecast}
-  \textcol{%
-    \blk{Implication}{A model with no site training is the baseline to beat. Weather forecasts decrease the error by 0.7 points. A weather ensemble adds nothing more.}
-    \blk{Research avenue}{Train a compact prior-data fitted network with occupancy and mobility signals. Measure it in decisions, not only in error.}
-    \blk{Hypotheses}{\hyp{H1}{Occupancy and mobility signals decrease the error on atypical days.}\hyp{H2}{On-site generation causes most of the rest of the error.}}}
-  \slidefoot
-\end{tikzpicture}\end{frame}
-
-% =============================================================================================
-% 5  Finding 4: verification from the meter
-\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 4 \enspace·\enspace verification}
+  \slidehead{Earlier result \enspace·\enspace verification}
        {The meter shows when sites install solar panels or heat pumps}
        {Left: how demand follows sunshine at 107 sites. Right: funded solar sites report 84 \% more generation; other sites 39 \%.}
   \fig{7.2}{24.2}{solar_lines}
@@ -138,28 +215,6 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 6  Discussion
-\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Discussion}
-       {Facts, open points and questions for this session}
-       {All results are exploratory: one data panel, one test period. No trust has checked the results.}
-  \boxcol{7.2}{Facts}{%
-    \bul{134 sites in 24 trusts. Half-hourly electricity, December 2022 to May 2026.}
-    \bul{24 sites have on-site generation and use 70 \% of the electricity. Their meters show grid import only.}
-    \bul{Quarterly bed occupancy does not follow electricity demand.}
-    \bul{Mobility data: 3 sites, 1 year.}}
-  \boxcol{57.3}{Not resolved}{%
-    \bul{Does patient activity change demand? We have no daily activity data for a site.}
-    \bul{Which plant is on each site? No register shows it.}
-    \bul{Network charges and network capacity are not in the project.}
-    \bul{Can we name sites in publications?}}
-  \boxcol{107.4}{Questions for this session}{%
-    \bul{Which group has daily occupancy or activity data that we can link?}
-    \bul{Can SENSE supply generation and gas meter data for the sites?}
-    \bul{Can all groups use one site identifier and one test protocol?}
-    \bul{Which decisions do estates teams make with a forecast?}}
-  \slidefoot
-\end{tikzpicture}\end{frame}
+\fi
 
 \end{document}
