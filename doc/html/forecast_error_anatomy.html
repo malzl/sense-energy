@@ -39,6 +39,7 @@
   <a class="h2" href="#9-what-this-says-about-the-research-avenue">9. What this says about the research avenue</a>
   <a class="h2" href="#10-limits">10. Limits</a>
   <a class="h2" href="#reproduce">Reproduce</a>
+  <a class="h2" href="#does-knowledge-of-the-plant-help-plant-knowledge">Does knowledge of the plant help? (plant_knowledge)</a>
   </div>
 </nav>
 <main>
@@ -3251,6 +3252,239 @@ CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-probes --which mobility 
 CUDA_VISIBLE_DEVICES=&quot;&quot; sense-energy forecast-anatomy                                #  5 minutes
 python code/scripts/forecast_anatomy/run_all.py
 </code></pre>
+<h2 id="does-knowledge-of-the-plant-help-plant-knowledge">Does knowledge of the plant help? (<code>plant_knowledge</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/plant_knowledge.png" alt="plant_knowledge" loading="lazy"><figcaption><code>plant_knowledge</code> <a href="figures/plant_knowledge.pdf">PDF</a></figcaption></figure></div>
+
+<p>Added 15 November 2026 (<code>forecast-probes --which plant</code>, <code>plant_scores.csv</code>,
+<code>plant_differences.csv</code>). The same 91 sites and 69 test days.</p>
+<figure class="single"><img src="figures/plant_knowledge.png" alt="plant_knowledge" loading="lazy"><figcaption>Change in error when a model gets knowledge of the plant, at the sites with on-site generation and at the others. Paired differences with 95 % intervals from resampling weeks. <code>plant_knowledge</code> <a href="figures/plant_knowledge.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>sites</th>
+      <th>a</th>
+      <th>b</th>
+      <th>diff_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all sites</td>
+      <td>plant_cross_flag</td>
+      <td>plant_cross</td>
+      <td>0.022</td>
+      <td>-0.207</td>
+      <td>0.171</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>plant_cross</td>
+      <td>chronos2</td>
+      <td>0.181</td>
+      <td>0.014</td>
+      <td>0.416</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>plant_state_past</td>
+      <td>chronos2</td>
+      <td>0.21</td>
+      <td>0.115</td>
+      <td>0.309</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>plant_state_oracle</td>
+      <td>chronos2</td>
+      <td>-2.246</td>
+      <td>-2.533</td>
+      <td>-1.941</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>lightgbm_ifs</td>
+      <td>lightgbm_ifs_noid</td>
+      <td>-0.032</td>
+      <td>-0.174</td>
+      <td>0.148</td>
+    </tr>
+    <tr>
+      <td>all sites</td>
+      <td>lightgbm_ifs_eric</td>
+      <td>lightgbm_ifs</td>
+      <td>-0.073</td>
+      <td>-0.221</td>
+      <td>0.041</td>
+    </tr>
+    <tr>
+      <td>sites with on-site generation</td>
+      <td>plant_cross_flag</td>
+      <td>plant_cross</td>
+      <td>0.021</td>
+      <td>-0.181</td>
+      <td>0.209</td>
+    </tr>
+    <tr>
+      <td>sites with on-site generation</td>
+      <td>plant_cross</td>
+      <td>chronos2</td>
+      <td>-0.062</td>
+      <td>-0.396</td>
+      <td>0.185</td>
+    </tr>
+    <tr>
+      <td>sites with on-site generation</td>
+      <td>plant_state_past</td>
+      <td>chronos2</td>
+      <td>-0.021</td>
+      <td>-0.136</td>
+      <td>0.091</td>
+    </tr>
+    <tr>
+      <td>sites with on-site generation</td>
+      <td>plant_state_oracle</td>
+      <td>chronos2</td>
+      <td>-3.983</td>
+      <td>-5.32</td>
+      <td>-2.614</td>
+    </tr>
+    <tr>
+      <td>sites with on-site generation</td>
+      <td>lightgbm_ifs</td>
+      <td>lightgbm_ifs_noid</td>
+      <td>0.146</td>
+      <td>-0.432</td>
+      <td>0.831</td>
+    </tr>
+    <tr>
+      <td>sites with on-site generation</td>
+      <td>lightgbm_ifs_eric</td>
+      <td>lightgbm_ifs</td>
+      <td>-0.274</td>
+      <td>-0.722</td>
+      <td>0.253</td>
+    </tr>
+    <tr>
+      <td>other sites</td>
+      <td>plant_cross_flag</td>
+      <td>plant_cross</td>
+      <td>0.022</td>
+      <td>-0.216</td>
+      <td>0.181</td>
+    </tr>
+    <tr>
+      <td>other sites</td>
+      <td>plant_cross</td>
+      <td>chronos2</td>
+      <td>0.218</td>
+      <td>0.048</td>
+      <td>0.466</td>
+    </tr>
+    <tr>
+      <td>other sites</td>
+      <td>plant_state_past</td>
+      <td>chronos2</td>
+      <td>0.245</td>
+      <td>0.134</td>
+      <td>0.365</td>
+    </tr>
+    <tr>
+      <td>other sites</td>
+      <td>plant_state_oracle</td>
+      <td>chronos2</td>
+      <td>-1.982</td>
+      <td>-2.228</td>
+      <td>-1.741</td>
+    </tr>
+    <tr>
+      <td>other sites</td>
+      <td>lightgbm_ifs</td>
+      <td>lightgbm_ifs_noid</td>
+      <td>-0.06</td>
+      <td>-0.167</td>
+      <td>0.099</td>
+    </tr>
+    <tr>
+      <td>other sites</td>
+      <td>lightgbm_ifs_eric</td>
+      <td>lightgbm_ifs</td>
+      <td>-0.043</td>
+      <td>-0.18</td>
+      <td>0.052</td>
+    </tr>
+    <tr>
+      <td>on-site generation, large-step days</td>
+      <td>plant_cross_flag</td>
+      <td>plant_cross</td>
+      <td>-0.222</td>
+      <td>-0.641</td>
+      <td>0.352</td>
+    </tr>
+    <tr>
+      <td>on-site generation, large-step days</td>
+      <td>plant_cross</td>
+      <td>chronos2</td>
+      <td>-0.16</td>
+      <td>-0.97</td>
+      <td>0.284</td>
+    </tr>
+    <tr>
+      <td>on-site generation, large-step days</td>
+      <td>plant_state_past</td>
+      <td>chronos2</td>
+      <td>-0.169</td>
+      <td>-0.64</td>
+      <td>0.133</td>
+    </tr>
+    <tr>
+      <td>on-site generation, large-step days</td>
+      <td>plant_state_oracle</td>
+      <td>chronos2</td>
+      <td>-11.487</td>
+      <td>-15.418</td>
+      <td>-8.673</td>
+    </tr>
+    <tr>
+      <td>on-site generation, large-step days</td>
+      <td>lightgbm_ifs</td>
+      <td>lightgbm_ifs_noid</td>
+      <td>0.002</td>
+      <td>-0.62</td>
+      <td>0.832</td>
+    </tr>
+    <tr>
+      <td>on-site generation, large-step days</td>
+      <td>lightgbm_ifs_eric</td>
+      <td>lightgbm_ifs</td>
+      <td>-0.23</td>
+      <td>-0.896</td>
+      <td>0.227</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/plant_differences.csv">code/reports/forecast_anatomy/plant_differences.csv</a> (24 rows shown)</p>
+
+<ul>
+<li><strong>That a site has a plant: nothing.</strong> A trained model (LightGBM) has 18.8 % error at the
+sites with on-site generation without any site information, 18.9 % with the site's identity
+and 18.7 % with the estates descriptors, the number of CHP units among them (differences
++0.15, −0.43 to +0.83, and −0.27, −0.72 to +0.25). Chronos-2 that sees all 91 sites of a day
+together gets nothing from a flag and the plant's share of the site's electricity (+0.02,
+−0.18 to +0.21). The history already shows the model that the import jumps.</li>
+<li><strong>The state of the plant up to the issue time: nothing</strong> (−0.02, −0.14 to +0.09 at the plant
+sites). The model sees it in the import.</li>
+<li><strong>The state of the plant on the target day: a quarter of the error.</strong> A three-level signal
+(import more than 25 % of the site's mean above, within or below its usual profile) takes
+the plant sites from 16.5 % to 12.5 % (−4.0, −5.3 to −2.6) and their large-step days from
+34.2 % to 22.7 % (−11.5, −15.4 to −8.7); the captured peak cut on those days goes from 42 %
+to 54 %. This is an upper bound: the signal is made from the import itself, and the same
+construction gains 2.0 points at the sites without a plant, where it marks noise.</li>
+</ul>
+<p>What is missing is when the plant will start or stop, not that it exists. A schedule from
+the site is worth at most a quarter to a third of the error at these sites with a signal this
+coarse.</p>
 <p class="meta">Built from <code>doc/forecast_error_anatomy.md</code> by <code>sense-energy build-docs</code>.</p>
 </main>
 </div>

@@ -322,3 +322,31 @@ CUDA_VISIBLE_DEVICES="" sense-energy forecast-probes --which mobility --threads 
 CUDA_VISIBLE_DEVICES="" sense-energy forecast-anatomy                                #  5 minutes
 python code/scripts/forecast_anatomy/run_all.py
 ```
+
+## Does knowledge of the plant help? (`plant_knowledge`)
+
+Added 15 November 2026 (`forecast-probes --which plant`, `plant_scores.csv`,
+`plant_differences.csv`). The same 91 sites and 69 test days.
+
+{{figure: plant_knowledge | caption=Change in error when a model gets knowledge of the plant, at the sites with on-site generation and at the others. Paired differences with 95 % intervals from resampling weeks.}}
+
+{{table: code/reports/forecast_anatomy/plant_differences.csv | round=3}}
+
+- **That a site has a plant: nothing.** A trained model (LightGBM) has 18.8 % error at the
+  sites with on-site generation without any site information, 18.9 % with the site's identity
+  and 18.7 % with the estates descriptors, the number of CHP units among them (differences
+  +0.15, −0.43 to +0.83, and −0.27, −0.72 to +0.25). Chronos-2 that sees all 91 sites of a day
+  together gets nothing from a flag and the plant's share of the site's electricity (+0.02,
+  −0.18 to +0.21). The history already shows the model that the import jumps.
+- **The state of the plant up to the issue time: nothing** (−0.02, −0.14 to +0.09 at the plant
+  sites). The model sees it in the import.
+- **The state of the plant on the target day: a quarter of the error.** A three-level signal
+  (import more than 25 % of the site's mean above, within or below its usual profile) takes
+  the plant sites from 16.5 % to 12.5 % (−4.0, −5.3 to −2.6) and their large-step days from
+  34.2 % to 22.7 % (−11.5, −15.4 to −8.7); the captured peak cut on those days goes from 42 %
+  to 54 %. This is an upper bound: the signal is made from the import itself, and the same
+  construction gains 2.0 points at the sites without a plant, where it marks noise.
+
+What is missing is when the plant will start or stop, not that it exists. A schedule from
+the site is worth at most a quarter to a third of the error at these sites with a signal this
+coarse.

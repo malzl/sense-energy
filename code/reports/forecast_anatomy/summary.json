@@ -672,6 +672,244 @@
       "raw_corr": 0.503
     }
   },
+  "plant_knowledge": {
+    "nmae_pct": {
+      "all sites": {
+        "chronos2": 12.2,
+        "lightgbm_ifs": 13.03,
+        "lightgbm_ifs_eric": 12.96,
+        "lightgbm_ifs_noid": 13.06,
+        "plant_cross": 12.38,
+        "plant_cross_flag": 12.4,
+        "plant_state_oracle": 9.95,
+        "plant_state_past": 12.41
+      },
+      "on-site generation, large-step days": {
+        "chronos2": 34.2,
+        "lightgbm_ifs": 34.65,
+        "lightgbm_ifs_eric": 34.42,
+        "lightgbm_ifs_noid": 34.65,
+        "plant_cross": 34.04,
+        "plant_cross_flag": 33.82,
+        "plant_state_oracle": 22.71,
+        "plant_state_past": 34.03
+      },
+      "other sites": {
+        "chronos2": 11.54,
+        "lightgbm_ifs": 12.13,
+        "lightgbm_ifs_eric": 12.09,
+        "lightgbm_ifs_noid": 12.19,
+        "plant_cross": 11.76,
+        "plant_cross_flag": 11.78,
+        "plant_state_oracle": 9.56,
+        "plant_state_past": 11.79
+      },
+      "sites with on-site generation": {
+        "chronos2": 16.5,
+        "lightgbm_ifs": 18.94,
+        "lightgbm_ifs_eric": 18.66,
+        "lightgbm_ifs_noid": 18.79,
+        "plant_cross": 16.43,
+        "plant_cross_flag": 16.45,
+        "plant_state_oracle": 12.51,
+        "plant_state_past": 16.47
+      }
+    },
+    "differences": [
+      {
+        "sites": "all sites",
+        "a": "plant_cross_flag",
+        "b": "plant_cross",
+        "diff_pts": 0.022,
+        "lo": -0.207,
+        "hi": 0.171
+      },
+      {
+        "sites": "all sites",
+        "a": "plant_cross",
+        "b": "chronos2",
+        "diff_pts": 0.181,
+        "lo": 0.014,
+        "hi": 0.416
+      },
+      {
+        "sites": "all sites",
+        "a": "plant_state_past",
+        "b": "chronos2",
+        "diff_pts": 0.21,
+        "lo": 0.115,
+        "hi": 0.309
+      },
+      {
+        "sites": "all sites",
+        "a": "plant_state_oracle",
+        "b": "chronos2",
+        "diff_pts": -2.246,
+        "lo": -2.533,
+        "hi": -1.941
+      },
+      {
+        "sites": "all sites",
+        "a": "lightgbm_ifs",
+        "b": "lightgbm_ifs_noid",
+        "diff_pts": -0.032,
+        "lo": -0.174,
+        "hi": 0.148
+      },
+      {
+        "sites": "all sites",
+        "a": "lightgbm_ifs_eric",
+        "b": "lightgbm_ifs",
+        "diff_pts": -0.073,
+        "lo": -0.221,
+        "hi": 0.041
+      },
+      {
+        "sites": "sites with on-site generation",
+        "a": "plant_cross_flag",
+        "b": "plant_cross",
+        "diff_pts": 0.021,
+        "lo": -0.181,
+        "hi": 0.209
+      },
+      {
+        "sites": "sites with on-site generation",
+        "a": "plant_cross",
+        "b": "chronos2",
+        "diff_pts": -0.062,
+        "lo": -0.396,
+        "hi": 0.185
+      },
+      {
+        "sites": "sites with on-site generation",
+        "a": "plant_state_past",
+        "b": "chronos2",
+        "diff_pts": -0.021,
+        "lo": -0.136,
+        "hi": 0.091
+      },
+      {
+        "sites": "sites with on-site generation",
+        "a": "plant_state_oracle",
+        "b": "chronos2",
+        "diff_pts": -3.983,
+        "lo": -5.32,
+        "hi": -2.614
+      },
+      {
+        "sites": "sites with on-site generation",
+        "a": "lightgbm_ifs",
+        "b": "lightgbm_ifs_noid",
+        "diff_pts": 0.146,
+        "lo": -0.432,
+        "hi": 0.831
+      },
+      {
+        "sites": "sites with on-site generation",
+        "a": "lightgbm_ifs_eric",
+        "b": "lightgbm_ifs",
+        "diff_pts": -0.274,
+        "lo": -0.722,
+        "hi": 0.253
+      },
+      {
+        "sites": "other sites",
+        "a": "plant_cross_flag",
+        "b": "plant_cross",
+        "diff_pts": 0.022,
+        "lo": -0.216,
+        "hi": 0.181
+      },
+      {
+        "sites": "other sites",
+        "a": "plant_cross",
+        "b": "chronos2",
+        "diff_pts": 0.218,
+        "lo": 0.048,
+        "hi": 0.466
+      },
+      {
+        "sites": "other sites",
+        "a": "plant_state_past",
+        "b": "chronos2",
+        "diff_pts": 0.245,
+        "lo": 0.134,
+        "hi": 0.365
+      },
+      {
+        "sites": "other sites",
+        "a": "plant_state_oracle",
+        "b": "chronos2",
+        "diff_pts": -1.982,
+        "lo": -2.228,
+        "hi": -1.741
+      },
+      {
+        "sites": "other sites",
+        "a": "lightgbm_ifs",
+        "b": "lightgbm_ifs_noid",
+        "diff_pts": -0.06,
+        "lo": -0.167,
+        "hi": 0.099
+      },
+      {
+        "sites": "other sites",
+        "a": "lightgbm_ifs_eric",
+        "b": "lightgbm_ifs",
+        "diff_pts": -0.043,
+        "lo": -0.18,
+        "hi": 0.052
+      },
+      {
+        "sites": "on-site generation, large-step days",
+        "a": "plant_cross_flag",
+        "b": "plant_cross",
+        "diff_pts": -0.222,
+        "lo": -0.641,
+        "hi": 0.352
+      },
+      {
+        "sites": "on-site generation, large-step days",
+        "a": "plant_cross",
+        "b": "chronos2",
+        "diff_pts": -0.16,
+        "lo": -0.97,
+        "hi": 0.284
+      },
+      {
+        "sites": "on-site generation, large-step days",
+        "a": "plant_state_past",
+        "b": "chronos2",
+        "diff_pts": -0.169,
+        "lo": -0.64,
+        "hi": 0.133
+      },
+      {
+        "sites": "on-site generation, large-step days",
+        "a": "plant_state_oracle",
+        "b": "chronos2",
+        "diff_pts": -11.487,
+        "lo": -15.418,
+        "hi": -8.673
+      },
+      {
+        "sites": "on-site generation, large-step days",
+        "a": "lightgbm_ifs",
+        "b": "lightgbm_ifs_noid",
+        "diff_pts": 0.002,
+        "lo": -0.62,
+        "hi": 0.832
+      },
+      {
+        "sites": "on-site generation, large-step days",
+        "a": "lightgbm_ifs_eric",
+        "b": "lightgbm_ifs",
+        "diff_pts": -0.23,
+        "lo": -0.896,
+        "hi": 0.227
+      }
+    ]
+  },
   "mobility_forecast": {
     "variants": [
       "mob_base",
