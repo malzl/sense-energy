@@ -1,4 +1,4 @@
-% Kickoff deck: four exploratory findings on the day-ahead forecast for NHS sites.
+% Kickoff deck: four exploratory findings on NHS sites in heat waves and cold spells.
 % Build with build.sh (pdfLaTeX, two passes). Text follows ASD-STE100 Simplified Technical English.
 % Look: the Oxford / SENSE slide template (Oxford blue, serif titles, Helvetica text).
 % Slide size 160 x 90 mm. Figures come from code/scripts/deck/ at their exact size on the slide.
@@ -15,7 +15,8 @@
 % ---- event line on the title slide: set the date when it is fixed ---------------------------
 \newcommand{\deckevent}{SENSE healthcare kickoff}
 \def\deckdate{}
-% ---- backup slides: the three earlier findings (heat pumps, hot days, verification) --------
+% ---- backup slides: the earlier findings (forecast value, plant error, strikes, heat pumps,
+%      hot days, verification) ------------------------------------------------------------------
 % \backuptrue adds them after the discussion slide
 \newif\ifbackup
 \backupfalse
@@ -70,8 +71,8 @@
   \fig{101.2}{5.5}{cover_sites}
   \at{104}{79.2}{\parbox[t]{50mm}{\raggedright\fontsize{5.2}{6.8}\selectfont\color{white}134 NHS sites with half-hourly electricity data.\\ Gold: sites with on-site generation.}}
   \at{7.2}{8.6}{\lab{Smart Energy Data Service (SENSE) \enspace·\enspace SDR UK}}
-  \at{7.2}{27}{\parbox[t]{88mm}{\raggedright\titlefont\fontsize{19.5}{24}\selectfont\color{oxblue}NHS site electricity demand:\\ four exploratory findings}}
-  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}What a day-ahead forecast can do, and what limits it. Half-hourly data for 134 NHS sites, 2022 to 2026}}
+  \at{7.2}{27}{\parbox[t]{88mm}{\raggedright\titlefont\fontsize{19.5}{24}\selectfont\color{oxblue}NHS sites in heat and cold:\\ four exploratory findings}}
+  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}How electricity demand reacts, when, where, and what site data explain. 134 NHS sites, 2022 to 2026}}
   \at{7.2}{60.5}{{\bfseries\fontsize{8.4}{10}\selectfont\color{oxblue}Professor Siddharth Arora \enspace·\enspace Nicolas Malz}}
   \at{7.2}{65.5}{{\fontsize{6.4}{8}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace \deckevent\ifx\deckdate\empty\else\enspace·\enspace\deckdate\fi}}
   \putlogo{oxford_logo}{7.2}{74}
@@ -80,58 +81,60 @@
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 2  Finding 1: the forecast and its value
+% 2  Finding 1: time
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 1 \enspace·\enspace forecast value}
-       {Zero-shot models lead, but get only half of the possible value}
-       {Day-ahead forecasts for 91 sites on 69 test days. Value: the peak cut of a battery that plans on the forecast.}
-  \fig{7.2}{24.6}{forecast}
-  \bignum{29}{66}{28}{11.5 \%}{error of the best model, with no site training}
-  \bignum{65.5}{66}{30}{53 \%}{of the possible peak cut, with the best forecast}
+  \slidehead{Exploratory finding 1 \enspace·\enspace time}
+       {Cold acts at once, all day. Heat builds for days, in the evening}
+       {Demand on event days against normal days of the same site. Sites with no on-site generation, 7 heat waves, 13 cold spells.}
+  \fig{7.2}{24.6}{event_days}
+  \fig{55.6}{24.6}{event_hours}
+  \bignum{12}{66}{38}{2.4 times}{the reaction for each degree from day 3 of a heat wave, against day 1}
+  \bignum{60.4}{66}{37}{+9 \%}{demand from 16:00 to 22:00 on heat-wave days. From 08:00 to 12:00: +1 \%}
   \textcol{%
-    \blk{Implication}{A model with no site training is the baseline to beat. Two weeks of history are sufficient. A perfect daily level increases the value to 63 \%. A new plan at 06:00 adds 2 points.}
-    \blk{Research avenue}{Train the model for the decision, not for the mean error. Find the time and the height of the peak, not the level of the day.}
-    \blk{Hypotheses}{\hyp{H1}{A model that is trained for the peak cut gets more value with the same error.}\hyp{H2}{The best quantile for the plan is different for each site.}}}
+    \blk{Implication}{A cold spell adds 11 \% at all hours from the first day. A heat wave adds little on day 1 and in the morning. Its load comes after two days, in the evening, at the time of the national peak.}
+    \blk{Research avenue}{Model heat as a dose that the building stores. Use the temperatures of the last days and nights, hour by hour.}
+    \blk{Hypotheses}{\hyp{H1}{The night temperature of the last three days explains the build-up.}\hyp{H2}{Heavy buildings build up more slowly than light buildings.}}}
   \slidefoot
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 3  Finding 2: on-site generation
+% 3  Finding 2: space
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 2 \enspace·\enspace on-site generation}
-       {Sites with on-site generation have 79 \% of the forecast error}
-       {12 of the 91 sites. Map: forecast error of each site in kWh. Chart: grid import of one site on a day when its plant stops.}
-  \fig{7.2}{24.2}{error_map}
-  \fig{55.6}{24.6}{switch_day}
-  \bignum{58.4}{66}{38}{43 \%}{of all error is on 2 \% of the site-days: the days with a plant start or stop}
+  \slidehead{Exploratory finding 2 \enspace·\enspace space}
+       {The weather is regional, but the reaction of a site is not}
+       {Maps: change in demand of each site (dark edge: on-site generation). Chart: differences between sites that the NHS region explains.}
+  \fig{7.2}{24.6}{reaction_maps}
+  \fig{74}{24.6}{region_share}
+  \bignum{12}{66}{38}{56 \%}{of the differences in heat-wave temperature between sites are regional}
+  \bignum{60.4}{66}{37}{9 \%}{of the differences in reaction are regional. Chance gives 8 \%}
   \textcol{%
-    \blk{Implication}{The meter shows demand minus generation. A plant start or stop changes the import by more than its mean in two hours. Size explains half of the error at these sites, the plant the other half.}
-    \blk{Research avenue}{Get plant schedules or generation meter data from two or three trusts. Then forecast demand and generation as two series.}
-    \blk{Hypotheses}{\hyp{H1}{With the plant schedule, the error at these sites decreases by half.}\hyp{H2}{The site knows most plant starts and stops one day before.}}}
+    \blk{Implication}{Neighbour sites get the same weather and react differently. Region and trust explain no more than chance. But a site reacts the same way in each event: its other events explain 37 to 56 \%.}
+    \blk{Research avenue}{Estimate the reaction of each site from its first events. Then find groups of buildings, not groups of regions.}
+    \blk{Hypotheses}{\hyp{H1}{Two events are sufficient to predict the reaction of a site in the next event.}\hyp{H2}{Buildings of the same age and type on one site react alike.}}}
   \slidefoot
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 4  Finding 3: patient activity
+% 4  Finding 3: site information
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 3 \enspace·\enspace patient activity}
-       {Strikes and visitor numbers do not change electricity demand}
-       {Left: demand on 34 doctor strike days against normal days, 132 sites. Right: daily visitors against daily demand at 2 sites, 2024.}
-  \fig{7.2}{24.6}{strike_profile}
-  \fig{55.6}{24.6}{footfall}
-  \bignum{12}{66}{38}{$-$0.4 \%}{demand from 08:00 to 18:00 on strike days (95 \% interval: $-$1.6 to +0.8 \%)}
-  \bignum{60.4}{66}{37}{0.00}{change in demand for 1 \% more visitors. Mobility data: The Oxford Partnership}
+  \slidehead{Exploratory finding 3 \enspace·\enspace site information}
+       {A plant on site changes the reaction. Certificates explain little}
+       {Left: sites with and without on-site generation (their meters show grid import). Right: sites with no on-site generation.}
+  \fig{7.2}{24.6}{plant_reaction}
+  \fig{55.6}{24.6}{descriptor_share}
+  \bignum{12}{66}{38}{+25 \%}{grid import in heat waves at sites with a plant. Other sites: +6 \%}
+  \bignum{60.4}{66}{37}{0 to 9 \%}{of the reaction is explained by one field of the energy certificate}
   \textcol{%
-    \blk{Implication}{On strike days, hospitals cancelled operations and appointments. Demand did not change. A model that gets the visitor count of the day is not better. Buildings and plant set the demand, not patients.}
-    \blk{Research avenue}{Do the same test with daily bed occupancy from the trusts. Do the test for gas, because heat can follow occupancy.}
-    \blk{Hypotheses}{\hyp{H1}{Daily bed occupancy explains less than 1 \% of the daily change in electricity.}\hyp{H2}{Activity changes demand only when a department closes fully.}}}
+    \blk{Implication}{With a plant on site, the heat wave is the grid event: +41 \% in the evening. A cold spell adds 2 \% where the plant follows the heat demand. Certificate fields do not separate the sites. The gas share does, in part.}
+    \blk{Research avenue}{Get plant output data from trusts. Add the size of cooling plant: only 19 \% of the certificates record it.}
+    \blk{Hypotheses}{\hyp{H1}{In a heat wave the plant output decreases with the heat demand.}\hyp{H2}{The size of cooling plant explains more than its presence.}}}
   \slidefoot
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 5  Finding 4: heat waves and cold waves
+% 5  Finding 4: the forecast on event days
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 4 \enspace·\enspace heat and cold waves}
+  \slidehead{Exploratory finding 4 \enspace·\enspace forecast}
        {On heat-wave days the forecast loses a third of its value}
        {91 sites, 342 test days, forecast with no weather input. Wave day: site temperature beyond the 5th or 95th percentile.}
   \fig{7.2}{24.6}{waves}
@@ -152,25 +155,71 @@
        {All results are exploratory: one data panel, one test period. No trust has checked the results.}
   \boxcol{7.2}{Facts}{%
     \bul{134 sites in 24 trusts. Half-hourly electricity, December 2022 to May 2026.}
-    \bul{Forecast test: 91 sites, 10 models, 69 to 342 test days.}
-    \bul{12 of the 91 sites have on-site generation. Their meters show grid import only.}
-    \bul{Public load data: the zero-shot model is level with a method from 2026.}}
+    \bul{7 heat waves and 13 cold spells (Met Office and UKHSA criteria).}
+    \bul{Reaction: demand on event days against normal days of the same site.}
+    \bul{92 sites with complete data: 14 with on-site generation, 76 with a certificate.}}
   \boxcol{57.3}{Not resolved}{%
-    \bul{Plant schedules and generation meter data: we have none.}
-    \bul{Daily bed occupancy: public data are monthly or quarterly.}
-    \bul{Value is one decision here: the peak cut of a battery. Other decisions can give other results.}
-    \bul{Can we name sites in publications?}}
+    \bul{Plant output: the meters show grid import only.}
+    \bul{Cooling plant: the certificates record presence, not size or control.}
+    \bul{Heat-health alerts: we do not know if sites prepare when an alert comes.}
+    \bul{Three summers are too few to see a trend.}}
   \boxcol{107.4}{Questions for this session}{%
-    \bul{Which trusts can supply plant schedules or generation meter data?}
-    \bul{Which group has daily occupancy or activity data that we can link?}
-    \bul{Which decisions do estates teams make with a forecast, and at what time?}
-    \bul{Can all groups use one site identifier and one test protocol?}}
+    \bul{Which trusts can supply plant output data or plant schedules?}
+    \bul{Who has data on cooling plant, and on indoor temperature in wards?}
+    \bul{What do estates teams do before and during a heat wave?}
+    \bul{Can all groups use one event list and one site identifier?}}
   \slidefoot
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% Backup slides: the three earlier findings. Set \backuptrue at the top to add them.
+% Backup slides: the earlier findings. Set \backuptrue at the top to add them.
 \ifbackup
+% Backup: Finding 1: the forecast and its value
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Earlier result \enspace·\enspace forecast value}
+       {Zero-shot models lead, but get only half of the possible value}
+       {Day-ahead forecasts for 91 sites on 69 test days. Value: the peak cut of a battery that plans on the forecast.}
+  \fig{7.2}{24.6}{forecast}
+  \bignum{29}{66}{28}{11.5 \%}{error of the best model, with no site training}
+  \bignum{65.5}{66}{30}{53 \%}{of the possible peak cut, with the best forecast}
+  \textcol{%
+    \blk{Implication}{A model with no site training is the baseline to beat. Two weeks of history are sufficient. A perfect daily level increases the value to 63 \%. A new plan at 06:00 adds 2 points.}
+    \blk{Research avenue}{Train the model for the decision, not for the mean error. Find the time and the height of the peak, not the level of the day.}
+    \blk{Hypotheses}{\hyp{H1}{A model that is trained for the peak cut gets more value with the same error.}\hyp{H2}{The best quantile for the plan is different for each site.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% Backup: Finding 2: on-site generation
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Earlier result \enspace·\enspace on-site generation}
+       {Sites with on-site generation have 79 \% of the forecast error}
+       {12 of the 91 sites. Map: forecast error of each site in kWh. Chart: grid import of one site on a day when its plant stops.}
+  \fig{7.2}{24.2}{error_map}
+  \fig{55.6}{24.6}{switch_day}
+  \bignum{58.4}{66}{38}{43 \%}{of all error is on 2 \% of the site-days: the days with a plant start or stop}
+  \textcol{%
+    \blk{Implication}{The meter shows demand minus generation. A plant start or stop changes the import by more than its mean in two hours. Size explains half of the error at these sites, the plant the other half.}
+    \blk{Research avenue}{Get plant schedules or generation meter data from two or three trusts. Then forecast demand and generation as two series.}
+    \blk{Hypotheses}{\hyp{H1}{With the plant schedule, the error at these sites decreases by half.}\hyp{H2}{The site knows most plant starts and stops one day before.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% Backup: Finding 3: patient activity
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Earlier result \enspace·\enspace patient activity}
+       {Strikes and visitor numbers do not change electricity demand}
+       {Left: demand on 34 doctor strike days against normal days, 132 sites. Right: daily visitors against daily demand at 2 sites, 2024.}
+  \fig{7.2}{24.6}{strike_profile}
+  \fig{55.6}{24.6}{footfall}
+  \bignum{12}{66}{38}{$-$0.4 \%}{demand from 08:00 to 18:00 on strike days (95 \% interval: $-$1.6 to +0.8 \%)}
+  \bignum{60.4}{66}{37}{0.00}{change in demand for 1 \% more visitors. Mobility data: The Oxford Partnership}
+  \textcol{%
+    \blk{Implication}{On strike days, hospitals cancelled operations and appointments. Demand did not change. A model that gets the visitor count of the day is not better. Buildings and plant set the demand, not patients.}
+    \blk{Research avenue}{Do the same test with daily bed occupancy from the trusts. Do the test for gas, because heat can follow occupancy.}
+    \blk{Hypotheses}{\hyp{H1}{Daily bed occupancy explains less than 1 \% of the daily change in electricity.}\hyp{H2}{Activity changes demand only when a department closes fully.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
 % Backup: heat electrification against the grid connection
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Earlier result \enspace·\enspace heat electrification}

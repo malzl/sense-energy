@@ -1,0 +1,1871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat waves and cold spells at the sites: the reaction, when, where, and what explains it · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="extreme_events.html" class="current">Heat waves and cold spells at the sites: the reaction, when, where, and what explains it</a>
+  <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
+  <a href="forecast_error_anatomy.html">Where the day-ahead error sits, and what can remove it</a>
+  <a href="heat_cold_wave_paper_check.html">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
+
+  <div class="toc"><a class="h2" href="#the-answers-in-short">The answers in short</a>
+  <a class="h2" href="#1-events-and-the-measure">1. Events and the measure</a>
+  <a class="h2" href="#2-time">2. Time</a>
+  <a class="h3" href="#2-1-day-by-day-event-time-event-temperature-build-up">2.1 Day by day (event_time, event_temperature, build_up)</a>
+  <a class="h3" href="#2-2-hour-by-hour-hour-profile-heatwave-hour-profile-cold-spe">2.2 Hour by hour (hour_profile_heatwave, hour_profile_cold_spell)</a>
+  <a class="h3" href="#2-3-year-by-year-seasons">2.3 Year by year (seasons)</a>
+  <a class="h2" href="#3-space-map-reaction-heatwave-map-reaction-cold-spell-region">3. Space (map_reaction_heatwave, map_reaction_cold_spell, region_share)</a>
+  <a class="h2" href="#4-site-information">4. Site information</a>
+  <a class="h3" href="#4-1-on-site-generation-plant-reaction">4.1 On-site generation (plant_reaction)</a>
+  <a class="h3" href="#4-2-certificates-and-the-estates-return-descriptor-share">4.2 Certificates and the estates return (descriptor_share)</a>
+  <a class="h2" href="#5-what-follows">5. What follows</a>
+  <a class="h2" href="#limits">Limits</a>
+  </div>
+</nav>
+<main>
+<h1>Heat waves and cold spells at the sites: the reaction, when, where, and what explains it</h1>
+<p>Run on 15 November 2026, on CPU. Command: <code>extreme-events</code>. Module:
+<code>code/src/sense_energy/analysis/extreme_events.py</code>. Tables in <code>code/reports/extreme_events/</code>,
+figures from <code>code/scripts/extreme_events/</code>. The kickoff deck (<code>doc/kickoff_deck/</code>) is built on
+this page.</p>
+<p>The earlier weather work (<a href="weather_and_cooling.md">weather_and_cooling.md</a>) estimates what a
+degree does to a site's electricity. This page asks a different question: what happens <strong>in an
+event</strong>. It takes the catalogue of heat waves and cold spells, measures each site's reaction in
+each event, and sets the reactions against time (day of the event, hour of the day, year),
+space (neighbours, regions, trusts) and the information that exists about a site (on-site
+generation, the Display Energy Certificate, the estates return).</p>
+<h2 id="the-answers-in-short">The answers in short</h2>
+<ul>
+<li><strong>Cold acts at once and all day. Heat builds, and comes in the evening.</strong> In a cold spell the
+sites without on-site generation use 11 % more electricity, at every hour, from the first day.
+In a heat wave they use 6 % more, but almost nothing on the first day and in the morning: per
+degree, the reaction from the third day on is 2.4 times that of the first day (0.31 to 0.76 %
+per °C; difference +0.44, 95 % interval 0.17 to 0.72), and it sits between 16:00 and 22:00
+(+9 %; 08:00 to 12:00: +1 %).</li>
+<li><strong>The weather is regional, the reaction is not.</strong> The NHS region accounts for 56 % of the
+between-site differences in heat-wave temperature and 37 % in cold-spell temperature, and for
+9 % and 5 % of the differences in reaction, which is what chance gives (8 % and 7 %).
+Neighbouring sites do not react alike (Moran's I −0.02 and 0.01; the temperature: 0.54 and
+0.80). Sites of one trust do not either.</li>
+<li><strong>The reaction belongs to the site.</strong> A site's reaction in half of its events explains 37 %
+(heat) and 56 % (cold) of its reaction in the other half; the reliability of the full measure
+is 0.70 and 0.89.</li>
+<li><strong>On-site generation turns the reaction around.</strong> At the sites with CHP the grid import rises
+by 25 % in heat waves (95 % interval 9 to 42; 11 of 12 sites rise; +41 % from 16:00 to 22:00)
+against 6 % elsewhere, and by 2 % in cold spells where the plant follows the heat demand
+(−4 to +8; 8 sites) against 11 % elsewhere. For a site with a plant, the heat wave and not
+the cold spell is the event at the grid connection.</li>
+<li><strong>The certificate explains little.</strong> At the sites without on-site generation, the building
+environment, the operational rating, the electricity per m² and the electric heating share of
+the Display Energy Certificate each explain 0 to 2 % of the differences in reaction. The floor
+share with any air conditioning explains 9 % (heat) and 6 % (cold). The best single
+descriptor is the gas-to-electricity ratio of the estates return: 11 % (heat) and 18 %
+(cold).</li>
+<li><strong>No trend over the record.</strong> The reaction per degree is the same in each winter (1.4 to
+1.7 % per °C) and in the summers of 2023 and 2025 (0.6 and 0.8).</li>
+</ul>
+<h2 id="1-events-and-the-measure">1. Events and the measure</h2>
+<p>The events are those of <code>weather_events</code> (section 3 of the weather page): a <strong>heat wave</strong> at a
+site is three or more days with a daily maximum at or above the Met Office county threshold
+(25 to 28 °C); a <strong>cold spell</strong> is two or more days with a daily mean at or below 2 °C (the
+UKHSA cold-alert criterion). A national event is a run of days with at least 5 % of the sites in
+a site event. The electricity record (7 December 2022 to 8 May 2026) holds 7 national heat waves
+and 14 national cold spells; 13 of the cold spells have scored site-days.</p>
+<p><strong>Reaction.</strong> Each site-day gets a reference: the median demand of the same weekday one, two
+and three weeks before and after, without the days that are themselves in a heat wave or cold
+spell at the site, bank holidays and the days from 21 December to 3 January. At least two
+reference days are needed. The reaction of a set of days is the summed demand over the summed
+reference, in per cent (100 × log ratio). Sums are used, not the mean of daily ratios, because
+the grid import of a site with a plant can be near zero on single days. The same difference for
+the temperature (daily maximum for heat waves, daily mean for cold spells) is the <strong>size of the
+event at the site</strong> in degrees: 7.9 °C on average in heat waves, 6.7 °C in cold spells.</p>
+<p><strong>Sites.</strong> 134 sites have half-hourly electricity. 42 are left out of every site-level result
+because their meter set is incomplete or changes (<code>meter_gaps</code>, <code>partial_supply</code>,
+<code>aggregate_supply</code> in the coverage flags); 92 remain, 14 of them with on-site generation (the
+CHP sample of <code>chp_dispatch</code>), 76 with a Display Energy Certificate. A site needs three scored
+event days to get a reaction: 88 sites for cold spells, 76 for heat waves.</p>
+<p><strong>What the measure is and is not.</strong> It is a comparison with nearby ordinary days of the same
+site, so it carries no national day shocks only as far as the reference weeks are ordinary; the
+fixed-effect estimates of the weather page (section 5) remove them fully and give 1.1 to 1.4 %
+per °C for cold and 1.5 to 2 % per °C for heat. The reactions here, per degree, are of that size
+for cold (1.4 to 1.9) and lower for heat (0.3 to 0.8 per °C of daily maximum against the
+reference days), because the heat-wave dose is measured on the daily maximum. The reference
+days of a heat wave are themselves warm days; the measure is the reaction to the event, not to
+summer.</p>
+<figure class="single"><img src="figures/event_timeline.png" alt="event_timeline" loading="lazy"><figcaption>Every national event in the record: mean reaction of the sites without on-site generation, with the 95 % interval across sites. <code>event_timeline</code> <a href="figures/event_timeline.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>event_id</th>
+      <th>type</th>
+      <th>start</th>
+      <th>days</th>
+      <th>degrees</th>
+      <th>sites_no_plant</th>
+      <th>no_plant_pct</th>
+      <th>no_plant_lo</th>
+      <th>no_plant_hi</th>
+      <th>sites_plant</th>
+      <th>plant_pct</th>
+      <th>summed_no_plant_pct</th>
+      <th>summed_plant_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold_spell_20221206</td>
+      <td>cold spell</td>
+      <td>2022-12-06</td>
+      <td>13</td>
+      <td>7.9</td>
+      <td>6</td>
+      <td>7.5</td>
+      <td>-1.4</td>
+      <td>16.4</td>
+      <td>1</td>
+      <td>-7.8</td>
+      <td>4.3</td>
+      <td>-7.8</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20230116</td>
+      <td>cold spell</td>
+      <td>2023-01-16</td>
+      <td>10</td>
+      <td>6.9</td>
+      <td>39</td>
+      <td>11.5</td>
+      <td>7.6</td>
+      <td>15.5</td>
+      <td>7</td>
+      <td>2.8</td>
+      <td>6.7</td>
+      <td>2.3</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20230206</td>
+      <td>cold spell</td>
+      <td>2023-02-06</td>
+      <td>3</td>
+      <td>5.1</td>
+      <td>45</td>
+      <td>8.6</td>
+      <td>5.7</td>
+      <td>11.5</td>
+      <td>6</td>
+      <td>0.8</td>
+      <td>6.1</td>
+      <td>-2</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20230307</td>
+      <td>cold spell</td>
+      <td>2023-03-07</td>
+      <td>5</td>
+      <td>7</td>
+      <td>23</td>
+      <td>9.9</td>
+      <td>4.5</td>
+      <td>15.2</td>
+      <td>10</td>
+      <td>4</td>
+      <td>4.8</td>
+      <td>-3.2</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20231129</td>
+      <td>cold spell</td>
+      <td>2023-11-29</td>
+      <td>5</td>
+      <td>8</td>
+      <td>64</td>
+      <td>11.4</td>
+      <td>8.1</td>
+      <td>14.7</td>
+      <td>13</td>
+      <td>11.1</td>
+      <td>7.6</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20240106</td>
+      <td>cold spell</td>
+      <td>2024-01-06</td>
+      <td>5</td>
+      <td>7.6</td>
+      <td>61</td>
+      <td>9.1</td>
+      <td>5.8</td>
+      <td>12.3</td>
+      <td>11</td>
+      <td>6.8</td>
+      <td>6</td>
+      <td>1.6</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20240114</td>
+      <td>cold spell</td>
+      <td>2024-01-14</td>
+      <td>6</td>
+      <td>8</td>
+      <td>71</td>
+      <td>12.3</td>
+      <td>9</td>
+      <td>15.6</td>
+      <td>13</td>
+      <td>3.8</td>
+      <td>7.9</td>
+      <td>-1.2</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20241118</td>
+      <td>cold spell</td>
+      <td>2024-11-18</td>
+      <td>5</td>
+      <td>7.2</td>
+      <td>67</td>
+      <td>9.5</td>
+      <td>5.5</td>
+      <td>13.5</td>
+      <td>12</td>
+      <td>6.7</td>
+      <td>7.3</td>
+      <td>-0.2</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20250102</td>
+      <td>cold spell</td>
+      <td>2025-01-02</td>
+      <td>11</td>
+      <td>5.2</td>
+      <td>73</td>
+      <td>7.8</td>
+      <td>4.4</td>
+      <td>11.1</td>
+      <td>12</td>
+      <td>18.7</td>
+      <td>6.9</td>
+      <td>22.4</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20250118</td>
+      <td>cold spell</td>
+      <td>2025-01-18</td>
+      <td>2</td>
+      <td>2.4</td>
+      <td>46</td>
+      <td>7.4</td>
+      <td>-1.5</td>
+      <td>16.3</td>
+      <td>5</td>
+      <td>-37.9</td>
+      <td>4.7</td>
+      <td>-98.3</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20250216</td>
+      <td>cold spell</td>
+      <td>2025-02-16</td>
+      <td>3</td>
+      <td>4</td>
+      <td>40</td>
+      <td>5.4</td>
+      <td>1.5</td>
+      <td>9.4</td>
+      <td>2</td>
+      <td>-51.5</td>
+      <td>5.7</td>
+      <td>-98.1</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20251119</td>
+      <td>cold spell</td>
+      <td>2025-11-19</td>
+      <td>3</td>
+      <td>9.1</td>
+      <td>59</td>
+      <td>13.5</td>
+      <td>9.2</td>
+      <td>17.8</td>
+      <td>11</td>
+      <td>15.8</td>
+      <td>8.8</td>
+      <td>36.8</td>
+    </tr>
+    <tr>
+      <td>cold_spell_20260102</td>
+      <td>cold spell</td>
+      <td>2026-01-02</td>
+      <td>5</td>
+      <td>8.1</td>
+      <td>74</td>
+      <td>13.9</td>
+      <td>10.5</td>
+      <td>17.4</td>
+      <td>12</td>
+      <td>0.3</td>
+      <td>10.6</td>
+      <td>3.1</td>
+    </tr>
+    <tr>
+      <td>heatwave_20230610</td>
+      <td>heatwave</td>
+      <td>2023-06-10</td>
+      <td>7</td>
+      <td>8</td>
+      <td>22</td>
+      <td>3.5</td>
+      <td>-0.2</td>
+      <td>7.2</td>
+      <td>9</td>
+      <td>23.8</td>
+      <td>6.5</td>
+      <td>42.9</td>
+    </tr>
+    <tr>
+      <td>heatwave_20230904</td>
+      <td>heatwave</td>
+      <td>2023-09-04</td>
+      <td>7</td>
+      <td>8.9</td>
+      <td>62</td>
+      <td>5.4</td>
+      <td>1.9</td>
+      <td>9</td>
+      <td>10</td>
+      <td>22.1</td>
+      <td>9.4</td>
+      <td>50.8</td>
+    </tr>
+    <tr>
+      <td>heatwave_20240729</td>
+      <td>heatwave</td>
+      <td>2024-07-29</td>
+      <td>3</td>
+      <td>7.7</td>
+      <td>5</td>
+      <td>-2.7</td>
+      <td>-14.6</td>
+      <td>9.1</td>
+      <td>4</td>
+      <td>4.7</td>
+      <td>-8.7</td>
+      <td>7.6</td>
+    </tr>
+    <tr>
+      <td>heatwave_20250618</td>
+      <td>heatwave</td>
+      <td>2025-06-18</td>
+      <td>4</td>
+      <td>6.3</td>
+      <td>32</td>
+      <td>6.5</td>
+      <td>1.2</td>
+      <td>11.8</td>
+      <td>7</td>
+      <td>8.7</td>
+      <td>9.4</td>
+      <td>15.8</td>
+    </tr>
+    <tr>
+      <td>heatwave_20250627</td>
+      <td>heatwave</td>
+      <td>2025-06-27</td>
+      <td>5</td>
+      <td>6.8</td>
+      <td>11</td>
+      <td>2.6</td>
+      <td>-4</td>
+      <td>9.1</td>
+      <td>2</td>
+      <td>18.3</td>
+      <td>2.2</td>
+      <td>18.1</td>
+    </tr>
+    <tr>
+      <td>heatwave_20250709</td>
+      <td>heatwave</td>
+      <td>2025-07-09</td>
+      <td>5</td>
+      <td>6.3</td>
+      <td>37</td>
+      <td>4.8</td>
+      <td>0.4</td>
+      <td>9.2</td>
+      <td>8</td>
+      <td>30.2</td>
+      <td>5.7</td>
+      <td>43.9</td>
+    </tr>
+    <tr>
+      <td>heatwave_20250811</td>
+      <td>heatwave</td>
+      <td>2025-08-11</td>
+      <td>5</td>
+      <td>8.2</td>
+      <td>21</td>
+      <td>6.3</td>
+      <td>0.4</td>
+      <td>12.2</td>
+      <td>5</td>
+      <td>27.7</td>
+      <td>7.7</td>
+      <td>46.4</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/table_events.csv">code/reports/extreme_events/table_events.csv</a> (20 rows shown)</p>
+
+<p>Every cold spell with at least ten sites raises demand at the sites without on-site generation
+(5 to 14 %); every heat wave but the small one of July 2024 does (3 to 7 %). The columns for
+the sites with a plant show what section 4 is about: their import rises by 20 to 30 % in the
+large heat waves and stays below that of the other sites in most cold spells. In two short cold spells of early
+2025 the summed import of the few plant sites in the event fell to a third: a plant came back
+during the event.</p>
+<h2 id="2-time">2. Time</h2>
+<h3 id="2-1-day-by-day-event-time-event-temperature-build-up">2.1 Day by day (<code>event_time</code>, <code>event_temperature</code>, <code>build_up</code>)</h3>
+<div class="figrow"><figure class="inrow"><img src="figures/event_time.png" alt="event_time" loading="lazy"><figcaption><code>event_time</code> <a href="figures/event_time.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/event_temperature.png" alt="event_temperature" loading="lazy"><figcaption><code>event_temperature</code> <a href="figures/event_temperature.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/build_up.png" alt="build_up" loading="lazy"><figcaption><code>build_up</code> <a href="figures/build_up.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/event_time.png" alt="event_time" loading="lazy"><figcaption>Reaction by day from the first day of the event at the site. Sites without on-site generation, mean and 95 % interval across sites. <code>event_time</code> <a href="figures/event_time.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/event_temperature.png" alt="event_temperature" loading="lazy"><figcaption>The size of the event by day: degrees warmer (heat wave, daily maximum) or colder (cold spell, daily mean) than the reference days. <code>event_temperature</code> <a href="figures/event_temperature.pdf">PDF</a></figcaption></figure>
+
+<p>The temperature steps on day 0 in both kinds of event (6 to 7 °C beyond the reference days).
+The demand of a cold spell steps with it: +9 % on day 0, +10 % on day 1. The demand of a heat
+wave does not: +2 % on day 0, +5 % on day 1, +7 % on days 2 and 3, with the temperature
+unchanged. After the event both fall back within a week.</p>
+<figure class="single"><img src="figures/build_up.png" alt="build_up" loading="lazy"><figcaption>Reaction per degree on the first day of an event and from the third day on, at the sites that have both. <code>build_up</code> <a href="figures/build_up.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites</th>
+      <th>first_day_pct_per_degree</th>
+      <th>third_day_on_pct_per_degree</th>
+      <th>difference</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>75</td>
+      <td>1.45</td>
+      <td>1.86</td>
+      <td>0.42</td>
+      <td>0.1</td>
+      <td>0.73</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>50</td>
+      <td>0.31</td>
+      <td>0.76</td>
+      <td>0.44</td>
+      <td>0.17</td>
+      <td>0.72</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/build_up.csv">code/reports/extreme_events/build_up.csv</a> (2 rows shown)</p>
+
+<p>The test is paired within sites: the reaction per degree from the third day on minus that of
+the first day. Heat waves: 0.31 to 0.76 % per °C, +0.44 (0.17 to 0.72), 50 sites. Cold spells:
+1.45 to 1.86, +0.42 (0.10 to 0.73), 75 sites. Both build by the same absolute amount; for heat
+that is a factor of 2.4, for cold a factor of 1.3. A model that takes the temperature of the
+day alone overstates the first day of a heat wave and understates the third.</p>
+<h3 id="2-2-hour-by-hour-hour-profile-heatwave-hour-profile-cold-spe">2.2 Hour by hour (<code>hour_profile_heatwave</code>, <code>hour_profile_cold_spell</code>)</h3>
+<div class="figrow"><figure class="inrow"><img src="figures/hour_profile_heatwave.png" alt="hour_profile_heatwave" loading="lazy"><figcaption><code>hour_profile_heatwave</code> <a href="figures/hour_profile_heatwave.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/hour_profile_cold_spell.png" alt="hour_profile_cold_spell" loading="lazy"><figcaption><code>hour_profile_cold_spell</code> <a href="figures/hour_profile_cold_spell.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/hour_profile_heatwave.png" alt="hour_profile_heatwave" loading="lazy"><figcaption>Heat-wave days: reaction by half-hour of the day, sites with and without on-site generation. <code>hour_profile_heatwave</code> <a href="figures/hour_profile_heatwave.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/hour_profile_cold_spell.png" alt="hour_profile_cold_spell" loading="lazy"><figcaption>Cold-spell days: reaction by half-hour of the day. <code>hour_profile_cold_spell</code> <a href="figures/hour_profile_cold_spell.pdf">PDF</a></figcaption></figure>
+
+<p>At the sites without on-site generation a cold spell lifts every hour by 9 to 13 %. A heat wave
+lifts the hours from 08:00 to 12:00 by 1 % and the hours from 16:00 to 22:00 by 9 %; the
+reaction stays above 5 % until after midnight. The load of a heat wave falls on the evening,
+when the national system has its peak, and on the night, when the building gives its heat back.
+At the sites with a plant the import in a heat wave rises by 41 % from 16:00 to 22:00.</p>
+<h3 id="2-3-year-by-year-seasons">2.3 Year by year (<code>seasons</code>)</h3>
+<div class="figrow"><figure class="inrow"><img src="figures/seasons.png" alt="seasons" loading="lazy"><figcaption><code>seasons</code> <a href="figures/seasons.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/seasons.png" alt="seasons" loading="lazy"><figcaption>Reaction per degree in each winter and summer of the record, sites without on-site generation (95 % interval from resampling sites). Summer 2024 had one small heat wave and is left out. <code>seasons</code> <a href="figures/seasons.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>season</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>reaction_pct</th>
+      <th>degrees</th>
+      <th>pct_per_degree</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>56</td>
+      <td>504</td>
+      <td>10.91</td>
+      <td>6.66</td>
+      <td>1.64</td>
+      <td>1.24</td>
+      <td>2.08</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>71</td>
+      <td>816</td>
+      <td>11.33</td>
+      <td>7.78</td>
+      <td>1.46</td>
+      <td>1.11</td>
+      <td>1.81</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>73</td>
+      <td>858</td>
+      <td>7.34</td>
+      <td>5.12</td>
+      <td>1.43</td>
+      <td>0.93</td>
+      <td>1.99</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>74</td>
+      <td>357</td>
+      <td>13.97</td>
+      <td>8.43</td>
+      <td>1.66</td>
+      <td>1.28</td>
+      <td>2.05</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>63</td>
+      <td>431</td>
+      <td>5.13</td>
+      <td>8.72</td>
+      <td>0.59</td>
+      <td>0.21</td>
+      <td>0.95</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>49</td>
+      <td>331</td>
+      <td>5.25</td>
+      <td>6.68</td>
+      <td>0.79</td>
+      <td>0.32</td>
+      <td>1.34</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/seasons.csv">code/reports/extreme_events/seasons.csv</a> (6 rows shown)</p>
+
+<p>No trend: 1.4 to 1.7 % per °C in each of the four winters, 0.6 and 0.8 in the summers of 2023
+and 2025, with overlapping intervals. Three summers and four winters cannot show a slow change.</p>
+<h2 id="3-space-map-reaction-heatwave-map-reaction-cold-spell-region">3. Space (<code>map_reaction_heatwave</code>, <code>map_reaction_cold_spell</code>, <code>region_share</code>)</h2>
+<div class="figrow"><figure class="inrow"><img src="figures/map_reaction_heatwave.png" alt="map_reaction_heatwave" loading="lazy"><figcaption><code>map_reaction_heatwave</code> <a href="figures/map_reaction_heatwave.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/map_reaction_cold_spell.png" alt="map_reaction_cold_spell" loading="lazy"><figcaption><code>map_reaction_cold_spell</code> <a href="figures/map_reaction_cold_spell.pdf">PDF</a></figcaption></figure><figure class="inrow"><img src="figures/region_share.png" alt="region_share" loading="lazy"><figcaption><code>region_share</code> <a href="figures/region_share.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/map_reaction_heatwave.png" alt="map_reaction_heatwave" loading="lazy"><figcaption>Each site's reaction in heat waves. Black edge: on-site generation. <code>map_reaction_heatwave</code> <a href="figures/map_reaction_heatwave.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/map_reaction_cold_spell.png" alt="map_reaction_cold_spell" loading="lazy"><figcaption>Each site's reaction in cold spells. <code>map_reaction_cold_spell</code> <a href="figures/map_reaction_cold_spell.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/region_share.png" alt="region_share" loading="lazy"><figcaption>Share of the between-site variance that the seven NHS regions account for. Black ticks: the share that regions get by chance. <code>region_share</code> <a href="figures/region_share.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites</th>
+      <th>quantity</th>
+      <th>n</th>
+      <th>morans_i</th>
+      <th>p</th>
+      <th>neighbour_km</th>
+      <th>region_share</th>
+      <th>region_share_chance</th>
+      <th>region_p</th>
+      <th>trust_sites</th>
+      <th>trusts</th>
+      <th>trust_share</th>
+      <th>trust_share_chance</th>
+      <th>trust_p</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>all sites</td>
+      <td>reaction</td>
+      <td>88</td>
+      <td>0.01</td>
+      <td>0.275</td>
+      <td>38.224</td>
+      <td>0.051</td>
+      <td>0.07</td>
+      <td>0.636</td>
+      <td>84</td>
+      <td>16</td>
+      <td>0.152</td>
+      <td>0.185</td>
+      <td>0.676</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>all sites</td>
+      <td>size of the event</td>
+      <td>88</td>
+      <td>0.795</td>
+      <td>0.001</td>
+      <td>38.224</td>
+      <td>0.374</td>
+      <td>0.07</td>
+      <td>0.001</td>
+      <td>84</td>
+      <td>16</td>
+      <td>0.866</td>
+      <td>0.179</td>
+      <td>0.001</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>reaction</td>
+      <td>75</td>
+      <td>0.016</td>
+      <td>0.227</td>
+      <td>38.077</td>
+      <td>0.046</td>
+      <td>0.081</td>
+      <td>0.782</td>
+      <td>70</td>
+      <td>13</td>
+      <td>0.083</td>
+      <td>0.172</td>
+      <td>0.943</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>size of the event</td>
+      <td>75</td>
+      <td>0.799</td>
+      <td>0.001</td>
+      <td>38.077</td>
+      <td>0.365</td>
+      <td>0.083</td>
+      <td>0.001</td>
+      <td>70</td>
+      <td>13</td>
+      <td>0.873</td>
+      <td>0.172</td>
+      <td>0.001</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>all sites</td>
+      <td>reaction</td>
+      <td>76</td>
+      <td>-0.018</td>
+      <td>0.51</td>
+      <td>38.033</td>
+      <td>0.096</td>
+      <td>0.079</td>
+      <td>0.282</td>
+      <td>72</td>
+      <td>13</td>
+      <td>0.174</td>
+      <td>0.165</td>
+      <td>0.39</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>all sites</td>
+      <td>size of the event</td>
+      <td>76</td>
+      <td>0.54</td>
+      <td>0.001</td>
+      <td>38.033</td>
+      <td>0.562</td>
+      <td>0.078</td>
+      <td>0.001</td>
+      <td>72</td>
+      <td>13</td>
+      <td>0.694</td>
+      <td>0.169</td>
+      <td>0.001</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>reaction</td>
+      <td>64</td>
+      <td>-0.033</td>
+      <td>0.62</td>
+      <td>36.389</td>
+      <td>0.093</td>
+      <td>0.096</td>
+      <td>0.455</td>
+      <td>58</td>
+      <td>10</td>
+      <td>0.199</td>
+      <td>0.157</td>
+      <td>0.26</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>size of the event</td>
+      <td>64</td>
+      <td>0.518</td>
+      <td>0.001</td>
+      <td>36.389</td>
+      <td>0.575</td>
+      <td>0.097</td>
+      <td>0.001</td>
+      <td>58</td>
+      <td>10</td>
+      <td>0.657</td>
+      <td>0.155</td>
+      <td>0.001</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/spatial.csv">code/reports/extreme_events/spatial.csv</a> (8 rows shown)</p>
+
+<p>Two tests, each for the size of the event at the site and for the reaction of the site:</p>
+<ul>
+<li><strong>Neighbours</strong> (Moran's I on the eight nearest sites, median distance to the eighth 38 km,
+999 permutations). The size of the event is alike among neighbours (0.54 for heat waves, 0.80
+for cold spells, p = 0.001). The reaction is not (−0.02, p = 0.51; 0.01, p = 0.28).</li>
+<li><strong>Regions and trusts</strong> (share of the between-site variance, permutation test). The region
+accounts for 56 % and 37 % of the size of the event and for 9 % and 5 % of the reaction
+(chance: 8 % and 7 %; p = 0.28 and 0.64). The trust (13 and 16 trusts with two or more sites)
+accounts for 69 % and 87 % of the size of the event, because the sites of a trust are close
+together, and for 17 % and 15 % of the reaction (chance: 17 % and 19 %; p = 0.39 and 0.68).</li>
+</ul>
+<p>The same holds without the sites with on-site generation. An event is a regional fact; what a
+site does in it is not, and it is not a trust fact either.</p>
+<p><strong>The reaction is a property of the site</strong> (<code>reliability.csv</code>). Splitting each site's events
+into odd and even ones in date order, the reaction in one half explains 37 % (heat, 59 sites)
+and 56 % (cold, 88 sites) of the variance of the reaction in the other half; stepped up to all
+events the reliability is 0.70 and 0.89.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites</th>
+      <th>split_half_r</th>
+      <th>reliability</th>
+      <th>other_events_r2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>88</td>
+      <td>0.803</td>
+      <td>0.891</td>
+      <td>0.557</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>59</td>
+      <td>0.54</td>
+      <td>0.701</td>
+      <td>0.368</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/reliability.csv">code/reports/extreme_events/reliability.csv</a> (2 rows shown)</p>
+
+<h2 id="4-site-information">4. Site information</h2>
+<h3 id="4-1-on-site-generation-plant-reaction">4.1 On-site generation (<code>plant_reaction</code>)</h3>
+<div class="figrow"><figure class="inrow"><img src="figures/plant_reaction.png" alt="plant_reaction" loading="lazy"><figcaption><code>plant_reaction</code> <a href="figures/plant_reaction.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/plant_reaction.png" alt="plant_reaction" loading="lazy"><figcaption>Mean site reaction with and without on-site generation, 95 % interval across sites. With a plant the meter records grid import. <code>plant_reaction</code> <a href="figures/plant_reaction.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 26 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>descriptor</th>
+      <th>level</th>
+      <th>sites</th>
+      <th>reaction_pct</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>median_pct</th>
+      <th>share_rising</th>
+      <th>extra_kw_per_site</th>
+      <th>mean_kw</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation (CHP)</td>
+      <td>no on-site generation</td>
+      <td>75</td>
+      <td>11.1</td>
+      <td>8.9</td>
+      <td>13.4</td>
+      <td>8.9</td>
+      <td>0.9</td>
+      <td>5.1</td>
+      <td>58.5</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation (CHP)</td>
+      <td>on-site generation</td>
+      <td>13</td>
+      <td>7.8</td>
+      <td>-1.5</td>
+      <td>17</td>
+      <td>3.6</td>
+      <td>0.7</td>
+      <td>15.3</td>
+      <td>385.2</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>acute inpatient</td>
+      <td>3</td>
+      <td>4.8</td>
+      <td>3.6</td>
+      <td>6</td>
+      <td>4.7</td>
+      <td>1</td>
+      <td>38.5</td>
+      <td>744.7</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>community inpatient</td>
+      <td>4</td>
+      <td>5.4</td>
+      <td>-7.2</td>
+      <td>18.1</td>
+      <td>3.7</td>
+      <td>0.8</td>
+      <td>2.1</td>
+      <td>22.8</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>mental health</td>
+      <td>20</td>
+      <td>10.4</td>
+      <td>7.6</td>
+      <td>13.2</td>
+      <td>9</td>
+      <td>1</td>
+      <td>4.2</td>
+      <td>31.2</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>non-inpatient</td>
+      <td>29</td>
+      <td>10.2</td>
+      <td>6.2</td>
+      <td>14.1</td>
+      <td>6.7</td>
+      <td>0.8</td>
+      <td>4.2</td>
+      <td>38.2</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>mechanical ventilation</td>
+      <td>13</td>
+      <td>9</td>
+      <td>4.9</td>
+      <td>13.2</td>
+      <td>6.7</td>
+      <td>0.9</td>
+      <td>5.2</td>
+      <td>75.6</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>mixed mode or air conditioning</td>
+      <td>11</td>
+      <td>14</td>
+      <td>8.2</td>
+      <td>19.8</td>
+      <td>11.5</td>
+      <td>1</td>
+      <td>14.1</td>
+      <td>206.6</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>natural ventilation</td>
+      <td>36</td>
+      <td>9.8</td>
+      <td>6.3</td>
+      <td>13.3</td>
+      <td>6.3</td>
+      <td>0.9</td>
+      <td>2.5</td>
+      <td>22.3</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: heat pumps</td>
+      <td>heat pumps</td>
+      <td>4</td>
+      <td>3.4</td>
+      <td>-1.3</td>
+      <td>8</td>
+      <td>4.5</td>
+      <td>0.8</td>
+      <td>28.3</td>
+      <td>615.7</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: heat pumps</td>
+      <td>no heat pumps</td>
+      <td>52</td>
+      <td>10.1</td>
+      <td>7.7</td>
+      <td>12.5</td>
+      <td>8.9</td>
+      <td>0.9</td>
+      <td>4.2</td>
+      <td>30.6</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>plant follows heat demand</td>
+      <td>False</td>
+      <td>5</td>
+      <td>17.3</td>
+      <td>-8.6</td>
+      <td>43.2</td>
+      <td>7.4</td>
+      <td>0.8</td>
+      <td>50.3</td>
+      <td>434.3</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>plant follows heat demand</td>
+      <td>True</td>
+      <td>8</td>
+      <td>1.8</td>
+      <td>-3.9</td>
+      <td>7.6</td>
+      <td>1.9</td>
+      <td>0.6</td>
+      <td>-6.6</td>
+      <td>354.5</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation (CHP)</td>
+      <td>no on-site generation</td>
+      <td>64</td>
+      <td>5.6</td>
+      <td>2.6</td>
+      <td>8.7</td>
+      <td>4.7</td>
+      <td>0.7</td>
+      <td>4.8</td>
+      <td>65.8</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation (CHP)</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>25.1</td>
+      <td>8.6</td>
+      <td>41.7</td>
+      <td>19.5</td>
+      <td>0.9</td>
+      <td>207.1</td>
+      <td>382.3</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>acute inpatient</td>
+      <td>3</td>
+      <td>7.8</td>
+      <td>2.2</td>
+      <td>13.5</td>
+      <td>8.6</td>
+      <td>1</td>
+      <td>60.3</td>
+      <td>744.7</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>community inpatient</td>
+      <td>3</td>
+      <td>-1.4</td>
+      <td>-39.3</td>
+      <td>36.6</td>
+      <td>7.1</td>
+      <td>0.7</td>
+      <td>1</td>
+      <td>25.5</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>mental health</td>
+      <td>19</td>
+      <td>6.2</td>
+      <td>-0.4</td>
+      <td>12.8</td>
+      <td>4.6</td>
+      <td>0.7</td>
+      <td>1.5</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>non-inpatient</td>
+      <td>26</td>
+      <td>4.1</td>
+      <td>0</td>
+      <td>8.3</td>
+      <td>2.3</td>
+      <td>0.7</td>
+      <td>2.4</td>
+      <td>41.3</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>mechanical ventilation</td>
+      <td>11</td>
+      <td>3.8</td>
+      <td>-4.1</td>
+      <td>11.7</td>
+      <td>5.5</td>
+      <td>0.6</td>
+      <td>5.3</td>
+      <td>82.7</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>mixed mode or air conditioning</td>
+      <td>9</td>
+      <td>9.7</td>
+      <td>0.7</td>
+      <td>18.7</td>
+      <td>8.6</td>
+      <td>0.9</td>
+      <td>20.2</td>
+      <td>246.3</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>natural ventilation</td>
+      <td>32</td>
+      <td>3.7</td>
+      <td>0</td>
+      <td>7.5</td>
+      <td>3</td>
+      <td>0.7</td>
+      <td>1.3</td>
+      <td>24.6</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: heat pumps</td>
+      <td>heat pumps</td>
+      <td>4</td>
+      <td>7.3</td>
+      <td>3.8</td>
+      <td>10.7</td>
+      <td>7.1</td>
+      <td>1</td>
+      <td>48.4</td>
+      <td>615.7</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: heat pumps</td>
+      <td>no heat pumps</td>
+      <td>47</td>
+      <td>4.6</td>
+      <td>1.1</td>
+      <td>8.1</td>
+      <td>3.2</td>
+      <td>0.7</td>
+      <td>1.7</td>
+      <td>31.8</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>plant follows heat demand</td>
+      <td>False</td>
+      <td>5</td>
+      <td>27.3</td>
+      <td>-22.2</td>
+      <td>76.8</td>
+      <td>10.5</td>
+      <td>0.8</td>
+      <td>313.9</td>
+      <td>434.3</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>plant follows heat demand</td>
+      <td>True</td>
+      <td>7</td>
+      <td>23.6</td>
+      <td>11.5</td>
+      <td>35.8</td>
+      <td>19.5</td>
+      <td>1</td>
+      <td>130.8</td>
+      <td>345.1</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/group_means.csv">code/reports/extreme_events/group_means.csv</a> (26 rows shown)</p>
+
+<ul>
+<li><strong>Heat waves.</strong> Import at the 12 sites with a plant rises by 25 % (9 to 42; median 19 %; 11
+of 12 rise), against 6 % (3 to 9) at the 64 other sites: 19 points more with the size of the
+event held fixed (4 to 34, p = 0.01). In kilowatts: 207 kW more import per site on a
+heat-wave day (mean import 382 kW), against 5 kW at the other sites (mean demand 66 kW). At
+the seven sites whose plant follows the heat demand (<code>chp_dispatch</code>), every one rises (24 %,
+11 to 36).</li>
+<li><strong>Cold spells.</strong> Import at the 13 sites with a plant rises by 8 % (−1 to 17; median 4 %),
+against 11 % (9 to 13) elsewhere. At the eight heat-led sites it rises by 2 % (−4 to 8); the
+five others are wide (17 %, −9 to 43).</li>
+</ul>
+<p>The plausible mechanism for both: a plant that follows heat runs flat out in a cold spell and
+covers the extra electricity, and is turned down in a heat wave when the site needs little
+heat, so the import rises by more than the cooling load. The meters cannot confirm it: they
+show import only. Plant output data would.</p>
+<h3 id="4-2-certificates-and-the-estates-return-descriptor-share">4.2 Certificates and the estates return (<code>descriptor_share</code>)</h3>
+<div class="figrow"><figure class="inrow"><img src="figures/descriptor_share.png" alt="descriptor_share" loading="lazy"><figcaption><code>descriptor_share</code> <a href="figures/descriptor_share.pdf">PDF</a></figcaption></figure></div>
+
+<figure class="single"><img src="figures/descriptor_share.png" alt="descriptor_share" loading="lazy"><figcaption>Share of the between-site variance of the reaction that each descriptor adds to the size of the event (adjusted R², one descriptor at a time), sites without on-site generation. <code>descriptor_share</code> <a href="figures/descriptor_share.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>descriptor</th>
+      <th>sites</th>
+      <th>joint_p</th>
+      <th>adj_r2_gain</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation (CHP)</td>
+      <td>88</td>
+      <td>0.408</td>
+      <td>0.004</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>56</td>
+      <td>0.051</td>
+      <td>-0.022</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>60</td>
+      <td>0.256</td>
+      <td>0.006</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: heat pumps</td>
+      <td>56</td>
+      <td>0.054</td>
+      <td>0.022</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: cooled floor share</td>
+      <td>60</td>
+      <td>0.151</td>
+      <td>0.016</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: floor share with any air conditioning</td>
+      <td>60</td>
+      <td>0.025</td>
+      <td>0.055</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: floor share heated with electricity</td>
+      <td>60</td>
+      <td>0.393</td>
+      <td>-0.005</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: operational rating</td>
+      <td>60</td>
+      <td>0.164</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: electricity per m2</td>
+      <td>60</td>
+      <td>0.152</td>
+      <td>0.007</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: gas over electricity</td>
+      <td>53</td>
+      <td>0.008</td>
+      <td>0.181</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: mean build year</td>
+      <td>56</td>
+      <td>0.025</td>
+      <td>0.037</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>site size (log of mean demand)</td>
+      <td>75</td>
+      <td>0.37</td>
+      <td>-0.005</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation (CHP)</td>
+      <td>76</td>
+      <td>0.014</td>
+      <td>0.17</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>51</td>
+      <td>0.4</td>
+      <td>-0.036</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>52</td>
+      <td>0.418</td>
+      <td>0.007</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: heat pumps</td>
+      <td>51</td>
+      <td>0.135</td>
+      <td>-0.016</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: cooled floor share</td>
+      <td>52</td>
+      <td>0.214</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: floor share with any air conditioning</td>
+      <td>52</td>
+      <td>0.019</td>
+      <td>0.087</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: floor share heated with electricity</td>
+      <td>52</td>
+      <td>0.919</td>
+      <td>-0.02</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: operational rating</td>
+      <td>52</td>
+      <td>0.314</td>
+      <td>0.003</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: electricity per m2</td>
+      <td>52</td>
+      <td>0.247</td>
+      <td>0.021</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: gas over electricity</td>
+      <td>48</td>
+      <td>0.032</td>
+      <td>0.105</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: mean build year</td>
+      <td>51</td>
+      <td>0.863</td>
+      <td>-0.021</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>site size (log of mean demand)</td>
+      <td>64</td>
+      <td>0.061</td>
+      <td>0.009</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/alignment_fits.csv">code/reports/extreme_events/alignment_fits.csv</a> (24 rows shown)</p>
+
+<details class="table"><summary>Table: 38 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>descriptor</th>
+      <th>level</th>
+      <th>sites</th>
+      <th>mean_reaction_pct</th>
+      <th>difference_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>p</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation (CHP)</td>
+      <td>no on-site generation</td>
+      <td>75</td>
+      <td>11.14</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation (CHP)</td>
+      <td>on-site generation</td>
+      <td>13</td>
+      <td>7.79</td>
+      <td>-3.8</td>
+      <td>-12.75</td>
+      <td>5.16</td>
+      <td>0.41</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>acute inpatient</td>
+      <td>3</td>
+      <td>4.79</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>community inpatient</td>
+      <td>4</td>
+      <td>5.41</td>
+      <td>-0.75</td>
+      <td>-9.98</td>
+      <td>8.48</td>
+      <td>0.87</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>mental health</td>
+      <td>20</td>
+      <td>10.39</td>
+      <td>4.02</td>
+      <td>0.49</td>
+      <td>7.55</td>
+      <td>0.03</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>building use</td>
+      <td>non-inpatient</td>
+      <td>29</td>
+      <td>10.17</td>
+      <td>4.29</td>
+      <td>0.29</td>
+      <td>8.29</td>
+      <td>0.04</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>mechanical ventilation</td>
+      <td>13</td>
+      <td>9.03</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>mixed mode or air conditioning</td>
+      <td>11</td>
+      <td>14.03</td>
+      <td>5.45</td>
+      <td>-1.25</td>
+      <td>12.15</td>
+      <td>0.11</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: building environment</td>
+      <td>natural ventilation</td>
+      <td>36</td>
+      <td>9.78</td>
+      <td>1.04</td>
+      <td>-4.42</td>
+      <td>6.51</td>
+      <td>0.71</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: heat pumps</td>
+      <td>heat pumps</td>
+      <td>4</td>
+      <td>3.35</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: heat pumps</td>
+      <td>no heat pumps</td>
+      <td>52</td>
+      <td>10.1</td>
+      <td>6.49</td>
+      <td>0.03</td>
+      <td>12.95</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: cooled floor share</td>
+      <td>per standard deviation</td>
+      <td>60</td>
+      <td></td>
+      <td>1.7</td>
+      <td>-0.59</td>
+      <td>3.99</td>
+      <td>0.15</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: floor share with any air conditioning</td>
+      <td>per standard deviation</td>
+      <td>60</td>
+      <td></td>
+      <td>2.54</td>
+      <td>0.38</td>
+      <td>4.7</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: floor share heated with electricity</td>
+      <td>per standard deviation</td>
+      <td>60</td>
+      <td></td>
+      <td>1.06</td>
+      <td>-1.35</td>
+      <td>3.47</td>
+      <td>0.39</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: operational rating</td>
+      <td>per standard deviation</td>
+      <td>60</td>
+      <td></td>
+      <td>1.22</td>
+      <td>-0.48</td>
+      <td>2.93</td>
+      <td>0.16</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>certificate: electricity per m2</td>
+      <td>per standard deviation</td>
+      <td>60</td>
+      <td></td>
+      <td>1.46</td>
+      <td>-0.51</td>
+      <td>3.44</td>
+      <td>0.15</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: gas over electricity</td>
+      <td>per standard deviation</td>
+      <td>53</td>
+      <td></td>
+      <td>-3.87</td>
+      <td>-6.6</td>
+      <td>-1.14</td>
+      <td>0.01</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>estates return: mean build year</td>
+      <td>per standard deviation</td>
+      <td>56</td>
+      <td></td>
+      <td>2</td>
+      <td>0.31</td>
+      <td>3.7</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>site size (log of mean demand)</td>
+      <td>per standard deviation</td>
+      <td>75</td>
+      <td></td>
+      <td>-0.95</td>
+      <td>-3.02</td>
+      <td>1.12</td>
+      <td>0.37</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation (CHP)</td>
+      <td>no on-site generation</td>
+      <td>64</td>
+      <td>5.65</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation (CHP)</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>25.14</td>
+      <td>19.18</td>
+      <td>4.25</td>
+      <td>34.1</td>
+      <td>0.01</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>acute inpatient</td>
+      <td>3</td>
+      <td>7.84</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>community inpatient</td>
+      <td>3</td>
+      <td>-1.37</td>
+      <td>-9.69</td>
+      <td>-32.41</td>
+      <td>13.03</td>
+      <td>0.4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>mental health</td>
+      <td>19</td>
+      <td>6.18</td>
+      <td>-2.14</td>
+      <td>-9.87</td>
+      <td>5.6</td>
+      <td>0.59</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>building use</td>
+      <td>non-inpatient</td>
+      <td>26</td>
+      <td>4.15</td>
+      <td>-3.71</td>
+      <td>-8.67</td>
+      <td>1.24</td>
+      <td>0.14</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>mechanical ventilation</td>
+      <td>11</td>
+      <td>3.81</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>mixed mode or air conditioning</td>
+      <td>9</td>
+      <td>9.69</td>
+      <td>6.7</td>
+      <td>-4.44</td>
+      <td>17.84</td>
+      <td>0.24</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: building environment</td>
+      <td>natural ventilation</td>
+      <td>32</td>
+      <td>3.73</td>
+      <td>0.85</td>
+      <td>-7.4</td>
+      <td>9.09</td>
+      <td>0.84</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: heat pumps</td>
+      <td>heat pumps</td>
+      <td>4</td>
+      <td>7.27</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: heat pumps</td>
+      <td>no heat pumps</td>
+      <td>47</td>
+      <td>4.59</td>
+      <td>-2.96</td>
+      <td>-6.76</td>
+      <td>0.85</td>
+      <td>0.13</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: cooled floor share</td>
+      <td>per standard deviation</td>
+      <td>52</td>
+      <td></td>
+      <td>2.16</td>
+      <td>-1.2</td>
+      <td>5.52</td>
+      <td>0.21</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: floor share with any air conditioning</td>
+      <td>per standard deviation</td>
+      <td>52</td>
+      <td></td>
+      <td>3.51</td>
+      <td>0.67</td>
+      <td>6.36</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: floor share heated with electricity</td>
+      <td>per standard deviation</td>
+      <td>52</td>
+      <td></td>
+      <td>-0.22</td>
+      <td>-4.54</td>
+      <td>4.09</td>
+      <td>0.92</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: operational rating</td>
+      <td>per standard deviation</td>
+      <td>52</td>
+      <td></td>
+      <td>1.67</td>
+      <td>-1.54</td>
+      <td>4.87</td>
+      <td>0.31</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>certificate: electricity per m2</td>
+      <td>per standard deviation</td>
+      <td>52</td>
+      <td></td>
+      <td>2.23</td>
+      <td>-1.5</td>
+      <td>5.97</td>
+      <td>0.24</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: gas over electricity</td>
+      <td>per standard deviation</td>
+      <td>48</td>
+      <td></td>
+      <td>-4.12</td>
+      <td>-7.77</td>
+      <td>-0.47</td>
+      <td>0.03</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>estates return: mean build year</td>
+      <td>per standard deviation</td>
+      <td>51</td>
+      <td></td>
+      <td>0.24</td>
+      <td>-2.49</td>
+      <td>2.97</td>
+      <td>0.86</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>site size (log of mean demand)</td>
+      <td>per standard deviation</td>
+      <td>64</td>
+      <td></td>
+      <td>1.91</td>
+      <td>-0.05</td>
+      <td>3.87</td>
+      <td>0.06</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/alignment_terms.csv">code/reports/extreme_events/alignment_terms.csv</a> (38 rows shown)</p>
+
+<p>One regression per descriptor of the site reaction on the descriptor with the size of the event
+held fixed, robust standard errors, on the sites without on-site generation (the plant would
+otherwise stand in for every descriptor that goes with large acute hospitals: with the plant
+sites in, building use, size and the gas ratio all &quot;explain&quot; the heat reaction).</p>
+<ul>
+<li><strong>Display Energy Certificate.</strong> Building environment (natural ventilation, mechanical
+ventilation, mixed mode or air conditioning): joint p = 0.42 (heat) and 0.26 (cold), 1 % of
+the variance. Operational rating: p = 0.31 and 0.16, 0 %. Electricity per m²: 2 % and 1 %.
+Floor share heated with electricity: 0 %. Floor share with any air conditioning: +3.5 points
+per standard deviation in heat waves (0.7 to 6.4, p = 0.02; 9 %) and +2.5 in cold spells (0.4
+to 4.7, p = 0.02; 6 %): the sites with more conditioned floor react more to both, which reads
+as electrically serviced buildings and not as cooling.</li>
+<li><strong>Estates return.</strong> Gas-to-electricity ratio: −4.1 points per standard deviation in heat
+waves (−7.8 to −0.5, p = 0.03; 11 %) and −3.9 in cold spells (−6.6 to −1.1, p = 0.01; 18 %):
+the more a site runs on gas, the less its electricity reacts, to cold as the weather page
+found and to heat as well. Building use: mental-health and non-inpatient sites react 4 points
+more to cold than the three acute hospitals without a plant (p = 0.03 and 0.04; 0 % of the
+variance after the degrees of freedom). Mean build year: +2.0 points per standard deviation
+for cold (p = 0.02; 4 %).</li>
+<li>Twenty tests were run and five have p below 0.05, where chance gives one; the weaker ones
+should not be read alone. The gas ratio (p = 0.008 for cold) is the one that also has a mechanism
+and an earlier, independent estimate.</li>
+</ul>
+<p>The comparison that matters: the best descriptor explains 11 to 18 %, the fields of the
+certificate 0 to 9 %, and the site's own other events 37 to 56 %. What a site does in an event
+is stable and is not in the registers.</p>
+<h2 id="5-what-follows">5. What follows</h2>
+<ul>
+<li>For load on the network, the unit of analysis is the site, not the region, and for sites
+with a plant the season of concern is the summer.</li>
+<li>A forecast or a planning model needs the heat of the last days, not the temperature of the
+day, and it needs the hour: the evening of the third day is where a heat wave lands. The
+forecast thread found the consequence from the other side: on heat-wave days the day-ahead
+forecast secures 33 % of the achievable peak cut against 50 % on the other days of the same
+site and month (<a href="forecast_error_anatomy.md">forecast_error_anatomy.md</a>).</li>
+<li>Two data requests would turn the open readings into tests: plant output (does the plant turn
+down in heat waves?) and the size of cooling plant (recorded on 19 % of recent certificates).</li>
+</ul>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>92 sites, 14 with a plant, 7 heat waves: the plant results rest on 12 and 13 sites and have
+wide intervals; the direction is consistent across events.</li>
+<li>The reference days are close in the calendar, not matched on anything else. A change at a
+site within three weeks of an event (a meter change, a ward closure) enters its reaction.</li>
+<li>The heat-wave definition is the Met Office's by county; the temperatures are ERA5 at the site
+(the weather page, section 6, compares it with ERA5-Land and stations).</li>
+<li>Reactions are in per cent of the site's own demand, so small sites count as much as large
+ones in the means; the summed columns of the event table give the kilowatt view.</li>
+<li>Gas is not in this page.</li>
+</ul>
+<p class="meta">Built from <code>doc/extreme_events.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+{
+  "sites": 134,
+  "clean_sites": 92,
+  "chp_sites_clean": 14,
+  "clean_sites_with_certificate": 76,
+  "national_events": {
+    "cold spell": 14,
+    "heatwave": 7
+  },
+  "event_site_days": {
+    "cold spell": 2981,
+    "heatwave": 967
+  },
+  "site_reaction": {
+    "cold spell": {
+      "sites": 88,
+      "mean_pct": 10.64667390011748,
+      "median_pct": 7.944710162531916,
+      "p10_pct": -0.8014908901637648,
+      "p90_pct": 26.56999431007456,
+      "share_rising": 0.8636363636363636,
+      "degrees": 6.746013929700312
+    },
+    "heatwave": {
+      "sites": 76,
+      "mean_pct": 8.725570100100363,
+      "median_pct": 5.766345845342364,
+      "p10_pct": -7.5819040033655245,
+      "p90_pct": 28.009016922350533,
+      "share_rising": 0.75,
+      "degrees": 7.933932481950887
+    }
+  },
+  "build_up": [
+    {
+      "type": "cold spell",
+      "sites": 75,
+      "first_day_pct_per_degree": 1.447,
+      "third_day_on_pct_per_degree": 1.864,
+      "difference": 0.417,
+      "lo": 0.1,
+      "hi": 0.734
+    },
+    {
+      "type": "heatwave",
+      "sites": 50,
+      "first_day_pct_per_degree": 0.311,
+      "third_day_on_pct_per_degree": 0.755,
+      "difference": 0.444,
+      "lo": 0.166,
+      "hi": 0.721
+    }
+  ],
+  "reliability": {
+    "cold spell": {
+      "sites": 88,
+      "split_half_r": 0.803,
+      "reliability": 0.891,
+      "other_events_r2": 0.557
+    },
+    "heatwave": {
+      "sites": 59,
+      "split_half_r": 0.54,
+      "reliability": 0.701,
+      "other_events_r2": 0.368
+    }
+  },
+  "spatial": [
+    {
+      "type": "cold spell",
+      "sites": "all sites",
+      "quantity": "reaction",
+      "n": 88,
+      "morans_i": 0.01,
+      "p": 0.275,
+      "neighbour_km": 38.224,
+      "region_share": 0.051,
+      "region_share_chance": 0.07,
+      "region_p": 0.636,
+      "trust_sites": 84,
+      "trusts": 16,
+      "trust_share": 0.152,
+      "trust_share_chance": 0.185,
+      "trust_p": 0.676
+    },
+    {
+      "type": "cold spell",
+      "sites": "all sites",
+      "quantity": "size of the event",
+      "n": 88,
+      "morans_i": 0.795,
+      "p": 0.001,
+      "neighbour_km": 38.224,
+      "region_share": 0.374,
+      "region_share_chance": 0.07,
+      "region_p": 0.001,
+      "trust_sites": 84,
+      "trusts": 16,
+      "trust_share": 0.866,
+      "trust_share_chance": 0.179,
+      "trust_p": 0.001
+    },
+    {
+      "type": "cold spell",
+      "sites": "no on-site generation",
+      "quantity": "reaction",
+      "n": 75,
+      "morans_i": 0.016,
+      "p": 0.227,
+      "neighbour_km": 38.077,
+      "region_share": 0.046,
+      "region_share_chance": 0.081,
+      "region_p": 0.782,
+      "trust_sites": 70,
+      "trusts": 13,
+      "trust_share": 0.083,
+      "trust_share_chance": 0.172,
+      "trust_p": 0.943
+    },
+    {
+      "type": "cold spell",
+      "sites": "no on-site generation",
+      "quantity": "size of the event",
+      "n": 75,
+      "morans_i": 0.799,
+      "p": 0.001,
+      "neighbour_km": 38.077,
+      "region_share": 0.365,
+      "region_share_chance": 0.083,
+      "region_p": 0.001,
+      "trust_sites": 70,
+      "trusts": 13,
+      "trust_share": 0.873,
+      "trust_share_chance": 0.172,
+      "trust_p": 0.001
+    },
+    {
+      "type": "heatwave",
+      "sites": "all sites",
+      "quantity": "reaction",
+      "n": 76,
+      "morans_i": -0.018,
+      "p": 0.51,
+      "neighbour_km": 38.033,
+      "region_share": 0.096,
+      "region_share_chance": 0.079,
+      "region_p": 0.282,
+      "trust_sites": 72,
+      "trusts": 13,
+      "trust_share": 0.174,
+      "trust_share_chance": 0.165,
+      "trust_p": 0.39
+    },
+    {
+      "type": "heatwave",
+      "sites": "all sites",
+      "quantity": "size of the event",
+      "n": 76,
+      "morans_i": 0.54,
+      "p": 0.001,
+      "neighbour_km": 38.033,
+      "region_share": 0.562,
+      "region_share_chance": 0.078,
+      "region_p": 0.001,
+      "trust_sites": 72,
+      "trusts": 13,
+      "trust_share": 0.694,
+      "trust_share_chance": 0.169,
+      "trust_p": 0.001
+    },
+    {
+      "type": "heatwave",
+      "sites": "no on-site generation",
+      "quantity": "reaction",
+      "n": 64,
+      "morans_i": -0.033,
+      "p": 0.62,
+      "neighbour_km": 36.389,
+      "region_share": 0.093,
+      "region_share_chance": 0.096,
+      "region_p": 0.455,
+      "trust_sites": 58,
+      "trusts": 10,
+      "trust_share": 0.199,
+      "trust_share_chance": 0.157,
+      "trust_p": 0.26
+    },
+    {
+      "type": "heatwave",
+      "sites": "no on-site generation",
+      "quantity": "size of the event",
+      "n": 64,
+      "morans_i": 0.518,
+      "p": 0.001,
+      "neighbour_km": 36.389,
+      "region_share": 0.575,
+      "region_share_chance": 0.097,
+      "region_p": 0.001,
+      "trust_sites": 58,
+      "trusts": 10,
+      "trust_share": 0.657,
+      "trust_share_chance": 0.155,
+      "trust_p": 0.001
+    }
+  ]
+}

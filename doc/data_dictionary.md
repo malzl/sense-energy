@@ -814,6 +814,26 @@ half-hour), all Chronos-2 with no training:
 | `context.csv`, `table_context.csv`, `issue_time.csv`, `issue_value.csv`, `table_issue.csv` | error and decision value by length of history and by issue time |
 | `summary.json` | the headline numbers |
 
+## Heat waves and cold spells at the sites
+
+Write-up: [extreme_events.md](extreme_events.md). Command `extreme-events`; tables in
+`code/reports/extreme_events/`. Reactions are in per cent (100 x log of summed demand over the
+summed reference of the same days); `degrees` is the size of the event at the site (daily
+maximum above the reference days in a heat wave, daily mean below them in a cold spell).
+
+| Table | Content |
+|---|---|
+| `sites.csv` | per site: place, region, trust, coverage flag and `clean`, on-site generation (`chp`, `chp_share`, `chp_heat_led`), use, the estates-return and certificate descriptors |
+| `event_site_days.csv` | site x day inside a site event: `kw`, `ref_kw`, temperature and its difference from the reference days, `degrees`, `run` (number of the site's event), `event_id` of the national event |
+| `site_reactions.csv` | per site and event type: `reaction_pct`, `se_pct` (from the site's events), `event_days`, `events`, `degrees`, `extra_kw`, with the site descriptors |
+| `events.csv`, `table_events.csv` | per national event and site group: mean site reaction with interval, median, reaction of the summed demand, `extra_mw`, sites and site-days |
+| `event_time.csv`, `build_up.csv` | reaction and `degrees` by day from the onset at the site; reaction per degree on the first day against the third day on (paired within sites) |
+| `hour_profile.csv` | reaction by half-hour of the day, event type and site group |
+| `seasons.csv` | reaction per degree in each summer and winter |
+| `spatial.csv`, `reliability.csv` | Moran's I and the region and trust shares of the between-site variance, for the reaction and for the size of the event; split-half agreement of a site's events |
+| `group_means.csv`, `alignment_terms.csv`, `alignment_fits.csv` | mean reaction by level of each categorical descriptor; one regression per descriptor (difference per level or per standard deviation; joint p; adjusted R2 gained) |
+| `summary.json` | the headline numbers |
+
 ## Check of Lu et al. (2026), heat and cold waves
 
 Write-up: [heat_cold_wave_paper_check.md](heat_cold_wave_paper_check.md).

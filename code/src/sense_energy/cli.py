@@ -636,13 +636,23 @@ def solar_programme_cmd() -> None:
     click.echo(json.dumps(run()["summary"], indent=1))
 
 
+@cli.command("extreme-events")
+def extreme_events_cmd() -> None:
+    """Heat waves and cold spells at the sites: the reaction in time and space, and what the
+    plant, the certificates and the estates return say about it."""
+    from .analysis.extreme_events import run
+
+    click.echo(json.dumps(run()["summary"], indent=1, default=float))
+
+
 @cli.command("forecast-probes")
 @click.option(
     "--which",
-    type=click.Choice(["daily", "context", "mobility", "intraday"]),
+    type=click.Choice(["daily", "context", "mobility", "intraday", "plant"]),
     required=True,
     help="daily: every test day; context: shorter histories; mobility: footfall in context; "
-    "intraday: issued on the target day.",
+    "intraday: issued on the target day; plant: a flag for on-site generation and the plant "
+    "state.",
 )
 @click.option("--threads", default=12, show_default=True)
 @click.option("--limit", default=None, type=int, help="Debug: only the first n origins.")
@@ -655,6 +665,7 @@ def forecast_probes_cmd(which: str, threads: int, limit: int | None) -> None:
         "context": fp.run_context,
         "mobility": fp.run_mobility,
         "intraday": fp.run_intraday,
+        "plant": fp.run_plant,
     }[which]
     out = run(threads, limit)
     click.echo(f"{which}: {len(out):,} forecast rows, models {sorted(out['model'].unique())}")

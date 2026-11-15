@@ -17,6 +17,7 @@
   <a href="data_manifest.html">Data manifest - processed demand datasets</a>
   <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
   <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="extreme_events.html">Heat waves and cold spells at the sites: the reaction, when, where, and what explains it</a>
   <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
   <a href="forecast_error_anatomy.html">Where the day-ahead error sits, and what can remove it</a>
   <a href="heat_cold_wave_paper_check.html">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
@@ -72,6 +73,7 @@
   <a class="h2" href="#long-temperature-record-code-data-external-weather-era5-time">Long temperature record: code/data/external/weather/era5_timeseries/ → interim/weather_daily_long.parquet</a>
   <a class="h2" href="#flexibility-design-winters-heat-pumps-in-the-field-solar-pro">Flexibility, design winters, heat pumps in the field, solar programme</a>
   <a class="h2" href="#forecast-error-anatomy">Forecast error anatomy</a>
+  <a class="h2" href="#heat-waves-and-cold-spells-at-the-sites">Heat waves and cold spells at the sites</a>
   <a class="h2" href="#check-of-lu-et-al-2026-heat-and-cold-waves">Check of Lu et al. (2026), heat and cold waves</a>
   </div>
 </nav>
@@ -2006,6 +2008,61 @@ half-hour), all Chronos-2 with no training:</p>
 <tr>
   <td><code>context.csv</code>, <code>table_context.csv</code>, <code>issue_time.csv</code>, <code>issue_value.csv</code>, <code>table_issue.csv</code></td>
   <td>error and decision value by length of history and by issue time</td>
+</tr>
+<tr>
+  <td><code>summary.json</code></td>
+  <td>the headline numbers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="heat-waves-and-cold-spells-at-the-sites">Heat waves and cold spells at the sites</h2>
+<p>Write-up: <a href="extreme_events.md">extreme_events.md</a>. Command <code>extreme-events</code>; tables in
+<code>code/reports/extreme_events/</code>. Reactions are in per cent (100 x log of summed demand over the
+summed reference of the same days); <code>degrees</code> is the size of the event at the site (daily
+maximum above the reference days in a heat wave, daily mean below them in a cold spell).</p>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>sites.csv</code></td>
+  <td>per site: place, region, trust, coverage flag and <code>clean</code>, on-site generation (<code>chp</code>, <code>chp_share</code>, <code>chp_heat_led</code>), use, the estates-return and certificate descriptors</td>
+</tr>
+<tr>
+  <td><code>event_site_days.csv</code></td>
+  <td>site x day inside a site event: <code>kw</code>, <code>ref_kw</code>, temperature and its difference from the reference days, <code>degrees</code>, <code>run</code> (number of the site's event), <code>event_id</code> of the national event</td>
+</tr>
+<tr>
+  <td><code>site_reactions.csv</code></td>
+  <td>per site and event type: <code>reaction_pct</code>, <code>se_pct</code> (from the site's events), <code>event_days</code>, <code>events</code>, <code>degrees</code>, <code>extra_kw</code>, with the site descriptors</td>
+</tr>
+<tr>
+  <td><code>events.csv</code>, <code>table_events.csv</code></td>
+  <td>per national event and site group: mean site reaction with interval, median, reaction of the summed demand, <code>extra_mw</code>, sites and site-days</td>
+</tr>
+<tr>
+  <td><code>event_time.csv</code>, <code>build_up.csv</code></td>
+  <td>reaction and <code>degrees</code> by day from the onset at the site; reaction per degree on the first day against the third day on (paired within sites)</td>
+</tr>
+<tr>
+  <td><code>hour_profile.csv</code></td>
+  <td>reaction by half-hour of the day, event type and site group</td>
+</tr>
+<tr>
+  <td><code>seasons.csv</code></td>
+  <td>reaction per degree in each summer and winter</td>
+</tr>
+<tr>
+  <td><code>spatial.csv</code>, <code>reliability.csv</code></td>
+  <td>Moran's I and the region and trust shares of the between-site variance, for the reaction and for the size of the event; split-half agreement of a site's events</td>
+</tr>
+<tr>
+  <td><code>group_means.csv</code>, <code>alignment_terms.csv</code>, <code>alignment_fits.csv</code></td>
+  <td>mean reaction by level of each categorical descriptor; one regression per descriptor (difference per level or per standard deviation; joint p; adjusted R2 gained)</td>
 </tr>
 <tr>
   <td><code>summary.json</code></td>

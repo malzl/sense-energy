@@ -847,3 +847,37 @@ def save_figure(fig, base: str | Path, png_dpi: int = 600, data: Any = None) -> 
     for kind, path in written.items():
         print(f"{kind:<5} {path}")
     return written
+
+
+# Knowledge of the plant given to a forecast (analysis/forecast_anatomy.plant_scores): the
+# comparisons in a fixed order, and the two site sets in the plant colours.
+PLANT_KNOWLEDGE_NAMES = {
+    "lightgbm_ifs|lightgbm_ifs_noid": "trained model:\nsite identity",
+    "lightgbm_ifs_eric|lightgbm_ifs": "trained model:\nestate descriptors",
+    "plant_cross_flag|plant_cross": "zero-shot model:\nflag and plant share",
+    "plant_state_past|chronos2": "zero-shot model:\nplant state to issue time",
+    "plant_state_oracle|chronos2": "zero-shot model:\nplant state of target day",
+}
+PLANT_KNOWLEDGE_SETS = {
+    "sites with on-site generation": "#CC79A7",
+    "other sites": "#0072B2",
+}
+
+# Heat waves and cold spells at the sites (analysis/extreme_events.py).
+EVENT_NAMES = {"heatwave": "heat wave", "cold spell": "cold spell"}
+PLANT_GROUP_ORDER = ("no on-site generation", "on-site generation")
+PLANT_GROUP_COLORS = {"no on-site generation": "#0072B2", "on-site generation": "#CC79A7"}
+EVENT_QUANTITY_NAMES = {"size of the event": "temperature of the event", "reaction": "reaction"}
+EVENT_QUANTITY_COLORS = {"size of the event": "#7A7A7A", "reaction": "#0072B2"}
+EVENT_DESCRIPTOR_ORDER = (
+    "estates return: gas over electricity",
+    "certificate: floor share with any air conditioning",
+    "certificate: cooled floor share",
+    "certificate: building environment",
+    "certificate: operational rating",
+    "certificate: electricity per m2",
+    "certificate: floor share heated with electricity",
+    "building use",
+    "estates return: mean build year",
+    "site size (log of mean demand)",
+)

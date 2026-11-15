@@ -327,3 +327,33 @@ def test_step_table_shares_cover_the_panel():
     assert t["day_share_pct"].sum() == pytest.approx(100.0)
     assert t.groupby("group")["day_share_of_group_pct"].sum().to_numpy() == pytest.approx(100.0)
     assert list(t[t["group"] == "inpatient"]["step_bin"]) == list(fa.STEP_LABELS)
+
+
+def test_plant_state_marks_the_hours_a_plant_is_off_and_nothing_else():
+    panel = _panel(days=42)
+    shape = 10.0 + 4.0 * np.sin(np.arange(len(panel.index)) * 2 * np.pi / 48)
+    y = pd.DataFrame({"A": shape, "B": 2 * shape}, index=panel.index)
+    off = slice(48 * 40 + 16, 48 * 40 + 32)  # eight hours of the 41st day
+    y.iloc[off, 0] += 10.0  # the plant stops: import rises by the site's mean
+    panel.y_imp, panel.sites = y, ["A", "B"]
+    state = fp.plant_state(panel, {"test_start": "2025-07-01"})
+    assert state.shape == y.shape and set(np.unique(state)) <= {-1.0, 0.0, 1.0}
+    assert (state[off, 0] == 1).all()
+    assert (state[48 * 35 : 48 * 40, 0] == 0).all()  # ordinary days before the stop
+    assert (state[:, 1] == 0).all()  # the other site has no step
+
+
+def test_plant_windows_keep_the_target_day_out_of_the_past_only_variant():
+    panel = _panel(days=42)
+    config = {
+        "timezone": "Europe/London",
+        "issue_time_local": "16:30",
+        "context_periods": 336,
+        "test_start": "2025-07-01",
+    }
+    origins = poc.make_origins(panel, config, "2025-07-10", "2025-07-10", 1)
+    assert fp.plant_windows(panel, origins, config, "cross") is None
+    past, future = fp.plant_windows(panel, origins, config, "state_past")[0]
+    assert set(past) == {"plant_state"} and future == {}
+    past, future = fp.plant_windows(panel, origins, config, "state_oracle")[0]
+    assert len(past["plant_state"]) == 336 and set(future) == {"plant_state"}

@@ -1451,6 +1451,16 @@ def run() -> dict:
         .round(3)
         .to_dict(orient="index")
     )
+    if any(OUT_DIR.glob("forecasts_plant_*.parquet")):
+        ps, pdiff = plant_scores(panel, config)
+        ps.to_csv(OUT_DIR / "plant_scores.csv", index=False)
+        pdiff.to_csv(OUT_DIR / "plant_differences.csv", index=False)
+        summary["plant_knowledge"] = {
+            "nmae_pct": ps.pivot(index="model", columns="sites", values="nmae_pct")
+            .round(2)
+            .to_dict(),
+            "differences": pdiff.round(3).to_dict(orient="records"),
+        }
     if mobility_forecasts_path().exists():
         ms, mdiff, msd = mobility_scores(panel)
         ms.to_csv(OUT_DIR / "mobility_scores.csv", index=False)
@@ -1475,3 +1485,79 @@ def run() -> dict:
     (OUT_DIR / "summary.json").write_text(text + "\n")
     logger.info("forecast anatomy: %s", json.dumps(summary["stored_best_model"]["by_group"]))
     return {"summary": summary}
+
+
+# --------------------------------------------------------------------------- #
+# Knowledge of the plant: a flag, and the state
+# --------------------------------------------------------------------------- #
+
+PLANT_PAIRS = (
+    ("plant_cross_flag", "plant_cross"),
+    ("plant_cross", "chronos2"),
+    ("plant_state_past", "chronos2"),
+    ("plant_state_oracle", "chronos2"),
+    ("lightgbm_ifs", "lightgbm_ifs_noid"),
+    ("lightgbm_ifs_eric", "lightgbm_ifs"),
+)
+
+
+def plant_forecasts() -> pd.DataFrame:
+    """The plant probe's forecasts with the stored runs they compare with."""
+    files = sorted(OUT_DIR.glob("forecasts_plant_*.parquet"))
+    files = [p for p in files if ".partial" not in p.name]
+    frames = [pd.read_parquet(p) for p in files]
+    frames.append(load_stored("chronos2"))
+    for name in ("lightgbm_ifs", "lightgbm_ifs_noid", "lightgbm_ifs_eric"):
+        frames.append(pd.read_parquet(POC / f"forecasts_{name}.parquet").assign(model=name))
+    return pd.concat(frames, ignore_index=True)
+
+
+def plant_scores(panel: poc.Panel, config: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Does knowledge of the plant help? Error and captured peak cut of each variant at the
+    sites with on-site generation and at the others (and on the days with a step larger than the
+    site's mean import), and the paired differences with their bootstrap intervals.
+
+    * a trained model with and without the site's identity, and with the estates returns'
+      descriptors (number of CHP units among them);
+    * Chronos-2 that sees all sites of an origin together, with and without a flag and the
+      plant's share of the site's electricity as covariates;
+    * Chronos-2 with the plant state up to the issue time, and with the state of the target day
+      (made from the import itself: an upper bound)."""
+    f = plant_forecasts()
+    actual = actual_long(panel)
+    days = day_table(panel, test_start=str(config["test_start"]))
+    chp = set(pd.read_csv(OUT_DIR.parent / "chp_dispatch" / "classification.csv")["site_code"])
+    sd = quantile_scores(f, actual)
+    sd = sd[sd["n"] >= MIN_PERIODS].merge(
+        days[["site_code", "day", "big_step"]], on=["site_code", "day"], how="left"
+    )
+    sd["chp"] = sd["site_code"].isin(chp)
+    mean_kw = (panel.y_raw[panel.sites] * 2.0).mean()
+    v = value_site_days(f, actual, mean_kw)
+    v["chp"] = v["site_code"].isin(chp)
+    sets = {
+        "all sites": lambda d: d,
+        "sites with on-site generation": lambda d: d[d["chp"]],
+        "other sites": lambda d: d[~d["chp"]],
+        "on-site generation, large-step days": lambda d: d[d["chp"] & (d["big_step"] == True)],  # noqa: E712
+    }
+    rows, diffs = [], []
+    for name, pick in sets.items():
+        x = pick(sd)
+        vx = pick(v.merge(days[["site_code", "day", "big_step"]], on=["site_code", "day"]))
+        val = value_table(vx, []).set_index("model")
+        for model, g in x.groupby("model"):
+            rows.append(
+                {
+                    "sites": name,
+                    "model": model,
+                    "site_days": len(g),
+                    "nmae_pct": _nmae(g),
+                    "crps_pct": _nmae(g, "crps"),
+                    "captured_point_pct": float(val.loc[model, "captured_point_pct"]),
+                }
+            )
+        for a, b in PLANT_PAIRS:
+            if {a, b} <= set(x["model"].unique()):
+                diffs.append({"sites": name, "a": a, "b": b, **paired_bootstrap(x, a, b)})
+    return pd.DataFrame(rows), pd.DataFrame(diffs)

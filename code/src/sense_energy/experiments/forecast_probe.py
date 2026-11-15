@@ -32,6 +32,7 @@ format. Mobility data: The Oxford Partnership (research licence, see ``doc/data_
 from __future__ import annotations
 
 import time
+import warnings
 from typing import Any
 
 import numpy as np
@@ -53,6 +54,9 @@ MOBILITY_START, MOBILITY_END = "2024-02-13", "2024-12-31"
 SHORT_CONTEXT = 336
 MOBILITY_VARIANTS = ("plain", "base", "prev_day", "oracle", "uni_oracle")
 ISSUE_HOURS = (0, 6)  # local hour on the target day for the intraday issues
+PLANT_VARIANTS = ("state_oracle", "state_past", "cross", "cross_flag")
+STATE_STEP = 0.25  # import this share of the site's mean away from its usual profile
+CROSS_BATCH = 91  # one batch = every site of one origin (the model sees all sites together)
 
 
 def setup(sites: tuple[str, ...] | None = None) -> tuple[dict[str, Any], poc.Panel]:
@@ -82,8 +86,10 @@ def predict(
     quantiles: list[float],
     windows: list[tuple[dict, dict]] | None = None,
     batch_size: int = 32,
+    cross_learning: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Quantiles (N, H, Q) and means (N, H) for contexts ``X``, with or without covariates."""
+    """Quantiles (N, H, Q) and means (N, H) for contexts ``X``, with or without covariates.
+    ``cross_learning`` lets the model share information between the series of a batch."""
     import torch
 
     qs, pts = [], []
@@ -92,7 +98,11 @@ def predict(
             if windows is None:
                 batch = torch.tensor(X[start : start + batch_size]).unsqueeze(1)
                 q, mean = pipe.predict_quantiles(
-                    batch, prediction_length=horizon, quantile_levels=quantiles
+                    batch,
+                    prediction_length=horizon,
+                    quantile_levels=quantiles,
+                    batch_size=batch_size,
+                    cross_learning=cross_learning,
                 )
             else:
                 inputs = [
@@ -106,16 +116,17 @@ def predict(
                     prediction_length=horizon,
                     quantile_levels=quantiles,
                     batch_size=batch_size,
+                    cross_learning=cross_learning,
                 )
             qs.append(_to_array(q, torch))
             pts.append(_to_array(mean, torch))
     return np.concatenate(qs), np.concatenate(pts)
 
 
-def _run(pipe, panel, origins, config, name: str, windows=None, batch_size: int = 32):
+def _run(pipe, panel, origins, config, name: str, windows=None, batch_size: int = 32, cross=False):
     t0 = time.time()
     keys, X, horizon = contexts_for(panel, origins, config)
-    Q, P = predict(pipe, X, horizon, list(config["quantiles"]), windows, batch_size)
+    Q, P = predict(pipe, X, horizon, list(config["quantiles"]), windows, batch_size, cross)
     out = _assemble(name, keys, Q, P, panel, list(config["quantiles"]))
     logger.info("%s: %d forecasts in %.0f s", name, len(keys), time.time() - t0)
     return out
@@ -264,4 +275,99 @@ def run_intraday(threads: int = 12, limit_origins: int | None = None) -> pd.Data
     out = pd.concat(frames, ignore_index=True)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out.to_parquet(OUT_DIR / "forecasts_intraday.parquet", index=False)
+    return out
+
+
+def plant_state(panel: poc.Panel, config: dict[str, Any]) -> np.ndarray:
+    """A three-level stand-in for a plant schedule, from the import itself (T x S).
+
+    +1 where the import is more than ``STATE_STEP`` of the site's mean above its usual profile
+    (the plant is off when it usually runs), -1 where it is as far below, 0 otherwise. The usual
+    profile is the median of the same half-hour and weekday in the last four weeks; the residual
+    is smoothed over two hours. The signal is made from the quantity to forecast, so its value
+    on the target day is an upper bound for what a schedule from the site could give."""
+    y = panel.y_imp[panel.sites]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # all-missing slots stay missing
+        usual = np.nanmedian(np.stack([y.shift(336 * k).to_numpy() for k in (1, 2, 3, 4)]), axis=0)
+    r = (y - usual).rolling(5, center=True, min_periods=3).median()
+    before = panel.index < pd.Timestamp(config["test_start"], tz="UTC")
+    level = y[before].mean().to_numpy()
+    state = np.sign(r.to_numpy()) * (np.abs(r.to_numpy()) > STATE_STEP * level)
+    return np.nan_to_num(state).astype("float32")
+
+
+def plant_windows(
+    panel: poc.Panel, origins: list[poc.Origin], config: dict[str, Any], variant: str
+) -> list[tuple[dict, dict]] | None:
+    """Covariate windows for one plant variant, in the order of ``contexts_for``. No other
+    covariate is given, so each variant compares with Chronos-2 without covariates."""
+    if variant == "cross":
+        return None
+    L = int(config["context_periods"])
+    H = int(max(o.target_pos[-1] - o.origin_pos for o in origins))
+    T = len(panel.index)
+    if variant == "cross_flag":
+        chp = pd.read_csv(PROJECT_ROOT / "code/reports/chp_dispatch/classification.csv")
+        share = chp.set_index("site_code")["chp_share"].reindex(panel.sites).fillna(0.0)
+        out = []
+        for _ in origins:
+            for s in panel.sites:
+                flag, sh = float(share[s] > 0), float(share[s])
+                past = {
+                    "has_chp": np.full(L, flag, "float32"),
+                    "chp_share": np.full(L, sh, "float32"),
+                }
+                future = {
+                    "has_chp": np.full(H, flag, "float32"),
+                    "chp_share": np.full(H, sh, "float32"),
+                }
+                out.append((past, future))
+        return out
+    state = plant_state(panel, config)
+    out = []
+    for o in origins:
+        ctx = np.clip(np.arange(o.origin_pos - L + 1, o.origin_pos + 1), 0, T - 1)
+        fut = np.clip(np.arange(o.origin_pos + 1, o.origin_pos + 1 + H), 0, T - 1)
+        for j, _ in enumerate(panel.sites):
+            past = state[ctx, j].copy()
+            past[-2:] = past[-3]  # the smoothing window looks one hour ahead: hold the last value
+            if variant == "state_past":
+                out.append(({"plant_state": past}, {}))
+            elif variant == "state_oracle":
+                out.append(({"plant_state": past}, {"plant_state": state[fut, j]}))
+            else:
+                raise KeyError(variant)
+    return out
+
+
+def run_plant(
+    threads: int = 8,
+    limit_origins: int | None = None,
+    variants: tuple[str, ...] = PLANT_VARIANTS,
+    tag: str = "",
+) -> pd.DataFrame:
+    """Chronos-2 with knowledge of the plant: a flag for on-site generation that the model can
+    compare across the sites of a batch, and the state of the plant (past only, and with the
+    target day as an upper bound)."""
+    config, panel = setup()
+    origins = poc.make_origins(
+        panel, config, config["test_start"], config["test_end"], int(config["origin_stride_days"])
+    )
+    if limit_origins:
+        origins = origins[:limit_origins]
+    pipe = _pipe(threads)
+    frames = []
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for variant in variants:
+        cross = variant.startswith("cross")
+        windows = plant_windows(panel, origins, config, variant)
+        batch = CROSS_BATCH if cross else 32
+        frames.append(_run(pipe, panel, origins, config, f"plant_{variant}", windows, batch, cross))
+        pd.concat(frames, ignore_index=True).to_parquet(
+            OUT_DIR / f"forecasts_plant{tag}.partial.parquet", index=False
+        )
+    out = pd.concat(frames, ignore_index=True)
+    out.to_parquet(OUT_DIR / f"forecasts_plant{tag}.parquet", index=False)
+    (OUT_DIR / f"forecasts_plant{tag}.partial.parquet").unlink(missing_ok=True)
     return out
