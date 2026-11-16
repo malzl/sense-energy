@@ -1,4 +1,5 @@
-% Kickoff deck: what we found so far, in five questions, each finding with a grade.
+% Kickoff deck: two slides. The project as a forecasting problem, and the policy angle with
+% the questions. The earlier, longer versions follow as backup slides (\backuptrue).
 % Build with build.sh (pdfLaTeX, two passes). Text follows ASD-STE100 Simplified Technical English.
 % Look: the Oxford / SENSE slide template (Oxford blue, serif titles, Helvetica text).
 % Slide size 160 x 90 mm. Figures come from code/scripts/deck/ at their exact size on the slide.
@@ -15,8 +16,8 @@
 % ---- event line on the title slide: set the date when it is fixed ---------------------------
 \newcommand{\deckevent}{SENSE healthcare kickoff}
 \def\deckdate{}
-% ---- backup slides: the detail slides of the earlier versions (heat and cold events, the
-%      forecast, the first selection) -----------------------------------------------------------
+% ---- backup slides: the seven-slide version (findings map) and the detail slides of the
+%      earlier versions -------------------------------------------------------------------------
 % \backuptrue adds them after the discussion slide
 \newif\ifbackup
 \backupfalse
@@ -66,6 +67,19 @@
 \newcommand{\boxcol}[3]{% x, label, content
   \fill[shell] ([xshift=#1mm,yshift=-24mm]current page.north west) rectangle ++(45.4mm,-55.5mm);
   \node[anchor=north west,inner sep=0pt,outer sep=0pt] at ([xshift=#1mm+4mm,yshift=-28mm]current page.north west) {\parbox[t]{37.6mm}{{\bfseries\fontsize{8.6}{10}\selectfont\color{oxblue}#2}\par\vspace{2.6mm}{\fontsize{7.2}{9.6}\selectfont\color{charcoal}\raggedright #3}}};}
+% ---- the two-slide version: colours of the model terms, formula band, short bullets ----------
+\definecolor{cdemand}{HTML}{274EB3}   % demand, heating
+\definecolor{cweather}{HTML}{00AAB4}  % weather
+\definecolor{cmobility}{HTML}{B8961F} % mobility, lighting (darker than the chart yellow, for text)
+\definecolor{ccool}{HTML}{FB5607}     % forecast, cooling
+\newcommand{\term}[3]{\underbrace{\textcolor{#1}{#2}}_{\text{\fontsize{5.4}{6}\selectfont\color{#1}#3}}}
+\newcommand{\termz}[3]{\underbrace{\textcolor{#1}{#2}}_{\makebox[0pt]{\fontsize{5.4}{6}\selectfont\color{#1}#3}}}% label without width
+\newcommand{\formulaband}[3]{% y, height, content
+  \fill[shell] ([xshift=7.2mm,yshift=-#1mm]current page.north west) rectangle ++(91.2mm,-#2mm);
+  \node[anchor=center,inner sep=0pt] at ([xshift=52.8mm,yshift=-#1mm-0.5*#2mm]current page.north west) {#3};}
+\newcommand{\tbul}[1]{\par\hangindent=3.1mm\hangafter=1\noindent\makebox[3.1mm][l]{\raisebox{0.45mm}{\color{oxblue}\rule{0.95mm}{0.95mm}}}#1\par\vspace{0.7mm}}
+\newcommand{\qst}[2]{\par\hangindent=5mm\hangafter=1\noindent\makebox[5mm][l]{\bfseries\color{oxblue}#1}#2\par\vspace{1.1mm}}
+
 % grade marks: solid (filled), indicative (outline), scenario (outline, turned)
 \DeclareRobustCommand{\gsolid}{\raisebox{0.35mm}{\color{oxblue}\rule{1.25mm}{1.25mm}}}
 \DeclareRobustCommand{\gind}{\raisebox{0.35mm}{\tikz[baseline=0pt]{\draw[oxblue,line width=0.45pt] (0,0) rectangle (1.25mm,1.25mm);}}}
@@ -82,7 +96,56 @@
 \begin{document}
 
 % =============================================================================================
-% 1  Title
+% 1  The forecasting problem
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{SENSE healthcare kickoff \enspace·\enspace NHS site energy \enspace·\enspace started in November 2026}
+       {NHS hospital energy demand as a forecasting problem}
+       {Professor Siddharth Arora and Nicolas Malz, Saïd Business School. An early-stage project: this is the set-up, not results.}
+  \fig{7.2}{24.4}{problem_panel}
+  \formulaband{68.2}{12.2}{\fontsize{8}{10}\selectfont\color{charcoal}$\displaystyle
+    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.2mm}\termz{cdemand}{y_{s,\le t}}{past demand}\,,\hspace{8.5mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.2mm}\Big)$}
+  \at{7.2}{81.3}{{\fontsize{4.6}{6}\selectfont\color{ash}One site, eight days in 2024 (indices). Dashed line: time of the forecast. Mobility data: The Oxford Partnership.}}
+  \textcol{%
+    \blk{The data}{%
+      \tbul{Electricity: 134 NHS sites, each half-hour}
+      \tbul{Weather: observed and forecast}
+      \tbul{Mobility: visitors per day}
+      \tbul{Registers: estates data, certificates}}
+    \blk{The problem}{For each site $s$, forecast the demand $y$ of the next day: 48 half-hours $h$, with the uncertainty.}
+    \blk{Why a forecast}{A forecast is a strict test. A model that predicts new days has learned what drives the demand of a site.}}
+  \at{7.2}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace Smart Energy Data Service (SENSE)}}
+  \atr{152.8}{84.0}{{\bfseries\fontsize{5.4}{6}\selectfont\color{oxblue}\insertframenumber}}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 2  The policy angle and the questions
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{The policy angle}
+       {Which hospitals benefit from which retrofit?}
+       {The same model divides the demand of each site into a base load and the parts that follow cold, heat and daylight.}
+  \formulaband{24.6}{12.6}{\fontsize{6.3}{9}\selectfont\color{charcoal}$\displaystyle
+    y_{s,t} \,=\, \hspace{1.4mm}\termz{ash}{b_{s,t}}{base load}\hspace{1.4mm}
+    \,+\, \term{cdemand}{\beta^{\mathrm{H}}_{s}\,(T_{\mathrm{H}}-T_{s,t})^{+}}{heating}
+    \,+\, \term{ccool}{\beta^{\mathrm{C}}_{s}\,(T_{s,t}-T_{\mathrm{C}})^{+}}{cooling}
+    \,+\, \term{cmobility}{\beta^{\mathrm{L}}_{s}\,(1-D_{s,t})}{lighting}
+    \,+\, \varepsilon_{s,t}$}
+  \fig{7.2}{38.4}{retrofit_maps}
+  \at{7.2}{78.9}{\parbox[t]{91mm}{\fontsize{4.6}{5.8}\selectfont\color{ash}$T$: outdoor temperature. $D$: daylight. The base load $b$ includes the calendar and the activity. Maps: an illustration with first estimates for 83 sites. A larger circle shows a site whose electricity follows cold, heat or daylight more.}}
+  \textcol{%
+    \blk{Why it matters}{The NHS must reach net zero, and the money for retrofits is limited. Site surveys are slow. Meter data can show, for each site, where heating, cooling or lighting uses the most energy.}
+    \blk{Questions}{%
+      \qst{Q1}{How much of the demand of a site is heating, cooling and lighting?}
+      \qst{Q2}{Which sites benefit most from which retrofit?}
+      \qst{Q3}{Does a retrofit give the expected saving? Can the meter show it?}
+      \qst{Q4}{What do weather forecasts and mobility data add?}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% Backup slides: the seven-slide version of 16 November (findings map), then the detail slides of
+% the earlier versions. Set \backuptrue at the top to add them.
+\ifbackup
+% Backup: title slide of the seven-slide version
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \fill[oxblue] ([xshift=98.4mm]current page.north west) rectangle (current page.south east);
   \fig{101.2}{5.5}{cover_sites}
@@ -97,8 +160,7 @@
   \putlogo{sense_logo}{48}{74}
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 2  Overview: the findings map
+% Backup: overview, the findings map
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Overview}
        {Five questions, and how sure we are of each answer}
@@ -125,8 +187,7 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 3  Question 2: drivers
+% Backup: question 2, drivers
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Question 2 \enspace·\enspace drivers \enspace·\enspace \gsolid\ solid}
        {The weather changes the demand. Patient activity does not}
@@ -142,8 +203,7 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 4  Question 3: sites
+% Backup: question 3, sites
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Question 3 \enspace·\enspace sites \enspace·\enspace \gsolid\ solid, \gind\ indicative for sites with a plant}
        {The reaction belongs to the site, not to the region}
@@ -159,8 +219,7 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 5  Question 4: forecast
+% Backup: question 4, forecast
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Question 4 \enspace·\enspace forecast \enspace·\enspace \gsolid\ solid}
        {The forecast is stable for 4 years, but loses value in heat waves}
@@ -176,8 +235,7 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 6  Question 5: the future estate
+% Backup: question 5, the future estate
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Question 5 \enspace·\enspace future \enspace·\enspace \gscen\ scenario, \gind\ indicative field data}
        {Scenario: heat pumps put half of the sites above capacity}
@@ -192,8 +250,7 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 7  Discussion
+% Backup: discussion
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Discussion}
        {Facts, open points and questions for this session}
@@ -216,9 +273,6 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% Backup slides: the detail slides of the earlier versions. Set \backuptrue at the top to add them.
-\ifbackup
 % Backup: Finding 1: time
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Detail \enspace·\enspace heat and cold events \enspace·\enspace time}
