@@ -1,0 +1,32 @@
+{
+  "models": [
+    "chronos2",
+    "chronos2_ifs",
+    "seasonal_naive"
+  ],
+  "best": "chronos2_ifs",
+  "site_days": 103786,
+  "days": 1201,
+  "whole_record": {
+    "sites": 91.0,
+    "site_days": 103786.0,
+    "days": 1201.0,
+    "nmae_pct": 11.17,
+    "nmae_lo": 9.99,
+    "nmae_hi": 12.29,
+    "naive_nmae_pct": 17.7,
+    "skill_pct": 34.82,
+    "captured_point_pct": 52.38,
+    "captured_lo": 47.74,
+    "captured_hi": 57.54,
+    "captured_q70_pct": 54.93,
+    "captured_level_pct": 62.1,
+    "plant_error_share_pct": 77.68,
+    "plant_demand_share_pct": 48.32,
+    "top3_error_share_pct": 55.36,
+    "large_step_day_share_pct": 5.57,
+    "large_step_error_share_pct": 37.56,
+    "plant_large_step_day_share_pct": 1.52,
+    "plant_large_step_error_share_pct": 36.69
+  }
+}

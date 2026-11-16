@@ -1,0 +1,5026 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What we found so far: the findings map · SENSE energy</title>
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="wrap">
+<nav class="site">
+  <a href="index.html">SENSE energy: documentation</a>
+  <a href="clustering.html">Structure of the demand data: shape clusters of meters, sites and trusts</a>
+  <a href="data_dictionary.html">Data dictionary</a>
+  <a href="data_governance.html">Data governance</a>
+  <a href="data_manifest.html">Data manifest - processed demand datasets</a>
+  <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
+  <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
+  <a href="extreme_events.html">Heat waves and cold spells at the sites: the reaction, when, where, and what explains it</a>
+  <a href="findings_map.html" class="current">What we found so far: the findings map</a>
+  <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
+  <a href="forecast_error_anatomy.html">Where the day-ahead error sits, and what can remove it</a>
+  <a href="heat_cold_wave_paper_check.html">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
+  <a href="methodology.html">Methodology</a>
+  <a href="poc_results.html">Proof of concept: day-ahead electricity demand at NHS sites</a>
+  <a href="project_brief.html">Project brief</a>
+  <a href="weather_and_cooling.html">Cooling need, extreme-weather events and the demand response</a>
+  <a href="weather_normalised_estate.html">The weather-normalised estate: savings, warming, heatwaves, solar and CHP dispatch</a>
+
+  <div class="toc"><a class="h2" href="#the-five-questions-in-short">The five questions in short</a>
+  <a class="h2" href="#1-can-we-trust-the-data">1. Can we trust the data?</a>
+  <a class="h2" href="#2-what-changes-the-demand-of-a-site">2. What changes the demand of a site?</a>
+  <a class="h2" href="#3-why-do-sites-differ">3. Why do sites differ?</a>
+  <a class="h2" href="#4-how-good-is-a-day-ahead-forecast-and-what-is-it-worth">4. How good is a day-ahead forecast, and what is it worth?</a>
+  <a class="h2" href="#5-what-changes-when-the-estate-changes">5. What changes when the estate changes?</a>
+  <a class="h2" href="#6-the-audit-of-the-event-findings">6. The audit of the event findings</a>
+  <a class="h2" href="#7-the-forecast-on-the-whole-record">7. The forecast on the whole record</a>
+  <a class="h2" href="#8-what-this-page-changes">8. What this page changes</a>
+  </div>
+</nav>
+<main>
+<h1>What we found so far: the findings map</h1>
+<p>16 November 2026. This page puts every result of the project under one of five questions and
+gives each a grade. It is the entry point to the other pages, which were written thread by
+thread in the order the questions came up. The kickoff deck (<code>doc/kickoff_deck/</code>) follows it
+slide for slide.</p>
+<p>The grades:</p>
+<table>
+<thead>
+<tr>
+  <th>Grade</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Solid</strong></td>
+  <td>An interval that excludes zero, and a second, independent confirmation: another method, another period or sample, or a placebo or randomisation test. No known contradiction.</td>
+</tr>
+<tr>
+  <td><strong>Indicative</strong></td>
+  <td>The direction is supported, but by one method, one period or few sites, or the size moves with the analysis choices.</td>
+</tr>
+<tr>
+  <td><strong>Open</strong></td>
+  <td>Tested without a clear answer, or an interpretation that has not been tested.</td>
+</tr>
+<tr>
+  <td><strong>Scenario</strong></td>
+  <td>A calculation that depends on stated assumptions. Not a measurement.</td>
+</tr>
+</tbody>
+</table>
+<p>The checks behind the grades were run for this page (commands <code>event-audit</code> and
+<code>forecast-record</code>; sections 6 and 7): the event findings under 90 combinations of analysis
+choices and against 12 placebo runs, and the forecast findings on every day of the record
+(1,201 days) in place of the 69 test days.</p>
+<h2 id="the-five-questions-in-short">The five questions in short</h2>
+<table>
+<thead>
+<tr>
+  <th>Question</th>
+  <th>Answer</th>
+  <th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1. Can we trust the data?</td>
+  <td>134 sites with 3.4 years of half-hourly electricity; 92 have complete meter data; the meters reproduce the annual estates returns at 65 verified sites. At sites with on-site generation the meter shows grid import only.</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>2. What changes the demand of a site?</td>
+  <td>Temperature: +1.1 % per °C below 14 °C and +1.5 % per °C above 20 °C, carried over three days, heat in the evening. Patient activity: nothing measurable.</td>
+  <td>Solid (size of the heat effect: indicative)</td>
+</tr>
+<tr>
+  <td>3. Why do sites differ?</td>
+  <td>The reaction is a stable property of the site. Region and trust explain no more than chance; the registers explain the cold reaction in part (heating fuel) and the heat reaction hardly at all.</td>
+  <td>Solid; sites with a plant indicative</td>
+</tr>
+<tr>
+  <td>4. How good is a day-ahead forecast, and what is it worth?</td>
+  <td>A model with no training has 11.2 % error in every year, better than trained models. A battery that plans on it gets half of the achievable peak cut, and 40 % less on heat-wave days. Three quarters of the error sits at 12 sites with a plant.</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>5. What changes when the estate changes?</td>
+  <td>With heat pumps for all gas heat, 13 of 31 sites exceed their grid connection. Field data a year after installation: +8 points of electricity.</td>
+  <td>Scenario; field data indicative</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-can-we-trust-the-data">1. Can we trust the data?</h2>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Finding</th>
+  <th>Number</th>
+  <th>Evidence</th>
+  <th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1.1</td>
+  <td>The panel</td>
+  <td>134 sites with half-hourly electricity, 7 December 2022 to 8 May 2026; 92 with complete meter data, 42 flagged (35 with meter gaps)</td>
+  <td>coverage rule, <code>estates_analysis.md</code> §1</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>1.2</td>
+  <td>The meters reproduce the estates returns</td>
+  <td>annual ratio median 1.00 (quartiles 0.98 to 1.00), peak ratio 1.00 (0.95 to 1.03), at the 65 sites that verify, of 114 matched</td>
+  <td>the 65 are those within 0.65 to 1.5 of the return; the agreement inside that window is far tighter than the window</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>1.3</td>
+  <td>At sites with a plant the meter shows grid import only</td>
+  <td>9.2 MW of import against 23.3 MW of implied demand at 20 sites: 40 %</td>
+  <td>arithmetic on the 2024/25 return; three unit errors found in the returns</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>1.4</td>
+  <td>The temperatures are good enough</td>
+  <td>ERA5 against 76 stations: daily mean within 0.62 °C; 0.9 °C too cool on hot days; every weather effect is the same with three temperature sources</td>
+  <td><code>weather_and_cooling.md</code> §6</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>1.5</td>
+  <td>Public patient-activity data stop at the trust and the month</td>
+  <td>A&amp;E monthly for 18 of 24 trusts, beds quarterly</td>
+  <td>source survey; the daily winter reports need a manual download</td>
+  <td>Solid</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-what-changes-the-demand-of-a-site">2. What changes the demand of a site?</h2>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Finding</th>
+  <th>Number</th>
+  <th>Evidence</th>
+  <th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>2.1</td>
+  <td>Cold raises demand</td>
+  <td>+1.1 % per °C below 14 °C (0.7 to 1.5). In a cold spell, 6.7 °C colder than the reference days: +11 % (9 to 13)</td>
+  <td>fixed effects with date effects; weather reassigned between sites at random: 0 of 200 as large; three temperature sources; neighbours' weather adds nothing. Event measure: 9 to 17 % over 90 sets of choices, every interval clear of zero; 12 placebo runs give −2 to +6 %</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>2.2</td>
+  <td>Heat raises demand</td>
+  <td>+1.5 % per °C above 20 °C (0.2 to 2.8); +1.8 (0.5 to 3.2) with sunshine held fixed. In a heat wave: +5.7 % (2.6 to 8.7)</td>
+  <td>randomisation: 6 of 200 as large; three temperature sources give 1.4 to 2.3. Event measure: 3.5 to 6.8 % over 90 sets of choices, every interval clear of zero; placebo runs −2.5 to +2.3 %</td>
+  <td>Direction solid; size indicative</td>
+</tr>
+<tr>
+  <td>2.3</td>
+  <td>Heat acts in the afternoon and evening, cold all day</td>
+  <td>heat-wave days: +9 % from 16:00 to 22:00, +1 % from 08:00 to 12:00; cold-spell days: +9 to +13 % at every hour</td>
+  <td>three analyses agree: by block of the day (+2.4 % per °C in the afternoon, +0.3 % at night), by hour (3.3 % per °C at 16:00), and the event days. Evening minus morning: 5.9 to 9.0 points over 90 sets of choices; placebo −2.3 to +2.3</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>2.4</td>
+  <td>The temperature acts over several days</td>
+  <td>per °C colder: 0.76 % today, 0.51 % from the day before, 0.11 and 0.18 from the two days before that, 1.6 % together. Per °C of daily maximum above 24 °C: 0.54, 0.72, 0.21, 0.15, 1.6 % together</td>
+  <td>fixed effects earlier: the same day and one day of carry-over. Event measure: the reaction from the third day of a heat wave is 4.4 points above the first day (2.1 to 6.8; clear in all 90 sets of choices; placebo −3.6 to +3.4)</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>2.5</td>
+  <td>An event is no more than its temperatures</td>
+  <td>with the temperatures of the day and of the three days before, nothing is left for &quot;the third day of an event&quot;: heat +0.4 points (−1.3 to +2.0), cold +0.3 (−0.9 to +1.5). With the day's temperature alone: +2.7 (1.1 to 4.4) and +2.2 (0.9 to 3.5)</td>
+  <td>fixed effects earlier: no extra reaction on days of 30 °C and more (−1.5 %, −4.3 to +1.3)</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>2.6</td>
+  <td>Patient activity does not change electricity demand</td>
+  <td>doctor strikes: −0.4 % from 08:00 to 18:00 (−1.6 to +0.8), 34 weekdays, 132 sites. Visitors: elasticity 0.00 at three sites; a forecast that is given the true visitor count is no better (+0.006 points, −0.012 to +0.024). Occupied beds by quarter: correlation −0.04, 19 trusts</td>
+  <td>four tests with different data; placebo week next to the strikes</td>
+  <td>Solid for electricity</td>
+</tr>
+<tr>
+  <td>2.7</td>
+  <td>Sunshine lowers the import</td>
+  <td>−0.7 % per kWh/m² of daily sunshine; 44 of 83 sites</td>
+  <td>one analysis; no interval on the pooled value</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>2.8</td>
+  <td>Tomorrow's heat already raises today's demand</td>
+  <td>+0.45 % per °C (−0.15 to +1.04)</td>
+  <td>anticipation, or error in the temperature of a site; not separated</td>
+  <td>Open</td>
+</tr>
+</tbody>
+</table>
+<p>Tested and rejected on the way: that the nights of the previous days make the heat build up
+(the day maxima of the previous days do; with night temperatures alone the third-day term stays
+at +2.2 points, 0.4 to 3.9); that strike days or visitor numbers mark days that are hard to
+forecast.</p>
+<h2 id="3-why-do-sites-differ">3. Why do sites differ?</h2>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Finding</th>
+  <th>Number</th>
+  <th>Evidence</th>
+  <th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>3.1</td>
+  <td>Sites differ far beyond noise, for heat even in sign</td>
+  <td>heat slope from −3.0 to +5.4 % per °C across the middle 80 % of sites; 94 to 97 % of the spread is real; 33 sites rise with heat and 21 fall, of 83 with complete meters</td>
+  <td>standard errors corrected on 9 November (they were 1.7 to 3.2 times too small)</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>3.2</td>
+  <td>The reaction belongs to the site, not to the place</td>
+  <td>the region accounts for 9 % (heat) and 5 % (cold) of the differences between sites, chance gives 8 % and 7 %; trusts are at chance too; neighbours do not react alike while their weather does</td>
+  <td>region above chance in 0 % (heat) and 6 % (cold) of the 90 sets of choices, as the placebo runs</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>3.3</td>
+  <td>A site's past events predict its next one</td>
+  <td>error of the predicted reaction: 9.6 points from the other sites in the event, 9.9 from the other sites of the region, 6.7 from the site's own other events (heat); 10.8, 11.2 and 8.5 (cold). The site's other events explain 50 % (heat) and 67 % (cold)</td>
+  <td>36 to 59 % and 49 to 67 % over the middle half of the 90 sets of choices; placebo runs at most 22 %</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>3.4</td>
+  <td>The cold reaction follows the heating fuel</td>
+  <td>a site with a standard deviation more gas per unit of electricity reacts 0.5 points per °C less (0.2 to 0.8); in cold spells 3.9 points less (1.1 to 6.6)</td>
+  <td>two measures, two samples (87 and 53 sites); a mechanism</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>3.5</td>
+  <td>The registers do not explain the heat reaction</td>
+  <td>estates descriptors: none of the real spread; certificate fields: 0 to 9 %; gas ratio 11 %</td>
+  <td>two measures. The site's own daily profile explains 45 % in sample and 30 to 50 % out of sample: indicative</td>
+  <td>Solid (that the registers do not)</td>
+</tr>
+<tr>
+  <td>3.6</td>
+  <td>Sites that fall on hot days are small buildings with a heating tail</td>
+  <td>21 of 83 sites with 8 % of the demand; they fall as much with warm nights as with hot afternoons</td>
+  <td>the mechanism is a reading</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>3.7</td>
+  <td>At sites with a plant, the meter multiplies every change in demand</td>
+  <td>import in heat waves +25 % (9 to 42) against +6 % elsewhere, 12 sites. The plant supplies about 70 % of the demand, so a demand reaction like that of the other sites, with the plant unchanged, gives +17 to +23 % at the meter</td>
+  <td>14 to 31 % over 90 sets of choices, but placebo runs reach +18 %. Earlier pages: +32 % on days of 24 °C and more (23 sites), +12 % in the 2025 heat waves (17 sites)</td>
+  <td>Direction solid; size and mechanism indicative</td>
+</tr>
+<tr>
+  <td>3.8</td>
+  <td>In cold spells the plants give more output; in heat waves a change is not established</td>
+  <td>cold: import +4 % where +15 to +32 % is expected with the plant unchanged, so output +5 to +18 % at the six plants that follow heat. Heat: output −3 to −7 % at those plants (−15 to +6)</td>
+  <td>output is the yearly mean of the estates return, not a measurement; two assumptions for the demand reaction</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>3.9</td>
+  <td>Three shapes of the day; the use of a site sets its shape</td>
+  <td>64 flat sites, 44 moderate, 21 office-like, 2 night-heavy</td>
+  <td>descriptive; the number of groups is a judgement</td>
+  <td>Indicative</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-how-good-is-a-day-ahead-forecast-and-what-is-it-worth">4. How good is a day-ahead forecast, and what is it worth?</h2>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Finding</th>
+  <th>Number</th>
+  <th>Evidence</th>
+  <th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>4.1</td>
+  <td>A model with no training beats the trained models</td>
+  <td>11.5 % error against 13.0 % for the gradient-boosted model (−1.5 points, −1.9 to −1.1), 13.7 % for a neural process trained on the panel and 18.4 % for the same day last week, on the 69 test days</td>
+  <td>on every day of the record: 11.2 % (10.0 to 12.3), and 11.0 to 11.5 % in the four years, against 17.7 % for the same day last week</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>4.2</td>
+  <td>Calendar, price and the weather forecast add 0.7 points; the weather forecast is as good as the observed weather</td>
+  <td>−0.65 points (−1.07 to −0.38); forecast against observed weather +0.05 (0.01 to 0.08)</td>
+  <td>whole record: 11.2 % against 11.8 % without inputs</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>4.3</td>
+  <td>The error sits at the sites with a plant</td>
+  <td>78 % of the error at 12 sites with 48 % of the metered demand, in every year (73 to 79 %); three sites hold 55 %</td>
+  <td>half of it is their size; days with a step larger than the site's mean import are 1.5 % of site-days and hold 37 % of the error</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>4.4</td>
+  <td>A battery that plans on the forecast gets half of the achievable peak cut</td>
+  <td>52 % (48 to 58) on the whole record, 52 to 57 % in the four years; same day last week: 39 %</td>
+  <td>depends on the storage: 43 % with one hour, 65 % with four; not on the power</td>
+  <td>Solid for a two-hour battery</td>
+</tr>
+<tr>
+  <td>4.5</td>
+  <td>Heat-wave days cost value, not accuracy</td>
+  <td>captured peak cut 27 % on heat-wave days against 45 % on the other days of the same site and month (−18.4 points, −27.7 to −10.0); error 12.1 % against 11.8 % (0.4 points, −0.5 to 1.3)</td>
+  <td>summer 2023: −21.2 points, −28.5 to −11.8; summer 2025: −18.4 points, −28.5 to −10.3; with the site's own percentiles: −13.0 points, −18.8 to −8.1; with each of five batteries the heat-wave days keep 57 to 70 % of what the other days get</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>4.6</td>
+  <td>Cold spells do not clearly cost value</td>
+  <td>captured peak cut 55 % on cold-spell days against 57 % on the other days of the same site and month (−1.1 points, −4.3 to 1.8); clear in 0 of 4 winters</td>
+  <td>the earlier figure (44 % against 53 %) came from the one winter of the test year</td>
+  <td>Withdrawn</td>
+</tr>
+<tr>
+  <td>4.7</td>
+  <td>Knowing that a site has a plant does not help; knowing when it runs would</td>
+  <td>a flag: +0.02 points (−0.18 to +0.21). The state of the plant on the target day: 16.5 to 12.5 % at the plant sites</td>
+  <td>the state signal is made from the import itself: an upper bound</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>4.8</td>
+  <td>Visitor counts add nothing to the forecast</td>
+  <td>+0.006 points (−0.012 to +0.024)</td>
+  <td>two sites; agrees with 2.6</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>4.9</td>
+  <td>Coherent forecasts across meters, sites and trusts improve the national total</td>
+  <td>8.0 to 6.8 %</td>
+  <td>no interval; 61 test days</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>4.10</td>
+  <td>A published method for heat and cold waves (Lu et al. 2026) is level with the zero-shot model</td>
+  <td>11 % behind in Europe, 6.5 % ahead in PJM</td>
+  <td>the paper's own public data; one seed</td>
+  <td>Indicative</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-what-changes-when-the-estate-changes">5. What changes when the estate changes?</h2>
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Finding</th>
+  <th>Number</th>
+  <th>Evidence</th>
+  <th>Grade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>5.1</td>
+  <td>Heat pumps for all gas heat put sites above their grid connection</td>
+  <td>13 of 31 panel sites; 48 % of 631 sites in England</td>
+  <td>assumes all gas heat replaced, a seasonal performance factor of 2.55, boiler efficiency 0.85</td>
+  <td>Scenario</td>
+</tr>
+<tr>
+  <td>5.2</td>
+  <td>The choice of winter hardly matters</td>
+  <td>10 to 15 of 31 sites in the last 30 winters, 14 in a one-in-twenty winter, 19 in 1962/63</td>
+  <td>66 weather years on the same scenario</td>
+  <td>Scenario</td>
+</tr>
+<tr>
+  <td>5.3</td>
+  <td>A year after heat pumps, sites use more electricity</td>
+  <td>+8.3 points (3.5 to 14.6), 23 sites; gas −9.4 points (−21 to +7, not clear); performance factor 2.8 at 13 clean switches (1.3 to 7.4)</td>
+  <td>estates returns, coarse; the field suggests that about a tenth of the gas is replaced, not all of it</td>
+  <td>Indicative</td>
+</tr>
+<tr>
+  <td>5.4</td>
+  <td>Hospitals use rooftop solar themselves</td>
+  <td>all of it up to 1 kWp per kW of mean demand</td>
+  <td>assumed performance ratio</td>
+  <td>Scenario</td>
+</tr>
+<tr>
+  <td>5.5</td>
+  <td>A battery earns £23 per kWh a year on wholesale prices</td>
+  <td>£88 to £96 on an Agile-type tariff</td>
+  <td>perfect price foresight, no degradation</td>
+  <td>Scenario</td>
+</tr>
+<tr>
+  <td>5.6</td>
+  <td>Warming lowers annual electricity</td>
+  <td>−1.2 % at +4 °C</td>
+  <td>uniform shift, fixed response</td>
+  <td>Scenario</td>
+</tr>
+<tr>
+  <td>5.7</td>
+  <td>LED lighting saves electricity</td>
+  <td>−0.6 % per ten points of LED share (−1.2 to 0.0)</td>
+  <td>p = 0.05, 59 sites</td>
+  <td>Open</td>
+</tr>
+<tr>
+  <td>5.8</td>
+  <td>Solar and heat-pump installations show at the meter</td>
+  <td>3 of the 4 sites with reported solar</td>
+  <td>8 downward breaks among 107 sites, and upward ones as large</td>
+  <td>Indicative</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-the-audit-of-the-event-findings">6. The audit of the event findings</h2>
+<p><code>event-audit</code> (<code>analysis/event_audit.py</code>, tables in <code>code/reports/event_audit/</code>).</p>
+<p><strong>Ninety sets of choices.</strong> Five sets of reference weeks, three definitions of an event (the
+catalogue, heat thresholds one degree lower, the site's own 5th and 95th percentiles), three
+site samples (complete meters, all 134 sites, the 91 forecast sites), holidays in or out.
+<strong>Twelve placebo runs.</strong> The catalogue's events moved by five to eight weeks and by one and two
+years; a reaction on those days is a fault of the measure or chance.</p>
+<figure class="single"><img src="figures/specification_curve_reaction.png" alt="specification_curve_reaction" loading="lazy"><figcaption>The reaction of the sites without on-site generation under each of the 90 sets of choices (small points, in order of size), the baseline with its interval (large point) and the range of the placebo runs (grey band). <code>specification_curve_reaction</code> <a href="figures/specification_curve_reaction.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/specification_curve_build_up.png" alt="specification_curve_build_up" loading="lazy"><figcaption>The reaction from the third day of an event minus that of the first day. <code>specification_curve_build_up</code> <a href="figures/specification_curve_build_up.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/specification_curve_evening.png" alt="specification_curve_evening" loading="lazy"><figcaption>Evening (16:00 to 22:00) minus morning (08:00 to 12:00). <code>specification_curve_evening</code> <a href="figures/specification_curve_evening.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/specification_curve_plant.png" alt="specification_curve_plant" loading="lazy"><figcaption>Sites with a plant minus the others. For heat waves every set of choices gives a clear difference, but the placebo band reaches most of it. <code>specification_curve_plant</code> <a href="figures/specification_curve_plant.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/specification_curve_region.png" alt="specification_curve_region" loading="lazy"><figcaption>Share of the differences between sites that the region explains, above chance. The baseline, the 90 sets of choices and the placebo runs all sit around zero. <code>specification_curve_region</code> <a href="figures/specification_curve_region.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/specification_curve_own_events.png" alt="specification_curve_own_events" loading="lazy"><figcaption>Share of a site's reaction that its other events explain. <code>specification_curve_own_events</code> <a href="figures/specification_curve_own_events.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>metric</th>
+      <th>type</th>
+      <th>baseline</th>
+      <th>baseline_lo</th>
+      <th>baseline_hi</th>
+      <th>specifications</th>
+      <th>min</th>
+      <th>median</th>
+      <th>max</th>
+      <th>same_sign_share</th>
+      <th>interval_excludes_zero_share</th>
+      <th>placebo_n</th>
+      <th>placebo_min</th>
+      <th>placebo_mean</th>
+      <th>placebo_max</th>
+      <th>placebo_as_large</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>build-up per degree</td>
+      <td>cold spell</td>
+      <td>0.42</td>
+      <td>0.1</td>
+      <td>0.73</td>
+      <td>90</td>
+      <td>-0.26</td>
+      <td>0.42</td>
+      <td>0.84</td>
+      <td>0.92</td>
+      <td>0.7</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>build-up per degree</td>
+      <td>heatwave</td>
+      <td>0.44</td>
+      <td>0.17</td>
+      <td>0.72</td>
+      <td>90</td>
+      <td>0.28</td>
+      <td>0.58</td>
+      <td>0.82</td>
+      <td>1</td>
+      <td>0.98</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>degrees, no plant</td>
+      <td>cold spell</td>
+      <td>6.72</td>
+      <td>6.58</td>
+      <td>6.85</td>
+      <td>90</td>
+      <td>6.04</td>
+      <td>6.81</td>
+      <td>7.82</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-0.71</td>
+      <td>0.51</td>
+      <td>1.79</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>degrees, no plant</td>
+      <td>heatwave</td>
+      <td>7.97</td>
+      <td>7.8</td>
+      <td>8.14</td>
+      <td>90</td>
+      <td>5.72</td>
+      <td>7</td>
+      <td>8.51</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-1.95</td>
+      <td>-0.04</td>
+      <td>0.69</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>evening minus morning</td>
+      <td>cold spell</td>
+      <td>-0.97</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>-4.69</td>
+      <td>-1.14</td>
+      <td>-0.02</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>-1.75</td>
+      <td>-0.48</td>
+      <td>0.93</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>evening minus morning</td>
+      <td>heatwave</td>
+      <td>8.35</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>5.87</td>
+      <td>7.8</td>
+      <td>9.02</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>-2.32</td>
+      <td>0.05</td>
+      <td>2.3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>event days, no plant</td>
+      <td>cold spell</td>
+      <td>2553</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>1113</td>
+      <td>3152</td>
+      <td>4542</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>692</td>
+      <td>2307.92</td>
+      <td>3711</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>event days, no plant</td>
+      <td>heatwave</td>
+      <td>782</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>771</td>
+      <td>1640</td>
+      <td>3491</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>332</td>
+      <td>652.25</td>
+      <td>792</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>other events r2</td>
+      <td>cold spell</td>
+      <td>67.22</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>14.04</td>
+      <td>58.93</td>
+      <td>77.33</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>0.01</td>
+      <td>7.72</td>
+      <td>21.61</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>other events r2</td>
+      <td>heatwave</td>
+      <td>49.78</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>0.03</td>
+      <td>50.44</td>
+      <td>74.96</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>0.25</td>
+      <td>5.26</td>
+      <td>19.02</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>plant minus no plant</td>
+      <td>cold spell</td>
+      <td>-3.36</td>
+      <td>-11.97</td>
+      <td>5.26</td>
+      <td>90</td>
+      <td>-11.56</td>
+      <td>-3.93</td>
+      <td>3.45</td>
+      <td>0.98</td>
+      <td>0.06</td>
+      <td>12</td>
+      <td>-1.19</td>
+      <td>3.96</td>
+      <td>12.5</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>plant minus no plant</td>
+      <td>heatwave</td>
+      <td>19.5</td>
+      <td>4.49</td>
+      <td>34.5</td>
+      <td>90</td>
+      <td>9.99</td>
+      <td>17.57</td>
+      <td>25.07</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-5.13</td>
+      <td>3.8</td>
+      <td>17.09</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>reaction, no plant</td>
+      <td>cold spell</td>
+      <td>11.14</td>
+      <td>8.85</td>
+      <td>13.43</td>
+      <td>90</td>
+      <td>9.4</td>
+      <td>12.09</td>
+      <td>16.89</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-2.04</td>
+      <td>2.13</td>
+      <td>5.5</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>reaction, no plant</td>
+      <td>heatwave</td>
+      <td>5.65</td>
+      <td>2.64</td>
+      <td>8.65</td>
+      <td>90</td>
+      <td>3.46</td>
+      <td>5.24</td>
+      <td>6.77</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-2.5</td>
+      <td>0.27</td>
+      <td>2.34</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>reaction, plant</td>
+      <td>cold spell</td>
+      <td>7.79</td>
+      <td>-1.46</td>
+      <td>17.03</td>
+      <td>90</td>
+      <td>0.84</td>
+      <td>8.08</td>
+      <td>18.06</td>
+      <td>1</td>
+      <td>0.34</td>
+      <td>12</td>
+      <td>-1.32</td>
+      <td>6.1</td>
+      <td>15.79</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>reaction, plant</td>
+      <td>heatwave</td>
+      <td>25.14</td>
+      <td>8.62</td>
+      <td>41.67</td>
+      <td>90</td>
+      <td>14.11</td>
+      <td>22.86</td>
+      <td>31.06</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-4.28</td>
+      <td>4.07</td>
+      <td>18.5</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>region p</td>
+      <td>cold spell</td>
+      <td>0.78</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>0.02</td>
+      <td>0.38</td>
+      <td>0.83</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>0.05</td>
+      <td>0.5</td>
+      <td>0.97</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>region p</td>
+      <td>heatwave</td>
+      <td>0.46</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>0.13</td>
+      <td>0.48</td>
+      <td>0.96</td>
+      <td>1</td>
+      <td></td>
+      <td>12</td>
+      <td>0.1</td>
+      <td>0.49</td>
+      <td>0.94</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>region share minus chance</td>
+      <td>cold spell</td>
+      <td>-3.51</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>-3.51</td>
+      <td>0.55</td>
+      <td>7.65</td>
+      <td>0.39</td>
+      <td></td>
+      <td>12</td>
+      <td>-6.9</td>
+      <td>-0.27</td>
+      <td>10.12</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>region share minus chance</td>
+      <td>heatwave</td>
+      <td>-0.34</td>
+      <td></td>
+      <td></td>
+      <td>90</td>
+      <td>-5.49</td>
+      <td>-0.57</td>
+      <td>4.55</td>
+      <td>0.57</td>
+      <td></td>
+      <td>12</td>
+      <td>-6.71</td>
+      <td>-0.28</td>
+      <td>8.39</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>third day on minus first day</td>
+      <td>cold spell</td>
+      <td>4.26</td>
+      <td>2.12</td>
+      <td>6.39</td>
+      <td>90</td>
+      <td>-0.74</td>
+      <td>4.32</td>
+      <td>8.74</td>
+      <td>0.93</td>
+      <td>0.8</td>
+      <td>12</td>
+      <td>-3.86</td>
+      <td>-1.08</td>
+      <td>2.19</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>third day on minus first day</td>
+      <td>heatwave</td>
+      <td>4.4</td>
+      <td>2.06</td>
+      <td>6.75</td>
+      <td>90</td>
+      <td>3.21</td>
+      <td>4.76</td>
+      <td>6.89</td>
+      <td>1</td>
+      <td>1</td>
+      <td>12</td>
+      <td>-3.59</td>
+      <td>0.04</td>
+      <td>3.41</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/grid_summary.csv">code/reports/event_audit/grid_summary.csv</a> (22 rows shown)</p>
+
+<p><strong>Does a site's past predict its next event?</strong> Each site's reaction in each national event,
+predicted without that event (and without that site, for the means of other sites).</p>
+<figure class="single"><img src="figures/prediction.png" alt="prediction" loading="lazy"><figcaption>Error of four predictions of a site's reaction in an event that the prediction has not seen. Sites without on-site generation. <code>prediction</code> <a href="figures/prediction.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites</th>
+      <th>predictor</th>
+      <th>site_events</th>
+      <th>n_sites</th>
+      <th>mae_pts</th>
+      <th>median_ae_pts</th>
+      <th>r2_against_event_mean</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>no reaction</td>
+      <td>662</td>
+      <td>75</td>
+      <td>12.69</td>
+      <td>8.28</td>
+      <td>-0.42</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>the other sites in the event</td>
+      <td>662</td>
+      <td>75</td>
+      <td>10.84</td>
+      <td>8.03</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>the other sites of the region</td>
+      <td>662</td>
+      <td>75</td>
+      <td>11.21</td>
+      <td>8.19</td>
+      <td>-0.08</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>the site's other events</td>
+      <td>662</td>
+      <td>75</td>
+      <td>8.49</td>
+      <td>5.15</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>other sites and the site's other events</td>
+      <td>662</td>
+      <td>75</td>
+      <td>8.48</td>
+      <td>5.39</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>no reaction</td>
+      <td>113</td>
+      <td>13</td>
+      <td>17.27</td>
+      <td>6.95</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>the other sites in the event</td>
+      <td>113</td>
+      <td>13</td>
+      <td>21.64</td>
+      <td>12.09</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>the other sites of the region</td>
+      <td>113</td>
+      <td>13</td>
+      <td>23.24</td>
+      <td>11.21</td>
+      <td>-0.07</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>the site's other events</td>
+      <td>113</td>
+      <td>13</td>
+      <td>16.83</td>
+      <td>8.22</td>
+      <td>0.16</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>other sites and the site's other events</td>
+      <td>113</td>
+      <td>13</td>
+      <td>22.1</td>
+      <td>11.55</td>
+      <td>-0.06</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>no reaction</td>
+      <td>175</td>
+      <td>50</td>
+      <td>9.92</td>
+      <td>7.7</td>
+      <td>-0.09</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>the other sites in the event</td>
+      <td>175</td>
+      <td>50</td>
+      <td>9.61</td>
+      <td>7.29</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>the other sites of the region</td>
+      <td>175</td>
+      <td>50</td>
+      <td>9.85</td>
+      <td>7.34</td>
+      <td>-0.08</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>the site's other events</td>
+      <td>175</td>
+      <td>50</td>
+      <td>6.7</td>
+      <td>4.5</td>
+      <td>0.44</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>other sites and the site's other events</td>
+      <td>175</td>
+      <td>50</td>
+      <td>6.99</td>
+      <td>5.24</td>
+      <td>0.41</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>no reaction</td>
+      <td>45</td>
+      <td>12</td>
+      <td>25.71</td>
+      <td>16.35</td>
+      <td>-0.29</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>the other sites in the event</td>
+      <td>45</td>
+      <td>12</td>
+      <td>24.16</td>
+      <td>18.86</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>the other sites of the region</td>
+      <td>45</td>
+      <td>12</td>
+      <td>24.41</td>
+      <td>21.15</td>
+      <td>-0.02</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>the site's other events</td>
+      <td>45</td>
+      <td>12</td>
+      <td>16.3</td>
+      <td>8.57</td>
+      <td>0.33</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>other sites and the site's other events</td>
+      <td>45</td>
+      <td>12</td>
+      <td>20.77</td>
+      <td>14.17</td>
+      <td>0.17</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/prediction_scores.csv">code/reports/event_audit/prediction_scores.csv</a> (20 rows shown)</p>
+
+<p>The region is a worse guide than the national mean of the event. The site's own other events
+cut the error by a fifth (cold) to a third (heat). &quot;Two events are sufficient&quot;, a hypothesis of
+the earlier deck, is not supported: in date order the error keeps falling up to the fifth
+earlier event (12.1 to 10.0 points for cold spells on the same later events).</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites</th>
+      <th>earlier_events_used</th>
+      <th>site_events</th>
+      <th>mae_pts</th>
+      <th>mae_same_events_pts</th>
+      <th>same_events</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>0</td>
+      <td>662</td>
+      <td>10.84</td>
+      <td>12.05</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>1</td>
+      <td>587</td>
+      <td>10.72</td>
+      <td>12.3</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>2</td>
+      <td>512</td>
+      <td>10.41</td>
+      <td>11.42</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>3</td>
+      <td>437</td>
+      <td>9.68</td>
+      <td>10.67</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>4</td>
+      <td>371</td>
+      <td>9.44</td>
+      <td>10.24</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>5</td>
+      <td>305</td>
+      <td>10.04</td>
+      <td>10.04</td>
+      <td>305</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>0</td>
+      <td>113</td>
+      <td>21.64</td>
+      <td>32.52</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>1</td>
+      <td>100</td>
+      <td>24.18</td>
+      <td>34.66</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>2</td>
+      <td>87</td>
+      <td>25.98</td>
+      <td>34.65</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>3</td>
+      <td>74</td>
+      <td>26.76</td>
+      <td>33.26</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>4</td>
+      <td>61</td>
+      <td>28.67</td>
+      <td>32.6</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>5</td>
+      <td>48</td>
+      <td>33.54</td>
+      <td>33.54</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>0</td>
+      <td>189</td>
+      <td>9.88</td>
+      <td></td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>1</td>
+      <td>125</td>
+      <td>8.3</td>
+      <td></td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>2</td>
+      <td>75</td>
+      <td>8.68</td>
+      <td></td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>3</td>
+      <td>38</td>
+      <td>7.76</td>
+      <td></td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>4</td>
+      <td>20</td>
+      <td>8.99</td>
+      <td></td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>5</td>
+      <td>9</td>
+      <td>8.67</td>
+      <td></td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>0</td>
+      <td>45</td>
+      <td>24.16</td>
+      <td></td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>1</td>
+      <td>33</td>
+      <td>25.35</td>
+      <td></td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>2</td>
+      <td>21</td>
+      <td>18.49</td>
+      <td></td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>3</td>
+      <td>13</td>
+      <td>15.24</td>
+      <td></td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>4</td>
+      <td>8</td>
+      <td>14.53</td>
+      <td></td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>5</td>
+      <td>4</td>
+      <td>11.82</td>
+      <td></td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/prediction_curve.csv">code/reports/event_audit/prediction_curve.csv</a> (24 rows shown)</p>
+
+<p><strong>Is an event more than its temperatures?</strong> The daily reaction of the sites without on-site
+generation on the temperature of the day and of the three days before, each as a difference
+from the reference days; cold season on degrees of daily mean, warm season on degrees of daily
+maximum above 24 °C (heat acts above a threshold: the plain difference in the daily maximum
+explains nothing in the warm season).</p>
+<figure class="single"><img src="figures/lag_weights.png" alt="lag_weights" loading="lazy"><figcaption>The effect on today's demand of a degree today and of a degree one, two and three days before. <code>lag_weights</code> <a href="figures/lag_weights.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/event_term.png" alt="event_term" loading="lazy"><figcaption>The extra reaction from the third day of an event, when the model has the day's temperature and when it also has the three days before. <code>event_term</code> <a href="figures/event_term.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 84 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>season</th>
+      <th>model</th>
+      <th>event_terms</th>
+      <th>term</th>
+      <th>coef</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>r2</th>
+      <th>site_days</th>
+      <th>sites</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>heat</td>
+      <td>the day's temperature</td>
+      <td>False</td>
+      <td>d_hot_0</td>
+      <td>1.1</td>
+      <td>0.35</td>
+      <td>1.85</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day's temperature</td>
+      <td>True</td>
+      <td>d_hot_0</td>
+      <td>1.04</td>
+      <td>0.19</td>
+      <td>1.88</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day's temperature</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>-0.67</td>
+      <td>-3.15</td>
+      <td>1.81</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day's temperature</td>
+      <td>True</td>
+      <td>late</td>
+      <td>2.7</td>
+      <td>1.06</td>
+      <td>4.35</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_hot_0</td>
+      <td>0.54</td>
+      <td>-0.14</td>
+      <td>1.21</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_hot_1</td>
+      <td>0.72</td>
+      <td>0.37</td>
+      <td>1.07</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_hot_2</td>
+      <td>0.21</td>
+      <td>-0.02</td>
+      <td>0.43</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_hot_3</td>
+      <td>0.15</td>
+      <td>-0.08</td>
+      <td>0.39</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_hot_0</td>
+      <td>0.56</td>
+      <td>-0.2</td>
+      <td>1.33</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_hot_1</td>
+      <td>0.73</td>
+      <td>0.37</td>
+      <td>1.09</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_hot_2</td>
+      <td>0.2</td>
+      <td>-0.03</td>
+      <td>0.44</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_hot_3</td>
+      <td>0.15</td>
+      <td>-0.08</td>
+      <td>0.38</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>-0.58</td>
+      <td>-2.94</td>
+      <td>1.79</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>late</td>
+      <td>0.35</td>
+      <td>-1.3</td>
+      <td>2</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_warm_night_0</td>
+      <td>0.76</td>
+      <td>0.42</td>
+      <td>1.1</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_warm_night_1</td>
+      <td>-0.02</td>
+      <td>-0.23</td>
+      <td>0.2</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_warm_night_2</td>
+      <td>0.03</td>
+      <td>-0.14</td>
+      <td>0.19</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_warm_night_3</td>
+      <td>0.04</td>
+      <td>-0.13</td>
+      <td>0.21</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_warm_night_0</td>
+      <td>0.69</td>
+      <td>0.37</td>
+      <td>1.01</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_warm_night_1</td>
+      <td>-0.05</td>
+      <td>-0.26</td>
+      <td>0.16</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_warm_night_2</td>
+      <td>0.02</td>
+      <td>-0.15</td>
+      <td>0.18</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_warm_night_3</td>
+      <td>0.05</td>
+      <td>-0.11</td>
+      <td>0.22</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>2.31</td>
+      <td>-0.03</td>
+      <td>4.66</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>late</td>
+      <td>2.17</td>
+      <td>0.42</td>
+      <td>3.91</td>
+      <td>0.01</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_hot_0</td>
+      <td>0.4</td>
+      <td>-0.29</td>
+      <td>1.09</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_hot_1</td>
+      <td>0.58</td>
+      <td>0.25</td>
+      <td>0.9</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_hot_2</td>
+      <td>0.31</td>
+      <td>0.08</td>
+      <td>0.53</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_hot_3</td>
+      <td>0.14</td>
+      <td>-0.07</td>
+      <td>0.36</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_warm_night_0</td>
+      <td>0.49</td>
+      <td>0.19</td>
+      <td>0.79</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_warm_night_1</td>
+      <td>-0.19</td>
+      <td>-0.37</td>
+      <td>0</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_warm_night_2</td>
+      <td>-0.08</td>
+      <td>-0.24</td>
+      <td>0.09</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_warm_night_3</td>
+      <td>0.03</td>
+      <td>-0.13</td>
+      <td>0.2</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_hot_0</td>
+      <td>0.42</td>
+      <td>-0.36</td>
+      <td>1.21</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_hot_1</td>
+      <td>0.58</td>
+      <td>0.25</td>
+      <td>0.92</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_hot_2</td>
+      <td>0.31</td>
+      <td>0.07</td>
+      <td>0.54</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_hot_3</td>
+      <td>0.14</td>
+      <td>-0.07</td>
+      <td>0.36</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_warm_night_0</td>
+      <td>0.49</td>
+      <td>0.19</td>
+      <td>0.79</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_warm_night_1</td>
+      <td>-0.19</td>
+      <td>-0.38</td>
+      <td>0</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_warm_night_2</td>
+      <td>-0.08</td>
+      <td>-0.24</td>
+      <td>0.09</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_warm_night_3</td>
+      <td>0.03</td>
+      <td>-0.13</td>
+      <td>0.2</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>-0.48</td>
+      <td>-2.87</td>
+      <td>1.9</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>heat</td>
+      <td>both</td>
+      <td>True</td>
+      <td>late</td>
+      <td>0.23</td>
+      <td>-1.38</td>
+      <td>1.85</td>
+      <td>0.02</td>
+      <td>33784</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day's temperature</td>
+      <td>False</td>
+      <td>d_t_mean_0</td>
+      <td>-1.22</td>
+      <td>-1.5</td>
+      <td>-0.94</td>
+      <td>0.1</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day's temperature</td>
+      <td>True</td>
+      <td>d_t_mean_0</td>
+      <td>-1.16</td>
+      <td>-1.44</td>
+      <td>-0.87</td>
+      <td>0.1</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day's temperature</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>0.68</td>
+      <td>-0.51</td>
+      <td>1.88</td>
+      <td>0.1</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day's temperature</td>
+      <td>True</td>
+      <td>late</td>
+      <td>2.17</td>
+      <td>0.87</td>
+      <td>3.48</td>
+      <td>0.1</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_t_mean_0</td>
+      <td>-0.76</td>
+      <td>-0.98</td>
+      <td>-0.53</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_t_mean_1</td>
+      <td>-0.51</td>
+      <td>-0.65</td>
+      <td>-0.37</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_t_mean_2</td>
+      <td>-0.11</td>
+      <td>-0.22</td>
+      <td>0.01</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>False</td>
+      <td>d_t_mean_3</td>
+      <td>-0.18</td>
+      <td>-0.27</td>
+      <td>-0.09</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_t_mean_0</td>
+      <td>-0.74</td>
+      <td>-0.98</td>
+      <td>-0.51</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_t_mean_1</td>
+      <td>-0.51</td>
+      <td>-0.65</td>
+      <td>-0.37</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_t_mean_2</td>
+      <td>-0.1</td>
+      <td>-0.22</td>
+      <td>0.01</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>d_t_mean_3</td>
+      <td>-0.18</td>
+      <td>-0.27</td>
+      <td>-0.09</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>0.29</td>
+      <td>-0.85</td>
+      <td>1.43</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>the day and three days before</td>
+      <td>True</td>
+      <td>late</td>
+      <td>0.3</td>
+      <td>-0.85</td>
+      <td>1.46</td>
+      <td>0.11</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_t_min_0</td>
+      <td>-0.64</td>
+      <td>-0.86</td>
+      <td>-0.43</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_t_min_1</td>
+      <td>-0.39</td>
+      <td>-0.51</td>
+      <td>-0.28</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_t_min_2</td>
+      <td>-0.1</td>
+      <td>-0.2</td>
+      <td>0</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>False</td>
+      <td>d_t_min_3</td>
+      <td>-0.13</td>
+      <td>-0.22</td>
+      <td>-0.04</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_t_min_0</td>
+      <td>-0.59</td>
+      <td>-0.8</td>
+      <td>-0.37</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_t_min_1</td>
+      <td>-0.38</td>
+      <td>-0.49</td>
+      <td>-0.26</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_t_min_2</td>
+      <td>-0.09</td>
+      <td>-0.19</td>
+      <td>0.02</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>d_t_min_3</td>
+      <td>-0.12</td>
+      <td>-0.21</td>
+      <td>-0.03</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>2.12</td>
+      <td>0.87</td>
+      <td>3.36</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>night temperature, day and three days before</td>
+      <td>True</td>
+      <td>late</td>
+      <td>0.82</td>
+      <td>-0.44</td>
+      <td>2.09</td>
+      <td>0.09</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_mean_0</td>
+      <td>-0.98</td>
+      <td>-1.21</td>
+      <td>-0.76</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_mean_1</td>
+      <td>-0.65</td>
+      <td>-0.88</td>
+      <td>-0.43</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_mean_2</td>
+      <td>-0.24</td>
+      <td>-0.43</td>
+      <td>-0.05</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_mean_3</td>
+      <td>-0.27</td>
+      <td>-0.44</td>
+      <td>-0.09</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_min_0</td>
+      <td>0.25</td>
+      <td>0.05</td>
+      <td>0.45</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_min_1</td>
+      <td>0.12</td>
+      <td>-0.05</td>
+      <td>0.28</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_min_2</td>
+      <td>0.13</td>
+      <td>-0.01</td>
+      <td>0.26</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>False</td>
+      <td>d_t_min_3</td>
+      <td>0.06</td>
+      <td>-0.07</td>
+      <td>0.2</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_mean_0</td>
+      <td>-0.97</td>
+      <td>-1.21</td>
+      <td>-0.74</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_mean_1</td>
+      <td>-0.65</td>
+      <td>-0.87</td>
+      <td>-0.43</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_mean_2</td>
+      <td>-0.24</td>
+      <td>-0.43</td>
+      <td>-0.04</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_mean_3</td>
+      <td>-0.27</td>
+      <td>-0.45</td>
+      <td>-0.09</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_min_0</td>
+      <td>0.25</td>
+      <td>0.05</td>
+      <td>0.45</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_min_1</td>
+      <td>0.11</td>
+      <td>-0.05</td>
+      <td>0.28</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_min_2</td>
+      <td>0.13</td>
+      <td>-0.01</td>
+      <td>0.26</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>d_t_min_3</td>
+      <td>0.06</td>
+      <td>-0.07</td>
+      <td>0.2</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>in_event</td>
+      <td>0.21</td>
+      <td>-0.9</td>
+      <td>1.32</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+    <tr>
+      <td>cold</td>
+      <td>both</td>
+      <td>True</td>
+      <td>late</td>
+      <td>0.21</td>
+      <td>-0.97</td>
+      <td>1.38</td>
+      <td>0.12</td>
+      <td>36020</td>
+      <td>77</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/lag_models.csv">code/reports/event_audit/lag_models.csv</a> (84 rows shown)</p>
+
+<p><strong>What the plant does.</strong> The observed reaction of the import against the reaction that the
+import would show if the site's demand reacted like that of the sites without a plant and the
+plant did not change. Plant output is the rated power times the capacity factor of the estates
+return.</p>
+<figure class="single"><img src="figures/plant_decomposition.png" alt="plant_decomposition" loading="lazy"><figcaption>Sites with a plant: reaction of the summed import (bar; line: the range when one site at a time is left out) and the reaction expected with the plant unchanged (grey bar: demand reacts like all sites without a plant; tick: like the acute sites without a plant). <code>plant_decomposition</code> <a href="figures/plant_decomposition.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>assumption</th>
+      <th>demand_reaction_assumed_pct</th>
+      <th>sites</th>
+      <th>n</th>
+      <th>plant_share_of_demand</th>
+      <th>import_reaction_summed_pct</th>
+      <th>import_reaction_without_one_site_min_pct</th>
+      <th>import_reaction_without_one_site_max_pct</th>
+      <th>import_reaction_if_plant_unchanged_pct</th>
+      <th>implied_output_change_pct</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>without_one_site_min_pct</th>
+      <th>without_one_site_max_pct</th>
+      <th>sites_with_lower_output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>like all sites without a plant</td>
+      <td>11.1</td>
+      <td>all sites with a plant</td>
+      <td>9</td>
+      <td>0.7</td>
+      <td>3.9</td>
+      <td>-1.7</td>
+      <td>7.1</td>
+      <td>32.4</td>
+      <td>15.3</td>
+      <td>8.8</td>
+      <td>20.3</td>
+      <td>14.1</td>
+      <td>18.3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>like all sites without a plant</td>
+      <td>11.1</td>
+      <td>other plants</td>
+      <td>3</td>
+      <td>0.7</td>
+      <td>13.4</td>
+      <td>0.2</td>
+      <td>26.7</td>
+      <td>29.5</td>
+      <td>10.4</td>
+      <td>-0.2</td>
+      <td>22</td>
+      <td>3.2</td>
+      <td>21.1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>like all sites without a plant</td>
+      <td>11.1</td>
+      <td>plant follows heat</td>
+      <td>6</td>
+      <td>0.7</td>
+      <td>-2.5</td>
+      <td>-4.1</td>
+      <td>0.9</td>
+      <td>34.1</td>
+      <td>17.6</td>
+      <td>15.1</td>
+      <td>22.9</td>
+      <td>16.9</td>
+      <td>19.1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>like the acute sites without a plant</td>
+      <td>4.8</td>
+      <td>all sites with a plant</td>
+      <td>9</td>
+      <td>0.7</td>
+      <td>3.9</td>
+      <td>-1.7</td>
+      <td>7.1</td>
+      <td>14.8</td>
+      <td>5.3</td>
+      <td>-1.2</td>
+      <td>9.2</td>
+      <td>3.6</td>
+      <td>8.1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>like the acute sites without a plant</td>
+      <td>4.8</td>
+      <td>other plants</td>
+      <td>3</td>
+      <td>0.7</td>
+      <td>13.4</td>
+      <td>0.2</td>
+      <td>26.7</td>
+      <td>13.4</td>
+      <td>0</td>
+      <td>-8.8</td>
+      <td>10.8</td>
+      <td>-6.8</td>
+      <td>8.7</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>like the acute sites without a plant</td>
+      <td>4.8</td>
+      <td>plant follows heat</td>
+      <td>6</td>
+      <td>0.7</td>
+      <td>-2.5</td>
+      <td>-4.1</td>
+      <td>0.9</td>
+      <td>15.6</td>
+      <td>7.9</td>
+      <td>6.1</td>
+      <td>9.4</td>
+      <td>7</td>
+      <td>8.7</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>like all sites without a plant</td>
+      <td>5.6</td>
+      <td>all sites with a plant</td>
+      <td>8</td>
+      <td>0.7</td>
+      <td>47.1</td>
+      <td>30</td>
+      <td>52.2</td>
+      <td>17.2</td>
+      <td>-18.6</td>
+      <td>-54.1</td>
+      <td>-1.4</td>
+      <td>-24.3</td>
+      <td>-6</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>like all sites without a plant</td>
+      <td>5.6</td>
+      <td>other plants</td>
+      <td>3</td>
+      <td>0.6</td>
+      <td>60.9</td>
+      <td>22</td>
+      <td>77.3</td>
+      <td>14.2</td>
+      <td>-42.2</td>
+      <td>-102.5</td>
+      <td>-3.1</td>
+      <td>-79.8</td>
+      <td>-4.3</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>like all sites without a plant</td>
+      <td>5.6</td>
+      <td>plant follows heat</td>
+      <td>5</td>
+      <td>0.7</td>
+      <td>33.5</td>
+      <td>24.2</td>
+      <td>37.3</td>
+      <td>19.7</td>
+      <td>-6.5</td>
+      <td>-14.5</td>
+      <td>4</td>
+      <td>-11.5</td>
+      <td>-2.5</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>like the acute sites without a plant</td>
+      <td>7.8</td>
+      <td>all sites with a plant</td>
+      <td>8</td>
+      <td>0.7</td>
+      <td>47.1</td>
+      <td>30</td>
+      <td>52.2</td>
+      <td>23.4</td>
+      <td>-15.2</td>
+      <td>-49.3</td>
+      <td>1.8</td>
+      <td>-20.7</td>
+      <td>-2.7</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>like the acute sites without a plant</td>
+      <td>7.8</td>
+      <td>other plants</td>
+      <td>3</td>
+      <td>0.6</td>
+      <td>60.9</td>
+      <td>22</td>
+      <td>77.3</td>
+      <td>19.4</td>
+      <td>-38.4</td>
+      <td>-98.4</td>
+      <td>3.2</td>
+      <td>-75.2</td>
+      <td>-0.7</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>like the acute sites without a plant</td>
+      <td>7.8</td>
+      <td>plant follows heat</td>
+      <td>5</td>
+      <td>0.7</td>
+      <td>33.5</td>
+      <td>24.2</td>
+      <td>37.3</td>
+      <td>26.7</td>
+      <td>-3.3</td>
+      <td>-10.2</td>
+      <td>6.2</td>
+      <td>-8</td>
+      <td>0.7</td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/plant_decomposition.csv">code/reports/event_audit/plant_decomposition.csv</a> (12 rows shown)</p>
+
+<h2 id="7-the-forecast-on-the-whole-record">7. The forecast on the whole record</h2>
+<p><code>forecast-probes --which record</code> and <code>forecast-record</code> (<code>analysis/forecast_record.py</code>, tables
+in <code>code/reports/forecast_record/</code>). Chronos-2, zero-shot, for every day from 18 January 2023 to
+8 May 2026 at the 91 forecast sites, on a GPU: without inputs, and with calendar, price,
+national forecasts and the weather forecast of the day before. A site-day counts if all 48
+half-hours are observed and at least 80 % of the six weeks before it.</p>
+<figure class="single"><img src="figures/record_error_years.png" alt="record_error_years" loading="lazy"><figcaption>Day-ahead error in each year, with the interval from resampling sites. <code>record_error_years</code> <a href="figures/record_error_years.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/record_value_years.png" alt="record_value_years" loading="lazy"><figcaption>Share of the achievable peak cut in each year. <code>record_value_years</code> <a href="figures/record_value_years.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>window</th>
+      <th>model</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>nmae_pct</th>
+      <th>nmae_lo</th>
+      <th>nmae_hi</th>
+      <th>naive_nmae_pct</th>
+      <th>captured_point_pct</th>
+      <th>captured_lo</th>
+      <th>captured_hi</th>
+      <th>captured_q70_pct</th>
+      <th>plant_error_share_pct</th>
+      <th>top3_error_share_pct</th>
+      <th>plant_large_step_day_share_pct</th>
+      <th>plant_large_step_error_share_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>whole record</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>103786</td>
+      <td>1201</td>
+      <td>11.8</td>
+      <td>10.6</td>
+      <td>13</td>
+      <td>17.7</td>
+      <td>50</td>
+      <td>45.4</td>
+      <td>54.5</td>
+      <td>52.3</td>
+      <td>76.8</td>
+      <td>54.4</td>
+      <td>1.5</td>
+      <td>35.2</td>
+    </tr>
+    <tr>
+      <td>whole record</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>103786</td>
+      <td>1201</td>
+      <td>11.2</td>
+      <td>10</td>
+      <td>12.3</td>
+      <td>17.7</td>
+      <td>52.4</td>
+      <td>47.7</td>
+      <td>57.5</td>
+      <td>54.9</td>
+      <td>77.7</td>
+      <td>55.4</td>
+      <td>1.5</td>
+      <td>36.7</td>
+    </tr>
+    <tr>
+      <td>whole record</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>103787</td>
+      <td>1202</td>
+      <td>17.7</td>
+      <td>15.7</td>
+      <td>19.8</td>
+      <td>17.7</td>
+      <td>38.9</td>
+      <td>34.2</td>
+      <td>44.6</td>
+      <td></td>
+      <td>81.9</td>
+      <td>58.6</td>
+      <td>1.5</td>
+      <td>28.5</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>28686</td>
+      <td>346</td>
+      <td>11.5</td>
+      <td>10.3</td>
+      <td>12.7</td>
+      <td>17</td>
+      <td>50.7</td>
+      <td>45.1</td>
+      <td>56</td>
+      <td>52.1</td>
+      <td>76.5</td>
+      <td>55.3</td>
+      <td>1.3</td>
+      <td>31</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>28686</td>
+      <td>346</td>
+      <td>11</td>
+      <td>9.8</td>
+      <td>12.3</td>
+      <td>17</td>
+      <td>52.6</td>
+      <td>47.1</td>
+      <td>58.1</td>
+      <td>54.8</td>
+      <td>77</td>
+      <td>55.4</td>
+      <td>1.3</td>
+      <td>32.7</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>28687</td>
+      <td>347</td>
+      <td>17</td>
+      <td>15</td>
+      <td>19.3</td>
+      <td>17</td>
+      <td>39</td>
+      <td>33.9</td>
+      <td>45</td>
+      <td></td>
+      <td>81.6</td>
+      <td>59.7</td>
+      <td>1.3</td>
+      <td>26.6</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>32499</td>
+      <td>364</td>
+      <td>11.9</td>
+      <td>10.6</td>
+      <td>13.2</td>
+      <td>17.7</td>
+      <td>49</td>
+      <td>44.2</td>
+      <td>54.3</td>
+      <td>51.7</td>
+      <td>77.1</td>
+      <td>55.8</td>
+      <td>1.6</td>
+      <td>35.7</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>32499</td>
+      <td>364</td>
+      <td>11.2</td>
+      <td>10</td>
+      <td>12.5</td>
+      <td>17.7</td>
+      <td>51.6</td>
+      <td>46.8</td>
+      <td>57.2</td>
+      <td>54.3</td>
+      <td>78</td>
+      <td>56.9</td>
+      <td>1.6</td>
+      <td>37.3</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>32499</td>
+      <td>364</td>
+      <td>17.7</td>
+      <td>15.6</td>
+      <td>19.9</td>
+      <td>17.7</td>
+      <td>38.7</td>
+      <td>33.5</td>
+      <td>45.1</td>
+      <td></td>
+      <td>81.2</td>
+      <td>57.5</td>
+      <td>1.6</td>
+      <td>28.5</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>31649</td>
+      <td>364</td>
+      <td>12.2</td>
+      <td>10.9</td>
+      <td>13.5</td>
+      <td>18.7</td>
+      <td>49.2</td>
+      <td>45.2</td>
+      <td>53.1</td>
+      <td>51.6</td>
+      <td>78.4</td>
+      <td>56.3</td>
+      <td>1.7</td>
+      <td>38.5</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>31649</td>
+      <td>364</td>
+      <td>11.5</td>
+      <td>10.3</td>
+      <td>12.7</td>
+      <td>18.7</td>
+      <td>51.6</td>
+      <td>47.1</td>
+      <td>56.6</td>
+      <td>54.2</td>
+      <td>79.2</td>
+      <td>57.2</td>
+      <td>1.7</td>
+      <td>39.8</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>31649</td>
+      <td>364</td>
+      <td>18.7</td>
+      <td>16.5</td>
+      <td>21</td>
+      <td>18.7</td>
+      <td>38</td>
+      <td>33.4</td>
+      <td>43.3</td>
+      <td></td>
+      <td>83.7</td>
+      <td>62</td>
+      <td>1.7</td>
+      <td>30.3</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>11.9</td>
+      <td>10.5</td>
+      <td>13.3</td>
+      <td>17.8</td>
+      <td>53.2</td>
+      <td>49.5</td>
+      <td>56.6</td>
+      <td>56.1</td>
+      <td>70.4</td>
+      <td>42.3</td>
+      <td>1.5</td>
+      <td>34</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>11.2</td>
+      <td>9.9</td>
+      <td>12.4</td>
+      <td>17.8</td>
+      <td>56.6</td>
+      <td>52.3</td>
+      <td>61.3</td>
+      <td>59.1</td>
+      <td>72.6</td>
+      <td>44</td>
+      <td>1.5</td>
+      <td>35.1</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>17.8</td>
+      <td>15.5</td>
+      <td>19.9</td>
+      <td>17.8</td>
+      <td>42.1</td>
+      <td>37.1</td>
+      <td>47.3</td>
+      <td></td>
+      <td>77.8</td>
+      <td>54.8</td>
+      <td>1.5</td>
+      <td>27.8</td>
+    </tr>
+    <tr>
+      <td>proof-of-concept window, every day</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>29658</td>
+      <td>341</td>
+      <td>12.1</td>
+      <td>10.8</td>
+      <td>13.4</td>
+      <td>18.3</td>
+      <td>50.2</td>
+      <td>46.3</td>
+      <td>53.9</td>
+      <td>53</td>
+      <td>76.6</td>
+      <td>52.4</td>
+      <td>1.8</td>
+      <td>40.7</td>
+    </tr>
+    <tr>
+      <td>proof-of-concept window, every day</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>29658</td>
+      <td>341</td>
+      <td>11.5</td>
+      <td>10.2</td>
+      <td>12.7</td>
+      <td>18.3</td>
+      <td>52.9</td>
+      <td>49</td>
+      <td>57.3</td>
+      <td>55.8</td>
+      <td>77.7</td>
+      <td>53.8</td>
+      <td>1.8</td>
+      <td>42</td>
+    </tr>
+    <tr>
+      <td>proof-of-concept window, every day</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>29658</td>
+      <td>341</td>
+      <td>18.3</td>
+      <td>16</td>
+      <td>20.3</td>
+      <td>18.3</td>
+      <td>39.3</td>
+      <td>34.6</td>
+      <td>44.7</td>
+      <td></td>
+      <td>82.4</td>
+      <td>57.4</td>
+      <td>1.8</td>
+      <td>31.7</td>
+    </tr>
+    <tr>
+      <td>proof-of-concept window, its 69 days</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>6022</td>
+      <td>69</td>
+      <td>12.1</td>
+      <td>10.7</td>
+      <td>13.3</td>
+      <td>18.2</td>
+      <td>51.2</td>
+      <td>47.5</td>
+      <td>55.2</td>
+      <td>52.9</td>
+      <td>78</td>
+      <td>56.3</td>
+      <td>1.8</td>
+      <td>41.8</td>
+    </tr>
+    <tr>
+      <td>proof-of-concept window, its 69 days</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>6022</td>
+      <td>69</td>
+      <td>11.4</td>
+      <td>10.2</td>
+      <td>12.6</td>
+      <td>18.2</td>
+      <td>53.6</td>
+      <td>50.6</td>
+      <td>56.7</td>
+      <td>55.6</td>
+      <td>78.6</td>
+      <td>57</td>
+      <td>1.8</td>
+      <td>43.7</td>
+    </tr>
+    <tr>
+      <td>proof-of-concept window, its 69 days</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>6022</td>
+      <td>69</td>
+      <td>18.2</td>
+      <td>15.9</td>
+      <td>20.4</td>
+      <td>18.2</td>
+      <td>40.4</td>
+      <td>35.8</td>
+      <td>45.6</td>
+      <td></td>
+      <td>83.6</td>
+      <td>61</td>
+      <td>1.8</td>
+      <td>34.4</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/by_period.csv">code/reports/forecast_record/by_period.csv</a> (21 rows shown)</p>
+
+<figure class="single"><img src="figures/record_event_value.png" alt="record_event_value" loading="lazy"><figcaption>Captured peak cut on event days minus the other days of the same site and month, by season, for two definitions of an event day. <code>record_event_value</code> <a href="figures/record_event_value.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 78 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>definition</th>
+      <th>type</th>
+      <th>season</th>
+      <th>sites_group</th>
+      <th>model</th>
+      <th>sites</th>
+      <th>event_site_days</th>
+      <th>nmae_event_pct</th>
+      <th>nmae_other_pct</th>
+      <th>nmae_diff_pts</th>
+      <th>nmae_diff_lo</th>
+      <th>nmae_diff_hi</th>
+      <th>bias_event_pct</th>
+      <th>captured_event_pct</th>
+      <th>captured_other_pct</th>
+      <th>captured_diff_pts</th>
+      <th>captured_diff_lo</th>
+      <th>captured_diff_hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>81</td>
+      <td>986</td>
+      <td>13.1</td>
+      <td>12.3</td>
+      <td>0.8</td>
+      <td>-0.1</td>
+      <td>1.7</td>
+      <td>-2.9</td>
+      <td>24.8</td>
+      <td>41.1</td>
+      <td>-16.3</td>
+      <td>-26</td>
+      <td>-7.5</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>81</td>
+      <td>986</td>
+      <td>12.1</td>
+      <td>11.8</td>
+      <td>0.4</td>
+      <td>-0.5</td>
+      <td>1.3</td>
+      <td>-1.7</td>
+      <td>27</td>
+      <td>45.4</td>
+      <td>-18.4</td>
+      <td>-27.7</td>
+      <td>-10</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>81</td>
+      <td>977</td>
+      <td>20.3</td>
+      <td>18.6</td>
+      <td>1.7</td>
+      <td>0.4</td>
+      <td>2.9</td>
+      <td>-5.4</td>
+      <td>13.6</td>
+      <td>28.7</td>
+      <td>-15.1</td>
+      <td>-22.3</td>
+      <td>-10.3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>81</td>
+      <td>545</td>
+      <td>12.1</td>
+      <td>11.4</td>
+      <td>0.7</td>
+      <td>-0.4</td>
+      <td>1.8</td>
+      <td>-2.5</td>
+      <td>27.1</td>
+      <td>43.4</td>
+      <td>-16.3</td>
+      <td>-27.6</td>
+      <td>-2.4</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>81</td>
+      <td>545</td>
+      <td>11.4</td>
+      <td>11</td>
+      <td>0.4</td>
+      <td>-0.7</td>
+      <td>1.5</td>
+      <td>-1.4</td>
+      <td>26.1</td>
+      <td>47.3</td>
+      <td>-21.2</td>
+      <td>-28.5</td>
+      <td>-11.8</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>81</td>
+      <td>541</td>
+      <td>20.4</td>
+      <td>17.1</td>
+      <td>3.3</td>
+      <td>1.6</td>
+      <td>4.8</td>
+      <td>-6.7</td>
+      <td>11.7</td>
+      <td>29.5</td>
+      <td>-17.8</td>
+      <td>-24.8</td>
+      <td>-11.3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2024</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>8</td>
+      <td>28</td>
+      <td>10.1</td>
+      <td>11.4</td>
+      <td>-1.3</td>
+      <td>-6.7</td>
+      <td>1.8</td>
+      <td>-4.3</td>
+      <td>40.2</td>
+      <td>33.5</td>
+      <td>6.7</td>
+      <td>-26.1</td>
+      <td>14.6</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2024</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>8</td>
+      <td>28</td>
+      <td>9.4</td>
+      <td>11</td>
+      <td>-1.7</td>
+      <td>-7.1</td>
+      <td>1.6</td>
+      <td>-3.4</td>
+      <td>43.4</td>
+      <td>37.7</td>
+      <td>5.7</td>
+      <td>-22.8</td>
+      <td>14.4</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2024</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>8</td>
+      <td>28</td>
+      <td>23.8</td>
+      <td>20.7</td>
+      <td>3.1</td>
+      <td>2</td>
+      <td>4.1</td>
+      <td>-2.3</td>
+      <td>36.4</td>
+      <td>19.5</td>
+      <td>17</td>
+      <td>-34.5</td>
+      <td>30.7</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>66</td>
+      <td>413</td>
+      <td>15.4</td>
+      <td>13.1</td>
+      <td>2.2</td>
+      <td>0.7</td>
+      <td>4.1</td>
+      <td>-3.3</td>
+      <td>19.9</td>
+      <td>39.9</td>
+      <td>-20</td>
+      <td>-26.8</td>
+      <td>-12.3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>66</td>
+      <td>413</td>
+      <td>14.1</td>
+      <td>12.6</td>
+      <td>1.5</td>
+      <td>0.1</td>
+      <td>3.1</td>
+      <td>-2.1</td>
+      <td>26.3</td>
+      <td>44.7</td>
+      <td>-18.4</td>
+      <td>-28.5</td>
+      <td>-10.3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>66</td>
+      <td>408</td>
+      <td>21.5</td>
+      <td>20.5</td>
+      <td>1.1</td>
+      <td>-0.1</td>
+      <td>2.2</td>
+      <td>-4.5</td>
+      <td>13.5</td>
+      <td>29.3</td>
+      <td>-15.8</td>
+      <td>-22.2</td>
+      <td>-10.3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2</td>
+      <td>70</td>
+      <td>825</td>
+      <td>11.5</td>
+      <td>11.1</td>
+      <td>0.3</td>
+      <td>-0.5</td>
+      <td>1.1</td>
+      <td>-2.4</td>
+      <td>27.6</td>
+      <td>47</td>
+      <td>-19.4</td>
+      <td>-26.3</td>
+      <td>-10.1</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>70</td>
+      <td>825</td>
+      <td>11</td>
+      <td>10.7</td>
+      <td>0.3</td>
+      <td>-0.5</td>
+      <td>1</td>
+      <td>-1.6</td>
+      <td>32.1</td>
+      <td>54.1</td>
+      <td>-22</td>
+      <td>-32</td>
+      <td>-10</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>70</td>
+      <td>818</td>
+      <td>18</td>
+      <td>16</td>
+      <td>2</td>
+      <td>0.9</td>
+      <td>3</td>
+      <td>-4.6</td>
+      <td>18.9</td>
+      <td>39.5</td>
+      <td>-20.6</td>
+      <td>-28.5</td>
+      <td>-10.9</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2</td>
+      <td>11</td>
+      <td>161</td>
+      <td>23.2</td>
+      <td>19.6</td>
+      <td>3.6</td>
+      <td>-0.2</td>
+      <td>7.9</td>
+      <td>-6</td>
+      <td>22.7</td>
+      <td>36.2</td>
+      <td>-13.5</td>
+      <td>-30.1</td>
+      <td>-3.3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>11</td>
+      <td>161</td>
+      <td>19.5</td>
+      <td>18.6</td>
+      <td>0.9</td>
+      <td>-3.4</td>
+      <td>5.8</td>
+      <td>-3.7</td>
+      <td>23.1</td>
+      <td>38.2</td>
+      <td>-15.1</td>
+      <td>-26</td>
+      <td>-7.4</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>11</td>
+      <td>159</td>
+      <td>35</td>
+      <td>35.1</td>
+      <td>-0.1</td>
+      <td>-6.6</td>
+      <td>5.3</td>
+      <td>-12.6</td>
+      <td>9.6</td>
+      <td>19.8</td>
+      <td>-10.2</td>
+      <td>-13.1</td>
+      <td>-8.2</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>90</td>
+      <td>3300</td>
+      <td>12.6</td>
+      <td>11.4</td>
+      <td>1.3</td>
+      <td>0.6</td>
+      <td>1.9</td>
+      <td>-3.2</td>
+      <td>51</td>
+      <td>53.8</td>
+      <td>-2.8</td>
+      <td>-6.1</td>
+      <td>0.9</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>90</td>
+      <td>3300</td>
+      <td>11.4</td>
+      <td>10.9</td>
+      <td>0.6</td>
+      <td>-0.1</td>
+      <td>1.2</td>
+      <td>-0.6</td>
+      <td>55.4</td>
+      <td>56.6</td>
+      <td>-1.1</td>
+      <td>-4.3</td>
+      <td>1.8</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>90</td>
+      <td>3296</td>
+      <td>21</td>
+      <td>17.3</td>
+      <td>3.7</td>
+      <td>2.7</td>
+      <td>4.8</td>
+      <td>-6.1</td>
+      <td>33.9</td>
+      <td>41.6</td>
+      <td>-7.7</td>
+      <td>-11.2</td>
+      <td>-3.8</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>68</td>
+      <td>503</td>
+      <td>10.1</td>
+      <td>9.8</td>
+      <td>0.3</td>
+      <td>-0.6</td>
+      <td>1.2</td>
+      <td>-2.3</td>
+      <td>53.7</td>
+      <td>57.9</td>
+      <td>-4.2</td>
+      <td>-8.1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>68</td>
+      <td>503</td>
+      <td>9.6</td>
+      <td>9.8</td>
+      <td>-0.2</td>
+      <td>-1.4</td>
+      <td>0.9</td>
+      <td>-0.6</td>
+      <td>53.5</td>
+      <td>58.4</td>
+      <td>-4.9</td>
+      <td>-10.9</td>
+      <td>1.2</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>68</td>
+      <td>503</td>
+      <td>16.8</td>
+      <td>15.9</td>
+      <td>0.9</td>
+      <td>-1.5</td>
+      <td>4.2</td>
+      <td>-4.5</td>
+      <td>36.9</td>
+      <td>45.6</td>
+      <td>-8.7</td>
+      <td>-18.9</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>90</td>
+      <td>1026</td>
+      <td>11.8</td>
+      <td>11.3</td>
+      <td>0.5</td>
+      <td>-0.6</td>
+      <td>1.5</td>
+      <td>-3.1</td>
+      <td>55.5</td>
+      <td>54.4</td>
+      <td>1.1</td>
+      <td>-7</td>
+      <td>10.6</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>90</td>
+      <td>1026</td>
+      <td>10.8</td>
+      <td>10.9</td>
+      <td>-0.1</td>
+      <td>-1.2</td>
+      <td>0.8</td>
+      <td>-0.7</td>
+      <td>60</td>
+      <td>56.6</td>
+      <td>3.4</td>
+      <td>-2.2</td>
+      <td>10.1</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>90</td>
+      <td>1024</td>
+      <td>17.2</td>
+      <td>16.9</td>
+      <td>0.3</td>
+      <td>-1.4</td>
+      <td>1.6</td>
+      <td>-5.1</td>
+      <td>42.2</td>
+      <td>41.2</td>
+      <td>1</td>
+      <td>-8.5</td>
+      <td>8.7</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>89</td>
+      <td>1175</td>
+      <td>12.5</td>
+      <td>11.4</td>
+      <td>1.2</td>
+      <td>0.2</td>
+      <td>2.1</td>
+      <td>-3.2</td>
+      <td>48.8</td>
+      <td>51.1</td>
+      <td>-2.3</td>
+      <td>-8.8</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>89</td>
+      <td>1175</td>
+      <td>11.2</td>
+      <td>10.9</td>
+      <td>0.4</td>
+      <td>-0.7</td>
+      <td>1.4</td>
+      <td>-0.6</td>
+      <td>54.2</td>
+      <td>53.6</td>
+      <td>0.5</td>
+      <td>-6.8</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>89</td>
+      <td>1174</td>
+      <td>22.8</td>
+      <td>17.8</td>
+      <td>5</td>
+      <td>3.6</td>
+      <td>6.9</td>
+      <td>-6.6</td>
+      <td>28.5</td>
+      <td>39.1</td>
+      <td>-10.7</td>
+      <td>-15.7</td>
+      <td>-4</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>90</td>
+      <td>596</td>
+      <td>14.2</td>
+      <td>11.3</td>
+      <td>2.9</td>
+      <td>1.6</td>
+      <td>4.4</td>
+      <td>-4.2</td>
+      <td>45</td>
+      <td>53.6</td>
+      <td>-8.6</td>
+      <td>-16.1</td>
+      <td>-1.2</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>90</td>
+      <td>596</td>
+      <td>12.4</td>
+      <td>10.7</td>
+      <td>1.7</td>
+      <td>0.3</td>
+      <td>3.3</td>
+      <td>-0.4</td>
+      <td>52.1</td>
+      <td>58.8</td>
+      <td>-6.7</td>
+      <td>-18.1</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>90</td>
+      <td>595</td>
+      <td>24.6</td>
+      <td>17.3</td>
+      <td>7.3</td>
+      <td>4.3</td>
+      <td>10.8</td>
+      <td>-9.2</td>
+      <td>27.4</td>
+      <td>42.7</td>
+      <td>-15.4</td>
+      <td>-23.7</td>
+      <td>-5.4</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2</td>
+      <td>78</td>
+      <td>2882</td>
+      <td>12.4</td>
+      <td>11</td>
+      <td>1.3</td>
+      <td>0.9</td>
+      <td>1.9</td>
+      <td>-3.4</td>
+      <td>49.5</td>
+      <td>56.1</td>
+      <td>-6.6</td>
+      <td>-9.7</td>
+      <td>-4.9</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>78</td>
+      <td>2882</td>
+      <td>11.1</td>
+      <td>10.5</td>
+      <td>0.5</td>
+      <td>0.2</td>
+      <td>1</td>
+      <td>-0.7</td>
+      <td>58.8</td>
+      <td>60</td>
+      <td>-1.2</td>
+      <td>-3.6</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>78</td>
+      <td>2880</td>
+      <td>19</td>
+      <td>16.1</td>
+      <td>2.8</td>
+      <td>2.2</td>
+      <td>3.5</td>
+      <td>-6.4</td>
+      <td>35.8</td>
+      <td>46.3</td>
+      <td>-10.5</td>
+      <td>-14.3</td>
+      <td>-5</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2</td>
+      <td>12</td>
+      <td>418</td>
+      <td>14.5</td>
+      <td>13.6</td>
+      <td>1</td>
+      <td>-2.7</td>
+      <td>4.2</td>
+      <td>-1.9</td>
+      <td>52.7</td>
+      <td>51.7</td>
+      <td>1</td>
+      <td>-4.4</td>
+      <td>8.1</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>12</td>
+      <td>418</td>
+      <td>13.8</td>
+      <td>13.2</td>
+      <td>0.6</td>
+      <td>-3.3</td>
+      <td>4</td>
+      <td>-0.3</td>
+      <td>51.5</td>
+      <td>53.2</td>
+      <td>-1.8</td>
+      <td>-6.8</td>
+      <td>5.5</td>
+    </tr>
+    <tr>
+      <td>catalogue</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>12</td>
+      <td>416</td>
+      <td>34.4</td>
+      <td>25.3</td>
+      <td>9.2</td>
+      <td>3</td>
+      <td>15.2</td>
+      <td>-3.8</td>
+      <td>31.8</td>
+      <td>37.2</td>
+      <td>-5.3</td>
+      <td>-8.9</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>90</td>
+      <td>3183</td>
+      <td>13</td>
+      <td>12.2</td>
+      <td>0.7</td>
+      <td>0.1</td>
+      <td>1.4</td>
+      <td>-2.3</td>
+      <td>30.5</td>
+      <td>44.5</td>
+      <td>-14</td>
+      <td>-18.4</td>
+      <td>-9</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>90</td>
+      <td>3183</td>
+      <td>12.3</td>
+      <td>11.7</td>
+      <td>0.6</td>
+      <td>0</td>
+      <td>1.2</td>
+      <td>-1.4</td>
+      <td>34.2</td>
+      <td>47.1</td>
+      <td>-13</td>
+      <td>-18.8</td>
+      <td>-8.1</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>90</td>
+      <td>3147</td>
+      <td>19.5</td>
+      <td>18.4</td>
+      <td>1.2</td>
+      <td>0.3</td>
+      <td>1.9</td>
+      <td>-3.7</td>
+      <td>20.2</td>
+      <td>32.9</td>
+      <td>-12.7</td>
+      <td>-20.2</td>
+      <td>-7.2</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>90</td>
+      <td>1210</td>
+      <td>12.3</td>
+      <td>11.3</td>
+      <td>1</td>
+      <td>0.2</td>
+      <td>1.9</td>
+      <td>-2</td>
+      <td>28.9</td>
+      <td>44.9</td>
+      <td>-15.9</td>
+      <td>-24.6</td>
+      <td>-5.2</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>90</td>
+      <td>1210</td>
+      <td>11.8</td>
+      <td>10.9</td>
+      <td>0.9</td>
+      <td>0.1</td>
+      <td>1.8</td>
+      <td>-1</td>
+      <td>33.7</td>
+      <td>47.2</td>
+      <td>-13.5</td>
+      <td>-20.1</td>
+      <td>-5.2</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2023</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>90</td>
+      <td>1196</td>
+      <td>20</td>
+      <td>16.8</td>
+      <td>3.2</td>
+      <td>1.9</td>
+      <td>4.6</td>
+      <td>-4.4</td>
+      <td>16.6</td>
+      <td>32.9</td>
+      <td>-16.3</td>
+      <td>-24.3</td>
+      <td>-8.2</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2024</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>83</td>
+      <td>440</td>
+      <td>12.3</td>
+      <td>12</td>
+      <td>0.3</td>
+      <td>-0.6</td>
+      <td>1.2</td>
+      <td>-2.6</td>
+      <td>31.1</td>
+      <td>41.7</td>
+      <td>-10.6</td>
+      <td>-15.9</td>
+      <td>-5.7</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2024</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>83</td>
+      <td>440</td>
+      <td>11.6</td>
+      <td>11.5</td>
+      <td>0.1</td>
+      <td>-0.8</td>
+      <td>1</td>
+      <td>-2.3</td>
+      <td>32.9</td>
+      <td>43.9</td>
+      <td>-11</td>
+      <td>-18</td>
+      <td>-5.5</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2024</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>83</td>
+      <td>438</td>
+      <td>17.4</td>
+      <td>17.5</td>
+      <td>-0.1</td>
+      <td>-1.3</td>
+      <td>1.1</td>
+      <td>-2.4</td>
+      <td>29.6</td>
+      <td>30.8</td>
+      <td>-1.2</td>
+      <td>-14.9</td>
+      <td>13.1</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>90</td>
+      <td>1533</td>
+      <td>14</td>
+      <td>13.3</td>
+      <td>0.8</td>
+      <td>0.1</td>
+      <td>1.5</td>
+      <td>-2.5</td>
+      <td>31.7</td>
+      <td>45.6</td>
+      <td>-13.9</td>
+      <td>-18.3</td>
+      <td>-9.6</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>90</td>
+      <td>1533</td>
+      <td>13.2</td>
+      <td>12.7</td>
+      <td>0.6</td>
+      <td>-0.1</td>
+      <td>1.2</td>
+      <td>-1.4</td>
+      <td>34.9</td>
+      <td>48.7</td>
+      <td>-13.8</td>
+      <td>-20.3</td>
+      <td>-7.5</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>summer 2025</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>90</td>
+      <td>1513</td>
+      <td>20.7</td>
+      <td>20.1</td>
+      <td>0.6</td>
+      <td>-0.4</td>
+      <td>1.6</td>
+      <td>-3.5</td>
+      <td>21.3</td>
+      <td>34</td>
+      <td>-12.7</td>
+      <td>-21.1</td>
+      <td>-5.3</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2</td>
+      <td>78</td>
+      <td>2793</td>
+      <td>11.7</td>
+      <td>11.2</td>
+      <td>0.5</td>
+      <td>-0.1</td>
+      <td>1.2</td>
+      <td>-2</td>
+      <td>34</td>
+      <td>49.1</td>
+      <td>-15.1</td>
+      <td>-19.4</td>
+      <td>-8.7</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>78</td>
+      <td>2793</td>
+      <td>11.2</td>
+      <td>10.8</td>
+      <td>0.5</td>
+      <td>0</td>
+      <td>1.1</td>
+      <td>-1.3</td>
+      <td>36.6</td>
+      <td>53.2</td>
+      <td>-16.6</td>
+      <td>-23.9</td>
+      <td>-7.6</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>78</td>
+      <td>2768</td>
+      <td>17.3</td>
+      <td>15.9</td>
+      <td>1.4</td>
+      <td>0.7</td>
+      <td>2.1</td>
+      <td>-2.9</td>
+      <td>22.5</td>
+      <td>41.4</td>
+      <td>-18.9</td>
+      <td>-27</td>
+      <td>-9</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2</td>
+      <td>12</td>
+      <td>390</td>
+      <td>21</td>
+      <td>18.6</td>
+      <td>2.4</td>
+      <td>-0.1</td>
+      <td>5.1</td>
+      <td>-5.8</td>
+      <td>27.5</td>
+      <td>40.3</td>
+      <td>-12.8</td>
+      <td>-20.3</td>
+      <td>-5.6</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>12</td>
+      <td>390</td>
+      <td>19</td>
+      <td>17.7</td>
+      <td>1.3</td>
+      <td>-1.8</td>
+      <td>4.5</td>
+      <td>-3.1</td>
+      <td>32.1</td>
+      <td>41.8</td>
+      <td>-9.7</td>
+      <td>-12.5</td>
+      <td>-6.3</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>heatwave</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>12</td>
+      <td>379</td>
+      <td>34</td>
+      <td>34.4</td>
+      <td>-0.4</td>
+      <td>-5</td>
+      <td>3</td>
+      <td>-12.2</td>
+      <td>18.3</td>
+      <td>25.3</td>
+      <td>-7</td>
+      <td>-11.8</td>
+      <td>-3.9</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>3612</td>
+      <td>12.5</td>
+      <td>11.2</td>
+      <td>1.3</td>
+      <td>0.7</td>
+      <td>1.9</td>
+      <td>-3.1</td>
+      <td>48.9</td>
+      <td>54</td>
+      <td>-5.2</td>
+      <td>-7.9</td>
+      <td>-2.1</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>3612</td>
+      <td>11.3</td>
+      <td>10.8</td>
+      <td>0.6</td>
+      <td>0</td>
+      <td>1.2</td>
+      <td>-0.6</td>
+      <td>54.1</td>
+      <td>56.5</td>
+      <td>-2.4</td>
+      <td>-5.6</td>
+      <td>0.9</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>3607</td>
+      <td>20.9</td>
+      <td>17.1</td>
+      <td>3.8</td>
+      <td>2.8</td>
+      <td>4.9</td>
+      <td>-5.7</td>
+      <td>33.3</td>
+      <td>41.4</td>
+      <td>-8.1</td>
+      <td>-11.4</td>
+      <td>-4.5</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>76</td>
+      <td>568</td>
+      <td>10.4</td>
+      <td>9.9</td>
+      <td>0.5</td>
+      <td>-0.3</td>
+      <td>1.4</td>
+      <td>-2.4</td>
+      <td>53.6</td>
+      <td>57.8</td>
+      <td>-4.2</td>
+      <td>-12.8</td>
+      <td>4.8</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>76</td>
+      <td>568</td>
+      <td>9.9</td>
+      <td>9.8</td>
+      <td>0.2</td>
+      <td>-0.8</td>
+      <td>1.1</td>
+      <td>-0.7</td>
+      <td>53</td>
+      <td>58.4</td>
+      <td>-5.5</td>
+      <td>-10.7</td>
+      <td>-0.5</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2022/23</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>76</td>
+      <td>568</td>
+      <td>16.7</td>
+      <td>16.1</td>
+      <td>0.6</td>
+      <td>-1.3</td>
+      <td>2.7</td>
+      <td>-4.6</td>
+      <td>35</td>
+      <td>45.3</td>
+      <td>-10.3</td>
+      <td>-19.1</td>
+      <td>-0.3</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>1070</td>
+      <td>11.5</td>
+      <td>11.2</td>
+      <td>0.3</td>
+      <td>-0.8</td>
+      <td>1.3</td>
+      <td>-3.1</td>
+      <td>55.8</td>
+      <td>54.3</td>
+      <td>1.5</td>
+      <td>-6.6</td>
+      <td>10.7</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>1070</td>
+      <td>10.6</td>
+      <td>10.9</td>
+      <td>-0.2</td>
+      <td>-1.2</td>
+      <td>0.7</td>
+      <td>-0.7</td>
+      <td>60.6</td>
+      <td>56.5</td>
+      <td>4.2</td>
+      <td>-2.3</td>
+      <td>11.7</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2023/24</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>1068</td>
+      <td>17.1</td>
+      <td>16.7</td>
+      <td>0.4</td>
+      <td>-1.3</td>
+      <td>1.7</td>
+      <td>-5</td>
+      <td>43.3</td>
+      <td>41</td>
+      <td>2.3</td>
+      <td>-5.7</td>
+      <td>9.3</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>1315</td>
+      <td>12</td>
+      <td>11.3</td>
+      <td>0.8</td>
+      <td>-0.1</td>
+      <td>1.6</td>
+      <td>-2.9</td>
+      <td>45.5</td>
+      <td>52.2</td>
+      <td>-6.8</td>
+      <td>-11.6</td>
+      <td>-1.8</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>1315</td>
+      <td>10.9</td>
+      <td>10.8</td>
+      <td>0.1</td>
+      <td>-1</td>
+      <td>1</td>
+      <td>-0.5</td>
+      <td>51.1</td>
+      <td>54.7</td>
+      <td>-3.5</td>
+      <td>-9</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2024/25</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>1313</td>
+      <td>22.1</td>
+      <td>17.4</td>
+      <td>4.6</td>
+      <td>3.1</td>
+      <td>6.4</td>
+      <td>-5.5</td>
+      <td>28.5</td>
+      <td>39.7</td>
+      <td>-11.2</td>
+      <td>-17.6</td>
+      <td>-3.8</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>all sites</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>659</td>
+      <td>14.8</td>
+      <td>11.3</td>
+      <td>3.5</td>
+      <td>2.3</td>
+      <td>4.9</td>
+      <td>-4.5</td>
+      <td>38.9</td>
+      <td>53.2</td>
+      <td>-14.4</td>
+      <td>-23.9</td>
+      <td>-4.1</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>all sites</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>659</td>
+      <td>12.5</td>
+      <td>10.8</td>
+      <td>1.8</td>
+      <td>0.5</td>
+      <td>3.3</td>
+      <td>-0.5</td>
+      <td>49.9</td>
+      <td>57.3</td>
+      <td>-7.5</td>
+      <td>-18.8</td>
+      <td>4.7</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>winter 2025/26</td>
+      <td>all sites</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>658</td>
+      <td>24.6</td>
+      <td>17.4</td>
+      <td>7.2</td>
+      <td>4.8</td>
+      <td>9.9</td>
+      <td>-9.3</td>
+      <td>24</td>
+      <td>41.3</td>
+      <td>-17.3</td>
+      <td>-25</td>
+      <td>-6.8</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2</td>
+      <td>79</td>
+      <td>3154</td>
+      <td>12.1</td>
+      <td>10.8</td>
+      <td>1.3</td>
+      <td>0.9</td>
+      <td>1.7</td>
+      <td>-3.2</td>
+      <td>48</td>
+      <td>55.5</td>
+      <td>-7.5</td>
+      <td>-9.8</td>
+      <td>-4.9</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>79</td>
+      <td>3154</td>
+      <td>10.9</td>
+      <td>10.4</td>
+      <td>0.5</td>
+      <td>0.2</td>
+      <td>0.9</td>
+      <td>-0.6</td>
+      <td>57.5</td>
+      <td>59.5</td>
+      <td>-2</td>
+      <td>-3.9</td>
+      <td>-0.1</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>no on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>79</td>
+      <td>3151</td>
+      <td>18.8</td>
+      <td>15.8</td>
+      <td>3</td>
+      <td>2.4</td>
+      <td>3.6</td>
+      <td>-6</td>
+      <td>35.7</td>
+      <td>45.9</td>
+      <td>-10.2</td>
+      <td>-14.1</td>
+      <td>-5.1</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2</td>
+      <td>12</td>
+      <td>458</td>
+      <td>14.9</td>
+      <td>13.6</td>
+      <td>1.3</td>
+      <td>-1.6</td>
+      <td>4.4</td>
+      <td>-2.6</td>
+      <td>49.7</td>
+      <td>52.7</td>
+      <td>-3</td>
+      <td>-7.9</td>
+      <td>1.8</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>12</td>
+      <td>458</td>
+      <td>14.1</td>
+      <td>13.2</td>
+      <td>0.9</td>
+      <td>-2.4</td>
+      <td>4.7</td>
+      <td>-0.4</td>
+      <td>50.9</td>
+      <td>53.8</td>
+      <td>-2.9</td>
+      <td>-8.5</td>
+      <td>3.2</td>
+    </tr>
+    <tr>
+      <td>site percentiles</td>
+      <td>cold spell</td>
+      <td>all</td>
+      <td>on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>12</td>
+      <td>456</td>
+      <td>34.4</td>
+      <td>25.3</td>
+      <td>9</td>
+      <td>3.2</td>
+      <td>15.3</td>
+      <td>-4.2</td>
+      <td>31.2</td>
+      <td>37.3</td>
+      <td>-6.2</td>
+      <td>-9.8</td>
+      <td>-1.2</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/event_days.csv">code/reports/forecast_record/event_days.csv</a> (78 rows shown)</p>
+
+<figure class="single"><img src="figures/record_decision.png" alt="record_decision" loading="lazy"><figcaption>Captured peak cut for five batteries. <code>record_decision</code> <a href="figures/record_decision.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>battery_share_of_mean_demand</th>
+      <th>battery_hours</th>
+      <th>model</th>
+      <th>captured_point_pct</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>captured_q70_pct</th>
+      <th>perfect_cut_share_of_peak_pct</th>
+      <th>heatwave_captured_pct</th>
+      <th>other_days_captured_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0.1</td>
+      <td>2</td>
+      <td>chronos2</td>
+      <td>51.4</td>
+      <td>47.6</td>
+      <td>54.9</td>
+      <td>51.2</td>
+      <td>5.9</td>
+      <td>26.6</td>
+      <td>41.9</td>
+    </tr>
+    <tr>
+      <td>0.1</td>
+      <td>2</td>
+      <td>chronos2_ifs</td>
+      <td>54.5</td>
+      <td>50.5</td>
+      <td>58.6</td>
+      <td>54.1</td>
+      <td>5.9</td>
+      <td>28</td>
+      <td>46.8</td>
+    </tr>
+    <tr>
+      <td>0.1</td>
+      <td>2</td>
+      <td>seasonal_naive</td>
+      <td>38.2</td>
+      <td>34.3</td>
+      <td>42.4</td>
+      <td></td>
+      <td>5.9</td>
+      <td>14.6</td>
+      <td>27.1</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>1</td>
+      <td>chronos2</td>
+      <td>40.6</td>
+      <td>36.2</td>
+      <td>45.4</td>
+      <td>43.1</td>
+      <td>7.8</td>
+      <td>19.7</td>
+      <td>33.5</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>1</td>
+      <td>chronos2_ifs</td>
+      <td>42.9</td>
+      <td>38</td>
+      <td>48.8</td>
+      <td>45.6</td>
+      <td>7.8</td>
+      <td>21.2</td>
+      <td>37.4</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>1</td>
+      <td>seasonal_naive</td>
+      <td>31.8</td>
+      <td>27.7</td>
+      <td>36.8</td>
+      <td></td>
+      <td>7.8</td>
+      <td>10.1</td>
+      <td>23.4</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>2</td>
+      <td>chronos2</td>
+      <td>49.9</td>
+      <td>45.3</td>
+      <td>54.5</td>
+      <td>52.2</td>
+      <td>9.7</td>
+      <td>24.8</td>
+      <td>41.1</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>2</td>
+      <td>chronos2_ifs</td>
+      <td>52.3</td>
+      <td>47.7</td>
+      <td>57.4</td>
+      <td>54.9</td>
+      <td>9.7</td>
+      <td>27</td>
+      <td>45.4</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>2</td>
+      <td>seasonal_naive</td>
+      <td>38.9</td>
+      <td>34.2</td>
+      <td>44.6</td>
+      <td></td>
+      <td>9.7</td>
+      <td>13.6</td>
+      <td>28.7</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>4</td>
+      <td>chronos2</td>
+      <td>62.4</td>
+      <td>59.4</td>
+      <td>64.9</td>
+      <td>64</td>
+      <td>11.6</td>
+      <td>34</td>
+      <td>51.8</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>4</td>
+      <td>chronos2_ifs</td>
+      <td>65.2</td>
+      <td>62.7</td>
+      <td>67.5</td>
+      <td>67</td>
+      <td>11.6</td>
+      <td>40.5</td>
+      <td>57.6</td>
+    </tr>
+    <tr>
+      <td>0.2</td>
+      <td>4</td>
+      <td>seasonal_naive</td>
+      <td>49.2</td>
+      <td>45</td>
+      <td>53.9</td>
+      <td></td>
+      <td>11.6</td>
+      <td>19.6</td>
+      <td>37.5</td>
+    </tr>
+    <tr>
+      <td>0.4</td>
+      <td>2</td>
+      <td>chronos2</td>
+      <td>51.9</td>
+      <td>47.6</td>
+      <td>56.3</td>
+      <td>56.1</td>
+      <td>14.7</td>
+      <td>26.9</td>
+      <td>44.2</td>
+    </tr>
+    <tr>
+      <td>0.4</td>
+      <td>2</td>
+      <td>chronos2_ifs</td>
+      <td>53.8</td>
+      <td>49.4</td>
+      <td>58.9</td>
+      <td>58.6</td>
+      <td>14.7</td>
+      <td>29</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>0.4</td>
+      <td>2</td>
+      <td>seasonal_naive</td>
+      <td>41.7</td>
+      <td>36.9</td>
+      <td>48</td>
+      <td></td>
+      <td>14.7</td>
+      <td>14</td>
+      <td>32.2</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/decision.csv">code/reports/forecast_record/decision.csv</a> (15 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>comparison</th>
+      <th>a</th>
+      <th>b</th>
+      <th>nmae_a_pct</th>
+      <th>nmae_b_pct</th>
+      <th>diff_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>best model against seasonal naive</td>
+      <td>chronos2_ifs</td>
+      <td>seasonal_naive</td>
+      <td>11.54</td>
+      <td>18.44</td>
+      <td>-6.9</td>
+      <td>-7.89</td>
+      <td>-6</td>
+    </tr>
+    <tr>
+      <td>zero-shot against trained, no covariates</td>
+      <td>chronos2</td>
+      <td>lightgbm</td>
+      <td>12.2</td>
+      <td>13.34</td>
+      <td>-1.14</td>
+      <td>-1.58</td>
+      <td>-0.79</td>
+    </tr>
+    <tr>
+      <td>zero-shot against trained, with covariates</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_ifs</td>
+      <td>11.54</td>
+      <td>13.03</td>
+      <td>-1.49</td>
+      <td>-1.93</td>
+      <td>-1.09</td>
+    </tr>
+    <tr>
+      <td>zero-shot against a neural process trained on the panel</td>
+      <td>chronos2_ifs</td>
+      <td>tnp</td>
+      <td>11.54</td>
+      <td>13.66</td>
+      <td>-2.11</td>
+      <td>-2.44</td>
+      <td>-1.74</td>
+    </tr>
+    <tr>
+      <td>the two best zero-shot models</td>
+      <td>chronos2_ifs</td>
+      <td>timesfm3_ifs</td>
+      <td>11.54</td>
+      <td>11.72</td>
+      <td>-0.18</td>
+      <td>-0.31</td>
+      <td>-0.07</td>
+    </tr>
+    <tr>
+      <td>covariates and weather forecast against none</td>
+      <td>chronos2_ifs</td>
+      <td>chronos2</td>
+      <td>11.54</td>
+      <td>12.2</td>
+      <td>-0.65</td>
+      <td>-1.07</td>
+      <td>-0.38</td>
+    </tr>
+    <tr>
+      <td>weather forecast against observed weather</td>
+      <td>chronos2_ifs</td>
+      <td>chronos2_era5</td>
+      <td>11.54</td>
+      <td>11.49</td>
+      <td>0.05</td>
+      <td>0.01</td>
+      <td>0.08</td>
+    </tr>
+    <tr>
+      <td>trained model with against without site identity</td>
+      <td>lightgbm_ifs</td>
+      <td>lightgbm_ifs_noid</td>
+      <td>13.03</td>
+      <td>13.06</td>
+      <td>-0.03</td>
+      <td>-0.17</td>
+      <td>0.15</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/model_differences.csv">code/reports/forecast_record/model_differences.csv</a> (8 rows shown)</p>
+
+<h2 id="8-what-this-page-changes">8. What this page changes</h2>
+<p><strong>Withdrawn or corrected</strong></p>
+<ul>
+<li><em>Cold spells cost the forecast value</em> (44 % against 53 % of the peak cut): one winter. Over
+four winters the difference is not clear (finding 4.6).</li>
+<li><em>Grid import at sites with a plant rises by 25 % in heat waves because the plant is turned
+down</em>: the rise is real in direction, but most of it is the meter showing a third of the
+load, and the placebo runs reach +18 %. A fall in plant output is not established (3.7, 3.8).</li>
+<li><em>Two events are sufficient to predict a site's reaction</em> and <em>the nights of the previous days
+explain the build-up</em>: both tested and not supported (3.3, 2.5).</li>
+<li><em>39 sites fall on hot days against 48 that rise</em> (key results of the PI report): from before
+the correction of the standard errors; it is 26 against 43, and 21 against 33 on the sites
+with complete meters.</li>
+<li><em>Every learned model beats the naive forecast by 26 to 35 %</em> and <em>the weather forecast is
+within 0.1 points of the observed weather for every model</em> (proof-of-concept page): true for
+the leading models, not for all in the table.</li>
+<li><em>The two night-heavy sites probably have storage heating</em> (clustering page): both run a
+plant.</li>
+</ul>
+<p><strong>Confirmed on the whole record</strong></p>
+<ul>
+<li>The error of the best model (11.5 % on the 69 test days) is 11.0 to 11.5 % in each of the
+four years; the share of the achievable peak cut (53 %) is 52 to 57 %.</li>
+<li>Days on which the import of a site with a plant steps by more than its mean are 1.5 % of all
+site-days and hold 37 % of the error (1.8 % and 42 % in the test year).</li>
+<li>Heat-wave days cost the forecast value in both large summers and under both definitions of
+a heat-wave day.</li>
+</ul>
+<p><strong>How numbers for the same thing relate</strong></p>
+<ul>
+<li><em>The heat effect.</em> +1.5 % per °C of daily mean above 20 °C (finding 2.2) is the number to
+quote. 1.6 % per °C of daily maximum above 24 °C is the same effect added over four days.
+The 0.3 to 0.8 % per °C of the event page divides the reaction by the whole difference in
+the daily maximum from the reference days, most of which lies below the threshold.</li>
+<li><em>Sites.</em> 134 with electricity; 114 matched to the estates return; 109 or 107 without a plant;
+92 with complete meters (83 without a plant in the heat analysis); 91 in the forecast panel.</li>
+<li><em>Event days.</em> The Met Office and UKHSA criteria per site (the catalogue) are the reference
+from now on. The site's own 5th and 95th percentiles and days of 28 °C and more were used on
+earlier pages; section 7 gives the forecast results for the first two side by side.</li>
+</ul>
+<p><strong>Not answered</strong></p>
+<ul>
+<li>Plant output: the meters show import only. Everything about plants in section 3 is a
+calculation with yearly means from the estates return.</li>
+<li>The size of cooling plant: recorded on 19 % of recent certificates.</li>
+<li>Gas, and daily bed occupancy (the daily winter reports need a manual download).</li>
+<li>The project brief was never filled in: these five questions are a reading of the work done,
+not a plan that was set at the start.</li>
+</ul>
+<p class="meta">Built from <code>doc/findings_map.md</code> by <code>sense-energy build-docs</code>.</p>
+</main>
+</div>
+
+</body>
+</html>

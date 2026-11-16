@@ -834,6 +834,35 @@ maximum above the reference days in a heat wave, daily mean below them in a cold
 | `group_means.csv`, `alignment_terms.csv`, `alignment_fits.csv` | mean reaction by level of each categorical descriptor; one regression per descriptor (difference per level or per standard deviation; joint p; adjusted R2 gained) |
 | `summary.json` | the headline numbers |
 
+## Audit of the event findings and the forecast on the whole record
+
+Write-up: [findings_map.md](findings_map.md), sections 6 and 7.
+
+`code/reports/event_audit/` (command `event-audit`):
+
+| Table | Content |
+|---|---|
+| `specification_grid.csv` | one row per headline number, event type and set of choices (`weeks`, `events`, `sample`, `holidays_out`; `baseline` marks the choices of `extreme_events`): `value`, interval, `n` sites |
+| `placebo.csv` | the same numbers for the catalogue's events moved by `shift_days` |
+| `grid_summary.csv` | per headline number: baseline, range over the 90 sets, share with the baseline's sign and with an interval clear of zero, range of the placebo runs |
+| `site_events.csv`, `prediction_scores.csv`, `prediction_curve.csv` | reaction of each site in each national event; error of the leave-one-out predictions; error by number of earlier events used |
+| `lag_models.csv` | daily reaction on the temperature of the day and the three days before (`d_t_mean_k`, `d_hot_k` = daily maximum above 24 degC, `d_warm_night_k` = daily minimum above 12 degC, lag k), with and without the terms `in_event` and `late` (third day on of an event) |
+| `plant_decomposition.csv`, `plant_decomposition_sites.csv` | sites with a plant: reaction of the import, the reaction expected with the plant unchanged under two assumptions for the demand, the implied change in plant output |
+
+`code/reports/forecast_anatomy/forecasts_record_none.parquet`, `forecasts_record_ifs.parquet`
+(`forecast-probes --which record`): Chronos-2 for every day from 18 January 2023 to 8 May 2026
+at the 91 forecast sites; `point` and five quantiles in kWh per half-hour.
+
+`code/reports/forecast_record/` (command `forecast-record`):
+
+| Table | Content |
+|---|---|
+| `site_days.parquet` | model x site x day: demand `a`, absolute error `ae`, `bias_pct`, peak cuts with the reference battery |
+| `by_period.csv` | per window (whole record, each year, the proof of concept's window and its 69 days) and model: error with interval, naive error, captured peak cut, share of the error at the sites with a plant and on large-step days |
+| `event_days.csv` | event days against the other days of the same site and month: error, bias, captured peak cut and their differences with intervals; by `definition`, type, season, site group and model |
+| `decision.csv` | captured peak cut for five batteries, overall and on heat-wave days |
+| `model_differences.csv` | paired differences in error between stored models of the proof of concept, with intervals from resampling weeks |
+
 ## Check of Lu et al. (2026), heat and cold waves
 
 Write-up: [heat_cold_wave_paper_check.md](heat_cold_wave_paper_check.md).

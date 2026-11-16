@@ -1,4 +1,4 @@
-% Kickoff deck: four exploratory findings on NHS sites in heat waves and cold spells.
+% Kickoff deck: what we found so far, in five questions, each finding with a grade.
 % Build with build.sh (pdfLaTeX, two passes). Text follows ASD-STE100 Simplified Technical English.
 % Look: the Oxford / SENSE slide template (Oxford blue, serif titles, Helvetica text).
 % Slide size 160 x 90 mm. Figures come from code/scripts/deck/ at their exact size on the slide.
@@ -15,11 +15,18 @@
 % ---- event line on the title slide: set the date when it is fixed ---------------------------
 \newcommand{\deckevent}{SENSE healthcare kickoff}
 \def\deckdate{}
-% ---- backup slides: the earlier findings (forecast value, plant error, strikes, heat pumps,
-%      hot days, verification) ------------------------------------------------------------------
+% ---- backup slides: the detail slides of the earlier versions (heat and cold events, the
+%      forecast, the first selection) -----------------------------------------------------------
 % \backuptrue adds them after the discussion slide
 \newif\ifbackup
 \backupfalse
+
+% ---- numbers of the forecast question (code/reports/forecast_record): set after each run -------
+\newcommand{\FCerr}{11.2}        % error of the zero-shot model, whole record
+\newcommand{\FCnaive}{17.7}      % error of the seasonal naive forecast
+\newcommand{\FCplant}{78}        % share of the error at the sites with a plant
+\newcommand{\FCwave}{$-$18}      % captured peak cut, heat-wave days minus other days (points)
+\newcommand{\FCwaveci}{$-$28 to $-$10}
 
 % ---- fonts: Charter for titles and numbers, Helvetica for text --------------------------------
 \newcommand{\titlefont}{\fontfamily{bch}\selectfont}
@@ -59,6 +66,16 @@
 \newcommand{\boxcol}[3]{% x, label, content
   \fill[shell] ([xshift=#1mm,yshift=-24mm]current page.north west) rectangle ++(45.4mm,-55.5mm);
   \node[anchor=north west,inner sep=0pt,outer sep=0pt] at ([xshift=#1mm+4mm,yshift=-28mm]current page.north west) {\parbox[t]{37.6mm}{{\bfseries\fontsize{8.6}{10}\selectfont\color{oxblue}#2}\par\vspace{2.6mm}{\fontsize{7.2}{9.6}\selectfont\color{charcoal}\raggedright #3}}};}
+% grade marks: solid (filled), indicative (outline), scenario (outline, turned)
+\DeclareRobustCommand{\gsolid}{\raisebox{0.35mm}{\color{oxblue}\rule{1.25mm}{1.25mm}}}
+\DeclareRobustCommand{\gind}{\raisebox{0.35mm}{\tikz[baseline=0pt]{\draw[oxblue,line width=0.45pt] (0,0) rectangle (1.25mm,1.25mm);}}}
+\DeclareRobustCommand{\gscen}{\raisebox{0.2mm}{\tikz[baseline=0pt]{\draw[oxblue,line width=0.45pt,rotate around={45:(0.625mm,0.625mm)}] (0,0) rectangle (1.25mm,1.25mm);}}}
+\newcommand{\st}[2]{\par\hangindent=3.6mm\hangafter=1\noindent\makebox[3.6mm][l]{#1}#2\par\vspace{0.55mm}}
+% one row of the overview: y, number and name, question, statements
+\newcommand{\qrow}[4]{%
+  \draw[stone,line width=0.35pt] ([xshift=7.2mm,yshift=-#1mm+1.6mm]current page.north west) -- ++(145.6mm,0);
+  \at{7.2}{#1}{\parbox[t]{35mm}{\raggedright{\titlefont\fontsize{10.5}{12}\selectfont\color{oxblue}#2}\par\vspace{0.6mm}{\fontsize{5.9}{7.3}\selectfont\color{ash}#3}}}
+  \at{44}{#1}{\parbox[t]{108.5mm}{\fontsize{6.5}{8.1}\selectfont\color{charcoal}\raggedright #4}}}
 % a logo appears when its file is in logos/ (pdf or png); without the file the slot stays empty
 \newcommand{\putlogo}[3]{\IfFileExists{logos/#1.pdf}{\at{#2}{#3}{\includegraphics[height=9mm]{logos/#1.pdf}}}{\IfFileExists{logos/#1.png}{\at{#2}{#3}{\includegraphics[height=9mm]{logos/#1.png}}}{}}}
 
@@ -71,8 +88,8 @@
   \fig{101.2}{5.5}{cover_sites}
   \at{104}{79.2}{\parbox[t]{50mm}{\raggedright\fontsize{5.2}{6.8}\selectfont\color{white}134 NHS sites with half-hourly electricity data.\\ Gold: sites with on-site generation.}}
   \at{7.2}{8.6}{\lab{Smart Energy Data Service (SENSE) \enspace·\enspace SDR UK}}
-  \at{7.2}{27}{\parbox[t]{88mm}{\raggedright\titlefont\fontsize{19.5}{24}\selectfont\color{oxblue}NHS sites in heat and cold:\\ four exploratory findings}}
-  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}How electricity demand reacts, when, where, and what site data explain. 134 NHS sites, 2022 to 2026}}
+  \at{7.2}{27}{\parbox[t]{88mm}{\raggedright\titlefont\fontsize{19.5}{24}\selectfont\color{oxblue}NHS site electricity demand:\\ what we found so far}}
+  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}Five questions, the findings, and how sure we are. Half-hourly data for 134 NHS sites, 2022 to 2026}}
   \at{7.2}{60.5}{{\bfseries\fontsize{8.4}{10}\selectfont\color{oxblue}Professor Siddharth Arora \enspace·\enspace Nicolas Malz}}
   \at{7.2}{65.5}{{\fontsize{6.4}{8}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace \deckevent\ifx\deckdate\empty\else\enspace·\enspace\deckdate\fi}}
   \putlogo{oxford_logo}{7.2}{74}
@@ -81,9 +98,130 @@
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 2  Finding 1: time
+% 2  Overview: the findings map
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 1 \enspace·\enspace time}
+  \slidehead{Overview}
+       {Five questions, and how sure we are of each answer}
+       {\gsolid\ Solid: two methods or two periods agree. \enspace \gind\ Indicative: one method or few sites. \enspace \gscen\ Scenario: a calculation.}
+  \qrow{25.2}{1 \enspace Data}{Can we trust the data?}{%
+    \st{\gsolid}{134 sites, 3.4 years of half-hourly electricity. 92 sites have complete meter data.}
+    \st{\gsolid}{The meters agree with the annual estates returns at 65 sites (median ratio 1.00).}
+    \st{\gind}{At sites with on-site generation the meter shows only the grid import: 40 \% of their use.}}
+  \qrow{37.2}{2 \enspace Drivers}{What changes the demand?}{%
+    \st{\gsolid}{Cold: +1.1 \% for each °C below 14 °C. Heat: +1.5 \% for each °C above 20 °C, in the evening.}
+    \st{\gsolid}{The temperature of the 3 days before has as much effect as the temperature of the day.}
+    \st{\gsolid}{Doctor strikes and visitor numbers do not change the demand ($-$0.4 \%, interval $-$1.6 to +0.8).}}
+  \qrow{49.2}{3 \enspace Sites}{Why do sites differ?}{%
+    \st{\gsolid}{The reaction belongs to the site. Region and trust explain no more than chance.}
+    \st{\gsolid}{Cold: sites with less gas heat react more. Heat: registers and certificates explain 0 to 9 \%.}
+    \st{\gind}{Sites with a plant: the meter shows each change in demand about 3 times larger.}}
+  \qrow{61.2}{4 \enspace Forecast}{How good is the forecast?}{%
+    \st{\gsolid}{A model with no training has \FCerr\ \% error in each of 4 years. Trained models: 13 \%.}
+    \st{\gsolid}{A battery that plans on the forecast gets half of the possible peak cut.}
+    \st{\gsolid}{On heat-wave days it gets 40 \% less, in each summer. \FCplant\ \% of the error is at 12 sites with a plant.}}
+  \qrow{73.2}{5 \enspace Future}{What if heat is electric?}{%
+    \st{\gscen}{Heat pumps for all gas heat put 13 of 31 sites above their grid connection.}
+    \st{\gind}{Field data: +8 points of electricity one year after heat pumps (23 sites).}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 3  Question 2: drivers
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 2 \enspace·\enspace drivers \enspace·\enspace \gsolid\ solid}
+       {The weather changes the demand. Patient activity does not}
+       {Left: change in demand in events, on placebo days and on strike days. Right: change by hour of the day on event days.}
+  \fig{7.2}{24.6}{drivers}
+  \fig{55.6}{24.6}{event_hours}
+  \bignum{12}{66}{38}{1.6 \%}{for each °C in total: the day and the 3 days before. Cold and heat}
+  \bignum{60.4}{66}{37}{+9 \%}{demand from 16:00 to 22:00 on heat-wave days. From 08:00 to 12:00: +1 \%}
+  \textcol{%
+    \blk{Implication}{A cold spell adds 11 \% at all hours. A heat wave adds 6 \%, in the evening. The temperatures of the day and of the 3 days before explain an event. Buildings set the demand, not patients.}
+    \blk{How sure}{90 sets of analysis choices give the same sign and a clear interval. 12 placebo runs give no reaction. Three temperature sources agree.}
+    \blk{Open}{\hyp{H1}{The heat of the 3 days before improves the day-ahead forecast.}\hyp{H2}{Gas demand follows patient activity. Electricity does not.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 4  Question 3: sites
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 3 \enspace·\enspace sites \enspace·\enspace \gsolid\ solid, \gind\ indicative for sites with a plant}
+       {The reaction belongs to the site, not to the region}
+       {Maps: change in demand of each site (dark edge: on-site generation). Chart: what explains the differences between sites.}
+  \fig{7.2}{24.6}{reaction_maps}
+  \fig{72.6}{24.6}{site_explained}
+  \bignum{12}{66}{38}{9 \%}{of the differences in the heat reaction are regional. Chance gives 8 \%}
+  \bignum{60.4}{66}{37}{50 to 67 \%}{are explained by the reaction of the same site in its other events}
+  \textcol{%
+    \blk{Implication}{Neighbour sites get the same weather and react differently. Registers do not show why: one certificate field explains 0 to 9 \%, the gas share 11 to 18 \%. The best predictor of a site is its own record.}
+    \blk{How sure}{Region and trust are at the level of chance and of placebo in 90 sets of choices. Sites with a plant: only 12, and the meter shows each change 3 times larger.}
+    \blk{Open}{\hyp{H1}{The size of cooling plant explains the heat reaction.}\hyp{H2}{Plants give more output in cold spells and the same output in heat waves.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 5  Question 4: forecast
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 4 \enspace·\enspace forecast \enspace·\enspace \gsolid\ solid}
+       {The forecast is stable for 4 years, but loses value in heat waves}
+       {Day-ahead forecasts for 91 sites on each day from January 2023 to May 2026. Value: the peak cut of a battery.}
+  \fig{7.2}{24.6}{record_years}
+  \fig{55.6}{24.6}{record_waves}
+  \bignum{12}{66}{38}{\FCerr\ \%}{error of a model with no training, in each year. Same day last week: \FCnaive\ \%}
+  \bignum{60.4}{66}{37}{\FCwave\ points}{less of the possible peak cut on heat-wave days (interval \FCwaveci)}
+  \textcol{%
+    \blk{Implication}{The model with no training is better than trained models (13 \%). A battery gets half of the possible peak cut. In a heat wave the demand is above the forecast. \FCplant\ \% of the error is at 12 sites with a plant.}
+    \blk{How sure}{1,201 days, not 69. The same loss in 2023 and 2025, with two heat-wave definitions and five batteries. Cold spells: no clear loss.}
+    \blk{Open}{\hyp{H1}{A plan on a higher quantile recovers the value on hot days.}\hyp{H2}{The plant schedule removes a quarter of the error at sites with a plant.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 6  Question 5: the future estate
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 5 \enspace·\enspace future \enspace·\enspace \gscen\ scenario, \gind\ indicative field data}
+       {Scenario: heat pumps put half of the sites above capacity}
+       {Heat pumps replace all gas heat. Map: 631 sites in England. Chart: 31 panel sites in the weather of 66 years.}
+  \fig{7.2}{24.2}{headroom_map}
+  \fig{55.6}{24.6}{headroom_winters}
+  \bignum{58.4}{66}{38}{48 \%}{of 631 sites need more power than the connection can supply}
+  \textcol{%
+    \blk{Implication}{The winter peak is the limit, not the annual energy. Mild winters and cold winters give almost the same result: 10 to 15 of 31 sites. Storage keeps 5 of 14 sites below the limit.}
+    \blk{How sure}{This is a calculation, not a measurement: all gas heat changes, with a performance factor of 2.55. Field data, 23 sites: +8 points of electricity after one year.}
+    \blk{Open}{\hyp{H1}{Gas for the coldest hours keeps most sites below the limit.}\hyp{H2}{Sites near the limit need less than 2 hours of storage.}}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 7  Discussion
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Discussion}
+       {Facts, open points and questions for this session}
+       {All results are exploratory: one data panel. No trust has checked the results.}
+  \boxcol{7.2}{Facts}{%
+    \bul{134 sites in 24 trusts. Half-hourly electricity, December 2022 to May 2026.}
+    \bul{Each finding has a grade: solid, indicative or scenario.}
+    \bul{Checks: 90 sets of analysis choices, placebo events, forecasts on 1,201 days.}
+    \bul{Withdrawn after the checks: the loss of forecast value in cold spells.}}
+  \boxcol{57.3}{Not resolved}{%
+    \bul{Plant output: the meters show grid import only.}
+    \bul{Cooling plant: the certificates record presence, not size.}
+    \bul{The size of the heat effect: +0.2 to +2.8 \% for each °C.}
+    \bul{Gas demand and daily bed occupancy: not analysed.}}
+  \boxcol{107.4}{Questions for this session}{%
+    \bul{Which trusts can supply plant output data or plant schedules?}
+    \bul{Who has data on cooling plant, and on indoor temperature in wards?}
+    \bul{Which decisions do estates teams make with a forecast, and at what time?}
+    \bul{Can all groups use one event list and one site identifier?}}
+  \slidefoot
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% Backup slides: the detail slides of the earlier versions. Set \backuptrue at the top to add them.
+\ifbackup
+% Backup: Finding 1: time
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Detail \enspace·\enspace heat and cold events \enspace·\enspace time}
        {Cold acts at once, all day. Heat builds for days, in the evening}
        {Demand on event days against normal days of the same site. Sites with no on-site generation, 7 heat waves, 13 cold spells.}
   \fig{7.2}{24.6}{event_days}
@@ -97,10 +235,9 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 3  Finding 2: space
+% Backup: Finding 2: space
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 2 \enspace·\enspace space}
+  \slidehead{Detail \enspace·\enspace heat and cold events \enspace·\enspace space}
        {The weather is regional, but the reaction of a site is not}
        {Maps: change in demand of each site (dark edge: on-site generation). Chart: differences between sites that the NHS region explains.}
   \fig{7.2}{24.6}{reaction_maps}
@@ -114,10 +251,9 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 4  Finding 3: site information
+% Backup: Finding 3: site information
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 3 \enspace·\enspace site information}
+  \slidehead{Detail \enspace·\enspace heat and cold events \enspace·\enspace site information}
        {A plant on site changes the reaction. Certificates explain little}
        {Left: sites with and without on-site generation (their meters show grid import). Right: sites with no on-site generation.}
   \fig{7.2}{24.6}{plant_reaction}
@@ -131,10 +267,9 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 5  Finding 4: the forecast on event days
+% Backup: Finding 4: the forecast on event days
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Exploratory finding 4 \enspace·\enspace forecast}
+  \slidehead{Detail \enspace·\enspace forecast \enspace·\enspace one test year}
        {On heat-wave days the forecast loses a third of its value}
        {91 sites, 342 test days, forecast with no weather input. Wave day: site temperature beyond the 5th or 95th percentile.}
   \fig{7.2}{24.6}{waves}
@@ -147,33 +282,6 @@
   \slidefoot
 \end{tikzpicture}\end{frame}
 
-% =============================================================================================
-% 6  Discussion
-\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Discussion}
-       {Facts, open points and questions for this session}
-       {All results are exploratory: one data panel, one test period. No trust has checked the results.}
-  \boxcol{7.2}{Facts}{%
-    \bul{134 sites in 24 trusts. Half-hourly electricity, December 2022 to May 2026.}
-    \bul{7 heat waves and 13 cold spells (Met Office and UKHSA criteria).}
-    \bul{Reaction: demand on event days against normal days of the same site.}
-    \bul{92 sites with complete data: 14 with on-site generation, 76 with a certificate.}}
-  \boxcol{57.3}{Not resolved}{%
-    \bul{Plant output: the meters show grid import only.}
-    \bul{Cooling plant: the certificates record presence, not size or control.}
-    \bul{Heat-health alerts: we do not know if sites prepare when an alert comes.}
-    \bul{Three summers are too few to see a trend.}}
-  \boxcol{107.4}{Questions for this session}{%
-    \bul{Which trusts can supply plant output data or plant schedules?}
-    \bul{Who has data on cooling plant, and on indoor temperature in wards?}
-    \bul{What do estates teams do before and during a heat wave?}
-    \bul{Can all groups use one event list and one site identifier?}}
-  \slidefoot
-\end{tikzpicture}\end{frame}
-
-% =============================================================================================
-% Backup slides: the earlier findings. Set \backuptrue at the top to add them.
-\ifbackup
 % Backup: Finding 1: the forecast and its value
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Earlier result \enspace·\enspace forecast value}

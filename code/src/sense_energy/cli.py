@@ -645,14 +645,35 @@ def extreme_events_cmd() -> None:
     click.echo(json.dumps(run()["summary"], indent=1, default=float))
 
 
+@cli.command("event-audit")
+@click.option("--tables-only", is_flag=True, help="Reuse the stored specification grid.")
+def event_audit_cmd(tables_only: bool) -> None:
+    """Audit of the event findings: 90 sets of analysis choices, placebo events, prediction of
+    a site's next event, the temperatures of the days before, and what the plant does."""
+    from .analysis.event_audit import run
+
+    out = run(grid=not tables_only)
+    click.echo(json.dumps(out["summary"]["plant"], indent=1, default=float))
+
+
+@cli.command("forecast-record")
+def forecast_record_cmd() -> None:
+    """Score the whole-record forecasts: by year, on event days, by battery, and the paired
+    differences between the stored models."""
+    from .analysis.forecast_record import run
+
+    click.echo(json.dumps(run()["summary"], indent=1, default=float))
+
+
 @cli.command("forecast-probes")
 @click.option(
     "--which",
-    type=click.Choice(["daily", "context", "mobility", "intraday", "plant"]),
+    type=click.Choice(["daily", "context", "mobility", "intraday", "plant", "record"]),
     required=True,
     help="daily: every test day; context: shorter histories; mobility: footfall in context; "
     "intraday: issued on the target day; plant: a flag for on-site generation and the plant "
-    "state.",
+    "state; record: every day of the meter record, without inputs and with the weather forecast "
+    "(uses a GPU if one is visible).",
 )
 @click.option("--threads", default=12, show_default=True)
 @click.option("--limit", default=None, type=int, help="Debug: only the first n origins.")
@@ -666,7 +687,12 @@ def forecast_probes_cmd(which: str, threads: int, limit: int | None) -> None:
         "mobility": fp.run_mobility,
         "intraday": fp.run_intraday,
         "plant": fp.run_plant,
-    }[which]
+    }.get(which)
+    if which == "record":
+        for weather in ("none", "ifs"):
+            out = fp.run_record(weather)
+            click.echo(f"record, {weather}: {len(out):,} forecast rows")
+        return
     out = run(threads, limit)
     click.echo(f"{which}: {len(out):,} forecast rows, models {sorted(out['model'].unique())}")
 

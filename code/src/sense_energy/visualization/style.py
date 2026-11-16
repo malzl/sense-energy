@@ -881,3 +881,27 @@ EVENT_DESCRIPTOR_ORDER = (
     "estates return: mean build year",
     "site size (log of mean demand)",
 )
+
+# The forecast on the whole record (analysis/forecast_record.py) and the audit of the event
+# findings (analysis/event_audit.py).
+RECORD_MODEL_NAMES = {
+    "seasonal_naive": "seasonal naive",
+    "chronos2": "zero-shot model, no inputs",
+    "chronos2_ifs": "zero-shot model, weather forecast",
+}
+RECORD_MODEL_COLORS = {
+    "seasonal_naive": "#7A7A7A",
+    "chronos2": "#56B4E9",
+    "chronos2_ifs": "#0072B2",
+}
+EVENT_DEFINITION_NAMES = {
+    "catalogue": "Met Office and UKHSA criteria",
+    "site percentiles": "site's own 5th and 95th percentile",
+}
+EVENT_DEFINITION_MARKERS = {"catalogue": "o", "site percentiles": "D"}
+PREDICTOR_ORDER = (
+    "no reaction",
+    "the other sites in the event",
+    "the other sites of the region",
+    "the site's other events",
+)

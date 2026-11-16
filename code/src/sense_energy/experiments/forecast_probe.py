@@ -371,3 +371,53 @@ def run_plant(
     out.to_parquet(OUT_DIR / f"forecasts_plant{tag}.parquet", index=False)
     (OUT_DIR / f"forecasts_plant{tag}.partial.parquet").unlink(missing_ok=True)
     return out
+
+
+RECORD_START, RECORD_END = "2023-01-18", "2026-05-08"
+RECORD_CHUNK_DAYS = 30
+RECORD_COLUMNS = ["model", "site_code", "target", "point", "q10", "q30", "q50", "q70", "q90"]
+
+
+def run_record(
+    weather: str = "none",
+    device: str | None = None,
+    start: str = RECORD_START,
+    end: str = RECORD_END,
+    batch_size: int = 256,
+) -> pd.DataFrame:
+    """Chronos-2, zero-shot, for every day of the electricity record at the proof-of-concept
+    sites (from six weeks after the first meter reading). The model has no training period, so
+    the whole record is a test: three summers and four winters instead of one test year.
+
+    ``weather="none"`` gives no covariates; ``"ifs"`` gives the proof of concept's known-ahead
+    covariates with the weather forecast of the day before (the 00z IFS ENS run). Written in
+    chunks of days to ``forecasts_record_<weather>.parquet`` (point and five quantiles)."""
+    from ..compute import autocast, select_device
+    from ..models.foundation import load_chronos2
+
+    config, panel = setup()
+    origins = poc.make_origins(panel, config, start, end, 1)
+    device = device or select_device()
+    pipe = load_chronos2(device)
+    quantiles = list(config["quantiles"])
+    name = "chronos2_record" if weather == "none" else f"chronos2_{weather}_record"
+    cw = None if weather == "none" else CovariateWindows(config, panel, weather)
+    L = int(config["context_periods"])
+    frames, t0 = [], time.time()
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for a in range(0, len(origins), RECORD_CHUNK_DAYS):
+        chunk = origins[a : a + RECORD_CHUNK_DAYS]
+        keys, X, horizon = contexts_for(panel, chunk, config)
+        windows = None
+        if cw is not None:
+            index = {s: j for j, s in enumerate(panel.sites)}
+            windows = [cw.window(o, index[s], s, L, horizon) for o, s in keys]
+        with autocast(device):
+            Q, P = predict(pipe, X, horizon, quantiles, windows, batch_size)
+        out = _assemble(name, keys, Q.astype("float32"), P.astype("float32"), panel, quantiles)
+        frames.append(out[RECORD_COLUMNS])
+        done = min(a + RECORD_CHUNK_DAYS, len(origins))
+        print(f"{name}: {done}/{len(origins)} days, {time.time() - t0:.0f} s", flush=True)
+    out = pd.concat(frames, ignore_index=True)
+    out.to_parquet(OUT_DIR / f"forecasts_record_{weather}.parquet", index=False)
+    return out

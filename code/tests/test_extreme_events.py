@@ -17,7 +17,9 @@ def _daily(days: int = 120, sites: tuple[str, ...] = ("A", "B")) -> pd.DataFrame
 def _weather(kw: pd.DataFrame, hot: slice) -> pd.DataFrame:
     rows = []
     for s in kw.columns:
-        t = pd.DataFrame({"date": kw.index, "site_code": s, "t_max": 20.0, "t_mean": 15.0})
+        t = pd.DataFrame(
+            {"date": kw.index, "site_code": s, "t_max": 20.0, "t_mean": 15.0, "t_min": 10.0}
+        )
         t.loc[t.index[hot], "t_max"] = 30.0
         rows.append(t)
     return pd.concat(rows, ignore_index=True)

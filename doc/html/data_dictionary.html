@@ -18,6 +18,7 @@
   <a href="estates_analysis.html">Estates returns (ERIC 2023/24) and occupied beds (KH03) joined with the demand data</a>
   <a href="external_activity_data.html">Public NHS activity data as covariates for the trusts and sites</a>
   <a href="extreme_events.html">Heat waves and cold spells at the sites: the reaction, when, where, and what explains it</a>
+  <a href="findings_map.html">What we found so far: the findings map</a>
   <a href="flexibility_and_design_winters.html">Flexibility, design winters, heat pumps in the field and the solar programme</a>
   <a href="forecast_error_anatomy.html">Where the day-ahead error sits, and what can remove it</a>
   <a href="heat_cold_wave_paper_check.html">Load forecasts under heat and cold waves: a check of Lu et al. (2026)</a>
@@ -74,6 +75,7 @@
   <a class="h2" href="#flexibility-design-winters-heat-pumps-in-the-field-solar-pro">Flexibility, design winters, heat pumps in the field, solar programme</a>
   <a class="h2" href="#forecast-error-anatomy">Forecast error anatomy</a>
   <a class="h2" href="#heat-waves-and-cold-spells-at-the-sites">Heat waves and cold spells at the sites</a>
+  <a class="h2" href="#audit-of-the-event-findings-and-the-forecast-on-the-whole-re">Audit of the event findings and the forecast on the whole record</a>
   <a class="h2" href="#check-of-lu-et-al-2026-heat-and-cold-waves">Check of Lu et al. (2026), heat and cold waves</a>
   </div>
 </nav>
@@ -2067,6 +2069,77 @@ maximum above the reference days in a heat wave, daily mean below them in a cold
 <tr>
   <td><code>summary.json</code></td>
   <td>the headline numbers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="audit-of-the-event-findings-and-the-forecast-on-the-whole-re">Audit of the event findings and the forecast on the whole record</h2>
+<p>Write-up: <a href="findings_map.md">findings_map.md</a>, sections 6 and 7.</p>
+<p><code>code/reports/event_audit/</code> (command <code>event-audit</code>):</p>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>specification_grid.csv</code></td>
+  <td>one row per headline number, event type and set of choices (<code>weeks</code>, <code>events</code>, <code>sample</code>, <code>holidays_out</code>; <code>baseline</code> marks the choices of <code>extreme_events</code>): <code>value</code>, interval, <code>n</code> sites</td>
+</tr>
+<tr>
+  <td><code>placebo.csv</code></td>
+  <td>the same numbers for the catalogue's events moved by <code>shift_days</code></td>
+</tr>
+<tr>
+  <td><code>grid_summary.csv</code></td>
+  <td>per headline number: baseline, range over the 90 sets, share with the baseline's sign and with an interval clear of zero, range of the placebo runs</td>
+</tr>
+<tr>
+  <td><code>site_events.csv</code>, <code>prediction_scores.csv</code>, <code>prediction_curve.csv</code></td>
+  <td>reaction of each site in each national event; error of the leave-one-out predictions; error by number of earlier events used</td>
+</tr>
+<tr>
+  <td><code>lag_models.csv</code></td>
+  <td>daily reaction on the temperature of the day and the three days before (<code>d_t_mean_k</code>, <code>d_hot_k</code> = daily maximum above 24 degC, <code>d_warm_night_k</code> = daily minimum above 12 degC, lag k), with and without the terms <code>in_event</code> and <code>late</code> (third day on of an event)</td>
+</tr>
+<tr>
+  <td><code>plant_decomposition.csv</code>, <code>plant_decomposition_sites.csv</code></td>
+  <td>sites with a plant: reaction of the import, the reaction expected with the plant unchanged under two assumptions for the demand, the implied change in plant output</td>
+</tr>
+</tbody>
+</table>
+<p><code>code/reports/forecast_anatomy/forecasts_record_none.parquet</code>, <code>forecasts_record_ifs.parquet</code>
+(<code>forecast-probes --which record</code>): Chronos-2 for every day from 18 January 2023 to 8 May 2026
+at the 91 forecast sites; <code>point</code> and five quantiles in kWh per half-hour.</p>
+<p><code>code/reports/forecast_record/</code> (command <code>forecast-record</code>):</p>
+<table>
+<thead>
+<tr>
+  <th>Table</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>site_days.parquet</code></td>
+  <td>model x site x day: demand <code>a</code>, absolute error <code>ae</code>, <code>bias_pct</code>, peak cuts with the reference battery</td>
+</tr>
+<tr>
+  <td><code>by_period.csv</code></td>
+  <td>per window (whole record, each year, the proof of concept's window and its 69 days) and model: error with interval, naive error, captured peak cut, share of the error at the sites with a plant and on large-step days</td>
+</tr>
+<tr>
+  <td><code>event_days.csv</code></td>
+  <td>event days against the other days of the same site and month: error, bias, captured peak cut and their differences with intervals; by <code>definition</code>, type, season, site group and model</td>
+</tr>
+<tr>
+  <td><code>decision.csv</code></td>
+  <td>captured peak cut for five batteries, overall and on heat-wave days</td>
+</tr>
+<tr>
+  <td><code>model_differences.csv</code></td>
+  <td>paired differences in error between stored models of the proof of concept, with intervals from resampling weeks</td>
 </tr>
 </tbody>
 </table>

@@ -44,6 +44,7 @@ CHP_FILE = PROJECT_ROOT / "code" / "reports" / "chp_dispatch" / "classification.
 TZ = "Europe/London"
 TYPES = ("heatwave", "cold spell")
 TEMP_COL = {"heatwave": "t_max", "cold spell": "t_mean"}
+TEMP_COLS = ("t_max", "t_mean", "t_min")
 REF_WEEKS = (-3, -2, -1, 1, 2, 3)
 MIN_REFS = 2
 MIN_PERIODS = 44
@@ -116,9 +117,14 @@ def excluded_days(days: pd.DatetimeIndex) -> np.ndarray:
     return np.array([d.date() in hol for d in days]) | (md >= 1221) | (md <= 103)
 
 
-def event_masks(days: pd.DatetimeIndex, sites: list[str]) -> dict[str, pd.DataFrame]:
-    """Per event type: True where the site-day is inside a site event (day x site)."""
-    ev = pd.read_csv(EVENTS_DIR / "site_events.csv", parse_dates=["start", "end"])
+def event_masks(
+    days: pd.DatetimeIndex, sites: list[str], events: pd.DataFrame | None = None
+) -> dict[str, pd.DataFrame]:
+    """Per event type: True where the site-day is inside a site event (day x site). ``events``
+    is a table of site events (site_code, type, start, end); the catalogue by default."""
+    ev = events
+    if ev is None:
+        ev = pd.read_csv(EVENTS_DIR / "site_events.csv", parse_dates=["start", "end"])
     out = {}
     for kind in TYPES:
         m = pd.DataFrame(False, index=days, columns=sites)
@@ -195,12 +201,12 @@ def site_table(kw: pd.DataFrame) -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 
 
-def reference(x: np.ndarray, usable: np.ndarray) -> np.ndarray:
+def reference(x: np.ndarray, usable: np.ndarray, weeks: tuple[int, ...] = REF_WEEKS) -> np.ndarray:
     """Median over the reference days (same weekday, one to three weeks either side) of an
     array whose first axis is the day; ``usable`` (day x site) marks the days that can serve as
     a reference. Fewer than ``MIN_REFS`` references give NaN."""
     stack = []
-    for k in REF_WEEKS:
+    for k in weeks:
         shifted = np.full(x.shape, np.nan)
         ok = np.zeros(usable.shape, dtype=bool)
         s = 7 * k
@@ -221,19 +227,39 @@ def reference(x: np.ndarray, usable: np.ndarray) -> np.ndarray:
     return np.where(n >= MIN_REFS, med, np.nan)
 
 
-def reactions(
-    kw: pd.DataFrame, weather: pd.DataFrame, masks: dict[str, pd.DataFrame]
-) -> pd.DataFrame:
-    """Per site-day: demand, its reference, the temperature differences from the reference
-    days, and the event type the day is in (or none). Excluded days carry no reference."""
-    days, sites = kw.index, list(kw.columns)
-    skip = excluded_days(days)
-    extreme = np.zeros(kw.shape, dtype=bool)
+def _usable(
+    days: pd.DatetimeIndex,
+    masks: dict[str, pd.DataFrame],
+    holidays: bool = True,
+    blocked: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Days that are not scored (holidays, Christmas fortnight) and the site-days that can
+    serve as a reference: not skipped, in no event, and not ``blocked``."""
+    skip = excluded_days(days) if holidays else np.zeros(len(days), dtype=bool)
+    extreme = np.zeros(next(iter(masks.values())).shape, dtype=bool)
     for m in masks.values():
         extreme |= m.to_numpy()
-    usable = ~extreme & ~skip[:, None]
+    if blocked is not None:
+        extreme |= blocked
+    return skip, ~extreme & ~skip[:, None]
+
+
+def reactions(
+    kw: pd.DataFrame,
+    weather: pd.DataFrame,
+    masks: dict[str, pd.DataFrame],
+    weeks: tuple[int, ...] = REF_WEEKS,
+    holidays: bool = True,
+    blocked: np.ndarray | None = None,
+) -> pd.DataFrame:
+    """Per site-day: demand, its reference, the temperature differences from the reference
+    days, and the event type the day is in (or none). Excluded days carry no reference.
+    ``weeks`` are the reference weeks, ``holidays=False`` keeps holidays in, ``blocked`` marks
+    further site-days that cannot be a reference (the real events, in a placebo run)."""
+    days, sites = kw.index, list(kw.columns)
+    skip, usable = _usable(days, masks, holidays, blocked)
     y = kw.to_numpy()
-    ref = reference(y, usable & np.isfinite(y))
+    ref = reference(y, usable & np.isfinite(y), weeks)
     ref[skip] = np.nan
     ref[~(ref > 0)] = np.nan
     out = pd.DataFrame(
@@ -244,13 +270,13 @@ def reactions(
             "ref_kw": ref.ravel(),
         }
     )
-    for col in sorted(set(TEMP_COL.values())):
+    for col in TEMP_COLS:
         t = weather.pivot(index="date", columns="site_code", values=col).reindex(
             index=days, columns=sites
         )
         t = t.to_numpy()
         out[col] = t.ravel()
-        out[f"d_{col}"] = (t - reference(t, usable & np.isfinite(t))).ravel()
+        out[f"d_{col}"] = (t - reference(t, usable & np.isfinite(t), weeks)).ravel()
     out["type"] = "none"
     for kind, m in masks.items():
         out.loc[m.to_numpy().ravel(), "type"] = kind
@@ -466,16 +492,16 @@ def hour_profile(
     site_codes: list[str],
     masks: dict[str, pd.DataFrame],
     sites: pd.DataFrame,
+    weeks: tuple[int, ...] = REF_WEEKS,
+    holidays: bool = True,
+    blocked: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """Reaction by half-hour of the day: per site the demand of the half-hour summed over its
     event days against the same half-hour of the reference days; then the mean over sites with
     a 95 % interval and the reaction of the summed demand, by site group."""
-    skip = excluded_days(days)
-    extreme = np.zeros((len(days), len(site_codes)), dtype=bool)
-    for m in masks.values():
-        extreme |= m.to_numpy()
-    usable = ~extreme & ~skip[:, None] & (np.isfinite(cube).sum(axis=1) >= MIN_PERIODS)
-    ref = reference(cube, usable)
+    skip, usable = _usable(days, masks, holidays, blocked)
+    usable = usable & (np.isfinite(cube).sum(axis=1) >= MIN_PERIODS)
+    ref = reference(cube, usable, weeks)
     info = sites.set_index("site_code").reindex(site_codes)
     chp, clean = info["chp"], info["clean"].to_numpy()
     rows = []
