@@ -52,22 +52,22 @@ for ax in axes:
     ax.axvspan(day, end, color=SHELL, zorder=0, linewidth=0)
     ax.axvline(issue, color=ASH, linewidth=0.6, linestyle=(0, (2, 2)), zorder=2)
 a.plot(t.index, t, color=TEAL, linewidth=1.0)
-a.set_title("Weather: outdoor temperature (°C)", loc="left", fontsize=6.0, pad=2, color=ASH)
+a.set_title("Weather: air temperature (°C)", loc="left", fontsize=6.0, pad=2, color=ASH)
 a.set_yticks([10, 20] if t.max() > 20 else [0, 10])
 b.bar(v.index, v, width=0.62, color=YELLOW, linewidth=0)
-b.set_title("Mobility: visitors per day (index)", loc="left", fontsize=6.0, pad=2, color=ASH)
+b.set_title("Mobility: visitors each day (index)", loc="left", fontsize=6.0, pad=2, color=ASH)
 b.set_ylim(0, 1.25 * v.max())
 b.set_yticks([0, 100])
 past = y.loc[:issue]
 later = y.loc[issue:]
-c.plot(past.index, past, color=BLUE, linewidth=0.9, label="known at the issue time")
-c.plot(later.index, later, color=MID_GREY, linewidth=0.8, label="not known yet")
+c.plot(past.index, past, color=BLUE, linewidth=0.9, label="known demand")
+c.plot(later.index, later, color=MID_GREY, linewidth=0.8, label="demand of the next day")
 c.fill_between(
-    f.index, f["q10"], f["q90"], color=ORANGE, alpha=0.28, linewidth=0, label="80 % interval"
+    f.index, f["q10"], f["q90"], color=ORANGE, alpha=0.28, linewidth=0, label="80 % range"
 )
 c.plot(f.index, f["point"], color=ORANGE, linewidth=1.3, label="forecast")
 c.set_title(
-    "Electricity demand, each half-hour (index)", loc="left", fontsize=6.0, pad=2, color=ASH
+    "Electricity demand for each half-hour (index)", loc="left", fontsize=6.0, pad=2, color=ASH
 )
 c.set_xlim(start, end)
 ticks = pd.date_range(start, end, freq="D")[:-1]

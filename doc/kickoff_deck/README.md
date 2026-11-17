@@ -6,10 +6,11 @@ findings.
 
 | Slide | Content | Visual |
 |---|---|---|
-| 1 | NHS hospital energy demand as a forecasting problem: the data (electricity, weather, mobility, registers), the problem, why a forecast | one site and eight days: temperature, visitors per day, demand and the forecast of the next day; the forecast as a formula |
-| 2 | The policy angle: which hospitals benefit from which retrofit, and four questions | the demand as base load plus heating, cooling and lighting terms; three maps with first estimates of how much each site follows cold, heat and daylight |
+| 1 | The energy demand of NHS hospitals as a forecast problem: the data (electricity, weather, mobility) and the aim | one site and eight days: air temperature, visitors each day, demand and the forecast of the next day; the forecast as a formula |
+| 2 | The correct retrofit for each hospital: the aim and the reason | the demand as base load plus heating, cooling and lighting terms; three maps with initial data |
 
-The text follows ASD-STE100 Simplified Technical English. The look follows the Oxford / SENSE
+The slides have very little text on purpose: two short blocks each, no questions and no
+hypotheses. The text follows ASD-STE100 Simplified Technical English. The look follows the Oxford / SENSE
 slide template: Oxford blue, serif titles (Charter), Helvetica text (TeX Gyre Heros), the
 template's chart palette. The maps on slide 2 are an illustration of the approach; they use the
 site slopes of `doc/weather_and_cooling.md` section 8 and are not presented as a result.

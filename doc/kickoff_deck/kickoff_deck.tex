@@ -78,6 +78,8 @@
   \fill[shell] ([xshift=7.2mm,yshift=-#1mm]current page.north west) rectangle ++(91.2mm,-#2mm);
   \node[anchor=center,inner sep=0pt] at ([xshift=52.8mm,yshift=-#1mm-0.5*#2mm]current page.north west) {#3};}
 \newcommand{\tbul}[1]{\par\hangindent=3.1mm\hangafter=1\noindent\makebox[3.1mm][l]{\raisebox{0.45mm}{\color{oxblue}\rule{0.95mm}{0.95mm}}}#1\par\vspace{0.7mm}}
+\newcommand{\blkbig}[2]{\lab{#1}\par\vspace{1.4mm}{\fontsize{8.4}{11.2}\selectfont\color{charcoal}\raggedright #2\par}\vspace{4.2mm}}
+\newcommand{\bbul}[1]{\par\hangindent=3.6mm\hangafter=1\noindent\makebox[3.6mm][l]{\raisebox{0.55mm}{\color{oxblue}\rule{1.1mm}{1.1mm}}}#1\par\vspace{1.0mm}}
 \newcommand{\qst}[2]{\par\hangindent=5mm\hangafter=1\noindent\makebox[5mm][l]{\bfseries\color{oxblue}#1}#2\par\vspace{1.1mm}}
 
 % grade marks: solid (filled), indicative (outline), scenario (outline, turned)
@@ -96,33 +98,31 @@
 \begin{document}
 
 % =============================================================================================
-% 1  The forecasting problem
+% 1  The forecast problem
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{SENSE healthcare kickoff \enspace·\enspace NHS site energy \enspace·\enspace started in November 2026}
-       {NHS hospital energy demand as a forecasting problem}
-       {Professor Siddharth Arora and Nicolas Malz, Saïd Business School. An early-stage project: this is the set-up, not results.}
+  \slidehead{SENSE healthcare kickoff}
+       {The energy demand of NHS hospitals as a forecast problem}
+       {Professor Siddharth Arora and Nicolas Malz, Saïd Business School. The work started in November 2026.}
   \fig{7.2}{24.4}{problem_panel}
   \formulaband{68.2}{12.2}{\fontsize{8}{10}\selectfont\color{charcoal}$\displaystyle
-    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.2mm}\termz{cdemand}{y_{s,\le t}}{past demand}\,,\hspace{8.5mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.2mm}\Big)$}
-  \at{7.2}{81.3}{{\fontsize{4.6}{6}\selectfont\color{ash}One site, eight days in 2024 (indices). Dashed line: time of the forecast. Mobility data: The Oxford Partnership.}}
+    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.2mm}\termz{cdemand}{y_{s,\le t}}{known demand}\,,\hspace{8.5mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.2mm}\Big)$}
+  \at{7.2}{81.3}{{\fontsize{4.6}{6}\selectfont\color{ash}The graph shows one site for eight days. The vertical line shows the time of the forecast. Mobility data: The Oxford Partnership.}}
   \textcol{%
-    \blk{The data}{%
-      \tbul{Electricity: 134 NHS sites, each half-hour}
-      \tbul{Weather: observed and forecast}
-      \tbul{Mobility: visitors per day}
-      \tbul{Registers: estates data, certificates}}
-    \blk{The problem}{For each site $s$, forecast the demand $y$ of the next day: 48 half-hours $h$, with the uncertainty.}
-    \blk{Why a forecast}{A forecast is a strict test. A model that predicts new days has learned what drives the demand of a site.}}
+    \blkbig{Data}{%
+      \bbul{Electricity: 134 NHS sites}
+      \bbul{Weather}
+      \bbul{Mobility}}
+    \blkbig{Aim}{The model calculates the demand of each site for the next day.}}
   \at{7.2}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace Smart Energy Data Service (SENSE)}}
   \atr{152.8}{84.0}{{\bfseries\fontsize{5.4}{6}\selectfont\color{oxblue}\insertframenumber}}
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
-% 2  The policy angle and the questions
+% 2  The correct retrofit for each hospital
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{The policy angle}
-       {Which hospitals benefit from which retrofit?}
-       {The same model divides the demand of each site into a base load and the parts that follow cold, heat and daylight.}
+  \slidehead{Use of the model}
+       {The correct retrofit for each hospital: heating, cooling or lighting}
+       {The model divides the demand of each site into four parts.}
   \formulaband{24.6}{12.6}{\fontsize{6.3}{9}\selectfont\color{charcoal}$\displaystyle
     y_{s,t} \,=\, \hspace{1.4mm}\termz{ash}{b_{s,t}}{base load}\hspace{1.4mm}
     \,+\, \term{cdemand}{\beta^{\mathrm{H}}_{s}\,(T_{\mathrm{H}}-T_{s,t})^{+}}{heating}
@@ -130,14 +130,10 @@
     \,+\, \term{cmobility}{\beta^{\mathrm{L}}_{s}\,(1-D_{s,t})}{lighting}
     \,+\, \varepsilon_{s,t}$}
   \fig{7.2}{38.4}{retrofit_maps}
-  \at{7.2}{78.9}{\parbox[t]{91mm}{\fontsize{4.6}{5.8}\selectfont\color{ash}$T$: outdoor temperature. $D$: daylight. The base load $b$ includes the calendar and the activity. Maps: an illustration with first estimates for 83 sites. A larger circle shows a site whose electricity follows cold, heat or daylight more.}}
+  \at{7.2}{79.6}{\parbox[t]{91mm}{\fontsize{4.6}{5.8}\selectfont\color{ash}$T$: temperature. $D$: daylight. The maps show initial data for 83 sites. A large circle shows a large change in demand.}}
   \textcol{%
-    \blk{Why it matters}{The NHS must reach net zero, and the money for retrofits is limited. Site surveys are slow. Meter data can show, for each site, where heating, cooling or lighting uses the most energy.}
-    \blk{Questions}{%
-      \qst{Q1}{How much of the demand of a site is heating, cooling and lighting?}
-      \qst{Q2}{Which sites benefit most from which retrofit?}
-      \qst{Q3}{Does a retrofit give the expected saving? Can the meter show it?}
-      \qst{Q4}{What do weather forecasts and mobility data add?}}}
+    \blkbig{Aim}{Find the sites where a retrofit decreases the demand most.}
+    \blkbig{Reason}{The NHS must decrease its emissions to net zero. The budget for retrofits is limited.}}
   \slidefoot
 \end{tikzpicture}\end{frame}
 

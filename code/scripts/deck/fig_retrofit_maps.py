@@ -25,9 +25,9 @@ s = pd.read_csv(REPORTS / "heat_drivers" / "site_features.csv")
 s = s.merge(C.site_points()[["site_code", "latitude", "longitude"]], on="site_code")
 s = s.dropna(subset=["latitude", "longitude"])
 panels = [
-    ("Heating", "demand follows cold", 100 * s["cold"], s["cold"] / s["cold_se"], BLUE),
-    ("Cooling", "demand follows heat", 100 * s["heat"], s["heat"] / s["heat_se"], ORANGE),
-    ("Lighting", "demand follows daylight", -100 * s["sun"], -s["sun"] / s["sun_se"], YELLOW),
+    ("Heating", "more demand when it is cold", 100 * s["cold"], s["cold"] / s["cold_se"], BLUE),
+    ("Cooling", "more demand when it is hot", 100 * s["heat"], s["heat"] / s["heat_se"], ORANGE),
+    ("Lighting", "less demand in daylight", -100 * s["sun"], -s["sun"] / s["sun_se"], YELLOW),
 ]
 fig, axes = figure(91, 40, ncols=3)
 out = s[["site_code", "latitude", "longitude"]].copy()
