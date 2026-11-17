@@ -606,6 +606,126 @@ def plant_decomposition(inp: Inputs, seed: int = 0) -> tuple[pd.DataFrame, pd.Da
 
 
 # --------------------------------------------------------------------------- #
+# 6. Which site effects are real? Placebo tests, false discovery rate, shrinkage
+# --------------------------------------------------------------------------- #
+
+NULL_DRAWS = 2000
+SEASON_MONTHS = {"heatwave": (5, 6, 7, 8, 9), "cold spell": (11, 12, 1, 2, 3)}
+
+
+def _block_null(kw: np.ndarray, ref: np.ndarray, lengths: list[int], rng) -> np.ndarray:
+    """Reactions (per cent) of random sets of blocks of ordinary days with the lengths of the
+    site's events: what the measure gives when there is no event."""
+    n = len(kw)
+    out = np.full(NULL_DRAWS, np.nan)
+    if n < 3 * max(lengths) or n < 30:
+        return out
+    ckw, cref = np.r_[0.0, np.cumsum(kw)], np.r_[0.0, np.cumsum(ref)]
+    num, den = np.zeros(NULL_DRAWS), np.zeros(NULL_DRAWS)
+    for length in lengths:
+        start = rng.integers(0, n - length + 1, NULL_DRAWS)
+        num += ckw[start + length] - ckw[start]
+        den += cref[start + length] - cref[start]
+    return 100 * np.log(num / den)
+
+
+def _bh(p: pd.Series) -> pd.Series:
+    """Benjamini-Hochberg adjusted p-values."""
+    order = p.sort_values().index
+    m = len(order)
+    q = (p.loc[order] * m / np.arange(1, m + 1))[::-1].cummin()[::-1].clip(upper=1.0)
+    return q.reindex(p.index)
+
+
+def site_effect_tests(inp: Inputs, seed: int = 0) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Is the reaction of a site different from zero, and how much do the sites truly differ?
+
+    For each site and event type the null distribution comes from the site itself: random
+    blocks of its ordinary days in the event's season, with the lengths of its events, scored
+    with the same measure. Its standard deviation is the standard error of the site's
+    reaction, its centre the bias. From these: a two-sided placebo p-value, the
+    Benjamini-Hochberg adjustment across sites, a random-effects decomposition (the true
+    between-site standard deviation tau and the share of the observed variance that is real)
+    and the empirical-Bayes estimate of each site, shrunk towards the mean of its group (with
+    and without on-site generation)."""
+    r, ev, _, sites, _, _ = prepare(inp, Spec())
+    sr = ee.site_reactions(ev, sites)
+    sr = sr[sr["clean"]]
+    rng = np.random.default_rng(seed)
+    ordinary = r[(r["type"] == "none") & r["kw"].notna() & r["ref_kw"].notna()]
+    rows = []
+    for kind in ee.TYPES:
+        season = ordinary[ordinary["date"].dt.month.isin(SEASON_MONTHS[kind])]
+        by_site = {s: g.sort_values("date") for s, g in season.groupby("site_code")}
+        runs = ev[ev["type"] == kind].groupby(["site_code", "run"]).size()
+        for x in sr[sr["type"] == kind].itertuples():
+            g = by_site.get(x.site_code)
+            if g is None:
+                continue
+            null = _block_null(
+                g["kw"].to_numpy(), g["ref_kw"].to_numpy(), runs.loc[x.site_code].tolist(), rng
+            )
+            null = null[np.isfinite(null)]
+            if len(null) < 100:
+                continue
+            centre, se = float(np.mean(null)), float(np.std(null, ddof=1))
+            effect = x.reaction_pct - centre
+            p = (1 + int((np.abs(null - centre) >= abs(effect)).sum())) / (len(null) + 1)
+            rows.append(
+                {
+                    "type": kind,
+                    "site_code": x.site_code,
+                    "chp": x.chp,
+                    "mean_kw": x.mean_kw,
+                    "events": x.events,
+                    "event_days": x.event_days,
+                    "reaction_pct": x.reaction_pct,
+                    "placebo_centre_pct": centre,
+                    "effect_pct": effect,
+                    "se_pct": se,
+                    "lo": effect - 1.96 * se,
+                    "hi": effect + 1.96 * se,
+                    "p": p,
+                }
+            )
+    t = pd.DataFrame(rows)
+    t["q"] = t.groupby("type", group_keys=False)["p"].apply(_bh)
+    parts, summary = [], []
+    for (kind, chp), g in t.groupby(["type", "chp"]):
+        w = 1 / g["se_pct"] ** 2
+        mu = float((w * g["effect_pct"]).sum() / w.sum())
+        qstat = float((w * (g["effect_pct"] - mu) ** 2).sum())
+        c = float(w.sum() - (w**2).sum() / w.sum())
+        tau2 = max(0.0, (qstat - (len(g) - 1)) / c)
+        wr = 1 / (g["se_pct"] ** 2 + tau2)
+        mean = float((wr * g["effect_pct"]).sum() / wr.sum())
+        b = tau2 / (tau2 + g["se_pct"] ** 2)
+        parts.append(
+            g.assign(shrunk_pct=b * g["effect_pct"] + (1 - b) * mean, weight_on_own_data=b)
+        )
+        summary.append(
+            {
+                "type": kind,
+                "sites_group": chp,
+                "sites": len(g),
+                "mean_effect_pct": mean,
+                "mean_se_pct": float(np.sqrt(1 / wr.sum())),
+                "true_sd_between_sites_pct": float(np.sqrt(tau2)),
+                "share_of_variance_real": max(0.0, (qstat - (len(g) - 1)) / qstat)
+                if qstat
+                else 0.0,
+                "median_site_se_pct": float(g["se_pct"].median()),
+                "rise_p05": int(((g["p"] < 0.05) & (g["effect_pct"] > 0)).sum()),
+                "fall_p05": int(((g["p"] < 0.05) & (g["effect_pct"] < 0)).sum()),
+                "rise_q05": int(((g["q"] < 0.05) & (g["effect_pct"] > 0)).sum()),
+                "fall_q05": int(((g["q"] < 0.05) & (g["effect_pct"] < 0)).sum()),
+                "expected_false_at_p05": 0.05 * len(g),
+            }
+        )
+    return pd.concat(parts, ignore_index=True), pd.DataFrame(summary)
+
+
+# --------------------------------------------------------------------------- #
 # Run
 # --------------------------------------------------------------------------- #
 
@@ -632,6 +752,9 @@ def run(grid: bool = True) -> dict:
     lags.to_csv(OUT_DIR / "lag_models.csv", index=False)
     per_site, pooled = plant_decomposition(inp)
     per_site.to_csv(OUT_DIR / "plant_decomposition_sites.csv", index=False)
+    tests, spread = site_effect_tests(inp)
+    tests.to_csv(OUT_DIR / "site_effect_tests.csv", index=False)
+    spread.to_csv(OUT_DIR / "site_effect_spread.csv", index=False)
     pooled.to_csv(OUT_DIR / "plant_decomposition.csv", index=False)
     summary = {
         "specifications": int(

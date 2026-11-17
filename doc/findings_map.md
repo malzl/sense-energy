@@ -158,6 +158,31 @@ return.
 
 {{table: code/reports/event_audit/plant_decomposition.csv | round=1}}
 
+**Which site effects are real?** (added 17 November 2026; `site_effect_tests.csv`,
+`site_effect_spread.csv`.) Each site's reaction is tested against its own placebo: 2,000 random
+sets of blocks of its ordinary days in the same season, with the lengths of its events. The
+spread of those placebo reactions is the site's standard error; the p-values are adjusted for
+the number of sites (false discovery rate 5 %).
+
+{{figure: site_effects_heatwave | caption=Heat waves: each site's reaction with its placebo interval, in order of size. Filled: different from zero after the adjustment. Black points: after shrinkage towards the mean of the group.}}
+
+{{figure: site_effects_cold_spell | caption=Cold spells: the same.}}
+
+{{table: code/reports/event_audit/site_effect_spread.csv | round=2}}
+
+- **Heat waves, 64 sites without on-site generation:** mean +5.4 % (standard error 1.0). 21
+  sites rise and 1 falls after the adjustment (26 and 3 at p < 0.05, where chance gives 3).
+  The true spread between sites is 6.4 points; 79 % of the observed spread is real.
+- **Cold spells, 75 sites:** mean +9.0 % (0.7). 50 rise, none falls. True spread 4.8 points.
+- **Sites with on-site generation:** for these the measure is biased upwards. Random blocks of
+  ordinary summer days give +1 to +21 % at single sites, because the import is volatile.
+  With that removed, their mean reaction to heat waves is +11.9 % (standard error 4.7), not
+  +25 %, and the difference from the other sites (+6.5 points) is not clear. Finding 3.7 has
+  to be read with this.
+- **A ranking of raw site reactions overstates the ends.** Of the ten highest raw reactions,
+  seven are different from zero after the adjustment; of the ten lowest, two. After shrinkage
+  the largest reaction is +26 %, not +92 %.
+
 ## 7. The forecast on the whole record
 
 `forecast-probes --which record` and `forecast-record` (`analysis/forecast_record.py`, tables

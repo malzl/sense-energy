@@ -2647,6 +2647,111 @@ return.</p>
   </tbody>
 </table><p class="source">source: <a href="data/plant_decomposition.csv">code/reports/event_audit/plant_decomposition.csv</a> (12 rows shown)</p>
 
+<p><strong>Which site effects are real?</strong> (added 17 November 2026; <code>site_effect_tests.csv</code>,
+<code>site_effect_spread.csv</code>.) Each site's reaction is tested against its own placebo: 2,000 random
+sets of blocks of its ordinary days in the same season, with the lengths of its events. The
+spread of those placebo reactions is the site's standard error; the p-values are adjusted for
+the number of sites (false discovery rate 5 %).</p>
+<figure class="single"><img src="figures/site_effects_heatwave.png" alt="site_effects_heatwave" loading="lazy"><figcaption>Heat waves: each site's reaction with its placebo interval, in order of size. Filled: different from zero after the adjustment. Black points: after shrinkage towards the mean of the group. <code>site_effects_heatwave</code> <a href="figures/site_effects_heatwave.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/site_effects_cold_spell.png" alt="site_effects_cold_spell" loading="lazy"><figcaption>Cold spells: the same. <code>site_effects_cold_spell</code> <a href="figures/site_effects_cold_spell.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites_group</th>
+      <th>sites</th>
+      <th>mean_effect_pct</th>
+      <th>mean_se_pct</th>
+      <th>true_sd_between_sites_pct</th>
+      <th>share_of_variance_real</th>
+      <th>median_site_se_pct</th>
+      <th>rise_p05</th>
+      <th>fall_p05</th>
+      <th>rise_q05</th>
+      <th>fall_q05</th>
+      <th>expected_false_at_p05</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>no on-site generation</td>
+      <td>75</td>
+      <td>9.02</td>
+      <td>0.66</td>
+      <td>4.8</td>
+      <td>0.88</td>
+      <td>2.91</td>
+      <td>51</td>
+      <td>0</td>
+      <td>50</td>
+      <td>0</td>
+      <td>3.75</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>on-site generation</td>
+      <td>13</td>
+      <td>5.06</td>
+      <td>2.3</td>
+      <td>5.92</td>
+      <td>0.83</td>
+      <td>6.07</td>
+      <td>4</td>
+      <td>0</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0.65</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>no on-site generation</td>
+      <td>64</td>
+      <td>5.42</td>
+      <td>1.02</td>
+      <td>6.44</td>
+      <td>0.79</td>
+      <td>4.46</td>
+      <td>26</td>
+      <td>3</td>
+      <td>21</td>
+      <td>1</td>
+      <td>3.2</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>11.94</td>
+      <td>4.74</td>
+      <td>11.76</td>
+      <td>0.81</td>
+      <td>14.15</td>
+      <td>4</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0.6</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/site_effect_spread.csv">code/reports/event_audit/site_effect_spread.csv</a> (4 rows shown)</p>
+
+<ul>
+<li><strong>Heat waves, 64 sites without on-site generation:</strong> mean +5.4 % (standard error 1.0). 21
+sites rise and 1 falls after the adjustment (26 and 3 at p &lt; 0.05, where chance gives 3).
+The true spread between sites is 6.4 points; 79 % of the observed spread is real.</li>
+<li><strong>Cold spells, 75 sites:</strong> mean +9.0 % (0.7). 50 rise, none falls. True spread 4.8 points.</li>
+<li><strong>Sites with on-site generation:</strong> for these the measure is biased upwards. Random blocks of
+ordinary summer days give +1 to +21 % at single sites, because the import is volatile.
+With that removed, their mean reaction to heat waves is +11.9 % (standard error 4.7), not
++25 %, and the difference from the other sites (+6.5 points) is not clear. Finding 3.7 has
+to be read with this.</li>
+<li><strong>A ranking of raw site reactions overstates the ends.</strong> Of the ten highest raw reactions,
+seven are different from zero after the adjustment; of the ten lowest, two. After shrinkage
+the largest reaction is +26 %, not +92 %.</li>
+</ul>
 <h2 id="7-the-forecast-on-the-whole-record">7. The forecast on the whole record</h2>
 <p><code>forecast-probes --which record</code> and <code>forecast-record</code> (<code>analysis/forecast_record.py</code>, tables
 in <code>code/reports/forecast_record/</code>). Chronos-2, zero-shot, for every day from 18 January 2023 to

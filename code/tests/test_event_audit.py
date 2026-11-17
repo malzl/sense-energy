@@ -102,3 +102,19 @@ def test_seasons_put_january_into_the_winter_that_started_the_year_before():
         "winter 2025/26",
     ]
     assert fr._season(d, "heatwave").tolist() == ["summer 2024", "summer 2024", "summer 2025"]
+
+
+def test_benjamini_hochberg_adjusts_in_rank_order():
+    p = pd.Series([0.01, 0.04, 0.03, 0.5], index=list("abcd"))
+    q = ea._bh(p)
+    assert np.allclose(q.loc[["a", "c", "b", "d"]], [0.04, 0.0533333, 0.0533333, 0.5], atol=1e-6)
+    assert (q >= p).all()
+
+
+def test_block_null_is_centred_on_zero_for_noise_and_needs_enough_days():
+    rng = np.random.default_rng(0)
+    ref = np.full(150, 100.0)
+    kw = ref * np.exp(rng.normal(0, 0.05, 150))
+    null = ea._block_null(kw, ref, [3, 4], rng)
+    assert abs(np.mean(null)) < 1.0 and 1.0 < np.std(null) < 3.0
+    assert np.isnan(ea._block_null(kw[:10], ref[:10], [3, 4], rng)).all()
