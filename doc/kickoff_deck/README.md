@@ -6,7 +6,7 @@ findings.
 
 | Slide | Content | Visual |
 |---|---|---|
-| 1 | The energy demand of NHS hospitals as a forecast problem | one site and eight days across the full width: air temperature, visitors each day, demand and the forecast of the next day; below it the forecast as a formula and two numbers (134 sites, 48 half-hours) |
+| 1 | The energy demand of NHS hospitals as a forecast problem | one site and eight days across the full width: air temperature, visitors each day, demand and the forecast of the next day; below it, across the full width, the forecast as a formula with its inputs: known demand, weather forecast, mobility, calendar, estates returns and, in brackets as planned, patient data |
 | 2 | The correct retrofit for each hospital | a strip with the demand of one site above its base load through 2025, divided into heating, lighting and cooling; three maps with initial data, each with its label at its left |
 
 The slides have very little text on purpose: a title, one line under it, the visuals and one
