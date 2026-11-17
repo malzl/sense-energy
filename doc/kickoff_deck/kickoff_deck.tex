@@ -81,9 +81,11 @@
   \fill[shell] ([xshift=#1mm,yshift=-#2mm]current page.north west) rectangle ++(#3mm,-#4mm);}
 \newcommand{\fmid}[3]{% x, y of the centre, content
   \node[anchor=center,inner sep=0pt] at ([xshift=#1mm,yshift=-#2mm]current page.north west) {#3};}
-% one footer for both slides: the same text at the same place, with the data credit
-\newcommand{\slidefootx}{%
-  \at{7.2}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace Smart Energy Data Service (SENSE) \enspace·\enspace Mobility data: The Oxford Partnership}}
+% footer of the two slides: method details as a footnote at the left, the affiliation and the
+% page number at the right (the same place on both slides)
+\newcommand{\slidefootm}[1]{%
+  \at{7.2}{81.9}{\parbox[t]{104mm}{\raggedright\fontsize{4.6}{5.9}\selectfont\color{ash}#1}}
+  \atr{148.4}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace SENSE}}
   \atr{152.8}{84.0}{{\bfseries\fontsize{5.4}{6}\selectfont\color{oxblue}\insertframenumber}}}
 \newcommand{\tbul}[1]{\par\hangindent=3.1mm\hangafter=1\noindent\makebox[3.1mm][l]{\raisebox{0.45mm}{\color{oxblue}\rule{0.95mm}{0.95mm}}}#1\par\vspace{0.7mm}}
 \newcommand{\blkbig}[2]{\lab{#1}\par\vspace{1.4mm}{\fontsize{8.4}{11.2}\selectfont\color{charcoal}\raggedright #2\par}\vspace{4.2mm}}
@@ -111,25 +113,25 @@
   \slidehead{SENSE healthcare kickoff}
        {The energy demand of NHS hospitals as a forecast problem}
        {The model calculates the demand of each site for the next day. The work started in November 2026.}
-  \atr{152.8}{6.4}{\lab{Professor Siddharth Arora \enspace·\enspace Nicolas Malz}}
+  \atr{152.8}{6.4}{\lab{Siddharth Arora \enspace·\enspace Nicolas Malz}}
   \fig{7.2}{23.6}{problem_panel}
   \fband{7.2}{67.0}{100}{13.6}
   \fmid{57.2}{73.8}{\fontsize{8.6}{10}\selectfont\color{charcoal}$\displaystyle
     \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.4mm}\termz{cdemand}{y_{s,\le t}}{known demand}\,,\hspace{9mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8.5mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6.5mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.4mm}\Big)$}
   \bignum{114}{67.4}{17}{134}{NHS sites}
   \bignum{133.4}{67.4}{19.4}{48}{half-hours in each forecast}
-  \slidefootx
+  \slidefootm{Graph: one site for eight days in 2024, as an index (mean = 100). Forecast: a pre-trained time-series model (Chronos-2) at 16:30 on the day before. In this example, the model gets the measured weather in place of the weather forecast.}
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
 % 2  The correct retrofit for each hospital
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
-  \slidehead{Use of the model}
+  \slidehead{Use of the data}
        {The correct retrofit for each hospital}
-       {The NHS must decrease its emissions to net zero. The model shows where a retrofit decreases the demand most.}
-  \fig{7.2}{23.4}{demand_parts}
-  \fig{7.2}{37.2}{retrofit_maps}
-  \slidefootx
+       {The NHS must decrease its emissions to net zero. A regression shows which sites react most to cold, heat and daylight.}
+  \fig{7.2}{23.0}{demand_parts}
+  \fig{7.2}{36.4}{retrofit_maps}
+  \slidefootm{Method: a regression of the daily demand of each site on cold (below 14 °C), heat (above 20 °C) and sunshine. 83 sites with complete data. Strip: the result for one site with the weather of 2025. This is not a measurement of the systems. A filled circle shows a clear sensitivity.}
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================

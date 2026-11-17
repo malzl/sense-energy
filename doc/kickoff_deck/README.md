@@ -19,8 +19,9 @@ skills.
 `Leonxlnx/taste-skill` and `nextlevelbuilder/ui-ux-pro-max-skill`, and from a checklist of signs
 of machine-made slides):
 
-- no caption under a visual: legends are part of the visual, credits are in the one footer line;
-- the footer is the same text at the same place on both slides;
+- no caption under a visual: legends are part of the visual, method details are in a footnote
+  at the bottom left of each slide;
+- the affiliation and the page number are at the same place on both slides;
 - equal left and right edges, no half-empty area, visuals across the full width;
 - text and thin lines have a contrast of at least 4.5:1 (the darker shades `TEXT_ORANGE`,
   `TEXT_TEAL`, `TEXT_GOLD` in `code/scripts/deck/_deck.py`; the brighter palette is for fills);
