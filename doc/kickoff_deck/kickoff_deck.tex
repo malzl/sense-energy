@@ -115,12 +115,12 @@
        {The model calculates the demand of each site for the next day. The work started in November 2026.}
   \atr{152.8}{6.4}{\lab{Siddharth Arora \enspace·\enspace Nicolas Malz}}
   \fig{7.2}{23.6}{problem_panel}
-  \fband{7.2}{67.0}{100}{13.6}
-  \fmid{57.2}{73.8}{\fontsize{8.6}{10}\selectfont\color{charcoal}$\displaystyle
-    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.4mm}\termz{cdemand}{y_{s,\le t}}{known demand}\,,\hspace{9mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8.5mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6.5mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.4mm}\Big)$}
-  \bignum{114}{67.4}{17}{134}{NHS sites}
-  \bignum{133.4}{67.4}{19.4}{48}{half-hours in each forecast}
-  \slidefootm{Graph: one site for eight days in 2024, as an index (mean = 100). Forecast: a pre-trained time-series model (Chronos-2) at 16:30 on the day before. In this example, the model gets the measured weather in place of the weather forecast.}
+  \fband{7.2}{67.0}{104}{13.6}
+  \fmid{59.2}{73.8}{\fontsize{7.9}{10}\selectfont\color{charcoal}$\displaystyle
+    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;=\; f_{\theta}\Big(\hspace{2mm}\termz{cdemand}{y_{s,\le t}}{known demand}\,,\hspace{6.6mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{6.6mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{4.6mm}\termz{ash}{c_{t+h}}{calendar}\,,\hspace{7.6mm}\termz{ash}{\big[\,p_{s,\le t}\,\big]}{patient data (planned)}\hspace{6mm}\Big)$}
+  \bignum{116.4}{67.4}{16}{134}{NHS sites}
+  \bignum{134.4}{67.4}{18.4}{48}{half-hours in each forecast}
+  \slidefootm{Graph: one site for eight days in 2024, as an index (mean = 100). Forecast: a pre-trained time-series model (Chronos-2) at 16:30 on the day before. In this example, the model gets the measured weather in place of the weather forecast. Patient data: we do not have access at this time.}
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
