@@ -10,7 +10,19 @@ last full day (experiments/forecast_probe.py, run "mobility").
 
 import pandas as pd
 import pyarrow.parquet as pq
-from _deck import ASH, BLUE, MID_GREY, ORANGE, REPORTS, SHELL, TEAL, YELLOW, figure, save
+from _deck import (
+    ASH,
+    BLUE,
+    MID_GREY,
+    ORANGE,
+    REPORTS,
+    SHELL,
+    TEXT_GOLD,
+    TEXT_TEAL,
+    YELLOW,
+    figure,
+    save,
+)
 
 from sense_energy.config import INTERIM_DIR, PROCESSED_DIR
 
@@ -46,15 +58,17 @@ v = v.set_index("date")["visits"].loc[str(start.date()) : str((day - pd.Timedelt
 v = 100 * v / mean_visits
 v.index = pd.DatetimeIndex(v.index).tz_localize(TZ) + pd.Timedelta(hours=12)
 
-fig, axes = figure(91, 43, nrows=3, sharex=True, gridspec_kw={"height_ratios": [1, 0.8, 2.2]})
+fig, axes = figure(
+    145.6, 41.5, nrows=3, sharex=True, gridspec_kw={"height_ratios": [0.9, 0.75, 2.6]}
+)
 a, b, c = axes
 for ax in axes:
     ax.axvspan(day, end, color=SHELL, zorder=0, linewidth=0)
     ax.axvline(issue, color=ASH, linewidth=0.6, linestyle=(0, (2, 2)), zorder=2)
-a.plot(t.index, t, color=TEAL, linewidth=1.0)
+a.plot(t.index, t, color=TEXT_TEAL, linewidth=1.0)
 a.set_title("Weather: air temperature (°C)", loc="left", fontsize=6.0, pad=2, color=ASH)
 a.set_yticks([10, 20] if t.max() > 20 else [0, 10])
-b.bar(v.index, v, width=0.62, color=YELLOW, linewidth=0)
+b.bar(v.index, v, width=0.62, color=YELLOW, edgecolor=TEXT_GOLD, linewidth=0.35)
 b.set_title("Mobility: visitors each day (index)", loc="left", fontsize=6.0, pad=2, color=ASH)
 b.set_ylim(0, 1.25 * v.max())
 b.set_yticks([0, 100])
@@ -65,7 +79,9 @@ c.plot(later.index, later, color=MID_GREY, linewidth=0.8, label="demand of the n
 c.fill_between(
     f.index, f["q10"], f["q90"], color=ORANGE, alpha=0.28, linewidth=0, label="80 % range"
 )
-c.plot(f.index, f["point"], color=ORANGE, linewidth=1.3, label="forecast")
+c.plot(
+    f.index, f["point"], color=ORANGE, linewidth=1.4, linestyle=(0, (3.0, 1.1)), label="forecast"
+)
 c.set_title(
     "Electricity demand for each half-hour (index)", loc="left", fontsize=6.0, pad=2, color=ASH
 )
@@ -80,7 +96,7 @@ for ax in axes:
         ax.axvline(d, color="#E6E4E0", linewidth=0.35, zorder=1)
 h, lab = c.get_legend_handles_labels()
 fig.legend(
-    h, lab, loc="outside lower center", ncol=4, handlelength=1.1, columnspacing=0.9, fontsize=6.0
+    h, lab, loc="outside lower center", ncol=4, handlelength=1.8, columnspacing=1.6, fontsize=6.2
 )
 out = pd.concat([y.rename("demand_index"), f.add_prefix("forecast_")], axis=1)
 save(fig, "problem_panel", data=out.reset_index())

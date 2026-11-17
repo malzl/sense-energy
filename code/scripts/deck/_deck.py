@@ -32,6 +32,8 @@ GOLD = "#E0C040"
 PALETTE = ("#274EB3", "#FB5607", "#00AAB4", "#D0AE2C", "#8F1D6D", "#95C11F")
 BLUE, ORANGE, TEAL, YELLOW, PURPLE, GREEN = PALETTE
 LIGHT_BLUE = "#95B3E9"
+#: Darker shades of the palette for text and thin lines: at least 4.5:1 against white and SHELL.
+TEXT_ORANGE, TEXT_TEAL, TEXT_GOLD = "#B93F07", "#086F78", "#7D6100"
 MID_GREY = "#A9A8A5"
 MM = 1 / 25.4
 #: Helvetica and its metric clones, in order of preference (the slide text is TeX Gyre Heros).

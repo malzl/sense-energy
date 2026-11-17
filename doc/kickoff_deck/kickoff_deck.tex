@@ -69,14 +69,22 @@
   \node[anchor=north west,inner sep=0pt,outer sep=0pt] at ([xshift=#1mm+4mm,yshift=-28mm]current page.north west) {\parbox[t]{37.6mm}{{\bfseries\fontsize{8.6}{10}\selectfont\color{oxblue}#2}\par\vspace{2.6mm}{\fontsize{7.2}{9.6}\selectfont\color{charcoal}\raggedright #3}}};}
 % ---- the two-slide version: colours of the model terms, formula band, short bullets ----------
 \definecolor{cdemand}{HTML}{274EB3}   % demand, heating
-\definecolor{cweather}{HTML}{00AAB4}  % weather
-\definecolor{cmobility}{HTML}{B8961F} % mobility, lighting (darker than the chart yellow, for text)
-\definecolor{ccool}{HTML}{FB5607}     % forecast, cooling
+\definecolor{cweather}{HTML}{086F78}  % weather (text shade: contrast above 4.5:1)
+\definecolor{cmobility}{HTML}{7D6100} % mobility, lighting (text shade)
+\definecolor{ccool}{HTML}{B93F07}     % forecast, cooling (text shade)
 \newcommand{\term}[3]{\underbrace{\textcolor{#1}{#2}}_{\text{\fontsize{5.4}{6}\selectfont\color{#1}#3}}}
 \newcommand{\termz}[3]{\underbrace{\textcolor{#1}{#2}}_{\makebox[0pt]{\fontsize{5.4}{6}\selectfont\color{#1}#3}}}% label without width
 \newcommand{\formulaband}[3]{% y, height, content
   \fill[shell] ([xshift=7.2mm,yshift=-#1mm]current page.north west) rectangle ++(91.2mm,-#2mm);
   \node[anchor=center,inner sep=0pt] at ([xshift=52.8mm,yshift=-#1mm-0.5*#2mm]current page.north west) {#3};}
+\newcommand{\fband}[4]{% x, y, width, height: a band in the shell colour
+  \fill[shell] ([xshift=#1mm,yshift=-#2mm]current page.north west) rectangle ++(#3mm,-#4mm);}
+\newcommand{\fmid}[3]{% x, y of the centre, content
+  \node[anchor=center,inner sep=0pt] at ([xshift=#1mm,yshift=-#2mm]current page.north west) {#3};}
+% one footer for both slides: the same text at the same place, with the data credit
+\newcommand{\slidefootx}{%
+  \at{7.2}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace Smart Energy Data Service (SENSE) \enspace·\enspace Mobility data: The Oxford Partnership}}
+  \atr{152.8}{84.0}{{\bfseries\fontsize{5.4}{6}\selectfont\color{oxblue}\insertframenumber}}}
 \newcommand{\tbul}[1]{\par\hangindent=3.1mm\hangafter=1\noindent\makebox[3.1mm][l]{\raisebox{0.45mm}{\color{oxblue}\rule{0.95mm}{0.95mm}}}#1\par\vspace{0.7mm}}
 \newcommand{\blkbig}[2]{\lab{#1}\par\vspace{1.4mm}{\fontsize{8.4}{11.2}\selectfont\color{charcoal}\raggedright #2\par}\vspace{4.2mm}}
 \newcommand{\bbul}[1]{\par\hangindent=3.6mm\hangafter=1\noindent\makebox[3.6mm][l]{\raisebox{0.55mm}{\color{oxblue}\rule{1.1mm}{1.1mm}}}#1\par\vspace{1.0mm}}
@@ -102,39 +110,33 @@
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{SENSE healthcare kickoff}
        {The energy demand of NHS hospitals as a forecast problem}
-       {Professor Siddharth Arora and Nicolas Malz, Saïd Business School. The work started in November 2026.}
-  \fig{7.2}{24.4}{problem_panel}
-  \formulaband{68.2}{12.2}{\fontsize{8}{10}\selectfont\color{charcoal}$\displaystyle
-    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.2mm}\termz{cdemand}{y_{s,\le t}}{known demand}\,,\hspace{8.5mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.2mm}\Big)$}
-  \at{7.2}{81.3}{{\fontsize{4.6}{6}\selectfont\color{ash}The graph shows one site for eight days. The vertical line shows the time of the forecast. Mobility data: The Oxford Partnership.}}
-  \textcol{%
-    \blkbig{Data}{%
-      \bbul{Electricity: 134 NHS sites}
-      \bbul{Weather}
-      \bbul{Mobility}}
-    \blkbig{Aim}{The model calculates the demand of each site for the next day.}}
-  \at{7.2}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace Smart Energy Data Service (SENSE)}}
-  \atr{152.8}{84.0}{{\bfseries\fontsize{5.4}{6}\selectfont\color{oxblue}\insertframenumber}}
+       {The model calculates the demand of each site for the next day. The work started in November 2026.}
+  \atr{152.8}{6.4}{\lab{Professor Siddharth Arora \enspace·\enspace Nicolas Malz}}
+  \fig{7.2}{23.6}{problem_panel}
+  \fband{7.2}{67.0}{100}{13.6}
+  \fmid{57.2}{73.8}{\fontsize{8.6}{10}\selectfont\color{charcoal}$\displaystyle
+    \termz{ccool}{\hat{y}_{s,t+h}}{forecast} \;\;=\;\; f_{\theta}\Big(\hspace{2.4mm}\termz{cdemand}{y_{s,\le t}}{known demand}\,,\hspace{9mm}\termz{cweather}{w_{s,t+h}}{weather forecast}\,,\hspace{8.5mm}\termz{cmobility}{m_{s,\le t}}{mobility}\,,\hspace{6.5mm}\termz{ash}{c_{t+h}}{calendar}\hspace{2.4mm}\Big)$}
+  \bignum{114}{67.4}{17}{134}{NHS sites}
+  \bignum{133.4}{67.4}{19.4}{48}{half-hours in each forecast}
+  \slidefootx
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================
 % 2  The correct retrofit for each hospital
 \begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
   \slidehead{Use of the model}
-       {The correct retrofit for each hospital: heating, cooling or lighting}
-       {The model divides the demand of each site into four parts.}
-  \formulaband{24.6}{12.6}{\fontsize{6.3}{9}\selectfont\color{charcoal}$\displaystyle
-    y_{s,t} \,=\, \hspace{1.4mm}\termz{ash}{b_{s,t}}{base load}\hspace{1.4mm}
-    \,+\, \term{cdemand}{\beta^{\mathrm{H}}_{s}\,(T_{\mathrm{H}}-T_{s,t})^{+}}{heating}
-    \,+\, \term{ccool}{\beta^{\mathrm{C}}_{s}\,(T_{s,t}-T_{\mathrm{C}})^{+}}{cooling}
-    \,+\, \term{cmobility}{\beta^{\mathrm{L}}_{s}\,(1-D_{s,t})}{lighting}
-    \,+\, \varepsilon_{s,t}$}
-  \fig{7.2}{38.4}{retrofit_maps}
-  \at{7.2}{79.6}{\parbox[t]{91mm}{\fontsize{4.6}{5.8}\selectfont\color{ash}$T$: temperature. $D$: daylight. The maps show initial data for 83 sites. A large circle shows a large change in demand.}}
-  \textcol{%
-    \blkbig{Aim}{Find the sites where a retrofit decreases the demand most.}
-    \blkbig{Reason}{The NHS must decrease its emissions to net zero. The budget for retrofits is limited.}}
-  \slidefoot
+       {The correct retrofit for each hospital}
+       {The NHS must decrease its emissions to net zero. The model shows where a retrofit decreases the demand most.}
+  \fband{7.2}{23.6}{145.6}{12.8}
+  \fmid{66}{30.0}{\fontsize{8.3}{10}\selectfont\color{charcoal}$\displaystyle
+    y_{s,t} \;=\; \hspace{1.6mm}\termz{ash}{b_{s,t}}{base load}\hspace{1.6mm}
+    \;+\; \term{cdemand}{\beta^{\mathrm{H}}_{s}\,(T_{\mathrm{H}}-T_{s,t})^{+}}{heating}
+    \;+\; \term{ccool}{\beta^{\mathrm{C}}_{s}\,(T_{s,t}-T_{\mathrm{C}})^{+}}{cooling}
+    \;+\; \term{cmobility}{\beta^{\mathrm{L}}_{s}\,(1-D_{s,t})}{lighting}
+    \;+\; \varepsilon_{s,t}$}
+  \atr{149.6}{26.9}{\parbox[t]{24mm}{\raggedleft\fontsize{5.6}{7.6}\selectfont\color{ash}$T$: temperature\\ $D$: daylight}}
+  \fig{7.2}{37.2}{retrofit_maps}
+  \slidefootx
 \end{tikzpicture}\end{frame}
 
 % =============================================================================================

@@ -6,11 +6,27 @@ findings.
 
 | Slide | Content | Visual |
 |---|---|---|
-| 1 | The energy demand of NHS hospitals as a forecast problem: the data (electricity, weather, mobility) and the aim | one site and eight days: air temperature, visitors each day, demand and the forecast of the next day; the forecast as a formula |
-| 2 | The correct retrofit for each hospital: the aim and the reason | the demand as base load plus heating, cooling and lighting terms; three maps with initial data |
+| 1 | The energy demand of NHS hospitals as a forecast problem | one site and eight days across the full width: air temperature, visitors each day, demand and the forecast of the next day; below it the forecast as a formula and two numbers (134 sites, 48 half-hours) |
+| 2 | The correct retrofit for each hospital | the demand as base load plus heating, cooling and lighting terms; three maps with initial data, each with its label at its left |
 
-The slides have very little text on purpose: two short blocks each, no questions and no
-hypotheses. The text follows ASD-STE100 Simplified Technical English. The look follows the Oxford / SENSE
+The slides have very little text on purpose: a title, one line under it, the visuals and one
+footer line. No bullets, no questions, no hypotheses.
+
+**Design rules** (from the two skills the slides are checked against,
+`Leonxlnx/taste-skill` and `nextlevelbuilder/ui-ux-pro-max-skill`, and from a checklist of signs
+of machine-made slides):
+
+- no caption under a visual: legends are part of the visual, credits are in the one footer line;
+- the footer is the same text at the same place on both slides;
+- equal left and right edges, no half-empty area, visuals across the full width;
+- text and thin lines have a contrast of at least 4.5:1 (the darker shades `TEXT_ORANGE`,
+  `TEXT_TEAL`, `TEXT_GOLD` in `code/scripts/deck/_deck.py`; the brighter palette is for fills);
+- a series is never told apart by colour alone: the forecast line is dashed, its range is named,
+  the yellow bars and circles have an edge, each map has its name next to it;
+- no bullet lists with the same rhythm, no stock icons, no stock phrases, two titles of different
+  shape, real data in every visual, specific numbers.
+
+The text follows ASD-STE100 Simplified Technical English. The look follows the Oxford / SENSE
 slide template: Oxford blue, serif titles (Charter), Helvetica text (TeX Gyre Heros), the
 template's chart palette. The maps on slide 2 are an illustration of the approach; they use the
 site slopes of `doc/weather_and_cooling.md` section 8 and are not presented as a result.
