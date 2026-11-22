@@ -51,6 +51,7 @@ choices and against 12 placebo runs, and the forecast findings on every day of t
 | 2.6 | Patient activity does not change electricity demand | doctor strikes: −0.4 % from 08:00 to 18:00 (−1.6 to +0.8), 34 weekdays, 132 sites. Visitors: elasticity 0.00 at three sites; a forecast that is given the true visitor count is no better (+0.006 points, −0.012 to +0.024). Occupied beds by quarter: correlation −0.04, 19 trusts | four tests with different data; placebo week next to the strikes | Solid for electricity |
 | 2.7 | Sunshine lowers the import | −0.7 % per kWh/m² of daily sunshine; 44 of 83 sites | one analysis; no interval on the pooled value | Indicative |
 | 2.8 | Tomorrow's heat already raises today's demand | +0.45 % per °C (−0.15 to +1.04) | anticipation, or error in the temperature of a site; not separated | Open |
+| 2.9 | The effects survive hidden confounding of moderate strength | a hidden factor must change the odds that a day is an event day by 1.8 times (heat waves) and 2.6 times (cold spells) before the effect can be zero; 1.3 and 2.2 times with the sampling interval | sharp bounds of the generalized marginal sensitivity model (Frauen et al. 2023), worst case. Observed calendar factors change those odds by up to 3.2 and 8.5 times, and holding them fixed moves the effect by 0.2 and 0.4 points | Solid for cold; indicative for heat |
 
 Tested and rejected on the way: that the nights of the previous days make the heat build up
 (the day maxima of the previous days do; with night temperatures alone the third-day term stays
@@ -85,6 +86,7 @@ forecast.
 | 4.8 | Visitor counts add nothing to the forecast | +0.006 points (−0.012 to +0.024) | two sites; agrees with 2.6 | Indicative |
 | 4.9 | Coherent forecasts across meters, sites and trusts improve the national total | 8.0 to 6.8 % | no interval; 61 test days | Indicative |
 | 4.10 | A published method for heat and cold waves (Lu et al. 2026) is level with the zero-shot model | 11 % behind in Europe, 6.5 % ahead in PJM | the paper's own public data; one seed | Indicative |
+| 4.11 | A rule for bank holidays repairs the forecast's weakest days | on bank holidays the error is 23.5 % (ordinary days about 11 %); with the same holiday of the past as a correction it is 18.3 % (−5.2 points, −8.2 to −2.4). Over all days the gain is 0.06 points | rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on; 19 bank holidays, 91 sites. On the days next to a holiday the rule makes the forecast worse (+3 to +4 points) | Solid for bank holidays |
 
 ## 5. What changes when the estate changes?
 
@@ -183,6 +185,47 @@ the number of sites (false discovery rate 5 %).
   seven are different from zero after the adjustment; of the ten lowest, two. After shrinkage
   the largest reaction is +26 %, not +92 %.
 
+**How wrong can the event effects be?** (added 22 November 2026; command
+`causal-sensitivity`, `analysis/causal_sensitivity.py`, tables in
+`code/reports/causal_sensitivity/`.) The event effects compare event days with ordinary days of
+the same site and season. A hidden factor that makes event days more likely and also moves
+demand would bias them. The generalized marginal sensitivity model of Frauen, Melnychuk and
+Feuerriegel (NeurIPS 2023) bounds the effect for a given strength Γ of such a factor: Γ is the
+largest factor by which it can change the odds that a day is an event day. The bounds are
+sharp, and they are a worst case: they let the hidden factor line up with demand as badly as
+possible.
+
+{{figure: sensitivity_bounds | caption=Bounds on the mean effect of a heat wave and of a cold spell for a hidden factor of strength Γ. Solid: lower bound; dashed: upper bound; band: 95 % interval from resampling sites.}}
+
+{{table: code/reports/causal_sensitivity/bounds.csv | round=2}}
+
+- **Heat waves** (64 sites): +5.3 % at Γ = 1. The lower bound reaches zero at Γ = 1.84, its
+  interval at Γ = 1.34.
+- **Cold spells** (75 sites): +9.4 %. The lower bound reaches zero at Γ = 2.64, its interval at
+  Γ = 2.18.
+- **What a Γ of that size is.** The same odds ratio for what we do observe: weekends 1.06 and
+  1.12 (the weather does not know the weekday), school holidays 3.2 for heat waves and 1.5 for
+  cold spells, the calendar month 2.4 and 8.5. These factors are stronger than the breakdown
+  values, yet holding them fixed moves the effect from 4.9 to 4.8 % (heat) and from 9.3 to 8.9 %
+  (cold): they are tied to the timing of events and hardly to the reaction, because the
+  reference days already remove the season.
+- **Reading.** A hidden factor would have to be tied to the timing of events about as strongly
+  as school holidays are, and to demand far more strongly than any calendar factor we can
+  measure. The cold effect is safe against that; the heat effect has less room.
+
+{{table: code/reports/causal_sensitivity/benchmarks.csv | round=2}}
+
+{{table: code/reports/causal_sensitivity/observed_adjustment.csv | round=2}}
+
+**Road traffic near the site** (`traffic_moderator.csv`). The Department for Transport counts
+in the SENSE data pack are yearly averages for count points, not daily series, so they cannot
+serve as a daily covariate. As a descriptor of the place (the flow at the busiest count point
+within one kilometre, median 23,000 vehicles a day) they do not go with the reaction of a site:
+−1.6 points per standard deviation for heat waves (−4.5 to +1.3) and −1.8 for cold spells (−5.1
+to +1.4).
+
+{{table: code/reports/event_audit/traffic_moderator.csv | round=2}}
+
 ## 7. The forecast on the whole record
 
 `forecast-probes --which record` and `forecast-record` (`analysis/forecast_record.py`, tables
@@ -206,6 +249,33 @@ half-hours are observed and at least 80 % of the six weeks before it.
 {{table: code/reports/forecast_record/decision.csv | round=1}}
 
 {{table: code/reports/forecast_record/model_differences.csv | round=2}}
+
+**A rule for special days** (added 22 November 2026; command `special-days`,
+`analysis/special_days.py`, tables in `code/reports/special_days/`). Arora and Taylor (2013,
+2018) forecast anomalous load with a rule: each special day refers to the most recent day of
+the same kind at the same time of year, weekday with weekday. Here the rule corrects the
+zero-shot forecast: the forecast for the special day times the ratio of demand to forecast on
+the corresponding past special day, by half-hour.
+
+{{figure: special_days | caption=Day-ahead error by kind of special day: the forecast, the forecast with the rule, and the load of the most recent Sunday. Forecast with calendar and weather inputs, 2024 to May 2026.}}
+
+{{table: code/reports/special_days/scores.csv | cols=model,kind,sites_group,sites,site_days,days,nmae_forecast_pct,nmae_rule_half_hour_pct,nmae_rule_day_pct,nmae_sunday_pct,rule_minus_forecast_pts,lo,hi,median_bias_forecast_pct | round=2}}
+
+- **Bank holidays** are where the forecast fails: 23.5 % error with the calendar as an input
+  (32.3 % without), against about 11 % on ordinary days, and the forecast is too high (+5 %
+  and +12 %). The rule brings it to 18.3 % (−5.2 points, −8.2 to −2.4). The load of the most
+  recent Sunday does as well (17.2 %).
+- **The days next to a holiday and the Christmas period are not anomalous at these sites**:
+  11.6 to 15.1 % error. There the rule adds the noise of one past day and makes the forecast
+  worse by 3 to 4 points. The rule is for bank holidays only.
+- **By holiday** (`scores_by_name.csv`): the gain is on Christmas Day, Good Friday, New Year's
+  Day and the late summer bank holiday (29 to 36 % error down to 17 to 21 %). On Easter Monday,
+  May Day, the spring bank holiday and Boxing Day the forecast is already at 12 to 20 % and the
+  rule does not help.
+- **Over all days** bank holidays are 2.3 % of days and 2.8 % of the error; the rule lowers
+  the error of all days from 11.33 to 11.27 % (−0.06 points, −0.09 to −0.03).
+
+{{table: code/reports/special_days/overall.csv | round=2}}
 
 ## 8. What this page changes
 

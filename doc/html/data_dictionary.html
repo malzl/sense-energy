@@ -76,6 +76,7 @@
   <a class="h2" href="#forecast-error-anatomy">Forecast error anatomy</a>
   <a class="h2" href="#heat-waves-and-cold-spells-at-the-sites">Heat waves and cold spells at the sites</a>
   <a class="h2" href="#audit-of-the-event-findings-and-the-forecast-on-the-whole-re">Audit of the event findings and the forecast on the whole record</a>
+  <a class="h2" href="#special-days-sensitivity-bounds-and-the-sense-data-pack">Special days, sensitivity bounds and the SENSE data pack</a>
   <a class="h2" href="#check-of-lu-et-al-2026-heat-and-cold-waves">Check of Lu et al. (2026), heat and cold waves</a>
   </div>
 </nav>
@@ -2140,6 +2141,38 @@ at the 91 forecast sites; <code>point</code> and five quantiles in kWh per half-
 <tr>
   <td><code>model_differences.csv</code></td>
   <td>paired differences in error between stored models of the proof of concept, with intervals from resampling weeks</td>
+</tr>
+</tbody>
+</table>
+<h2 id="special-days-sensitivity-bounds-and-the-sense-data-pack">Special days, sensitivity bounds and the SENSE data pack</h2>
+<p>Write-up: <a href="findings_map.md">findings_map.md</a>, sections 6 and 7.</p>
+<table>
+<thead>
+<tr>
+  <th>Location</th>
+  <th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>code/reports/special_days/</code> (<code>special-days</code>)</td>
+  <td><code>special_site_days.csv</code>: site x special day with its kind, name, corresponding past day and the errors of the forecast, the rule and the most recent Sunday; <code>scores.csv</code>, <code>scores_by_name.csv</code>, <code>overall.csv</code></td>
+</tr>
+<tr>
+  <td><code>code/reports/causal_sensitivity/</code> (<code>causal-sensitivity</code>)</td>
+  <td><code>bounds.csv</code>: bounds on the mean event effect by <code>gamma</code> with intervals; <code>bounds_sites.csv</code>: the same per site; <code>benchmarks.csv</code>: odds ratios of observed calendar factors; <code>observed_adjustment.csv</code>: the effect without and with those factors</td>
+</tr>
+<tr>
+  <td><code>code/reports/event_audit/traffic_moderator.csv</code></td>
+  <td>site reaction on the road traffic near the site</td>
+</tr>
+<tr>
+  <td><code>code/data/external/sense_del/</code> (not in git)</td>
+  <td>the SENSE data pack of 22 November 2026: <code>traffic/</code> (Department for Transport count points, raw counts and annual average daily flows, 2000 to 2024), <code>mobility/</code> (the visitor counts of calendar 2024 for three sites and a campus, with the end user licence agreement), <code>dissertation/</code>, and four papers</td>
+</tr>
+<tr>
+  <td><code>code/data/external/papers_sensitivity/paper.pdf</code> (not in git)</td>
+  <td>Frauen, Melnychuk and Feuerriegel (NeurIPS 2023)</td>
 </tr>
 </tbody>
 </table>

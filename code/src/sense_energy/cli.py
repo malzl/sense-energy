@@ -665,6 +665,24 @@ def forecast_record_cmd() -> None:
     click.echo(json.dumps(run()["summary"], indent=1, default=float))
 
 
+@cli.command("special-days")
+def special_days_cmd() -> None:
+    """The rule for special days (Arora and Taylor) on top of the zero-shot forecast."""
+    from .analysis.special_days import run
+
+    out = run()
+    click.echo(out["overall"].round(2).to_string(index=False))
+
+
+@cli.command("causal-sensitivity")
+def causal_sensitivity_cmd() -> None:
+    """Bounds on the effect of heat waves and cold spells under unobserved confounding
+    (generalized marginal sensitivity model, Frauen et al. 2023)."""
+    from .analysis.causal_sensitivity import run
+
+    click.echo(json.dumps(run()["summary"], indent=1, default=float))
+
+
 @cli.command("forecast-probes")
 @click.option(
     "--which",

@@ -863,6 +863,18 @@ at the 91 forecast sites; `point` and five quantiles in kWh per half-hour.
 | `decision.csv` | captured peak cut for five batteries, overall and on heat-wave days |
 | `model_differences.csv` | paired differences in error between stored models of the proof of concept, with intervals from resampling weeks |
 
+## Special days, sensitivity bounds and the SENSE data pack
+
+Write-up: [findings_map.md](findings_map.md), sections 6 and 7.
+
+| Location | Content |
+|---|---|
+| `code/reports/special_days/` (`special-days`) | `special_site_days.csv`: site x special day with its kind, name, corresponding past day and the errors of the forecast, the rule and the most recent Sunday; `scores.csv`, `scores_by_name.csv`, `overall.csv` |
+| `code/reports/causal_sensitivity/` (`causal-sensitivity`) | `bounds.csv`: bounds on the mean event effect by `gamma` with intervals; `bounds_sites.csv`: the same per site; `benchmarks.csv`: odds ratios of observed calendar factors; `observed_adjustment.csv`: the effect without and with those factors |
+| `code/reports/event_audit/traffic_moderator.csv` | site reaction on the road traffic near the site |
+| `code/data/external/sense_del/` (not in git) | the SENSE data pack of 22 November 2026: `traffic/` (Department for Transport count points, raw counts and annual average daily flows, 2000 to 2024), `mobility/` (the visitor counts of calendar 2024 for three sites and a campus, with the end user licence agreement), `dissertation/`, and four papers |
+| `code/data/external/papers_sensitivity/paper.pdf` (not in git) | Frauen, Melnychuk and Feuerriegel (NeurIPS 2023) |
+
 ## Check of Lu et al. (2026), heat and cold waves
 
 Write-up: [heat_cold_wave_paper_check.md](heat_cold_wave_paper_check.md).

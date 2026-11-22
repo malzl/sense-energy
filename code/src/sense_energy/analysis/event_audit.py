@@ -726,6 +726,80 @@ def site_effect_tests(inp: Inputs, seed: int = 0) -> tuple[pd.DataFrame, pd.Data
 
 
 # --------------------------------------------------------------------------- #
+# 7. Road traffic near the site
+# --------------------------------------------------------------------------- #
+
+TRAFFIC_FILE = (
+    PROJECT_ROOT
+    / "code/data/external/sense_del/sense_del/traffic"
+    / "energy_systems_catapult.road_traffic.dft_traffic_counts_aadf.parquet"
+)
+TRAFFIC_RADIUS_KM = 1.0
+
+
+def site_traffic(sites: pd.DataFrame) -> pd.DataFrame:
+    """Road traffic near each site from the Department for Transport count points: the
+    annual average daily flow of motor vehicles (latest year of each count point from 2019
+    on) at the busiest count point within one kilometre, and the number of count points
+    there. The counts are yearly averages: they describe the place, not a day."""
+    a = pd.read_parquet(
+        TRAFFIC_FILE,
+        columns=["count_point_id", "year", "latitude", "longitude", "all_motor_vehicles"],
+    )
+    a = a[a["year"] >= 2019].sort_values("year").drop_duplicates("count_point_id", keep="last")
+    lat, lon = np.deg2rad(a["latitude"].to_numpy()), np.deg2rad(a["longitude"].to_numpy())
+    flow = a["all_motor_vehicles"].to_numpy(dtype=float)
+    rows = []
+    for s in sites.dropna(subset=["latitude", "longitude"]).itertuples():
+        la, lo = np.deg2rad(s.latitude), np.deg2rad(s.longitude)
+        d = 6371.0 * np.hypot(lat - la, (lon - lo) * np.cos((lat + la) / 2))
+        near = d <= TRAFFIC_RADIUS_KM
+        rows.append(
+            {
+                "site_code": s.site_code,
+                "count_points_1km": int(near.sum()),
+                "busiest_flow_1km": float(flow[near].max()) if near.any() else np.nan,
+                "nearest_count_point_km": float(d.min()),
+            }
+        )
+    out = pd.DataFrame(rows)
+    out["log_traffic"] = np.log(out["busiest_flow_1km"])
+    return out
+
+
+def traffic_moderator(inp: Inputs) -> pd.DataFrame:
+    """Does road traffic near the site go with its reaction? The site reaction on the log of
+    the traffic flow, with the size of the event held fixed (sites without on-site
+    generation)."""
+    if not TRAFFIC_FILE.exists():
+        return pd.DataFrame()
+    _, ev, _, sites, _, _ = prepare(inp, Spec())
+    sr = ee.site_reactions(ev, sites).merge(site_traffic(sites), on="site_code", how="left")
+    rows = []
+    for kind, x in sr.groupby("type"):
+        x = x[x["clean"] & (x["chp"] == PLAIN)].dropna(subset=["reaction_pct", "degrees"])
+        got = ee._fit_descriptor(x, "log_traffic", "num")
+        if got is None:
+            continue
+        d, fit, _, joint, gain = got
+        ci = fit.conf_int().loc["z"]
+        rows.append(
+            {
+                "type": kind,
+                "sites": len(d),
+                "sites_without_count_point": int(x["log_traffic"].isna().sum()),
+                "median_flow": float(np.exp(d["log_traffic"]).median()),
+                "points_per_sd": float(fit.params["z"]),
+                "lo": float(ci[0]),
+                "hi": float(ci[1]),
+                "p": joint,
+                "adj_r2_gain": gain,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+# --------------------------------------------------------------------------- #
 # Run
 # --------------------------------------------------------------------------- #
 
@@ -752,6 +826,9 @@ def run(grid: bool = True) -> dict:
     lags.to_csv(OUT_DIR / "lag_models.csv", index=False)
     per_site, pooled = plant_decomposition(inp)
     per_site.to_csv(OUT_DIR / "plant_decomposition_sites.csv", index=False)
+    traffic = traffic_moderator(inp)
+    if len(traffic):
+        traffic.to_csv(OUT_DIR / "traffic_moderator.csv", index=False)
     tests, spread = site_effect_tests(inp)
     tests.to_csv(OUT_DIR / "site_effect_tests.csv", index=False)
     spread.to_csv(OUT_DIR / "site_effect_spread.csv", index=False)

@@ -230,6 +230,13 @@ choices and against 12 placebo runs, and the forecast findings on every day of t
   <td>anticipation, or error in the temperature of a site; not separated</td>
   <td>Open</td>
 </tr>
+<tr>
+  <td>2.9</td>
+  <td>The effects survive hidden confounding of moderate strength</td>
+  <td>a hidden factor must change the odds that a day is an event day by 1.8 times (heat waves) and 2.6 times (cold spells) before the effect can be zero; 1.3 and 2.2 times with the sampling interval</td>
+  <td>sharp bounds of the generalized marginal sensitivity model (Frauen et al. 2023), worst case. Observed calendar factors change those odds by up to 3.2 and 8.5 times, and holding them fixed moves the effect by 0.2 and 0.4 points</td>
+  <td>Solid for cold; indicative for heat</td>
+</tr>
 </tbody>
 </table>
 <p>Tested and rejected on the way: that the nights of the previous days make the heat build up
@@ -394,6 +401,13 @@ forecast.</p>
   <td>11 % behind in Europe, 6.5 % ahead in PJM</td>
   <td>the paper's own public data; one seed</td>
   <td>Indicative</td>
+</tr>
+<tr>
+  <td>4.11</td>
+  <td>A rule for bank holidays repairs the forecast's weakest days</td>
+  <td>on bank holidays the error is 23.5 % (ordinary days about 11 %); with the same holiday of the past as a correction it is 18.3 % (−5.2 points, −8.2 to −2.4). Over all days the gain is 0.06 points</td>
+  <td>rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on; 19 bank holidays, 91 sites. On the days next to a holiday the rule makes the forecast worse (+3 to +4 points)</td>
+  <td>Solid for bank holidays</td>
 </tr>
 </tbody>
 </table>
@@ -2752,6 +2766,341 @@ to be read with this.</li>
 seven are different from zero after the adjustment; of the ten lowest, two. After shrinkage
 the largest reaction is +26 %, not +92 %.</li>
 </ul>
+<p><strong>How wrong can the event effects be?</strong> (added 22 November 2026; command
+<code>causal-sensitivity</code>, <code>analysis/causal_sensitivity.py</code>, tables in
+<code>code/reports/causal_sensitivity/</code>.) The event effects compare event days with ordinary days of
+the same site and season. A hidden factor that makes event days more likely and also moves
+demand would bias them. The generalized marginal sensitivity model of Frauen, Melnychuk and
+Feuerriegel (NeurIPS 2023) bounds the effect for a given strength Γ of such a factor: Γ is the
+largest factor by which it can change the odds that a day is an event day. The bounds are
+sharp, and they are a worst case: they let the hidden factor line up with demand as badly as
+possible.</p>
+<figure class="single"><img src="figures/sensitivity_bounds.png" alt="sensitivity_bounds" loading="lazy"><figcaption>Bounds on the mean effect of a heat wave and of a cold spell for a hidden factor of strength Γ. Solid: lower bound; dashed: upper bound; band: 95 % interval from resampling sites. <code>sensitivity_bounds</code> <a href="figures/sensitivity_bounds.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>gamma</th>
+      <th>sites</th>
+      <th>effect_lo</th>
+      <th>effect_hi</th>
+      <th>ci_lo</th>
+      <th>ci_hi</th>
+      <th>sites_with_lower_bound_above_zero</th>
+      <th>type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>64</td>
+      <td>5.31</td>
+      <td>5.31</td>
+      <td>2.49</td>
+      <td>8.22</td>
+      <td>0.7</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>1.1</td>
+      <td>64</td>
+      <td>4.47</td>
+      <td>6.15</td>
+      <td>1.65</td>
+      <td>9.1</td>
+      <td>0.67</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>1.25</td>
+      <td>64</td>
+      <td>3.34</td>
+      <td>7.26</td>
+      <td>0.52</td>
+      <td>10.24</td>
+      <td>0.66</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>1.5</td>
+      <td>64</td>
+      <td>1.72</td>
+      <td>8.84</td>
+      <td>-1.15</td>
+      <td>11.88</td>
+      <td>0.59</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>64</td>
+      <td>-0.82</td>
+      <td>11.3</td>
+      <td>-3.78</td>
+      <td>14.37</td>
+      <td>0.48</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>64</td>
+      <td>-4.39</td>
+      <td>14.75</td>
+      <td>-7.5</td>
+      <td>17.97</td>
+      <td>0.38</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>64</td>
+      <td>-8.77</td>
+      <td>19.15</td>
+      <td>-12.15</td>
+      <td>22.62</td>
+      <td>0.31</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>64</td>
+      <td>-14.63</td>
+      <td>25.32</td>
+      <td>-18.46</td>
+      <td>29.32</td>
+      <td>0.17</td>
+      <td>heatwave</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>75</td>
+      <td>9.44</td>
+      <td>9.44</td>
+      <td>7.59</td>
+      <td>11.45</td>
+      <td>0.88</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>1.1</td>
+      <td>75</td>
+      <td>8.51</td>
+      <td>10.38</td>
+      <td>6.67</td>
+      <td>12.41</td>
+      <td>0.85</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>1.25</td>
+      <td>75</td>
+      <td>7.25</td>
+      <td>11.63</td>
+      <td>5.39</td>
+      <td>13.73</td>
+      <td>0.85</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>1.5</td>
+      <td>75</td>
+      <td>5.46</td>
+      <td>13.41</td>
+      <td>3.65</td>
+      <td>15.58</td>
+      <td>0.8</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>75</td>
+      <td>2.65</td>
+      <td>16.25</td>
+      <td>0.8</td>
+      <td>18.56</td>
+      <td>0.64</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>75</td>
+      <td>-1.23</td>
+      <td>20.36</td>
+      <td>-3.17</td>
+      <td>22.98</td>
+      <td>0.51</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>75</td>
+      <td>-5.93</td>
+      <td>25.73</td>
+      <td>-8.21</td>
+      <td>28.86</td>
+      <td>0.28</td>
+      <td>cold spell</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>75</td>
+      <td>-12.35</td>
+      <td>33.76</td>
+      <td>-15.06</td>
+      <td>37.72</td>
+      <td>0.08</td>
+      <td>cold spell</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/bounds.csv">code/reports/causal_sensitivity/bounds.csv</a> (16 rows shown)</p>
+
+<ul>
+<li><strong>Heat waves</strong> (64 sites): +5.3 % at Γ = 1. The lower bound reaches zero at Γ = 1.84, its
+interval at Γ = 1.34.</li>
+<li><strong>Cold spells</strong> (75 sites): +9.4 %. The lower bound reaches zero at Γ = 2.64, its interval at
+Γ = 2.18.</li>
+<li><strong>What a Γ of that size is.</strong> The same odds ratio for what we do observe: weekends 1.06 and
+1.12 (the weather does not know the weekday), school holidays 3.2 for heat waves and 1.5 for
+cold spells, the calendar month 2.4 and 8.5. These factors are stronger than the breakdown
+values, yet holding them fixed moves the effect from 4.9 to 4.8 % (heat) and from 9.3 to 8.9 %
+(cold): they are tied to the timing of events and hardly to the reaction, because the
+reference days already remove the season.</li>
+<li><strong>Reading.</strong> A hidden factor would have to be tied to the timing of events about as strongly
+as school holidays are, and to demand far more strongly than any calendar factor we can
+measure. The cold effect is safe against that; the heat effect has less room.</li>
+</ul>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>factor</th>
+      <th>levels</th>
+      <th>odds_ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>heatwave</td>
+      <td>weekend</td>
+      <td>2</td>
+      <td>1.06</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>school holidays (approximate)</td>
+      <td>2</td>
+      <td>3.24</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>calendar month</td>
+      <td>5</td>
+      <td>2.38</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>weekend</td>
+      <td>2</td>
+      <td>1.12</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>school holidays (approximate)</td>
+      <td>2</td>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>calendar month</td>
+      <td>5</td>
+      <td>8.5</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/benchmarks.csv">code/reports/causal_sensitivity/benchmarks.csv</a> (6 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>site_days</th>
+      <th>effect_pct</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>effect_adjusted_pct</th>
+      <th>adjusted_lo</th>
+      <th>adjusted_hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>heatwave</td>
+      <td>33784</td>
+      <td>4.92</td>
+      <td>3.6</td>
+      <td>6.23</td>
+      <td>4.77</td>
+      <td>3.42</td>
+      <td>6.13</td>
+    </tr>
+    <tr>
+      <td>cold spell</td>
+      <td>36093</td>
+      <td>9.28</td>
+      <td>8.14</td>
+      <td>10.43</td>
+      <td>8.93</td>
+      <td>7.72</td>
+      <td>10.14</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/observed_adjustment.csv">code/reports/causal_sensitivity/observed_adjustment.csv</a> (2 rows shown)</p>
+
+<p><strong>Road traffic near the site</strong> (<code>traffic_moderator.csv</code>). The Department for Transport counts
+in the SENSE data pack are yearly averages for count points, not daily series, so they cannot
+serve as a daily covariate. As a descriptor of the place (the flow at the busiest count point
+within one kilometre, median 23,000 vehicles a day) they do not go with the reaction of a site:
+−1.6 points per standard deviation for heat waves (−4.5 to +1.3) and −1.8 for cold spells (−5.1
+to +1.4).</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>type</th>
+      <th>sites</th>
+      <th>sites_without_count_point</th>
+      <th>median_flow</th>
+      <th>points_per_sd</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>p</th>
+      <th>adj_r2_gain</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cold spell</td>
+      <td>65</td>
+      <td>10</td>
+      <td>23213</td>
+      <td>-1.83</td>
+      <td>-5.07</td>
+      <td>1.41</td>
+      <td>0.27</td>
+      <td>0.02</td>
+    </tr>
+    <tr>
+      <td>heatwave</td>
+      <td>58</td>
+      <td>6</td>
+      <td>23648.5</td>
+      <td>-1.6</td>
+      <td>-4.45</td>
+      <td>1.26</td>
+      <td>0.28</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/traffic_moderator.csv">code/reports/event_audit/traffic_moderator.csv</a> (2 rows shown)</p>
+
 <h2 id="7-the-forecast-on-the-whole-record">7. The forecast on the whole record</h2>
 <p><code>forecast-probes --which record</code> and <code>forecast-record</code> (<code>analysis/forecast_record.py</code>, tables
 in <code>code/reports/forecast_record/</code>). Chronos-2, zero-shot, for every day from 18 January 2023 to
@@ -5073,6 +5422,584 @@ half-hours are observed and at least 80 % of the six weeks before it.</p>
     </tr>
   </tbody>
 </table><p class="source">source: <a href="data/model_differences.csv">code/reports/forecast_record/model_differences.csv</a> (8 rows shown)</p>
+
+<p><strong>A rule for special days</strong> (added 22 November 2026; command <code>special-days</code>,
+<code>analysis/special_days.py</code>, tables in <code>code/reports/special_days/</code>). Arora and Taylor (2013,
+2018) forecast anomalous load with a rule: each special day refers to the most recent day of
+the same kind at the same time of year, weekday with weekday. Here the rule corrects the
+zero-shot forecast: the forecast for the special day times the ratio of demand to forecast on
+the corresponding past special day, by half-hour.</p>
+<figure class="single"><img src="figures/special_days.png" alt="special_days" loading="lazy"><figcaption>Day-ahead error by kind of special day: the forecast, the forecast with the rule, and the load of the most recent Sunday. Forecast with calendar and weather inputs, 2024 to May 2026. <code>special_days</code> <a href="figures/special_days.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 30 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>kind</th>
+      <th>sites_group</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>nmae_forecast_pct</th>
+      <th>nmae_rule_half_hour_pct</th>
+      <th>nmae_rule_day_pct</th>
+      <th>nmae_sunday_pct</th>
+      <th>rule_minus_forecast_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>median_bias_forecast_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2</td>
+      <td>all special days</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>4666</td>
+      <td>53</td>
+      <td>19.44</td>
+      <td>17.61</td>
+      <td>19.52</td>
+      <td>24.23</td>
+      <td>-1.84</td>
+      <td>-3.15</td>
+      <td>-0.62</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>all special days</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>4073</td>
+      <td>53</td>
+      <td>18.99</td>
+      <td>16.81</td>
+      <td>18.65</td>
+      <td>23.6</td>
+      <td>-2.18</td>
+      <td>-3.54</td>
+      <td>-0.85</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>all special days</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>593</td>
+      <td>53</td>
+      <td>22.43</td>
+      <td>22.9</td>
+      <td>25.25</td>
+      <td>28.38</td>
+      <td>0.46</td>
+      <td>-1.97</td>
+      <td>2.63</td>
+      <td>0.34</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>Christmas period</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>1271</td>
+      <td>14</td>
+      <td>14.72</td>
+      <td>18.23</td>
+      <td>18.01</td>
+      <td>25.99</td>
+      <td>3.51</td>
+      <td>2.83</td>
+      <td>4.21</td>
+      <td>-1.64</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>Christmas period</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>1104</td>
+      <td>14</td>
+      <td>13.81</td>
+      <td>17.15</td>
+      <td>16.84</td>
+      <td>25.48</td>
+      <td>3.33</td>
+      <td>2.78</td>
+      <td>3.96</td>
+      <td>-1.59</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>Christmas period</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>167</td>
+      <td>14</td>
+      <td>20.72</td>
+      <td>25.39</td>
+      <td>25.71</td>
+      <td>29.39</td>
+      <td>4.67</td>
+      <td>2.28</td>
+      <td>7.57</td>
+      <td>-1.92</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>bank holiday</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>1651</td>
+      <td>19</td>
+      <td>32.34</td>
+      <td>17.8</td>
+      <td>23.61</td>
+      <td>17.22</td>
+      <td>-14.55</td>
+      <td>-20.34</td>
+      <td>-9.25</td>
+      <td>12.05</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>bank holiday</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>1448</td>
+      <td>19</td>
+      <td>32.67</td>
+      <td>17.37</td>
+      <td>23.43</td>
+      <td>15.96</td>
+      <td>-15.3</td>
+      <td>-21.76</td>
+      <td>-9.85</td>
+      <td>11.61</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>bank holiday</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>203</td>
+      <td>19</td>
+      <td>30.2</td>
+      <td>20.61</td>
+      <td>24.75</td>
+      <td>25.49</td>
+      <td>-9.59</td>
+      <td>-16.35</td>
+      <td>-3.36</td>
+      <td>17.14</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>day after a bank holiday</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>878</td>
+      <td>10</td>
+      <td>20.73</td>
+      <td>19.53</td>
+      <td>22.71</td>
+      <td>27.48</td>
+      <td>-1.2</td>
+      <td>-2.41</td>
+      <td>-0.03</td>
+      <td>-10.92</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>day after a bank holiday</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>766</td>
+      <td>10</td>
+      <td>20.24</td>
+      <td>18.91</td>
+      <td>21.77</td>
+      <td>27.41</td>
+      <td>-1.34</td>
+      <td>-2.65</td>
+      <td>-0.07</td>
+      <td>-10.65</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>day after a bank holiday</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>112</td>
+      <td>10</td>
+      <td>23.93</td>
+      <td>23.61</td>
+      <td>28.88</td>
+      <td>27.91</td>
+      <td>-0.32</td>
+      <td>-3.66</td>
+      <td>2.82</td>
+      <td>-12.72</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>day before a bank holiday</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>866</td>
+      <td>10</td>
+      <td>11.76</td>
+      <td>15.48</td>
+      <td>14.47</td>
+      <td>26.48</td>
+      <td>3.72</td>
+      <td>3.15</td>
+      <td>4.29</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>day before a bank holiday</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>755</td>
+      <td>10</td>
+      <td>11.37</td>
+      <td>14.82</td>
+      <td>13.48</td>
+      <td>25.75</td>
+      <td>3.45</td>
+      <td>2.99</td>
+      <td>3.95</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>day before a bank holiday</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>111</td>
+      <td>10</td>
+      <td>14.32</td>
+      <td>19.8</td>
+      <td>20.98</td>
+      <td>31.32</td>
+      <td>5.48</td>
+      <td>2.88</td>
+      <td>8.29</td>
+      <td>-0.08</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all special days</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>4666</td>
+      <td>53</td>
+      <td>15.13</td>
+      <td>16.63</td>
+      <td>16.82</td>
+      <td>24.23</td>
+      <td>1.49</td>
+      <td>0.87</td>
+      <td>2.11</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all special days</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>4073</td>
+      <td>53</td>
+      <td>14.6</td>
+      <td>15.81</td>
+      <td>15.82</td>
+      <td>23.6</td>
+      <td>1.21</td>
+      <td>0.59</td>
+      <td>1.79</td>
+      <td>0.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>all special days</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>593</td>
+      <td>53</td>
+      <td>18.67</td>
+      <td>22.02</td>
+      <td>23.39</td>
+      <td>28.38</td>
+      <td>3.35</td>
+      <td>1.23</td>
+      <td>5.64</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>Christmas period</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>1271</td>
+      <td>14</td>
+      <td>11.94</td>
+      <td>15.81</td>
+      <td>15.06</td>
+      <td>25.99</td>
+      <td>3.87</td>
+      <td>3.17</td>
+      <td>4.7</td>
+      <td>-0.96</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>Christmas period</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>1104</td>
+      <td>14</td>
+      <td>11.24</td>
+      <td>14.74</td>
+      <td>13.82</td>
+      <td>25.48</td>
+      <td>3.5</td>
+      <td>2.96</td>
+      <td>4.06</td>
+      <td>-0.91</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>Christmas period</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>167</td>
+      <td>14</td>
+      <td>16.53</td>
+      <td>22.83</td>
+      <td>23.25</td>
+      <td>29.39</td>
+      <td>6.3</td>
+      <td>2.86</td>
+      <td>11.15</td>
+      <td>-1.33</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>bank holiday</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>1651</td>
+      <td>19</td>
+      <td>23.48</td>
+      <td>18.31</td>
+      <td>21.02</td>
+      <td>17.22</td>
+      <td>-5.17</td>
+      <td>-8.21</td>
+      <td>-2.37</td>
+      <td>5.06</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>bank holiday</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>1448</td>
+      <td>19</td>
+      <td>23.21</td>
+      <td>17.8</td>
+      <td>20.6</td>
+      <td>15.96</td>
+      <td>-5.41</td>
+      <td>-8.93</td>
+      <td>-2.57</td>
+      <td>4.69</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>bank holiday</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>203</td>
+      <td>19</td>
+      <td>25.28</td>
+      <td>21.69</td>
+      <td>23.75</td>
+      <td>25.49</td>
+      <td>-3.6</td>
+      <td>-6.89</td>
+      <td>-0.37</td>
+      <td>10.82</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>day after a bank holiday</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>878</td>
+      <td>10</td>
+      <td>15.07</td>
+      <td>18.05</td>
+      <td>18.04</td>
+      <td>27.48</td>
+      <td>2.98</td>
+      <td>2.35</td>
+      <td>3.61</td>
+      <td>-5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>day after a bank holiday</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>766</td>
+      <td>10</td>
+      <td>14.35</td>
+      <td>17.18</td>
+      <td>16.63</td>
+      <td>27.41</td>
+      <td>2.83</td>
+      <td>2.25</td>
+      <td>3.47</td>
+      <td>-4.96</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>day after a bank holiday</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>112</td>
+      <td>10</td>
+      <td>19.8</td>
+      <td>23.79</td>
+      <td>27.34</td>
+      <td>27.91</td>
+      <td>4</td>
+      <td>1.63</td>
+      <td>6.65</td>
+      <td>-5.29</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>day before a bank holiday</td>
+      <td>all sites</td>
+      <td>91</td>
+      <td>866</td>
+      <td>10</td>
+      <td>11.56</td>
+      <td>15.04</td>
+      <td>13.84</td>
+      <td>26.48</td>
+      <td>3.48</td>
+      <td>3</td>
+      <td>4.03</td>
+      <td>0.51</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>day before a bank holiday</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>755</td>
+      <td>10</td>
+      <td>11.28</td>
+      <td>14.59</td>
+      <td>13.14</td>
+      <td>25.75</td>
+      <td>3.31</td>
+      <td>2.86</td>
+      <td>3.8</td>
+      <td>0.57</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>day before a bank holiday</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>111</td>
+      <td>10</td>
+      <td>13.37</td>
+      <td>18.04</td>
+      <td>18.43</td>
+      <td>31.32</td>
+      <td>4.66</td>
+      <td>2.56</td>
+      <td>6.99</td>
+      <td>-0.48</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/scores.csv">code/reports/special_days/scores.csv</a> (30 rows shown)</p>
+
+<ul>
+<li><strong>Bank holidays</strong> are where the forecast fails: 23.5 % error with the calendar as an input
+(32.3 % without), against about 11 % on ordinary days, and the forecast is too high (+5 %
+and +12 %). The rule brings it to 18.3 % (−5.2 points, −8.2 to −2.4). The load of the most
+recent Sunday does as well (17.2 %).</li>
+<li><strong>The days next to a holiday and the Christmas period are not anomalous at these sites</strong>:
+11.6 to 15.1 % error. There the rule adds the noise of one past day and makes the forecast
+worse by 3 to 4 points. The rule is for bank holidays only.</li>
+<li><strong>By holiday</strong> (<code>scores_by_name.csv</code>): the gain is on Christmas Day, Good Friday, New Year's
+Day and the late summer bank holiday (29 to 36 % error down to 17 to 21 %). On Easter Monday,
+May Day, the spring bank holiday and Boxing Day the forecast is already at 12 to 20 % and the
+rule does not help.</li>
+<li><strong>Over all days</strong> bank holidays are 2.3 % of days and 2.8 % of the error; the rule lowers
+the error of all days from 11.33 to 11.27 % (−0.06 points, −0.09 to −0.03).</li>
+</ul>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>special_share_of_days_pct</th>
+      <th>special_share_of_error_pct</th>
+      <th>holiday_share_of_days_pct</th>
+      <th>holiday_share_of_error_pct</th>
+      <th>nmae_all_days_pct</th>
+      <th>nmae_rule_on_bank_holidays_pct</th>
+      <th>nmae_rule_on_all_special_days_pct</th>
+      <th>holiday_rule_change_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>76009</td>
+      <td>6.42</td>
+      <td>8.81</td>
+      <td>2.31</td>
+      <td>3.36</td>
+      <td>12.01</td>
+      <td>11.82</td>
+      <td>11.91</td>
+      <td>-0.19</td>
+      <td>-0.25</td>
+      <td>-0.13</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>76009</td>
+      <td>6.42</td>
+      <td>7.31</td>
+      <td>2.31</td>
+      <td>2.84</td>
+      <td>11.33</td>
+      <td>11.27</td>
+      <td>11.42</td>
+      <td>-0.06</td>
+      <td>-0.09</td>
+      <td>-0.03</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/overall.csv">code/reports/special_days/overall.csv</a> (2 rows shown)</p>
 
 <h2 id="8-what-this-page-changes">8. What this page changes</h2>
 <p><strong>Withdrawn or corrected</strong></p>

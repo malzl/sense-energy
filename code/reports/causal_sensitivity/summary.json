@@ -1,0 +1,28 @@
+{
+  "heatwave": {
+    "sites": 64,
+    "median_propensity": 0.02412280701754386,
+    "gamma_point": 1.84,
+    "gamma_interval": 1.34,
+    "effect_at_gamma_1": 5.30905800833471,
+    "benchmarks": {
+      "weekend": 1.06,
+      "school holidays (approximate)": 3.24,
+      "calendar month": 2.38
+    },
+    "effect_with_calendar_held_fixed": 4.77
+  },
+  "cold spell": {
+    "sites": 75,
+    "median_propensity": 0.07942238267148015,
+    "gamma_point": 2.64,
+    "gamma_interval": 2.18,
+    "effect_at_gamma_1": 9.442083616751379,
+    "benchmarks": {
+      "weekend": 1.12,
+      "school holidays (approximate)": 1.5,
+      "calendar month": 8.5
+    },
+    "effect_with_calendar_held_fixed": 8.93
+  }
+}
