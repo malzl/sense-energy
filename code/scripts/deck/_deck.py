@@ -109,12 +109,15 @@ def england_map(ax, face: str = SHELL, edge: str = STONE, lw: float = 0.4) -> No
     ax.set_axis_off()
 
 
-def save(fig, name: str, data=None, facecolor: str | None = None) -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
+def save(fig, name: str, data=None, facecolor: str | None = None, out: Path | None = None) -> None:
+    """Write ``<name>.pdf``, ``.png`` and ``_data.csv`` to ``out`` (default: this deck's
+    figure folder; the findings deck passes its own)."""
+    out = out or OUT
+    out.mkdir(parents=True, exist_ok=True)
     kw = {"facecolor": facecolor, "transparent": False} if facecolor else {}
-    fig.savefig(OUT / f"{name}.pdf", **kw)
-    fig.savefig(OUT / f"{name}.png", dpi=400, transparent=False, facecolor=facecolor or "white")
+    fig.savefig(out / f"{name}.pdf", **kw)
+    fig.savefig(out / f"{name}.png", dpi=400, transparent=False, facecolor=facecolor or "white")
     if data is not None:
-        data.to_csv(Path(OUT / f"{name}_data.csv"), index=False)
+        data.to_csv(Path(out / f"{name}_data.csv"), index=False)
     plt.close(fig)
-    print(f"wrote {OUT / name}.pdf")
+    print(f"wrote {out / name}.pdf")

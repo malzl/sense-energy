@@ -1,9 +1,10 @@
 # What we found so far: the findings map
 
-16 November 2026. This page puts every result of the project under one of five questions and
-gives each a grade. It is the entry point to the other pages, which were written thread by
-thread in the order the questions came up. The kickoff deck (`doc/kickoff_deck/`) follows it
-slide for slide.
+16 November 2026, updated 22 November 2026. This page puts every result of the project under one
+of five questions and gives each a grade. It is the entry point to the other pages, which were
+written thread by thread in the order the questions came up. The findings deck
+(`doc/findings_deck/`, 22 November 2026) follows it slide for slide; the kickoff deck
+(`doc/kickoff_deck/`) keeps an earlier version as backup slides.
 
 The grades:
 

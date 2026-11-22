@@ -1,0 +1,313 @@
+% Findings deck: all findings of the project to date, in the look of the kickoff deck
+% (doc/kickoff_deck). One question of the findings map (doc/findings_map.md) per slide, a visual
+% across the full width, method details in a footnote; an overview with a grade mark for each
+% finding, the changes that the checks made, and two reference slides with all 45 findings.
+% Build with build.sh (pdfLaTeX, two passes). Text follows ASD-STE100 Simplified Technical English.
+% Slide size 160 x 90 mm. Figures come from code/scripts/findings_deck/ at their exact size.
+\documentclass[aspectratio=169,9pt]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage{tgheros}                 % Helvetica (TeX Gyre Heros) for text
+\usepackage[tracking=true]{microtype}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{array}
+\usefonttheme{professionalfonts}
+\setbeamertemplate{navigation symbols}{}
+\setbeamersize{text margin left=0mm,text margin right=0mm}
+
+\newcommand{\deckdate}{November 2026}
+
+% ---- fonts: Charter for titles, Helvetica for text ------------------------------------------
+\newcommand{\titlefont}{\fontfamily{bch}\selectfont}
+
+% ---- colours of the template ----------------------------------------------------------------
+\definecolor{oxblue}{HTML}{002147}
+\definecolor{shell}{HTML}{F1EEE9}
+\definecolor{charcoal}{HTML}{211D1C}
+\definecolor{ash}{HTML}{61615F}
+\definecolor{stone}{HTML}{D9D8D6}
+\definecolor{textorange}{HTML}{B93F07}
+\setbeamercolor{normal text}{fg=charcoal,bg=white}
+
+% ---- placement: millimetres from the top-left corner of the slide ----------------------------
+\newcommand{\at}[3]{\node[anchor=north west,inner sep=0pt,outer sep=0pt] at ([xshift=#1mm,yshift=-#2mm]current page.north west) {#3};}
+\newcommand{\atr}[3]{\node[anchor=north east,inner sep=0pt,outer sep=0pt] at ([xshift=#1mm,yshift=-#2mm]current page.north west) {#3};}
+\newcommand{\fig}[3]{\at{#1}{#2}{\includegraphics{figures/#3.pdf}}}
+\newcommand{\lab}[1]{{\bfseries\fontsize{5.4}{7}\selectfont\color{oxblue}\textls[90]{\MakeUppercase{#1}}}}
+\newcommand{\slidehead}[3]{%
+  \at{7.2}{6.4}{\lab{#1}}
+  \at{7.2}{9.7}{\parbox[t]{146mm}{\raggedright\titlefont\fontsize{14.6}{17}\selectfont\color{oxblue}#2}}
+  \at{7.2}{17.9}{\parbox[t]{146mm}{\raggedright\fontsize{7.2}{9.4}\selectfont\color{ash}#3}}}
+% footer: method details at the left, the affiliation and the page number at the right (the same
+% place on every slide)
+\newcommand{\slidefoot}[1]{%
+  \at{7.2}{80.6}{\parbox[t]{93mm}{\raggedright\fontsize{4.6}{5.9}\selectfont\color{ash}#1}}
+  \atr{148.4}{84.3}{{\fontsize{4.6}{6}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace SENSE}}
+  \atr{152.8}{84.0}{{\bfseries\fontsize{5.4}{6}\selectfont\color{oxblue}\insertframenumber}}}
+\newcommand{\putlogo}[3]{\IfFileExists{logos/#1.pdf}{\at{#2}{#3}{\includegraphics[height=9mm]{logos/#1.pdf}}}{\IfFileExists{logos/#1.png}{\at{#2}{#3}{\includegraphics[height=9mm]{logos/#1.png}}}{}}}
+
+% ---- grade marks -------------------------------------------------------------------------------
+% inline (in text): solid, solid in part, indicative, open, scenario, withdrawn
+\newlength{\gsz}\setlength{\gsz}{1.45mm}
+\newcommand{\gpic}[1]{\tikz[baseline=0pt,overlay=false]{#1}}
+\DeclareRobustCommand{\gS}{\gpic{\fill[oxblue] (0,0) rectangle (\gsz,\gsz);}}
+\DeclareRobustCommand{\gP}{\gpic{\fill[oxblue] (0,0) -- (\gsz,0) -- (0,\gsz) -- cycle; \draw[oxblue,line width=0.45pt] (0,0) rectangle (\gsz,\gsz);}}
+\DeclareRobustCommand{\gI}{\gpic{\draw[oxblue,line width=0.45pt] (0,0) rectangle (\gsz,\gsz);}}
+\DeclareRobustCommand{\gO}{\gpic{\draw[oxblue,line width=0.45pt,dash pattern=on 0.55pt off 0.45pt] (0,0) rectangle (\gsz,\gsz);}}
+\DeclareRobustCommand{\gC}{\gpic{\draw[oxblue,line width=0.45pt] (0.5\gsz,-0.1\gsz) -- (1.1\gsz,0.5\gsz) -- (0.5\gsz,1.1\gsz) -- (-0.1\gsz,0.5\gsz) -- cycle;}}
+\DeclareRobustCommand{\gW}{\gpic{\draw[ash,line width=0.45pt] (0,0) rectangle (\gsz,\gsz) (0,0) -- (\gsz,\gsz) (0,\gsz) -- (\gsz,0);}}
+% placed on the slide (overview): grade letter, x, y of the top-left corner, side 2.6 mm
+\newcommand{\pos}[2]{([xshift=#1mm,yshift=-#2mm]current page.north west)}
+\newcommand{\mkS}[2]{\fill[oxblue] \pos{#1}{#2} rectangle ++(2.6mm,-2.6mm);}
+\newcommand{\mkP}[2]{\fill[oxblue] \pos{#1}{#2} ++(0,-2.6mm) -- ++(2.6mm,0) -- ++(-2.6mm,2.6mm) -- cycle; \draw[oxblue,line width=0.55pt] \pos{#1}{#2} rectangle ++(2.6mm,-2.6mm);}
+\newcommand{\mkI}[2]{\draw[oxblue,line width=0.55pt] \pos{#1}{#2} rectangle ++(2.6mm,-2.6mm);}
+\newcommand{\mkO}[2]{\draw[oxblue,line width=0.55pt,dash pattern=on 0.8pt off 0.65pt] \pos{#1}{#2} rectangle ++(2.6mm,-2.6mm);}
+\newcommand{\mkC}[2]{\draw[oxblue,line width=0.55pt] \pos{#1}{#2} ++(1.3mm,0.25mm) -- ++(1.55mm,-1.55mm) -- ++(-1.55mm,-1.55mm) -- ++(-1.55mm,1.55mm) -- cycle;}
+\newcommand{\mkW}[2]{\draw[ash,line width=0.55pt] \pos{#1}{#2} rectangle ++(2.6mm,-2.6mm) \pos{#1}{#2} -- ++(2.6mm,-2.6mm) ++(0,2.6mm) -- ++(-2.6mm,-2.6mm);}
+% a row of marks from x0, y: {grade/number, ...}; nine marks for each line
+\newcommand{\fmarks}[3]{\foreach \g/\lbl [count=\k from 0] in {#3}{%
+  \pgfmathsetmacro{\xx}{#1+mod(\k,9)*5.85}\pgfmathsetmacro{\yy}{#2+floor(\k/9)*5.9}%
+  \csname mk\g\endcsname{\xx}{\yy}%
+  \node[anchor=north,inner sep=0pt] at ([xshift=\xx mm+1.3mm,yshift=-\yy mm-3.2mm]current page.north west) {\fontsize{4.3}{5}\selectfont\color{ash}\lbl};}}
+% one row of the overview: y, line height, number and name, question, answer, marks
+\newcommand{\qrow}[6]{%
+  \draw[stone,line width=0.35pt] ([xshift=7.2mm,yshift=-#1mm+1.7mm]current page.north west) -- ++(145.6mm,0);
+  \at{7.2}{#1}{\parbox[t]{35mm}{\raggedright{\titlefont\fontsize{10.5}{12}\selectfont\color{oxblue}#3}\par\vspace{0.5mm}{\fontsize{5.9}{7.3}\selectfont\color{ash}#4}}}
+  \at{44}{#1}{\parbox[t]{55mm}{\fontsize{7}{9}\selectfont\color{charcoal}\raggedright #5}}
+  \fmarks{103.6}{#1+0.2}{#6}}
+
+% ---- the reference slides: one line for each finding ----------------------------------------
+\newcommand{\fhead}[1]{\multicolumn{4}{@{}l}{\rule{0pt}{2.9mm}{\bfseries\fontsize{5.9}{6.5}\selectfont\color{oxblue}#1}}\\}
+\newcommand{\frow}[4]{#1 & \makebox[4mm][l]{#2} & #3 & #4\\}
+\newenvironment{findings}{\fontsize{5.3}{5.9}\selectfont\color{charcoal}\renewcommand{\arraystretch}{1.0}\begin{tabular}{@{}l@{\hspace{1.4mm}}>{\color{ash}}l@{\hspace{1.2mm}}>{\raggedright\arraybackslash}p{63mm}@{\hspace{2mm}}>{\raggedright\arraybackslash\leavevmode\color{ash}}p{71.5mm}@{}}}{\end{tabular}}
+
+% ---- the changes slide: tag, earlier statement, after the check --------------------------------
+\newcommand{\crow}[4]{% y, tag, earlier, after
+  \draw[stone,line width=0.35pt] ([xshift=7.2mm,yshift=-#1mm+2.0mm]current page.north west) -- ++(145.6mm,0);
+  \at{7.2}{#1}{\raisebox{-0.35mm}{\lab{#2}}}
+  \at{27.5}{#1}{\parbox[t]{56mm}{\raggedright\fontsize{6.9}{8.6}\selectfont\color{ash}#3}}
+  \at{86.2}{#1}{{\fontsize{6.9}{8.6}\selectfont\color{oxblue}$\rightarrow$}}
+  \at{91}{#1}{\parbox[t]{61.8mm}{\raggedright\fontsize{6.9}{8.6}\selectfont\color{charcoal}#4}}}
+
+\begin{document}
+
+% =============================================================================================
+% 1  Cover
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \fill[oxblue] ([xshift=98.4mm]current page.north west) rectangle (current page.south east);
+  \fig{101.2}{5.5}{cover_sites}
+  \at{104}{79.2}{\parbox[t]{50mm}{\raggedright\fontsize{5.2}{6.8}\selectfont\color{white}134 NHS sites with half-hourly electricity data.\\ Gold: sites with on-site generation.}}
+  \at{7.2}{8.6}{\lab{Smart Energy Data Service (SENSE) \enspace·\enspace healthcare}}
+  \at{7.2}{27}{\parbox[t]{88mm}{\raggedright\titlefont\fontsize{19.5}{24}\selectfont\color{oxblue}Electricity demand of NHS sites: what we found to date}}
+  \at{7.2}{47.5}{\parbox[t]{84mm}{\raggedright\fontsize{9}{12.2}\selectfont\color{ash}Five questions, 45 findings, and how sure we are of each. Half-hourly data of 134 sites, December 2022 to May 2026.}}
+  \at{7.2}{62}{{\bfseries\fontsize{8.4}{10}\selectfont\color{oxblue}Siddharth Arora \enspace·\enspace Nicolas Malz}}
+  \at{7.2}{67}{{\fontsize{6.4}{8}\selectfont\color{ash}Saïd Business School, University of Oxford \enspace·\enspace \deckdate}}
+  \putlogo{oxford_logo}{7.2}{74}
+  \putlogo{sbs_logo}{24}{74}
+  \putlogo{sense_logo}{48}{74}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 2  Overview: the five questions with a mark for each finding
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Overview}
+       {Five questions, and how sure we are of each answer}
+       {Each mark is one finding. The number refers to the list of all findings at the end of the deck.}
+  \qrow{25.0}{1}{1 \enspace Data}{Can we trust the data?}
+       {The meters agree with the estates returns. At sites with a plant, the meter shows only the grid import.}
+       {S/1.1,S/1.2,I/1.3,S/1.4,S/1.5}
+  \qrow{35.4}{1}{2 \enspace Drivers}{What changes the demand?}
+       {Cold and heat change the demand, also from the 3 days before. Patient activity does not.}
+       {S/2.1,P/2.2,S/2.3,S/2.4,S/2.5,S/2.6,I/2.7,O/2.8,P/2.9}
+  \qrow{45.8}{1}{3 \enspace Sites}{Why do sites differ?}
+       {Each site has its own reaction. Region and certificates do not explain it. Its own past events do.}
+       {S/3.1,S/3.2,S/3.3,S/3.4,S/3.5,I/3.6,P/3.7,I/3.8,I/3.9}
+  \qrow{56.2}{2}{4 \enspace Forecast}{How good is it, and what is it worth?}
+       {A model with no training is best. It gets half of the possible peak cut, less in heat waves. Sites with a plant have 78 \% of the error.}
+       {S/4.1,S/4.2,S/4.3,S/4.4,S/4.5,W/4.6,I/4.7,I/4.8,I/4.9,I/4.10,S/4.11,S/4.12,P/4.13,S/4.14}
+  \qrow{69.0}{1}{5 \enspace Future}{What if heat is electric?}
+       {Scenario: with heat pumps, half of the sites need more power than their grid connection supplies.}
+       {C/5.1,C/5.2,I/5.3,C/5.4,C/5.5,C/5.6,O/5.7,I/5.8}
+  \slidefoot{\setlength{\gsz}{1.2mm}\gS\ solid 22 \enspace \gP\ solid in part 4 \enspace \gI\ indicative 11 \enspace \gO\ open 2 \enspace \gC\ scenario 5 \enspace \gW\ withdrawn 1.\enspace Solid: an interval that excludes zero and a second, independent check (another method, period or sample, or a placebo test). Indicative: one method, one period or few sites. Open: tested, no clear answer. Scenario: a calculation.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 3  Question 1: the data
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 1 \enspace·\enspace data \enspace·\enspace \gS\ solid}
+       {The meters agree with the estates returns}
+       {At 65 sites the annual totals agree: median ratio 1.00. At sites with a plant the meter shows 40 \% of the demand.}
+  \fig{7.2}{23.6}{data_check}
+  \slidefoot{Left: metered electricity of April 2023 to March 2024 against the estates return (ERIC 2023/24), sites with 80 \% or more of the half-hours. Middle: the return of 2024/25, 20 sites with a plausible plant output; import plus output is the demand of the site. Right: the check of each site.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 4  Question 2: what changes the demand
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 2 \enspace·\enspace drivers \enspace·\enspace \gS\ solid}
+       {Weather changes the demand. Patient activity does not}
+       {A cold spell adds 11 \% at all hours from the first day. A heat wave adds 6 \%, more after two days and in the evening.}
+  \fig{7.2}{23.6}{drivers}
+  \slidefoot{Sites with complete meter data and no on-site generation; 13 cold spells and 7 heat waves by the UKHSA and Met Office criteria. Change: event days against the same weekdays 1 to 3 weeks before and after; 95 \% intervals. Placebo: the events moved in time, 12 runs. Strike: 34 weekdays, 08:00 to 18:00, 132 sites.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 5  Question 2: how sure
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 2 \enspace·\enspace how sure}
+       {Three checks of the weather effects}
+       {The effects stay clear in 90 sets of analysis choices. The temperature of four days explains each event.}
+  \fig{7.2}{23.6}{checks}
+  \slidefoot{Left: change in demand for each set of choices (reference weeks, event definition, site sample, holidays); grey: 12 placebo runs. Middle: extra change from day 3 of an event in a regression on temperature; 95 \% interval. Right: the lowest effect if a hidden factor changes the odds of an event day by up to $\Gamma$ (Frauen et al., 2023).}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 6  Question 3: why sites differ
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 3 \enspace·\enspace sites \enspace·\enspace \gS\ solid}
+       {Each site has its own reaction}
+       {Region and certificates explain little. The best guide to the next event of a site is its own past events.}
+  \fig{7.2}{23.6}{sites}
+  \slidefoot{Maps: sites with complete meter data and no on-site generation (64 heat, 75 cold). Each site is tested against 2,000 placebo periods of its own normal days; false discovery rate 5 \%. Circle area: the change after shrinkage to the mean. Right: share of the variance between sites; region: above chance.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 7  Question 4: accuracy
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 4 \enspace·\enspace forecast \enspace·\enspace \gS\ solid}
+       {A model with no training is the best forecast}
+       {It is 2.1 points better than a trained model that learns again each quarter. It needs 6 to 12 weeks of history.}
+  \fig{7.2}{23.6}{accuracy}
+  \slidefoot{Forecast at 16:30 for each half-hour of the next day; error: absolute error over demand, mean over 91 sites. No training: Chronos-2 with calendar, price and weather forecast. Trained: LightGBM, the same inputs; 2.1 points (1.7 to 2.5) on the same site-days. Right: Chronos-2 without inputs, 69 test days.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 8  Question 4: value
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 4 \enspace·\enspace value \enspace·\enspace \gS\ solid}
+       {Heat-wave days cost value, not accuracy}
+       {A battery that plans on the forecast gets 52 \% of the possible peak cut. On heat-wave days it gets 27 \%.}
+  \fig{7.2}{23.6}{value}
+  \slidefoot{Battery: power 20 \% of the mean demand of the site; it plans its discharge on the forecast of the next day. Possible peak cut: the cut with a perfect forecast. January 2023 to May 2026, 91 sites; 95 \% intervals. Heat-wave days (Met Office criterion at the site) against other days of the same site and month.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 9  Question 4: where the error is
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 4 \enspace·\enspace error \enspace·\enspace \gS\ solid}
+       {Twelve sites with a plant have most of the error}
+       {They have 48 \% of the demand and 78 \% of the error. Meter data of the same day halve it for the next two hours.}
+  \fig{7.2}{23.6}{error}
+  \slidefoot{Map: summed absolute error of the day-ahead forecast of each site, January 2023 to May 2026. Right: a new forecast every two hours on every third day; this needs a meter that is read in real time. Large step: the import changes by more than its mean. 95 \% intervals from resampling sites.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 10  Question 4: special days and the forecast range
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 4 \enspace·\enspace corrections \enspace·\enspace \gS\ solid, \gP\ solid in part}
+       {Two faults of the forecast, and two corrections}
+       {A rule cuts the error on bank holidays from 23 \% to 19 \%. The 80 \% range holds the demand 76 \% of the time.}
+  \fig{7.2}{23.6}{calendar_range}
+  \slidefoot{Rule: the forecast times the ratio of demand to forecast on the same holiday a year before (Arora and Taylor, 2013); 2024 to May 2026. Proximity days: the working days next to a bank holiday. Range: 10 \% to 90 \% quantile. Tracking moves each bound after each miss (Angelopoulos et al., 2023); its range is 14 \% wider.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 11  Question 5: the future estate
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Question 5 \enspace·\enspace future \enspace·\enspace \gC\ scenario, \gI\ indicative field data}
+       {Scenario: heat pumps put half of the sites above their connection}
+       {The winter peak is the limit, not the annual energy. Sites with new heat pumps used 8 points more electricity.}
+  \fig{7.2}{23.6}{estate}
+  \slidefoot{Scenario: heat pumps replace all gas heat (performance factor 2.55, boiler efficiency 0.85); peak against the connection capacity in the estates return 2023/24; sites without on-site generation. Field data: estates returns 2023/24 to 2025/26, 23 sites with heat pumps from 2024/25 against other sites; 95 \% interval.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 12  What the checks changed
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{How sure}
+       {What the checks changed}
+       {Each earlier statement had a second check. These eight did not pass it in full.}
+  \at{27.5}{23.6}{{\bfseries\fontsize{5.6}{7}\selectfont\color{ash}Earlier statement}}
+  \at{91}{23.6}{{\bfseries\fontsize{5.6}{7}\selectfont\color{oxblue}After the check}}
+  \crow{29.0}{Withdrawn}{Cold spells cost the forecast value.}{No clear loss in four winters: $-$1 point ($-$4 to +2).}
+  \crow{35.4}{Corrected}{Grid import at plant sites: +25 \% in heat waves.}{+12 \% after a placebo correction; no clear difference.}
+  \crow{41.8}{Corrected}{39 sites use less electricity on hot days.}{21 of 83 with correct standard errors; 1 in heat waves.}
+  \crow{48.2}{Corrected}{The highest site reaction to heat waves: +92 \%.}{+26 \% after shrinkage; 7 of the 10 highest are clear.}
+  \crow{54.6}{Corrected}{Two weeks of history are sufficient.}{Two weeks cost 0.5 points; twelve weeks are best.}
+  \crow{61.0}{Withdrawn}{Two past events predict the next reaction of a site.}{The error of the prediction decreases up to the fifth event.}
+  \crow{67.4}{Withdrawn}{Warm nights make the heat reaction build up.}{The day maxima of the days before do; the nights do not.}
+  \crow{73.8}{Corrected}{The upper bound of the forecast range is too low.}{The lower bound misses: 14 \% below, 10 \% above.}
+  \slidefoot{Checks: 90 sets of analysis choices and 12 placebo runs for each event result; standard errors that allow for correlation in time and space; forecasts on all 1,201 days in place of 69 test days; a test for each site with a false discovery rate.}
+\end{tikzpicture}\end{frame}
+
+% =============================================================================================
+% 13, 14  All findings
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Reference \enspace·\enspace all findings, 1 of 2}
+       {Questions 1 to 3: data, drivers and sites}
+       {}
+  \at{7.2}{19.4}{\begin{findings}
+    \fhead{1 \enspace Can we trust the data?}
+    \frow{\gS}{1.1}{134 sites with half-hourly electricity; 92 with complete meter data}{7 December 2022 to 8 May 2026; 42 flagged, 35 of them for meter gaps}
+    \frow{\gS}{1.2}{The meters reproduce the estates returns}{65 sites: annual ratio 1.00 (quartiles 0.98 to 1.00), peak ratio 1.00}
+    \frow{\gI}{1.3}{At sites with a plant the meter shows grid import only}{9.2 MW of import against 23 MW of demand at 20 sites: 40 \%}
+    \frow{\gS}{1.4}{The temperatures are good enough}{ERA5 within 0.62 °C of 76 stations; three sources give the same effects}
+    \frow{\gS}{1.5}{Public data on patient activity stop at the trust and the month}{A\&E monthly for 18 of 24 trusts; beds by quarter}
+    \fhead{2 \enspace What changes the demand of a site?}
+    \frow{\gS}{2.1}{Cold increases demand}{+1.1 \% for each °C below 14 °C; in a cold spell +11 \% (9 to 13)}
+    \frow{\gP}{2.2}{Heat increases demand; the size is indicative}{+1.5 \% for each °C above 20 °C (0.2 to 2.8); in a heat wave +5.7 \% (2.6 to 8.7)}
+    \frow{\gS}{2.3}{Heat acts in the afternoon and evening, cold at all hours}{heat waves: +9 \% from 16:00 to 22:00, +1 \% from 08:00 to 12:00}
+    \frow{\gS}{2.4}{The temperature acts over several days}{1.6 \% for each °C over the day and the 3 days before; day 3 of a heat wave +4.4 points}
+    \frow{\gS}{2.5}{An event is no more than its temperatures}{with the 3 days before: heat +0.4 points ($-$1.3 to +2.0), cold +0.3 ($-$0.9 to +1.5)}
+    \frow{\gS}{2.6}{Patient activity does not change electricity demand}{doctor strikes $-$0.4 \% ($-$1.6 to +0.8); visitors: elasticity 0.00; beds $-$0.04}
+    \frow{\gI}{2.7}{Sunshine decreases the import}{$-$0.7 \% for each kWh/m² of sunshine in a day; 44 of 83 sites}
+    \frow{\gO}{2.8}{The heat of the next day increases demand today}{+0.45 \% for each °C ($-$0.15 to +1.04)}
+    \frow{\gP}{2.9}{The effects survive a hidden factor of moderate strength}{$\Gamma$ to remove the effect: 2.6 for cold spells, 1.8 for heat waves}
+    \fhead{3 \enspace Why do sites differ?}
+    \frow{\gS}{3.1}{Sites differ far more than noise, for heat even in sign}{$-$3.0 to +5.4 \% for each °C over the middle 80 \% of sites; 94 to 97 \% of the spread is real}
+    \frow{\gS}{3.2}{The reaction belongs to the site, not to the region}{region: 9 \% (heat) and 5 \% (cold) of the differences; chance: 8 \% and 7 \%}
+    \frow{\gS}{3.3}{The past events of a site predict its next event}{error 6.7 points from its own events, 9.6 from the other sites (heat)}
+    \frow{\gS}{3.4}{The cold reaction follows the heating fuel}{$-$0.5 points for each °C for one standard deviation more gas (0.2 to 0.8)}
+    \frow{\gS}{3.5}{The registers do not explain the heat reaction}{certificate fields 0 to 9 \%; gas ratio 11 \%}
+    \frow{\gI}{3.6}{Sites that use less on hot days are small, with heating in summer}{21 of 83 sites, 8 \% of the demand}
+    \frow{\gP}{3.7}{At sites with a plant the meter enlarges each change in demand}{heat waves: import +25 \% (9 to 42); +12 \% after a placebo correction}
+    \frow{\gI}{3.8}{In cold spells the plants give more output}{output +5 to +18 \% at six plants that follow the heat demand}
+    \frow{\gI}{3.9}{Three shapes of the day; the use of the site sets its shape}{64 flat, 44 moderate, 21 like an office, 2 with most demand at night}
+  \end{findings}}
+  \slidefoot{\setlength{\gsz}{1.2mm}\gS\ solid \enspace \gP\ solid in part \enspace \gI\ indicative \enspace \gO\ open \enspace \gC\ scenario \enspace \gW\ withdrawn \enspace (see slide 2). Source: the findings map of the project (doc/findings\_map.md), with the evidence for each finding.}
+\end{tikzpicture}\end{frame}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture,overlay]
+  \slidehead{Reference \enspace·\enspace all findings, 2 of 2}
+       {Questions 4 and 5: the forecast and the future estate}
+       {}
+  \at{7.2}{19.4}{\begin{findings}
+    \fhead{4 \enspace How good is a day-ahead forecast, and what is it worth?}
+    \frow{\gS}{4.1}{A model with no training is better than the trained models}{11.2 \% (10.0 to 12.3) on all days; 2.1 points better than LightGBM trained each quarter}
+    \frow{\gS}{4.2}{Calendar, price and weather forecast add 0.7 points}{$-$0.65 ($-$1.07 to $-$0.38); the weather forecast is as good as the measured weather}
+    \frow{\gS}{4.3}{The error is at the sites with a plant}{78 \% of the error at 12 sites with 48 \% of the demand, in each year}
+    \frow{\gS}{4.4}{A battery gets half of the possible peak cut}{52 \% (48 to 58); 43 \% with one hour of storage, 65 \% with four}
+    \frow{\gS}{4.5}{Heat-wave days cost value, not accuracy}{peak cut 27 \% against 45 \% ($-$18.4 points, $-$27.7 to $-$10.0); error +0.4 points}
+    \frow{\gW}{4.6}{Cold spells cost value: withdrawn}{$-$1.1 points ($-$4.3 to +1.8); clear in 0 of 4 winters}
+    \frow{\gI}{4.7}{It helps to know when a plant runs, not that it exists}{flag +0.02 points; plant state of the day: 16.5 to 12.5 \% (upper bound)}
+    \frow{\gI}{4.8}{Visitor counts add nothing to the forecast}{+0.006 points ($-$0.012 to +0.024), two sites}
+    \frow{\gI}{4.9}{Forecasts that add up across levels improve the national total}{error 8.0 to 6.8 \%, 61 test days}
+    \frow{\gI}{4.10}{A published method for heat waves is level with the zero-shot model}{Lu et al. (2026): 11 \% behind in Europe, 6.5 \% ahead in PJM}
+    \frow{\gS}{4.11}{A rule for special days works on bank holidays only}{bank holidays 23.5 to 18.5 \%; Christmas period +3.6 and proximity days +3.2 points}
+    \frow{\gS}{4.12}{Meter data of the same day cut the error of the next two hours by 30 \%}{11.3 to 8.1 \%; sites with a plant 15.4 to 8.8 \%}
+    \frow{\gP}{4.13}{The forecast range is too narrow at the lower bound}{75.7 \% inside the 80 \% range, 14.0 \% below; online tracking: 80.0 \%}
+    \frow{\gS}{4.14}{The form of the weather input does not change the forecast}{measured and forecast weather as two inputs: $-$0.03 points ($-$0.06 to $-$0.00)}
+    \fhead{5 \enspace What changes when the estate changes?}
+    \frow{\gC}{5.1}{Heat pumps put sites above their grid connection}{13 of 31 panel sites; 48 \% of 631 sites in England}
+    \frow{\gC}{5.2}{The choice of winter has almost no effect}{10 to 15 of 31 sites in the last 30 winters; 19 in 1962/63}
+    \frow{\gI}{5.3}{A year after heat pumps, sites use more electricity}{+8.3 points (3.5 to 14.6), 23 sites; gas $-$9.4 ($-$21 to +7)}
+    \frow{\gC}{5.4}{Hospitals use all the power of their rooftop solar}{up to 1 kWp for each kW of mean demand}
+    \frow{\gC}{5.5}{A battery earns £23 for each kWh in a year at wholesale prices}{£88 to £96 with an Agile-type tariff}
+    \frow{\gC}{5.6}{Warmer weather decreases annual electricity}{$-$1.2 \% at +4 °C}
+    \frow{\gO}{5.7}{LED lighting decreases electricity}{$-$0.6 \% for each ten points of LED share ($-$1.2 to 0.0)}
+    \frow{\gI}{5.8}{Solar and heat-pump installations show at the meter}{3 of the 4 sites with reported solar}
+  \end{findings}}
+  \slidefoot{\setlength{\gsz}{1.2mm}\gS\ solid \enspace \gP\ solid in part \enspace \gI\ indicative \enspace \gO\ open \enspace \gC\ scenario \enspace \gW\ withdrawn \enspace (see slide 2). Source: the findings map of the project (doc/findings\_map.md), with the evidence for each finding.}
+\end{tikzpicture}\end{frame}
+
+\end{document}
