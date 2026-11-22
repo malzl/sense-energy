@@ -2159,6 +2159,30 @@ at the 91 forecast sites; <code>point</code> and five quantiles in kWh per half-
   <td><code>special_site_days.csv</code>: site x special day with its kind, name, corresponding past day and the errors of the forecast, the rule and the most recent Sunday; <code>scores.csv</code>, <code>scores_by_name.csv</code>, <code>overall.csv</code></td>
 </tr>
 <tr>
+  <td><code>code/reports/special_days/day_classes.csv</code></td>
+  <td>the rule scored on all, normal, special and proximity days (and bank holidays and the Christmas period) under three policies: error of the forecast and with the rule, the difference with its interval, shares of days and of error</td>
+</tr>
+<tr>
+  <td><code>code/reports/forecast_record/forecasts_intraday_correction.parquet</code> (<code>forecast-extension-runs --which correction</code>; not in git)</td>
+  <td>every third day, every two hours, four half-hours ahead: <code>y</code>, <code>day_ahead</code>, <code>corrected</code> (day-ahead plus a zero-shot forecast of its error), <code>error_carried</code>, <code>value_carried</code>, <code>direct</code> (zero-shot on the demand), kWh per half-hour</td>
+</tr>
+<tr>
+  <td><code>code/reports/forecast_record/forecasts_split_weather*.parquet</code> (<code>--which split-weather</code>; not in git)</td>
+  <td>day-ahead forecasts on every third day with the weather inputs given as two channels (<code>chronos2_ifs_split</code>) or as the forecast only (<code>chronos2_ifs_fc_only</code>)</td>
+</tr>
+<tr>
+  <td><code>code/reports/forecast_record/forecasts_lightgbm_rolling.parquet</code> (<code>--which retrain</code>; not in git)</td>
+  <td>LightGBM median forecasts for 2024 to May 2026, trained once on 2023 (<code>lightgbm_once</code>) and trained again each quarter (<code>lightgbm_quarterly</code>)</td>
+</tr>
+<tr>
+  <td><code>code/reports/forecast_extensions/</code> (<code>forecast-extensions</code>)</td>
+  <td><code>retrain_errors.csv</code>, <code>retrain_quarters.csv</code>, <code>retrain_differences.csv</code>; <code>correction_errors.csv</code>, <code>correction_differences.csv</code>, <code>correction_steps.csv</code>; <code>split_errors.csv</code>, <code>split_differences.csv</code>: error by group and model with intervals from resampling sites, paired differences with intervals from resampling weeks</td>
+</tr>
+<tr>
+  <td><code>code/reports/forecast_range/</code> (<code>forecast-range</code>)</td>
+  <td><code>coverage.csv</code>: shares below, inside and above the 80 % range, its width and quantile loss by method and group; <code>reliability.csv</code>; <code>season_hour.csv</code>; <code>by_site.csv</code>; <code>over_time.csv</code>; <code>spread.csv</code>; <code>learning_rates.csv</code></td>
+</tr>
+<tr>
   <td><code>code/reports/causal_sensitivity/</code> (<code>causal-sensitivity</code>)</td>
   <td><code>bounds.csv</code>: bounds on the mean event effect by <code>gamma</code> with intervals; <code>bounds_sites.csv</code>: the same per site; <code>benchmarks.csv</code>: odds ratios of observed calendar factors; <code>observed_adjustment.csv</code>: the effect without and with those factors</td>
 </tr>

@@ -336,7 +336,7 @@ forecast.</p>
   <td>4.1</td>
   <td>A model with no training beats the trained models</td>
   <td>11.5 % error against 13.0 % for the gradient-boosted model (−1.5 points, −1.9 to −1.1), 13.7 % for a neural process trained on the panel and 18.4 % for the same day last week, on the 69 test days</td>
-  <td>on every day of the record: 11.2 % (10.0 to 12.3), and 11.0 to 11.5 % in the four years, against 17.7 % for the same day last week</td>
+  <td>on every day of the record: 11.2 % (10.0 to 12.3), and 11.0 to 11.5 % in the four years, against 17.7 % for the same day last week. Against the gradient-boosted model trained again each quarter, January 2024 to May 2026: −2.1 points (−2.5 to −1.7), ahead in every quarter, at 88 of 91 sites; the lead narrows from 2.5 points (2024) to 1.3 (2026)</td>
   <td>Solid</td>
 </tr>
 <tr>
@@ -408,6 +408,27 @@ forecast.</p>
   <td>bank holidays: 23.5 to 18.5 % error (−4.9 points, −7.8 to −2.3). Special days (bank holidays and the Christmas period, 4.1 % of days): 16.7 to 14.9 % with the rule on bank holidays (−1.8, −2.8 to −0.9). All days: 11.33 to 11.27 % (−0.06, −0.09 to −0.03). Normal days (11.1 %) do not change</td>
   <td>rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on, 76,009 site-days. The rule on the Christmas period adds 3.6 points (2.9 to 4.4) and on the proximity days 3.2 points (2.7 to 3.7); the same pattern without inputs (bank holidays −13.8 points)</td>
   <td>Solid for bank holidays; the rule fails on the Christmas period and the proximity days</td>
+</tr>
+<tr>
+  <td>4.12</td>
+  <td>Meter data from the same day cut the error of the next two hours by about 30 %, most at the sites with a plant</td>
+  <td>11.3 to 8.1 % (−3.2 points, −3.4 to −3.0) with the day-ahead forecast corrected every two hours; sites with on-site generation 15.4 to 8.8 %, their days with a large step 36.1 to 18.4 %</td>
+  <td>400 days, every year −3.2 to −3.3 points. A second model of the errors is not needed: the zero-shot model run again on the demand is better still (7.5 %, 0.6 points ahead). Needs a meter that is read in real time</td>
+  <td>Solid</td>
+</tr>
+<tr>
+  <td>4.13</td>
+  <td>The forecast range is too narrow at the lower bound; online tracking fixes the coverage but not the quality</td>
+  <td>inside the 80 % range 75.7 % of the time (74.5 to 76.5); 14.0 % below, 10.3 % above. Tracked online: 80.0 % in every season, hour and site group, with a 14 % wider range and no lower quantile loss (5.69 to 5.87 %)</td>
+  <td>1,117 days; the same without inputs (76.1 %). Event days and bank holidays stay under-covered after tracking (74.5 to 77.6 %): a method that reacts to misses is late for an unusual day</td>
+  <td>Solid for the miss; the correction is indicative</td>
+</tr>
+<tr>
+  <td>4.14</td>
+  <td>How the weather is given to the zero-shot model does not matter</td>
+  <td>measured and forecast weather as two inputs: −0.03 points (−0.06 to −0.00); forecast weather only: −0.02 (−0.05 to −0.00)</td>
+  <td>402 days; all inputs together are worth 0.62 points on these days; in summer the two-input form gains 0.06 points</td>
+  <td>Solid (a null)</td>
 </tr>
 </tbody>
 </table>
@@ -6730,6 +6751,4781 @@ points (−0.25 to −0.13); Christmas period +3.3 and proximity days +1.2 point
 around a holiday as well, and a hospital's does not. The policy for these sites is the rule
 on bank holidays.</li>
 </ul>
+<p><strong>Four extensions of the forecast</strong> (added 22 November 2026). Spoek et al. (2026) forecast
+district heat load with zero-shot models and report four things that we had not tested: a
+second model for the errors within the day, measured and forecast temperature as separate
+inputs, trained baselines that are trained again when the data drift, and a forecast range
+that fails in some seasons and hours. Each is tested here on the whole record. Runs:
+<code>forecast-extension-runs</code>; scores: <code>forecast-extensions</code> and <code>forecast-range</code>
+(<code>analysis/forecast_extensions.py</code>, <code>analysis/forecast_range.py</code>; tables in
+<code>code/reports/forecast_extensions/</code> and <code>code/reports/forecast_range/</code>).</p>
+<p><em>1. A correction within the day.</em> Every two hours on every third day of the record (400 days,
+35,365 site-days) a second zero-shot model forecasts the next four half-hours of the error of
+the day-ahead forecast from the last week of errors, and the day-ahead forecast is corrected
+by it. The comparators see the same meter data: the last error carried forward, the last
+metered value carried forward, and the zero-shot model run again on the demand itself. All of
+them need the meter to be read in real time.</p>
+<figure class="single"><img src="figures/correction_groups.png" alt="correction_groups" loading="lazy"><figcaption>Error of the next two hours for the day-ahead forecast and four forecasts made again every two hours, by site group. Intervals from resampling sites. <code>correction_groups</code> <a href="figures/correction_groups.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/correction_steps.png" alt="correction_steps" loading="lazy"><figcaption>The same by half-hour after the issue, at the sites with on-site generation. <code>correction_steps</code> <a href="figures/correction_steps.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 45 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>model</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>nmae_pct</th>
+      <th>nmae_lo</th>
+      <th>nmae_hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all</td>
+      <td>corrected</td>
+      <td>91</td>
+      <td>35365</td>
+      <td>400</td>
+      <td>8.11</td>
+      <td>7.26</td>
+      <td>8.97</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>day_ahead</td>
+      <td>91</td>
+      <td>35365</td>
+      <td>400</td>
+      <td>11.32</td>
+      <td>10.12</td>
+      <td>12.52</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>direct</td>
+      <td>91</td>
+      <td>35365</td>
+      <td>400</td>
+      <td>7.51</td>
+      <td>6.73</td>
+      <td>8.3</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>error_carried</td>
+      <td>91</td>
+      <td>35365</td>
+      <td>400</td>
+      <td>9.05</td>
+      <td>8.07</td>
+      <td>10.06</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>value_carried</td>
+      <td>91</td>
+      <td>35365</td>
+      <td>400</td>
+      <td>13.02</td>
+      <td>11.79</td>
+      <td>14.26</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>corrected</td>
+      <td>12</td>
+      <td>4616</td>
+      <td>400</td>
+      <td>8.81</td>
+      <td>6.69</td>
+      <td>10.95</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>day_ahead</td>
+      <td>12</td>
+      <td>4616</td>
+      <td>400</td>
+      <td>15.36</td>
+      <td>10.9</td>
+      <td>20.19</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>direct</td>
+      <td>12</td>
+      <td>4616</td>
+      <td>400</td>
+      <td>7.83</td>
+      <td>5.99</td>
+      <td>9.64</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>error_carried</td>
+      <td>12</td>
+      <td>4616</td>
+      <td>400</td>
+      <td>9.11</td>
+      <td>6.99</td>
+      <td>11.2</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>value_carried</td>
+      <td>12</td>
+      <td>4616</td>
+      <td>400</td>
+      <td>13.9</td>
+      <td>9.91</td>
+      <td>18.49</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>corrected</td>
+      <td>79</td>
+      <td>30749</td>
+      <td>400</td>
+      <td>8</td>
+      <td>7.1</td>
+      <td>8.95</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>day_ahead</td>
+      <td>79</td>
+      <td>30749</td>
+      <td>400</td>
+      <td>10.71</td>
+      <td>9.65</td>
+      <td>11.91</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>direct</td>
+      <td>79</td>
+      <td>30749</td>
+      <td>400</td>
+      <td>7.46</td>
+      <td>6.62</td>
+      <td>8.38</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>error_carried</td>
+      <td>79</td>
+      <td>30749</td>
+      <td>400</td>
+      <td>9.04</td>
+      <td>8.01</td>
+      <td>10.15</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>value_carried</td>
+      <td>79</td>
+      <td>30749</td>
+      <td>400</td>
+      <td>12.88</td>
+      <td>11.56</td>
+      <td>14.24</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>corrected</td>
+      <td>10</td>
+      <td>576</td>
+      <td>308</td>
+      <td>18.38</td>
+      <td>15.73</td>
+      <td>20.84</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>day_ahead</td>
+      <td>10</td>
+      <td>576</td>
+      <td>308</td>
+      <td>36.14</td>
+      <td>30.97</td>
+      <td>40.6</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>direct</td>
+      <td>10</td>
+      <td>576</td>
+      <td>308</td>
+      <td>15.97</td>
+      <td>14.11</td>
+      <td>17.59</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>error_carried</td>
+      <td>10</td>
+      <td>576</td>
+      <td>308</td>
+      <td>18.24</td>
+      <td>15.94</td>
+      <td>20.33</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>value_carried</td>
+      <td>10</td>
+      <td>576</td>
+      <td>308</td>
+      <td>21.36</td>
+      <td>19.05</td>
+      <td>23.97</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>corrected</td>
+      <td>12</td>
+      <td>4040</td>
+      <td>400</td>
+      <td>6.93</td>
+      <td>5.5</td>
+      <td>8.3</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>day_ahead</td>
+      <td>12</td>
+      <td>4040</td>
+      <td>400</td>
+      <td>11.58</td>
+      <td>8.84</td>
+      <td>14.29</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>direct</td>
+      <td>12</td>
+      <td>4040</td>
+      <td>400</td>
+      <td>6.07</td>
+      <td>4.79</td>
+      <td>7.45</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>error_carried</td>
+      <td>12</td>
+      <td>4040</td>
+      <td>400</td>
+      <td>7.37</td>
+      <td>5.88</td>
+      <td>8.89</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>value_carried</td>
+      <td>12</td>
+      <td>4040</td>
+      <td>400</td>
+      <td>13</td>
+      <td>9.14</td>
+      <td>18.14</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>corrected</td>
+      <td>91</td>
+      <td>9677</td>
+      <td>114</td>
+      <td>8.12</td>
+      <td>7.27</td>
+      <td>8.97</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>day_ahead</td>
+      <td>91</td>
+      <td>9677</td>
+      <td>114</td>
+      <td>11.28</td>
+      <td>10.07</td>
+      <td>12.55</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>direct</td>
+      <td>91</td>
+      <td>9677</td>
+      <td>114</td>
+      <td>7.51</td>
+      <td>6.75</td>
+      <td>8.29</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>error_carried</td>
+      <td>91</td>
+      <td>9677</td>
+      <td>114</td>
+      <td>9.08</td>
+      <td>8.11</td>
+      <td>10.09</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>value_carried</td>
+      <td>91</td>
+      <td>9677</td>
+      <td>114</td>
+      <td>12.98</td>
+      <td>11.75</td>
+      <td>14.23</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>corrected</td>
+      <td>91</td>
+      <td>11048</td>
+      <td>122</td>
+      <td>8.11</td>
+      <td>7.23</td>
+      <td>9.05</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>day_ahead</td>
+      <td>91</td>
+      <td>11048</td>
+      <td>122</td>
+      <td>11.37</td>
+      <td>10.12</td>
+      <td>12.75</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>direct</td>
+      <td>91</td>
+      <td>11048</td>
+      <td>122</td>
+      <td>7.5</td>
+      <td>6.68</td>
+      <td>8.36</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>error_carried</td>
+      <td>91</td>
+      <td>11048</td>
+      <td>122</td>
+      <td>9.04</td>
+      <td>8.01</td>
+      <td>10.18</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>value_carried</td>
+      <td>91</td>
+      <td>11048</td>
+      <td>122</td>
+      <td>13.05</td>
+      <td>11.73</td>
+      <td>14.41</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>corrected</td>
+      <td>91</td>
+      <td>10902</td>
+      <td>122</td>
+      <td>8.27</td>
+      <td>7.35</td>
+      <td>9.2</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>day_ahead</td>
+      <td>91</td>
+      <td>10902</td>
+      <td>122</td>
+      <td>11.5</td>
+      <td>10.25</td>
+      <td>12.72</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>direct</td>
+      <td>91</td>
+      <td>10902</td>
+      <td>122</td>
+      <td>7.69</td>
+      <td>6.84</td>
+      <td>8.54</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>error_carried</td>
+      <td>91</td>
+      <td>10902</td>
+      <td>122</td>
+      <td>9.26</td>
+      <td>8.18</td>
+      <td>10.31</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>value_carried</td>
+      <td>91</td>
+      <td>10902</td>
+      <td>122</td>
+      <td>13.27</td>
+      <td>11.97</td>
+      <td>14.56</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>corrected</td>
+      <td>91</td>
+      <td>3738</td>
+      <td>42</td>
+      <td>8.2</td>
+      <td>7.27</td>
+      <td>9.17</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>day_ahead</td>
+      <td>91</td>
+      <td>3738</td>
+      <td>42</td>
+      <td>11.4</td>
+      <td>10.07</td>
+      <td>12.69</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>direct</td>
+      <td>91</td>
+      <td>3738</td>
+      <td>42</td>
+      <td>7.58</td>
+      <td>6.71</td>
+      <td>8.47</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>error_carried</td>
+      <td>91</td>
+      <td>3738</td>
+      <td>42</td>
+      <td>9.12</td>
+      <td>8.08</td>
+      <td>10.23</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>value_carried</td>
+      <td>91</td>
+      <td>3738</td>
+      <td>42</td>
+      <td>13.38</td>
+      <td>11.97</td>
+      <td>14.88</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/correction_errors.csv">code/reports/forecast_extensions/correction_errors.csv</a> (45 rows shown)</p>
+
+<details class="table"><summary>Table: 36 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>a</th>
+      <th>b</th>
+      <th>diff_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>nmae_a_pct</th>
+      <th>nmae_b_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-3.22</td>
+      <td>-3.4</td>
+      <td>-3.04</td>
+      <td>8.11</td>
+      <td>11.32</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.94</td>
+      <td>-0.98</td>
+      <td>-0.9</td>
+      <td>8.11</td>
+      <td>9.05</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.6</td>
+      <td>0.56</td>
+      <td>0.64</td>
+      <td>8.11</td>
+      <td>7.51</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-3.82</td>
+      <td>-4.03</td>
+      <td>-3.62</td>
+      <td>7.51</td>
+      <td>11.32</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-6.56</td>
+      <td>-7.2</td>
+      <td>-5.92</td>
+      <td>8.81</td>
+      <td>15.36</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.3</td>
+      <td>-0.4</td>
+      <td>-0.2</td>
+      <td>8.81</td>
+      <td>9.11</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.98</td>
+      <td>0.84</td>
+      <td>1.11</td>
+      <td>8.81</td>
+      <td>7.83</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-7.53</td>
+      <td>-8.23</td>
+      <td>-6.86</td>
+      <td>7.83</td>
+      <td>15.36</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-2.71</td>
+      <td>-2.87</td>
+      <td>-2.55</td>
+      <td>8</td>
+      <td>10.71</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-1.04</td>
+      <td>-1.08</td>
+      <td>-1</td>
+      <td>8</td>
+      <td>9.04</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.54</td>
+      <td>0.5</td>
+      <td>0.58</td>
+      <td>8</td>
+      <td>7.46</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-3.25</td>
+      <td>-3.45</td>
+      <td>-3.07</td>
+      <td>7.46</td>
+      <td>10.71</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-17.77</td>
+      <td>-21.91</td>
+      <td>-15.53</td>
+      <td>18.38</td>
+      <td>36.14</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>0.14</td>
+      <td>-0.3</td>
+      <td>0.55</td>
+      <td>18.38</td>
+      <td>18.24</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>2.41</td>
+      <td>1.89</td>
+      <td>3.31</td>
+      <td>18.38</td>
+      <td>15.97</td>
+    </tr>
+    <tr>
+      <td>on-site generation, days with a large step</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-20.17</td>
+      <td>-25.04</td>
+      <td>-17.77</td>
+      <td>15.97</td>
+      <td>36.14</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-4.65</td>
+      <td>-5.38</td>
+      <td>-3.98</td>
+      <td>6.93</td>
+      <td>11.58</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.44</td>
+      <td>-0.5</td>
+      <td>-0.38</td>
+      <td>6.93</td>
+      <td>7.37</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.86</td>
+      <td>0.74</td>
+      <td>1</td>
+      <td>6.93</td>
+      <td>6.07</td>
+    </tr>
+    <tr>
+      <td>on-site generation, other days</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-5.52</td>
+      <td>-6.27</td>
+      <td>-4.82</td>
+      <td>6.07</td>
+      <td>11.58</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-3.16</td>
+      <td>-3.5</td>
+      <td>-2.86</td>
+      <td>8.12</td>
+      <td>11.28</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.96</td>
+      <td>-1.03</td>
+      <td>-0.9</td>
+      <td>8.12</td>
+      <td>9.08</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.61</td>
+      <td>0.53</td>
+      <td>0.71</td>
+      <td>8.12</td>
+      <td>7.51</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-3.78</td>
+      <td>-4.2</td>
+      <td>-3.43</td>
+      <td>7.51</td>
+      <td>11.28</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-3.25</td>
+      <td>-3.54</td>
+      <td>-3</td>
+      <td>8.11</td>
+      <td>11.37</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.93</td>
+      <td>-1</td>
+      <td>-0.87</td>
+      <td>8.11</td>
+      <td>9.04</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.61</td>
+      <td>0.54</td>
+      <td>0.68</td>
+      <td>8.11</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-3.86</td>
+      <td>-4.2</td>
+      <td>-3.57</td>
+      <td>7.5</td>
+      <td>11.37</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-3.23</td>
+      <td>-3.58</td>
+      <td>-2.9</td>
+      <td>8.27</td>
+      <td>11.5</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.99</td>
+      <td>-1.08</td>
+      <td>-0.89</td>
+      <td>8.27</td>
+      <td>9.26</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.58</td>
+      <td>0.52</td>
+      <td>0.66</td>
+      <td>8.27</td>
+      <td>7.69</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-3.81</td>
+      <td>-4.19</td>
+      <td>-3.47</td>
+      <td>7.69</td>
+      <td>11.5</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>corrected</td>
+      <td>day_ahead</td>
+      <td>-3.2</td>
+      <td>-3.87</td>
+      <td>-2.79</td>
+      <td>8.2</td>
+      <td>11.4</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>corrected</td>
+      <td>error_carried</td>
+      <td>-0.92</td>
+      <td>-1.01</td>
+      <td>-0.86</td>
+      <td>8.2</td>
+      <td>9.12</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>corrected</td>
+      <td>direct</td>
+      <td>0.61</td>
+      <td>0.5</td>
+      <td>0.79</td>
+      <td>8.2</td>
+      <td>7.58</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>direct</td>
+      <td>day_ahead</td>
+      <td>-3.81</td>
+      <td>-4.65</td>
+      <td>-3.3</td>
+      <td>7.58</td>
+      <td>11.4</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/correction_differences.csv">code/reports/forecast_extensions/correction_differences.csv</a> (36 rows shown)</p>
+
+<ul>
+<li><strong>Meter data from the same day cut the error by about 30 %.</strong> Day-ahead 11.3 %; corrected by
+the forecast of its error 8.1 % (−3.2 points, −3.4 to −3.0); the same in each of the four
+years (−3.2 to −3.3).</li>
+<li><strong>At the sites with on-site generation the error falls by more than 40 %</strong>: 15.4 to 8.8 %
+(−6.6 points, −7.2 to −5.9), and on their days with a large step from 36.1 to 18.4 % (−17.8
+points, −21.9 to −15.5). This is the first input that reaches the plant error: a flag for
+the plant and its state up to the day before did not (finding 4.7).</li>
+<li><strong>The second model is not what helps.</strong> The zero-shot model run again on the demand is
+better than the correction by 0.6 points (0.56 to 0.64; 7.5 %), at every half-hour after the
+issue and in every site group. On the days with a large step the forecast of the error is no
+better than the last error carried forward (+0.1 points, −0.3 to +0.6). The gain is the
+meter reading, not the model of the errors.</li>
+<li><strong>Not tested:</strong> what a battery gains when it plans again within the day, and how late the
+meter data of these sites arrive in practice.</li>
+</ul>
+<p><em>2. Measured and forecast weather as separate inputs.</em> The covariate run gives each weather variable one channel: measured
+values over the past, the forecast of the day before over the future, so the source changes at
+the issue time. Two alternatives on every third day of the record (402 days, 35,112
+site-days): the measured value as a past-only input and the day-ahead forecast as a second
+input over past and future; and the day-ahead forecast only, over past and future. The history
+of forecasts is the run of the day before each day, as it was issued.</p>
+<figure class="single"><img src="figures/split_weather.png" alt="split_weather" loading="lazy"><figcaption>Change in the day-ahead error against the run with one channel for each weather variable. Paired on the same site-days; intervals from resampling weeks. <code>split_weather</code> <a href="figures/split_weather.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>model</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>nmae_pct</th>
+      <th>nmae_lo</th>
+      <th>nmae_hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>35112</td>
+      <td>402</td>
+      <td>11.72</td>
+      <td>10.48</td>
+      <td>12.91</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>35112</td>
+      <td>402</td>
+      <td>11.1</td>
+      <td>9.92</td>
+      <td>12.24</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>91</td>
+      <td>35112</td>
+      <td>402</td>
+      <td>11.08</td>
+      <td>9.9</td>
+      <td>12.21</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs_split</td>
+      <td>91</td>
+      <td>35112</td>
+      <td>402</td>
+      <td>11.08</td>
+      <td>9.9</td>
+      <td>12.21</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>8130</td>
+      <td>92</td>
+      <td>12.3</td>
+      <td>10.82</td>
+      <td>13.84</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>8130</td>
+      <td>92</td>
+      <td>11.75</td>
+      <td>10.38</td>
+      <td>13.21</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>91</td>
+      <td>8130</td>
+      <td>92</td>
+      <td>11.75</td>
+      <td>10.37</td>
+      <td>13.21</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2_ifs_split</td>
+      <td>91</td>
+      <td>8130</td>
+      <td>92</td>
+      <td>11.69</td>
+      <td>10.32</td>
+      <td>13.16</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2</td>
+      <td>91</td>
+      <td>8849</td>
+      <td>104</td>
+      <td>11.49</td>
+      <td>10.14</td>
+      <td>12.76</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>8849</td>
+      <td>104</td>
+      <td>10.79</td>
+      <td>9.57</td>
+      <td>11.99</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>91</td>
+      <td>8849</td>
+      <td>104</td>
+      <td>10.79</td>
+      <td>9.58</td>
+      <td>11.99</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2_ifs_split</td>
+      <td>91</td>
+      <td>8849</td>
+      <td>104</td>
+      <td>10.8</td>
+      <td>9.58</td>
+      <td>11.98</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2</td>
+      <td>12</td>
+      <td>4550</td>
+      <td>402</td>
+      <td>15.82</td>
+      <td>11.37</td>
+      <td>20.65</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>12</td>
+      <td>4550</td>
+      <td>402</td>
+      <td>14.91</td>
+      <td>10.52</td>
+      <td>19.64</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>12</td>
+      <td>4550</td>
+      <td>402</td>
+      <td>14.89</td>
+      <td>10.49</td>
+      <td>19.61</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs_split</td>
+      <td>12</td>
+      <td>4550</td>
+      <td>402</td>
+      <td>14.88</td>
+      <td>10.47</td>
+      <td>19.59</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2</td>
+      <td>79</td>
+      <td>30562</td>
+      <td>402</td>
+      <td>11.1</td>
+      <td>10</td>
+      <td>12.27</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>79</td>
+      <td>30562</td>
+      <td>402</td>
+      <td>10.53</td>
+      <td>9.48</td>
+      <td>11.68</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>79</td>
+      <td>30562</td>
+      <td>402</td>
+      <td>10.5</td>
+      <td>9.46</td>
+      <td>11.65</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs_split</td>
+      <td>79</td>
+      <td>30562</td>
+      <td>402</td>
+      <td>10.5</td>
+      <td>9.46</td>
+      <td>11.65</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/split_errors.csv">code/reports/forecast_extensions/split_errors.csv</a> (20 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>a</th>
+      <th>b</th>
+      <th>diff_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>nmae_a_pct</th>
+      <th>nmae_b_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs</td>
+      <td>-0.029</td>
+      <td>-0.059</td>
+      <td>-0.002</td>
+      <td>11.076</td>
+      <td>11.105</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>chronos2_ifs</td>
+      <td>-0.023</td>
+      <td>-0.045</td>
+      <td>-0.001</td>
+      <td>11.082</td>
+      <td>11.105</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>-0.007</td>
+      <td>-0.025</td>
+      <td>0.011</td>
+      <td>11.076</td>
+      <td>11.082</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs</td>
+      <td>-0.059</td>
+      <td>-0.123</td>
+      <td>-0.001</td>
+      <td>11.693</td>
+      <td>11.752</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>chronos2_ifs</td>
+      <td>-0.002</td>
+      <td>-0.043</td>
+      <td>0.045</td>
+      <td>11.75</td>
+      <td>11.752</td>
+    </tr>
+    <tr>
+      <td>summer (June to August)</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>-0.057</td>
+      <td>-0.096</td>
+      <td>-0.022</td>
+      <td>11.693</td>
+      <td>11.75</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs</td>
+      <td>0.007</td>
+      <td>-0.055</td>
+      <td>0.065</td>
+      <td>10.796</td>
+      <td>10.788</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>chronos2_ifs</td>
+      <td>0.004</td>
+      <td>-0.036</td>
+      <td>0.041</td>
+      <td>10.793</td>
+      <td>10.788</td>
+    </tr>
+    <tr>
+      <td>winter (December to February)</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>0.003</td>
+      <td>-0.03</td>
+      <td>0.033</td>
+      <td>10.796</td>
+      <td>10.793</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs</td>
+      <td>-0.029</td>
+      <td>-0.11</td>
+      <td>0.045</td>
+      <td>14.878</td>
+      <td>14.907</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>chronos2_ifs</td>
+      <td>-0.015</td>
+      <td>-0.069</td>
+      <td>0.042</td>
+      <td>14.892</td>
+      <td>14.907</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>-0.014</td>
+      <td>-0.079</td>
+      <td>0.046</td>
+      <td>14.878</td>
+      <td>14.892</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs</td>
+      <td>-0.029</td>
+      <td>-0.059</td>
+      <td>0.001</td>
+      <td>10.498</td>
+      <td>10.527</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>chronos2_ifs</td>
+      <td>-0.024</td>
+      <td>-0.047</td>
+      <td>-0.001</td>
+      <td>10.504</td>
+      <td>10.527</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs_split</td>
+      <td>chronos2_ifs_fc_only</td>
+      <td>-0.006</td>
+      <td>-0.023</td>
+      <td>0.012</td>
+      <td>10.498</td>
+      <td>10.504</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/split_differences.csv">code/reports/forecast_extensions/split_differences.csv</a> (15 rows shown)</p>
+
+<ul>
+<li><strong>No gain of a size that matters.</strong> Two inputs: 11.08 % against 11.10 % (−0.03 points,
+−0.06 to −0.00). Forecast only: −0.02 points (−0.05 to −0.00). All the inputs together are
+worth 0.62 points on these days, so the way the weather is given moves a twentieth of that.</li>
+<li><strong>In summer the two-input form is ahead by 0.06 points</strong> (−0.12 to −0.00), in winter by
+nothing (+0.01, −0.06 to +0.07), and not at the sites with on-site generation.</li>
+<li>This agrees with finding 4.2: the forecast weather is as good as the measured weather for
+this model, so a change of source at the issue time costs it nothing.</li>
+</ul>
+<p><em>3. The trained baseline, trained again.</em> The gradient-boosted model of the proof of concept was
+trained once. Over a longer test a model that is trained once grows old, and a comparison with
+a model that needs no training is then unfair to it. Here the same model (LightGBM with the
+weather forecast, median only) is run from January 2024 to May 2026 in two ways: trained once
+on 2023, and trained again at the start of each quarter on all data up to then. A calendar
+replaces the drift detector of the paper: ten re-trainings in ten quarters are at least as
+many as a detector would start. 75,276 site-days on 856 days, 91 sites.</p>
+<figure class="single"><img src="figures/retrain_quarters.png" alt="retrain_quarters" loading="lazy"><figcaption>Day-ahead error in each quarter: the trained model trained once on 2023, the same model trained again each quarter, the zero-shot model and the same day last week. The same site-days for every model. <code>retrain_quarters</code> <a href="figures/retrain_quarters.pdf">PDF</a></figcaption></figure>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>model</th>
+      <th>sites</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>nmae_pct</th>
+      <th>nmae_lo</th>
+      <th>nmae_hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>75276</td>
+      <td>856</td>
+      <td>11.27</td>
+      <td>10.06</td>
+      <td>12.4</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>lightgbm_once</td>
+      <td>91</td>
+      <td>75276</td>
+      <td>856</td>
+      <td>13.93</td>
+      <td>12.39</td>
+      <td>15.52</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>lightgbm_quarterly</td>
+      <td>91</td>
+      <td>75276</td>
+      <td>856</td>
+      <td>13.33</td>
+      <td>11.8</td>
+      <td>14.91</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>75276</td>
+      <td>856</td>
+      <td>18.04</td>
+      <td>15.91</td>
+      <td>20.13</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>32586</td>
+      <td>365</td>
+      <td>11.22</td>
+      <td>10</td>
+      <td>12.53</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>lightgbm_once</td>
+      <td>91</td>
+      <td>32586</td>
+      <td>365</td>
+      <td>13.5</td>
+      <td>11.94</td>
+      <td>15.22</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>lightgbm_quarterly</td>
+      <td>91</td>
+      <td>32586</td>
+      <td>365</td>
+      <td>13.74</td>
+      <td>11.8</td>
+      <td>16.04</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>32586</td>
+      <td>365</td>
+      <td>17.66</td>
+      <td>15.6</td>
+      <td>19.94</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>31738</td>
+      <td>364</td>
+      <td>11.52</td>
+      <td>10.27</td>
+      <td>12.74</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>lightgbm_once</td>
+      <td>91</td>
+      <td>31738</td>
+      <td>364</td>
+      <td>14.54</td>
+      <td>12.82</td>
+      <td>16.18</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>lightgbm_quarterly</td>
+      <td>91</td>
+      <td>31738</td>
+      <td>364</td>
+      <td>13.32</td>
+      <td>11.8</td>
+      <td>14.77</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>31738</td>
+      <td>364</td>
+      <td>18.71</td>
+      <td>16.48</td>
+      <td>20.98</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>chronos2_ifs</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>11.2</td>
+      <td>9.93</td>
+      <td>12.39</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>lightgbm_once</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>14.02</td>
+      <td>12.3</td>
+      <td>15.6</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>lightgbm_quarterly</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>12.5</td>
+      <td>10.99</td>
+      <td>13.89</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>seasonal_naive</td>
+      <td>91</td>
+      <td>10952</td>
+      <td>127</td>
+      <td>17.77</td>
+      <td>15.46</td>
+      <td>19.93</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>12</td>
+      <td>9629</td>
+      <td>856</td>
+      <td>15.08</td>
+      <td>11.14</td>
+      <td>19.41</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>lightgbm_once</td>
+      <td>12</td>
+      <td>9629</td>
+      <td>856</td>
+      <td>20.71</td>
+      <td>14.7</td>
+      <td>27.4</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>lightgbm_quarterly</td>
+      <td>12</td>
+      <td>9629</td>
+      <td>856</td>
+      <td>21.27</td>
+      <td>14.19</td>
+      <td>29.56</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>12</td>
+      <td>9629</td>
+      <td>856</td>
+      <td>29.1</td>
+      <td>19.77</td>
+      <td>39.14</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>79</td>
+      <td>65647</td>
+      <td>856</td>
+      <td>10.69</td>
+      <td>9.59</td>
+      <td>11.88</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>lightgbm_once</td>
+      <td>79</td>
+      <td>65647</td>
+      <td>856</td>
+      <td>12.9</td>
+      <td>11.62</td>
+      <td>14.35</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>lightgbm_quarterly</td>
+      <td>79</td>
+      <td>65647</td>
+      <td>856</td>
+      <td>12.13</td>
+      <td>10.95</td>
+      <td>13.43</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>seasonal_naive</td>
+      <td>79</td>
+      <td>65647</td>
+      <td>856</td>
+      <td>16.36</td>
+      <td>14.77</td>
+      <td>18.01</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/retrain_errors.csv">code/reports/forecast_extensions/retrain_errors.csv</a> (24 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>group</th>
+      <th>a</th>
+      <th>b</th>
+      <th>diff_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+      <th>nmae_a_pct</th>
+      <th>nmae_b_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>all</td>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>-0.6</td>
+      <td>-0.96</td>
+      <td>-0.18</td>
+      <td>13.33</td>
+      <td>13.93</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>-2.07</td>
+      <td>-2.54</td>
+      <td>-1.69</td>
+      <td>11.27</td>
+      <td>13.33</td>
+    </tr>
+    <tr>
+      <td>all</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>-2.67</td>
+      <td>-2.86</td>
+      <td>-2.47</td>
+      <td>11.27</td>
+      <td>13.93</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>0.24</td>
+      <td>-0.4</td>
+      <td>1.2</td>
+      <td>13.74</td>
+      <td>13.5</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>-2.52</td>
+      <td>-3.49</td>
+      <td>-1.8</td>
+      <td>11.22</td>
+      <td>13.74</td>
+    </tr>
+    <tr>
+      <td>2024</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>-2.28</td>
+      <td>-2.59</td>
+      <td>-1.96</td>
+      <td>11.22</td>
+      <td>13.5</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>-1.23</td>
+      <td>-1.38</td>
+      <td>-1.07</td>
+      <td>13.32</td>
+      <td>14.54</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>-1.79</td>
+      <td>-2.01</td>
+      <td>-1.57</td>
+      <td>11.52</td>
+      <td>13.32</td>
+    </tr>
+    <tr>
+      <td>2025</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>-3.02</td>
+      <td>-3.26</td>
+      <td>-2.77</td>
+      <td>11.52</td>
+      <td>14.54</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>-1.52</td>
+      <td>-1.87</td>
+      <td>-1.18</td>
+      <td>12.5</td>
+      <td>14.02</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>-1.3</td>
+      <td>-1.64</td>
+      <td>-0.84</td>
+      <td>11.2</td>
+      <td>12.5</td>
+    </tr>
+    <tr>
+      <td>2026</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>-2.82</td>
+      <td>-3.32</td>
+      <td>-2.31</td>
+      <td>11.2</td>
+      <td>14.02</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>0.56</td>
+      <td>-1.74</td>
+      <td>3.62</td>
+      <td>21.27</td>
+      <td>20.71</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>-6.19</td>
+      <td>-9.48</td>
+      <td>-3.81</td>
+      <td>15.08</td>
+      <td>21.27</td>
+    </tr>
+    <tr>
+      <td>on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>-5.63</td>
+      <td>-6.22</td>
+      <td>-5.03</td>
+      <td>15.08</td>
+      <td>20.71</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>-0.78</td>
+      <td>-0.91</td>
+      <td>-0.65</td>
+      <td>12.13</td>
+      <td>12.9</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>-1.44</td>
+      <td>-1.6</td>
+      <td>-1.28</td>
+      <td>10.69</td>
+      <td>12.13</td>
+    </tr>
+    <tr>
+      <td>no on-site generation</td>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>-2.22</td>
+      <td>-2.41</td>
+      <td>-2.02</td>
+      <td>10.69</td>
+      <td>12.9</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/retrain_differences.csv">code/reports/forecast_extensions/retrain_differences.csv</a> (18 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>a</th>
+      <th>b</th>
+      <th>sites</th>
+      <th>mean_diff_pts</th>
+      <th>median_diff_pts</th>
+      <th>sites_a_better</th>
+      <th>largest_diff_pts</th>
+      <th>largest_diff_site</th>
+      <th>mean_diff_without_it_pts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>lightgbm_quarterly</td>
+      <td>lightgbm_once</td>
+      <td>91</td>
+      <td>-0.6</td>
+      <td>-0.59</td>
+      <td>87</td>
+      <td>28.38</td>
+      <td>RXN01</td>
+      <td>-0.92</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_quarterly</td>
+      <td>91</td>
+      <td>-2.07</td>
+      <td>-1.08</td>
+      <td>88</td>
+      <td>0.46</td>
+      <td>RYX08</td>
+      <td>-2.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>lightgbm_once</td>
+      <td>91</td>
+      <td>-2.67</td>
+      <td>-1.89</td>
+      <td>91</td>
+      <td>-0.04</td>
+      <td>RYX08</td>
+      <td>-2.7</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/retrain_site_differences.csv">code/reports/forecast_extensions/retrain_site_differences.csv</a> (3 rows shown)</p>
+
+<ul>
+<li><strong>The model trained once grows old</strong>: 13.5 % in 2024, 14.5 % in 2025, 14.0 % in 2026.
+Trained again each quarter it is better by 1.2 points in 2025 (−1.4 to −1.1) and by 1.5
+points in 2026 (−1.9 to −1.2); over the whole test by 0.6 points (−1.0 to −0.2), at 87 of 91
+sites.</li>
+<li><strong>In 2024 re-training does not help</strong> (+0.2 points, −0.4 to +1.2): one site fails for two
+weeks in June 2024 after a re-training (its error over the test rises by 28 points). Without
+it the mean gain is 0.9 points; the median site gains 0.6.</li>
+<li><strong>The zero-shot model stays ahead of the re-trained one</strong> in every quarter and every year:
+by 2.1 points over the whole test (−2.5 to −1.7), at 88 of 91 sites, and by 6.2 points at the
+sites with on-site generation. The lead narrows from 2.5 points in 2024 to 1.8 in 2025 and
+1.3 in 2026 (−1.6 to −0.8), as the re-trained model gets more data. Whether it narrows
+further is open: 2026 has 127 days.</li>
+<li><strong>The finding of the proof of concept holds</strong> (−1.5 points against a model trained on two
+years and tested on the year after): it is not a lead over a model that had grown old.</li>
+</ul>
+<p><em>4. Where the forecast range fails, and an online correction.</em> The forecast has a 10 % and a
+90 % quantile; the demand should be inside them 80 % of the time, with 10 % below and 10 %
+above. Scored on 1,117 days (the first 90 days are left out for every method), 91 sites.</p>
+<figure class="single"><img src="figures/range_reliability.png" alt="range_reliability" loading="lazy"><figcaption>Share of the half-hours with the demand below each quantile of the forecast, by site group. On the dashed diagonal the quantiles are right. <code>range_reliability</code> <a href="figures/range_reliability.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/range_below_hours.png" alt="range_below_hours" loading="lazy"><figcaption>Demand below the 10 % quantile, by hour of the day and season. Nominal: 10 %. <code>range_below_hours</code> <a href="figures/range_below_hours.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/range_above_hours.png" alt="range_above_hours" loading="lazy"><figcaption>Demand above the 90 % quantile, by hour of the day and season. Nominal: 10 %. <code>range_above_hours</code> <a href="figures/range_above_hours.pdf">PDF</a></figcaption></figure>
+
+<ul>
+<li><strong>The range is too narrow, and the fault is at the lower bound.</strong> The demand is inside the
+range 75.7 % of the time (74.5 to 76.5), below it 14.0 % and above it 10.3 %. The lower
+bound fails in every season and hour, most at night (15 to 18 % below); the upper bound is
+right outside events. This is the opposite tail to the district-heating paper, which finds
+the upper quantile too low. The forecast without inputs shows the same (76.1 % inside).</li>
+<li><strong>On event days the upper bound fails</strong>: 14.9 % of the half-hours above the range on
+heat-wave days and 13.8 % on cold-spell days, against 10.2 % on other days. This fits
+finding 4.5: on heat-wave days the peak is above what the forecast allows for.</li>
+<li><strong>On bank holidays the lower bound fails</strong>: 23 % below the range (70 % inside).</li>
+<li><strong>One site is inside its range 31 % of the time</strong>; 77 % of the sites are within five points
+of 80 %.</li>
+</ul>
+<p>The correction follows Angelopoulos, Candes and Tibshirani (2023, conformal PID control). For
+each site, bound and half-hour of the day an offset moves out after a miss and in after a hit
+(quantile tracking), with the learning rate of the paper and with feedback as late as in
+operation (the half-hours after 16:00 learn from two days before). The comparator is a fixed
+rule on the scores of the last 90 days.</p>
+<figure class="single"><img src="figures/range_groups.png" alt="range_groups" loading="lazy"><figcaption>Share of the half-hours inside the 80 % range by season, site group, day type and event days: the range of the model and the range tracked online. Intervals from resampling sites. <code>range_groups</code> <a href="figures/range_groups.pdf">PDF</a></figcaption></figure>
+
+<figure class="single"><img src="figures/range_over_time.png" alt="range_over_time" loading="lazy"><figcaption>Share inside the range in windows of 30 days at the sites with on-site generation. <code>range_over_time</code> <a href="figures/range_over_time.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 184 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>method</th>
+      <th>grouping</th>
+      <th>group</th>
+      <th>sites</th>
+      <th>below_pct</th>
+      <th>above_pct</th>
+      <th>inside_pct</th>
+      <th>inside_lo</th>
+      <th>inside_hi</th>
+      <th>width_pct</th>
+      <th>loss_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>12.9</td>
+      <td>11</td>
+      <td>76.1</td>
+      <td>74.7</td>
+      <td>77</td>
+      <td>33.9</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>12.4</td>
+      <td>11</td>
+      <td>76.7</td>
+      <td>75.8</td>
+      <td>77.4</td>
+      <td>32.4</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>14.7</td>
+      <td>10.1</td>
+      <td>75.2</td>
+      <td>73.6</td>
+      <td>76.4</td>
+      <td>34.6</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>13.3</td>
+      <td>10.8</td>
+      <td>75.9</td>
+      <td>73.9</td>
+      <td>77.3</td>
+      <td>35.6</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>11.3</td>
+      <td>12.3</td>
+      <td>76.5</td>
+      <td>75.3</td>
+      <td>77.3</td>
+      <td>33.5</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>15.2</td>
+      <td>11.2</td>
+      <td>73.6</td>
+      <td>72.1</td>
+      <td>74.8</td>
+      <td>22.5</td>
+      <td>4.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>13.4</td>
+      <td>10.9</td>
+      <td>75.7</td>
+      <td>74.4</td>
+      <td>76.8</td>
+      <td>26.3</td>
+      <td>4.7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>11.6</td>
+      <td>11.6</td>
+      <td>76.8</td>
+      <td>75.5</td>
+      <td>77.7</td>
+      <td>39.9</td>
+      <td>6.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>12.4</td>
+      <td>11.5</td>
+      <td>76.2</td>
+      <td>74.8</td>
+      <td>77.1</td>
+      <td>42.9</td>
+      <td>7.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>11.6</td>
+      <td>10.8</td>
+      <td>77.7</td>
+      <td>76.2</td>
+      <td>78.7</td>
+      <td>37.4</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>13.3</td>
+      <td>10.1</td>
+      <td>76.6</td>
+      <td>74.8</td>
+      <td>77.9</td>
+      <td>31.8</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>13.4</td>
+      <td>10.9</td>
+      <td>75.8</td>
+      <td>74.4</td>
+      <td>76.9</td>
+      <td>41.7</td>
+      <td>9.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>12.8</td>
+      <td>11</td>
+      <td>76.1</td>
+      <td>74.6</td>
+      <td>77.2</td>
+      <td>32.7</td>
+      <td>5.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>11.9</td>
+      <td>11.8</td>
+      <td>76.3</td>
+      <td>74.9</td>
+      <td>77.2</td>
+      <td>33.7</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>13.6</td>
+      <td>9.3</td>
+      <td>77</td>
+      <td>75.5</td>
+      <td>78.1</td>
+      <td>32.8</td>
+      <td>5.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>36.1</td>
+      <td>6.1</td>
+      <td>57.8</td>
+      <td>55.1</td>
+      <td>60.5</td>
+      <td>52.3</td>
+      <td>19.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>13</td>
+      <td>10.9</td>
+      <td>76.1</td>
+      <td>74.3</td>
+      <td>77.2</td>
+      <td>33.2</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>12.9</td>
+      <td>11.1</td>
+      <td>76</td>
+      <td>74.4</td>
+      <td>77</td>
+      <td>33.8</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>12.8</td>
+      <td>11.1</td>
+      <td>76.1</td>
+      <td>74.7</td>
+      <td>77.1</td>
+      <td>35</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>13.2</td>
+      <td>10.4</td>
+      <td>76.3</td>
+      <td>75.7</td>
+      <td>77</td>
+      <td>33.7</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>10.8</td>
+      <td>16.6</td>
+      <td>72.6</td>
+      <td>70.1</td>
+      <td>74.7</td>
+      <td>36</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>7.9</td>
+      <td>19.3</td>
+      <td>72.8</td>
+      <td>71.7</td>
+      <td>73.9</td>
+      <td>32.3</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>model</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>13.1</td>
+      <td>10.7</td>
+      <td>76.2</td>
+      <td>74.8</td>
+      <td>77.2</td>
+      <td>33.9</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11</td>
+      <td>77.9</td>
+      <td>77.7</td>
+      <td>78.2</td>
+      <td>35.8</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>11.7</td>
+      <td>10.4</td>
+      <td>77.9</td>
+      <td>77.7</td>
+      <td>78.2</td>
+      <td>34.4</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>11.8</td>
+      <td>10.6</td>
+      <td>77.6</td>
+      <td>77.1</td>
+      <td>78.2</td>
+      <td>36.2</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>11.4</td>
+      <td>78.4</td>
+      <td>78.1</td>
+      <td>78.8</td>
+      <td>37.6</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>10.4</td>
+      <td>11.8</td>
+      <td>77.8</td>
+      <td>77.5</td>
+      <td>78.2</td>
+      <td>35.5</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>10.9</td>
+      <td>11</td>
+      <td>78.1</td>
+      <td>77.9</td>
+      <td>78.4</td>
+      <td>24.9</td>
+      <td>4.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.1</td>
+      <td>78</td>
+      <td>77.7</td>
+      <td>78.2</td>
+      <td>27.8</td>
+      <td>4.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>11</td>
+      <td>10.9</td>
+      <td>78.1</td>
+      <td>77.9</td>
+      <td>78.4</td>
+      <td>42.4</td>
+      <td>6.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>11.1</td>
+      <td>10.8</td>
+      <td>78.1</td>
+      <td>77.9</td>
+      <td>78.4</td>
+      <td>45.7</td>
+      <td>7.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>11.2</td>
+      <td>11</td>
+      <td>77.7</td>
+      <td>77.5</td>
+      <td>78</td>
+      <td>38.5</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>11.1</td>
+      <td>11.2</td>
+      <td>77.7</td>
+      <td>77.4</td>
+      <td>78</td>
+      <td>33.4</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>11.1</td>
+      <td>11.2</td>
+      <td>77.7</td>
+      <td>77.6</td>
+      <td>77.8</td>
+      <td>45.2</td>
+      <td>9.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>11</td>
+      <td>11</td>
+      <td>78</td>
+      <td>77.8</td>
+      <td>78.3</td>
+      <td>34.3</td>
+      <td>5.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>10</td>
+      <td>11.8</td>
+      <td>78.3</td>
+      <td>78</td>
+      <td>78.5</td>
+      <td>35.6</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>11.9</td>
+      <td>9.5</td>
+      <td>78.6</td>
+      <td>78.2</td>
+      <td>79.1</td>
+      <td>34.6</td>
+      <td>5.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>33.7</td>
+      <td>6.3</td>
+      <td>60</td>
+      <td>57.4</td>
+      <td>62.6</td>
+      <td>54.5</td>
+      <td>19.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>10.8</td>
+      <td>11.2</td>
+      <td>78</td>
+      <td>77.9</td>
+      <td>78.2</td>
+      <td>34.9</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11</td>
+      <td>78</td>
+      <td>77.7</td>
+      <td>78.5</td>
+      <td>35.8</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.1</td>
+      <td>77.8</td>
+      <td>77.6</td>
+      <td>78.2</td>
+      <td>37</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>11.7</td>
+      <td>10.4</td>
+      <td>77.8</td>
+      <td>77.6</td>
+      <td>78.1</td>
+      <td>35.7</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>7.8</td>
+      <td>16.5</td>
+      <td>75.8</td>
+      <td>74.3</td>
+      <td>77.2</td>
+      <td>38.1</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>7.5</td>
+      <td>18</td>
+      <td>74.5</td>
+      <td>73.6</td>
+      <td>75.4</td>
+      <td>34.4</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rolling quantile</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>11.2</td>
+      <td>10.8</td>
+      <td>78.1</td>
+      <td>77.9</td>
+      <td>78.4</td>
+      <td>35.8</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.2</td>
+      <td>38.8</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>10.3</td>
+      <td>9.4</td>
+      <td>80.3</td>
+      <td>80.2</td>
+      <td>80.5</td>
+      <td>37.7</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>10.4</td>
+      <td>10</td>
+      <td>79.7</td>
+      <td>79.4</td>
+      <td>80</td>
+      <td>39.3</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>9.7</td>
+      <td>10.1</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.6</td>
+      <td>40.4</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>9.7</td>
+      <td>10.3</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>38.6</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>29</td>
+      <td>4.7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>31.3</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>10.1</td>
+      <td>9.9</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>44.7</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>10</td>
+      <td>79.8</td>
+      <td>79.7</td>
+      <td>80</td>
+      <td>48</td>
+      <td>7.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>10.1</td>
+      <td>9.9</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>41.9</td>
+      <td>6.6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>38.8</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>10.1</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>50.2</td>
+      <td>9.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>37.1</td>
+      <td>5.6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>9.2</td>
+      <td>10.6</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>38.7</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>10.5</td>
+      <td>8.4</td>
+      <td>81</td>
+      <td>80.7</td>
+      <td>81.4</td>
+      <td>37.7</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>31</td>
+      <td>6.2</td>
+      <td>62.8</td>
+      <td>60.2</td>
+      <td>65.3</td>
+      <td>59</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10.1</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80</td>
+      <td>37.8</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>38.8</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.4</td>
+      <td>40.3</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>10.3</td>
+      <td>9.7</td>
+      <td>80</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>38.8</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>7.4</td>
+      <td>14.4</td>
+      <td>78.2</td>
+      <td>76.8</td>
+      <td>79.5</td>
+      <td>40.9</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>6.5</td>
+      <td>15.5</td>
+      <td>78.1</td>
+      <td>77.3</td>
+      <td>78.8</td>
+      <td>38.4</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>9.7</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>38.9</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.2</td>
+      <td>40</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>9.5</td>
+      <td>80.4</td>
+      <td>80.2</td>
+      <td>80.6</td>
+      <td>38.7</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>10.3</td>
+      <td>10</td>
+      <td>79.7</td>
+      <td>79.5</td>
+      <td>80.1</td>
+      <td>40.8</td>
+      <td>6.6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>9.8</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.4</td>
+      <td>41.6</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>9.8</td>
+      <td>10.4</td>
+      <td>79.8</td>
+      <td>79.7</td>
+      <td>80</td>
+      <td>39.6</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>30.4</td>
+      <td>4.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>32.4</td>
+      <td>5.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>10.1</td>
+      <td>10</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>45.4</td>
+      <td>7.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>10.1</td>
+      <td>79.7</td>
+      <td>79.6</td>
+      <td>79.8</td>
+      <td>49.2</td>
+      <td>7.6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>10.1</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.8</td>
+      <td>80.2</td>
+      <td>43.3</td>
+      <td>6.7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.5</td>
+      <td>40.8</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>10.1</td>
+      <td>10</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80</td>
+      <td>51.6</td>
+      <td>9.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.2</td>
+      <td>38.3</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>9.2</td>
+      <td>10.7</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>39.9</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>10.4</td>
+      <td>8.5</td>
+      <td>81</td>
+      <td>80.7</td>
+      <td>81.4</td>
+      <td>38.9</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>30.7</td>
+      <td>6.3</td>
+      <td>63</td>
+      <td>60.4</td>
+      <td>65.5</td>
+      <td>61</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10.1</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80</td>
+      <td>39.4</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.2</td>
+      <td>39.6</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>41.6</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>9.7</td>
+      <td>80.1</td>
+      <td>79.8</td>
+      <td>80.5</td>
+      <td>40.1</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>7.4</td>
+      <td>14</td>
+      <td>78.6</td>
+      <td>77.4</td>
+      <td>79.9</td>
+      <td>42.5</td>
+      <td>6.6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>6.4</td>
+      <td>15.3</td>
+      <td>78.4</td>
+      <td>77.6</td>
+      <td>79.1</td>
+      <td>39.7</td>
+      <td>6.6</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>9.8</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>40</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>14</td>
+      <td>10.3</td>
+      <td>75.7</td>
+      <td>74.5</td>
+      <td>76.5</td>
+      <td>32.7</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>13.9</td>
+      <td>10</td>
+      <td>76.1</td>
+      <td>75.4</td>
+      <td>76.7</td>
+      <td>31.1</td>
+      <td>5.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>15.2</td>
+      <td>9.8</td>
+      <td>75</td>
+      <td>73.3</td>
+      <td>76</td>
+      <td>33.2</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>13.9</td>
+      <td>10.4</td>
+      <td>75.7</td>
+      <td>73.9</td>
+      <td>76.9</td>
+      <td>34.7</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>13.1</td>
+      <td>11.2</td>
+      <td>75.8</td>
+      <td>74.8</td>
+      <td>76.5</td>
+      <td>33</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>16</td>
+      <td>10.1</td>
+      <td>73.9</td>
+      <td>72.6</td>
+      <td>74.9</td>
+      <td>22.6</td>
+      <td>4.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>14.8</td>
+      <td>9.8</td>
+      <td>75.4</td>
+      <td>74.2</td>
+      <td>76.3</td>
+      <td>26.2</td>
+      <td>4.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>12.5</td>
+      <td>10.3</td>
+      <td>77.2</td>
+      <td>76.1</td>
+      <td>78</td>
+      <td>38.7</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>13.5</td>
+      <td>10.4</td>
+      <td>76</td>
+      <td>74.9</td>
+      <td>76.9</td>
+      <td>41</td>
+      <td>6.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>12.6</td>
+      <td>11.2</td>
+      <td>76.2</td>
+      <td>74.8</td>
+      <td>77.2</td>
+      <td>35.4</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>14.6</td>
+      <td>10.2</td>
+      <td>75.2</td>
+      <td>73.9</td>
+      <td>76.2</td>
+      <td>31.3</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>14.7</td>
+      <td>11</td>
+      <td>74.3</td>
+      <td>72.9</td>
+      <td>75.6</td>
+      <td>39.1</td>
+      <td>9.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>13.9</td>
+      <td>10.2</td>
+      <td>75.9</td>
+      <td>74.5</td>
+      <td>76.7</td>
+      <td>31.8</td>
+      <td>5.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>13.5</td>
+      <td>10.9</td>
+      <td>75.6</td>
+      <td>74.4</td>
+      <td>76.4</td>
+      <td>32.6</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>14.4</td>
+      <td>9.3</td>
+      <td>76.3</td>
+      <td>75</td>
+      <td>77.2</td>
+      <td>31.4</td>
+      <td>5.4</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>23.2</td>
+      <td>6.6</td>
+      <td>70.2</td>
+      <td>68.5</td>
+      <td>72</td>
+      <td>56.2</td>
+      <td>13.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>13.9</td>
+      <td>10</td>
+      <td>76.1</td>
+      <td>74.7</td>
+      <td>77.1</td>
+      <td>32.9</td>
+      <td>5.6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>14</td>
+      <td>10.4</td>
+      <td>75.6</td>
+      <td>74.1</td>
+      <td>76.6</td>
+      <td>32.8</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>13.9</td>
+      <td>10.8</td>
+      <td>75.3</td>
+      <td>74.1</td>
+      <td>76.2</td>
+      <td>33.3</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>14.5</td>
+      <td>9.7</td>
+      <td>75.8</td>
+      <td>75.2</td>
+      <td>76.4</td>
+      <td>32.6</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>13</td>
+      <td>14.9</td>
+      <td>72.1</td>
+      <td>69.8</td>
+      <td>74</td>
+      <td>33.7</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>13.9</td>
+      <td>13.8</td>
+      <td>72.3</td>
+      <td>71.3</td>
+      <td>73.3</td>
+      <td>30</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>model</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>14</td>
+      <td>10.2</td>
+      <td>75.8</td>
+      <td>74.6</td>
+      <td>76.6</td>
+      <td>32.9</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>11.1</td>
+      <td>11.2</td>
+      <td>77.7</td>
+      <td>77.5</td>
+      <td>78</td>
+      <td>34.1</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>11.2</td>
+      <td>10.6</td>
+      <td>78.2</td>
+      <td>77.9</td>
+      <td>78.4</td>
+      <td>32.6</td>
+      <td>5.6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>11.5</td>
+      <td>11.3</td>
+      <td>77.3</td>
+      <td>76.8</td>
+      <td>77.8</td>
+      <td>34.5</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>10.5</td>
+      <td>11.5</td>
+      <td>78.1</td>
+      <td>77.7</td>
+      <td>78.5</td>
+      <td>36</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>11.1</td>
+      <td>11.4</td>
+      <td>77.5</td>
+      <td>77.2</td>
+      <td>78</td>
+      <td>34.4</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.1</td>
+      <td>78</td>
+      <td>77.7</td>
+      <td>78.3</td>
+      <td>24.8</td>
+      <td>4.4</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.2</td>
+      <td>77.8</td>
+      <td>77.5</td>
+      <td>78.1</td>
+      <td>27.4</td>
+      <td>4.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.1</td>
+      <td>77.9</td>
+      <td>77.6</td>
+      <td>78.2</td>
+      <td>39.7</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>11.1</td>
+      <td>11.1</td>
+      <td>77.9</td>
+      <td>77.6</td>
+      <td>78.2</td>
+      <td>42.4</td>
+      <td>6.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>11.2</td>
+      <td>11.3</td>
+      <td>77.6</td>
+      <td>77.4</td>
+      <td>77.9</td>
+      <td>36.7</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>11.2</td>
+      <td>11.3</td>
+      <td>77.5</td>
+      <td>77.2</td>
+      <td>77.8</td>
+      <td>32.9</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>11.2</td>
+      <td>11.4</td>
+      <td>77.4</td>
+      <td>77.1</td>
+      <td>77.7</td>
+      <td>41.9</td>
+      <td>9.3</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>11</td>
+      <td>11.2</td>
+      <td>77.8</td>
+      <td>77.6</td>
+      <td>78.1</td>
+      <td>32.9</td>
+      <td>5.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>10.5</td>
+      <td>11.7</td>
+      <td>77.8</td>
+      <td>77.6</td>
+      <td>78.1</td>
+      <td>34</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>11.7</td>
+      <td>10.3</td>
+      <td>78</td>
+      <td>77.6</td>
+      <td>78.4</td>
+      <td>32.7</td>
+      <td>5.4</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>20.3</td>
+      <td>7.2</td>
+      <td>72.5</td>
+      <td>71</td>
+      <td>74.1</td>
+      <td>57.7</td>
+      <td>13</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.4</td>
+      <td>77.6</td>
+      <td>77.4</td>
+      <td>77.8</td>
+      <td>33.7</td>
+      <td>5.6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.2</td>
+      <td>77.7</td>
+      <td>77.4</td>
+      <td>78.2</td>
+      <td>34.1</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>11</td>
+      <td>11.3</td>
+      <td>77.7</td>
+      <td>77.3</td>
+      <td>78.1</td>
+      <td>35</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>11.4</td>
+      <td>10.4</td>
+      <td>78.3</td>
+      <td>77.9</td>
+      <td>78.6</td>
+      <td>34.5</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>10</td>
+      <td>15.6</td>
+      <td>74.4</td>
+      <td>72.9</td>
+      <td>76</td>
+      <td>35</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>11.8</td>
+      <td>14.4</td>
+      <td>73.8</td>
+      <td>72.8</td>
+      <td>74.7</td>
+      <td>31.5</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rolling quantile</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>11.1</td>
+      <td>11</td>
+      <td>77.9</td>
+      <td>77.7</td>
+      <td>78.2</td>
+      <td>34.2</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.2</td>
+      <td>37.3</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.6</td>
+      <td>80.4</td>
+      <td>80.2</td>
+      <td>80.5</td>
+      <td>35.8</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>10.1</td>
+      <td>10.1</td>
+      <td>79.8</td>
+      <td>79.6</td>
+      <td>80.1</td>
+      <td>37.6</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>79.8</td>
+      <td>80.4</td>
+      <td>38.8</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10.1</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.1</td>
+      <td>37.7</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>28.9</td>
+      <td>4.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>30.9</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.8</td>
+      <td>80.2</td>
+      <td>42.1</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>44.9</td>
+      <td>6.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>40.3</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>38.3</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.8</td>
+      <td>80.1</td>
+      <td>47.2</td>
+      <td>9.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>35.8</td>
+      <td>5.3</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>9.6</td>
+      <td>10.4</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>37.1</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>10.3</td>
+      <td>9.1</td>
+      <td>80.6</td>
+      <td>80.3</td>
+      <td>80.9</td>
+      <td>35.9</td>
+      <td>5.6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>18.8</td>
+      <td>6.6</td>
+      <td>74.5</td>
+      <td>73</td>
+      <td>76.1</td>
+      <td>61.7</td>
+      <td>13.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10.1</td>
+      <td>79.9</td>
+      <td>79.9</td>
+      <td>80</td>
+      <td>36.9</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>37.1</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>38.3</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>10.2</td>
+      <td>9.5</td>
+      <td>80.3</td>
+      <td>80.2</td>
+      <td>80.5</td>
+      <td>37.5</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>9.2</td>
+      <td>13.3</td>
+      <td>77.6</td>
+      <td>76.3</td>
+      <td>79</td>
+      <td>38.4</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>10.1</td>
+      <td>12.8</td>
+      <td>77.1</td>
+      <td>76.3</td>
+      <td>77.8</td>
+      <td>35.4</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.8</td>
+      <td>80.2</td>
+      <td>80.1</td>
+      <td>80.4</td>
+      <td>37.4</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>all</td>
+      <td>all</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.2</td>
+      <td>38.4</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>winter</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.7</td>
+      <td>80.3</td>
+      <td>80.2</td>
+      <td>80.6</td>
+      <td>36.7</td>
+      <td>5.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>spring</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10.1</td>
+      <td>79.9</td>
+      <td>79.7</td>
+      <td>80.3</td>
+      <td>39</td>
+      <td>6.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>summer</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>79.8</td>
+      <td>80.3</td>
+      <td>40</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>season</td>
+      <td>autumn</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10.2</td>
+      <td>79.9</td>
+      <td>79.8</td>
+      <td>80</td>
+      <td>38.8</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>00:00-04:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>30.2</td>
+      <td>4.8</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>04:00-08:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.4</td>
+      <td>32</td>
+      <td>5.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>08:00-12:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>42.8</td>
+      <td>6.6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>12:00-16:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10.2</td>
+      <td>79.8</td>
+      <td>79.6</td>
+      <td>79.9</td>
+      <td>46.2</td>
+      <td>7.1</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>16:00-20:00</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.1</td>
+      <td>79.9</td>
+      <td>80.4</td>
+      <td>41.4</td>
+      <td>6.4</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>time of day</td>
+      <td>20:00-24:00</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80</td>
+      <td>80.5</td>
+      <td>40.2</td>
+      <td>6.5</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>site group</td>
+      <td>on-site generation</td>
+      <td>12</td>
+      <td>10</td>
+      <td>10.1</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.1</td>
+      <td>48.9</td>
+      <td>9.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>site group</td>
+      <td>no on-site generation</td>
+      <td>79</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80.1</td>
+      <td>80</td>
+      <td>80.3</td>
+      <td>36.8</td>
+      <td>5.4</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>day type</td>
+      <td>working day</td>
+      <td>91</td>
+      <td>9.6</td>
+      <td>10.4</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>38.2</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>day type</td>
+      <td>weekend</td>
+      <td>91</td>
+      <td>10.3</td>
+      <td>9.2</td>
+      <td>80.6</td>
+      <td>80.3</td>
+      <td>80.9</td>
+      <td>37</td>
+      <td>5.7</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>day type</td>
+      <td>bank holiday</td>
+      <td>91</td>
+      <td>18.6</td>
+      <td>6.7</td>
+      <td>74.7</td>
+      <td>73.2</td>
+      <td>76.2</td>
+      <td>63.3</td>
+      <td>13.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2023</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80</td>
+      <td>38.6</td>
+      <td>5.9</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2024</td>
+      <td>91</td>
+      <td>10</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.2</td>
+      <td>37.8</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2025</td>
+      <td>91</td>
+      <td>9.9</td>
+      <td>10</td>
+      <td>80</td>
+      <td>79.9</td>
+      <td>80.3</td>
+      <td>39.6</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>year</td>
+      <td>2026</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.5</td>
+      <td>80.5</td>
+      <td>80.2</td>
+      <td>80.8</td>
+      <td>38.6</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>event</td>
+      <td>heatwave day</td>
+      <td>81</td>
+      <td>9.1</td>
+      <td>13.2</td>
+      <td>77.7</td>
+      <td>76.4</td>
+      <td>79.2</td>
+      <td>40</td>
+      <td>6.3</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>event</td>
+      <td>cold spell day</td>
+      <td>90</td>
+      <td>10</td>
+      <td>12.8</td>
+      <td>77.2</td>
+      <td>76.4</td>
+      <td>78</td>
+      <td>36.6</td>
+      <td>6.2</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>event</td>
+      <td>other day</td>
+      <td>91</td>
+      <td>10</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>80.1</td>
+      <td>80.4</td>
+      <td>38.5</td>
+      <td>6</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/coverage.csv">code/reports/forecast_range/coverage.csv</a> (184 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>method</th>
+      <th>cells</th>
+      <th>cell_sd_pts</th>
+      <th>cells_within_5_pct</th>
+      <th>cell_worst_decile_pct</th>
+      <th>sites_within_5_pct</th>
+      <th>site_min_pct</th>
+      <th>site_max_pct</th>
+      <th>model</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>model</td>
+      <td>2184</td>
+      <td>7.2</td>
+      <td>69</td>
+      <td>71</td>
+      <td>84.6</td>
+      <td>27.4</td>
+      <td>83.7</td>
+      <td>chronos2</td>
+    </tr>
+    <tr>
+      <td>rolling quantile</td>
+      <td>2184</td>
+      <td>2.7</td>
+      <td>89.8</td>
+      <td>75.1</td>
+      <td>97.8</td>
+      <td>74.7</td>
+      <td>88.5</td>
+      <td>chronos2</td>
+    </tr>
+    <tr>
+      <td>quantile tracking</td>
+      <td>2184</td>
+      <td>1.5</td>
+      <td>99.3</td>
+      <td>78.7</td>
+      <td>98.9</td>
+      <td>79.4</td>
+      <td>87.9</td>
+      <td>chronos2</td>
+    </tr>
+    <tr>
+      <td>tracking with integrator</td>
+      <td>2184</td>
+      <td>1.6</td>
+      <td>99.1</td>
+      <td>78.8</td>
+      <td>98.9</td>
+      <td>79.4</td>
+      <td>87.7</td>
+      <td>chronos2</td>
+    </tr>
+    <tr>
+      <td>model</td>
+      <td>2184</td>
+      <td>6.5</td>
+      <td>65.2</td>
+      <td>71</td>
+      <td>76.9</td>
+      <td>31.4</td>
+      <td>80.5</td>
+      <td>chronos2_ifs</td>
+    </tr>
+    <tr>
+      <td>rolling quantile</td>
+      <td>2184</td>
+      <td>2.6</td>
+      <td>89.1</td>
+      <td>75</td>
+      <td>98.9</td>
+      <td>75.5</td>
+      <td>88.6</td>
+      <td>chronos2_ifs</td>
+    </tr>
+    <tr>
+      <td>quantile tracking</td>
+      <td>2184</td>
+      <td>1.4</td>
+      <td>99.4</td>
+      <td>78.8</td>
+      <td>98.9</td>
+      <td>79.6</td>
+      <td>87</td>
+      <td>chronos2_ifs</td>
+    </tr>
+    <tr>
+      <td>tracking with integrator</td>
+      <td>2184</td>
+      <td>1.6</td>
+      <td>99.2</td>
+      <td>78.9</td>
+      <td>98.9</td>
+      <td>79.5</td>
+      <td>87.8</td>
+      <td>chronos2_ifs</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/spread.csv">code/reports/forecast_range/spread.csv</a> (8 rows shown)</p>
+
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>method</th>
+      <th>learning_rate</th>
+      <th>below_pct</th>
+      <th>above_pct</th>
+      <th>inside_pct</th>
+      <th>width_pct</th>
+      <th>loss_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>0.02</td>
+      <td>10.19</td>
+      <td>9.99</td>
+      <td>79.82</td>
+      <td>36.37</td>
+      <td>5.94</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>0.05</td>
+      <td>10.1</td>
+      <td>9.92</td>
+      <td>79.97</td>
+      <td>37.39</td>
+      <td>6.01</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>0.1</td>
+      <td>10.04</td>
+      <td>9.93</td>
+      <td>80.03</td>
+      <td>38.85</td>
+      <td>6.14</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>0.2</td>
+      <td>9.99</td>
+      <td>9.95</td>
+      <td>80.07</td>
+      <td>41.78</td>
+      <td>6.43</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>quantile tracking</td>
+      <td>0.5</td>
+      <td>9.93</td>
+      <td>9.94</td>
+      <td>80.13</td>
+      <td>51.58</td>
+      <td>7.48</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>0.02</td>
+      <td>10.15</td>
+      <td>10.05</td>
+      <td>79.8</td>
+      <td>37.76</td>
+      <td>6.06</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>0.05</td>
+      <td>10.09</td>
+      <td>9.99</td>
+      <td>79.92</td>
+      <td>38.6</td>
+      <td>6.13</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>0.1</td>
+      <td>10.02</td>
+      <td>9.97</td>
+      <td>80.01</td>
+      <td>40.02</td>
+      <td>6.26</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>0.2</td>
+      <td>9.97</td>
+      <td>9.93</td>
+      <td>80.1</td>
+      <td>42.94</td>
+      <td>6.55</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>tracking with integrator</td>
+      <td>0.5</td>
+      <td>9.92</td>
+      <td>9.92</td>
+      <td>80.16</td>
+      <td>52.75</td>
+      <td>7.6</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>0.02</td>
+      <td>10.16</td>
+      <td>10.09</td>
+      <td>79.75</td>
+      <td>34.9</td>
+      <td>5.68</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>0.05</td>
+      <td>10.05</td>
+      <td>10</td>
+      <td>79.96</td>
+      <td>35.86</td>
+      <td>5.74</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>0.1</td>
+      <td>9.99</td>
+      <td>9.96</td>
+      <td>80.05</td>
+      <td>37.27</td>
+      <td>5.87</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>0.2</td>
+      <td>9.94</td>
+      <td>9.94</td>
+      <td>80.12</td>
+      <td>40.14</td>
+      <td>6.15</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>quantile tracking</td>
+      <td>0.5</td>
+      <td>9.9</td>
+      <td>9.92</td>
+      <td>80.18</td>
+      <td>49.63</td>
+      <td>7.16</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>0.02</td>
+      <td>10.15</td>
+      <td>10.09</td>
+      <td>79.76</td>
+      <td>36.4</td>
+      <td>5.82</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>0.05</td>
+      <td>10.05</td>
+      <td>10.05</td>
+      <td>79.91</td>
+      <td>37.2</td>
+      <td>5.89</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>0.1</td>
+      <td>9.97</td>
+      <td>9.97</td>
+      <td>80.06</td>
+      <td>38.4</td>
+      <td>5.99</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>0.2</td>
+      <td>9.92</td>
+      <td>9.92</td>
+      <td>80.15</td>
+      <td>41.21</td>
+      <td>6.27</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>tracking with integrator</td>
+      <td>0.5</td>
+      <td>9.89</td>
+      <td>9.9</td>
+      <td>80.2</td>
+      <td>50.79</td>
+      <td>7.29</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/learning_rates.csv">code/reports/forecast_range/learning_rates.csv</a> (20 rows shown)</p>
+
+<ul>
+<li><strong>Tracking makes the coverage right everywhere it can react</strong>: 80.0 % inside, 10.0 % at each
+bound, in every season, block of hours, site group and year (79.8 to 80.6 %). The share of
+site x season x four-hour cells within five points of 80 % goes from 65 to 99 %, and the
+worst site from 31 to 80 %. The fixed rule gets to 77.8 %; the integrator adds nothing.</li>
+<li><strong>It pays with width, not with a better range.</strong> The range is 14 % wider (32.8 to 37.3 % of
+the demand) and the quantile loss of the two bounds is not lower (5.69 to 5.87 % of the
+demand; higher at 89 of 91 sites). With a fifth of the learning rate the coverage is 79.8 %
+at the model's loss (5.68 %) and a range that is 7 % wider. The learning rate was set before
+the run; the table gives all five.</li>
+<li><strong>It cannot foresee</strong>: bank holidays stay at 74.5 % inside, heat-wave days at 77.6 % and
+cold-spell days at 77.1 %. A method that reacts to yesterday's misses is late for a day that
+is unlike yesterday. The paper's third part, a model that forecasts the scores, is the place
+for the calendar and the weather forecast; it is not built.</li>
+</ul>
 <h2 id="8-what-this-page-changes">8. What this page changes</h2>
 <p><strong>Withdrawn or corrected</strong></p>
 <ul>
@@ -6748,6 +11544,10 @@ within 0.1 points of the observed weather for every model</em> (proof-of-concept
 the leading models, not for all in the table.</li>
 <li><em>The two night-heavy sites probably have storage heating</em> (clustering page): both run a
 plant.</li>
+<li><em>The zero-shot model's upper quantile is too low, as for district heat</em> (said when the
+paper of Spoek et al. was read): on the whole record the lower bound is the one that fails
+(14.0 % below the 10 % quantile); the upper bound fails only on heat-wave and cold-spell
+days (finding 4.13).</li>
 </ul>
 <p><strong>Confirmed on the whole record</strong></p>
 <ul>
@@ -6757,6 +11557,8 @@ four years; the share of the achievable peak cut (53 %) is 52 to 57 %.</li>
 site-days and hold 37 % of the error (1.8 % and 42 % in the test year).</li>
 <li>Heat-wave days cost the forecast value in both large summers and under both definitions of
 a heat-wave day.</li>
+<li>The zero-shot lead over the trained model is not a lead over a model that grew old: against
+the same model trained again each quarter it is 2.1 points over 2024 to May 2026.</li>
 </ul>
 <p><strong>How numbers for the same thing relate</strong></p>
 <ul>

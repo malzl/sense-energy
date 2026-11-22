@@ -76,7 +76,7 @@ forecast.
 
 | | Finding | Number | Evidence | Grade |
 |---|---|---|---|---|
-| 4.1 | A model with no training beats the trained models | 11.5 % error against 13.0 % for the gradient-boosted model (−1.5 points, −1.9 to −1.1), 13.7 % for a neural process trained on the panel and 18.4 % for the same day last week, on the 69 test days | on every day of the record: 11.2 % (10.0 to 12.3), and 11.0 to 11.5 % in the four years, against 17.7 % for the same day last week | Solid |
+| 4.1 | A model with no training beats the trained models | 11.5 % error against 13.0 % for the gradient-boosted model (−1.5 points, −1.9 to −1.1), 13.7 % for a neural process trained on the panel and 18.4 % for the same day last week, on the 69 test days | on every day of the record: 11.2 % (10.0 to 12.3), and 11.0 to 11.5 % in the four years, against 17.7 % for the same day last week. Against the gradient-boosted model trained again each quarter, January 2024 to May 2026: −2.1 points (−2.5 to −1.7), ahead in every quarter, at 88 of 91 sites; the lead narrows from 2.5 points (2024) to 1.3 (2026) | Solid |
 | 4.2 | Calendar, price and the weather forecast add 0.7 points; the weather forecast is as good as the observed weather | −0.65 points (−1.07 to −0.38); forecast against observed weather +0.05 (0.01 to 0.08) | whole record: 11.2 % against 11.8 % without inputs | Solid |
 | 4.3 | The error sits at the sites with a plant | 78 % of the error at 12 sites with 48 % of the metered demand, in every year (73 to 79 %); three sites hold 55 % | half of it is their size; days with a step larger than the site's mean import are 1.5 % of site-days and hold 37 % of the error | Solid |
 | 4.4 | A battery that plans on the forecast gets half of the achievable peak cut | 52 % (48 to 58) on the whole record, 52 to 57 % in the four years; same day last week: 39 % | depends on the storage: 43 % with one hour, 65 % with four; not on the power | Solid for a two-hour battery |
@@ -87,6 +87,9 @@ forecast.
 | 4.9 | Coherent forecasts across meters, sites and trusts improve the national total | 8.0 to 6.8 % | no interval; 61 test days | Indicative |
 | 4.10 | A published method for heat and cold waves (Lu et al. 2026) is level with the zero-shot model | 11 % behind in Europe, 6.5 % ahead in PJM | the paper's own public data; one seed | Indicative |
 | 4.11 | A rule for special days works on the bank holidays and only there | bank holidays: 23.5 to 18.5 % error (−4.9 points, −7.8 to −2.3). Special days (bank holidays and the Christmas period, 4.1 % of days): 16.7 to 14.9 % with the rule on bank holidays (−1.8, −2.8 to −0.9). All days: 11.33 to 11.27 % (−0.06, −0.09 to −0.03). Normal days (11.1 %) do not change | rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on, 76,009 site-days. The rule on the Christmas period adds 3.6 points (2.9 to 4.4) and on the proximity days 3.2 points (2.7 to 3.7); the same pattern without inputs (bank holidays −13.8 points) | Solid for bank holidays; the rule fails on the Christmas period and the proximity days |
+| 4.12 | Meter data from the same day cut the error of the next two hours by about 30 %, most at the sites with a plant | 11.3 to 8.1 % (−3.2 points, −3.4 to −3.0) with the day-ahead forecast corrected every two hours; sites with on-site generation 15.4 to 8.8 %, their days with a large step 36.1 to 18.4 % | 400 days, every year −3.2 to −3.3 points. A second model of the errors is not needed: the zero-shot model run again on the demand is better still (7.5 %, 0.6 points ahead). Needs a meter that is read in real time | Solid |
+| 4.13 | The forecast range is too narrow at the lower bound; online tracking fixes the coverage but not the quality | inside the 80 % range 75.7 % of the time (74.5 to 76.5); 14.0 % below, 10.3 % above. Tracked online: 80.0 % in every season, hour and site group, with a 14 % wider range and no lower quantile loss (5.69 to 5.87 %) | 1,117 days; the same without inputs (76.1 %). Event days and bank holidays stay under-covered after tracking (74.5 to 77.6 %): a method that reacts to misses is late for an unusual day | Solid for the miss; the correction is indicative |
+| 4.14 | How the weather is given to the zero-shot model does not matter | measured and forecast weather as two inputs: −0.03 points (−0.06 to −0.00); forecast weather only: −0.02 (−0.05 to −0.00) | 402 days; all inputs together are worth 0.62 points on these days; in summer the two-input form gains 0.06 points | Solid (a null) |
 
 ## 5. What changes when the estate changes?
 
@@ -326,6 +329,149 @@ For the forecast with calendar and weather inputs (76,009 site-days on 855 days)
   around a holiday as well, and a hospital's does not. The policy for these sites is the rule
   on bank holidays.
 
+**Four extensions of the forecast** (added 22 November 2026). Spoek et al. (2026) forecast
+district heat load with zero-shot models and report four things that we had not tested: a
+second model for the errors within the day, measured and forecast temperature as separate
+inputs, trained baselines that are trained again when the data drift, and a forecast range
+that fails in some seasons and hours. Each is tested here on the whole record. Runs:
+`forecast-extension-runs`; scores: `forecast-extensions` and `forecast-range`
+(`analysis/forecast_extensions.py`, `analysis/forecast_range.py`; tables in
+`code/reports/forecast_extensions/` and `code/reports/forecast_range/`).
+
+*1. A correction within the day.* Every two hours on every third day of the record (400 days,
+35,365 site-days) a second zero-shot model forecasts the next four half-hours of the error of
+the day-ahead forecast from the last week of errors, and the day-ahead forecast is corrected
+by it. The comparators see the same meter data: the last error carried forward, the last
+metered value carried forward, and the zero-shot model run again on the demand itself. All of
+them need the meter to be read in real time.
+
+{{figure: correction_groups | caption=Error of the next two hours for the day-ahead forecast and four forecasts made again every two hours, by site group. Intervals from resampling sites.}}
+
+{{figure: correction_steps | caption=The same by half-hour after the issue, at the sites with on-site generation.}}
+
+{{table: code/reports/forecast_extensions/correction_errors.csv | round=2}}
+
+{{table: code/reports/forecast_extensions/correction_differences.csv | round=2}}
+
+- **Meter data from the same day cut the error by about 30 %.** Day-ahead 11.3 %; corrected by
+  the forecast of its error 8.1 % (−3.2 points, −3.4 to −3.0); the same in each of the four
+  years (−3.2 to −3.3).
+- **At the sites with on-site generation the error falls by more than 40 %**: 15.4 to 8.8 %
+  (−6.6 points, −7.2 to −5.9), and on their days with a large step from 36.1 to 18.4 % (−17.8
+  points, −21.9 to −15.5). This is the first input that reaches the plant error: a flag for
+  the plant and its state up to the day before did not (finding 4.7).
+- **The second model is not what helps.** The zero-shot model run again on the demand is
+  better than the correction by 0.6 points (0.56 to 0.64; 7.5 %), at every half-hour after the
+  issue and in every site group. On the days with a large step the forecast of the error is no
+  better than the last error carried forward (+0.1 points, −0.3 to +0.6). The gain is the
+  meter reading, not the model of the errors.
+- **Not tested:** what a battery gains when it plans again within the day, and how late the
+  meter data of these sites arrive in practice.
+
+*2. Measured and forecast weather as separate inputs.* The covariate run gives each weather variable one channel: measured
+values over the past, the forecast of the day before over the future, so the source changes at
+the issue time. Two alternatives on every third day of the record (402 days, 35,112
+site-days): the measured value as a past-only input and the day-ahead forecast as a second
+input over past and future; and the day-ahead forecast only, over past and future. The history
+of forecasts is the run of the day before each day, as it was issued.
+
+{{figure: split_weather | caption=Change in the day-ahead error against the run with one channel for each weather variable. Paired on the same site-days; intervals from resampling weeks.}}
+
+{{table: code/reports/forecast_extensions/split_errors.csv | round=2}}
+
+{{table: code/reports/forecast_extensions/split_differences.csv | round=3}}
+
+- **No gain of a size that matters.** Two inputs: 11.08 % against 11.10 % (−0.03 points,
+  −0.06 to −0.00). Forecast only: −0.02 points (−0.05 to −0.00). All the inputs together are
+  worth 0.62 points on these days, so the way the weather is given moves a twentieth of that.
+- **In summer the two-input form is ahead by 0.06 points** (−0.12 to −0.00), in winter by
+  nothing (+0.01, −0.06 to +0.07), and not at the sites with on-site generation.
+- This agrees with finding 4.2: the forecast weather is as good as the measured weather for
+  this model, so a change of source at the issue time costs it nothing.
+
+*3. The trained baseline, trained again.* The gradient-boosted model of the proof of concept was
+trained once. Over a longer test a model that is trained once grows old, and a comparison with
+a model that needs no training is then unfair to it. Here the same model (LightGBM with the
+weather forecast, median only) is run from January 2024 to May 2026 in two ways: trained once
+on 2023, and trained again at the start of each quarter on all data up to then. A calendar
+replaces the drift detector of the paper: ten re-trainings in ten quarters are at least as
+many as a detector would start. 75,276 site-days on 856 days, 91 sites.
+
+{{figure: retrain_quarters | caption=Day-ahead error in each quarter: the trained model trained once on 2023, the same model trained again each quarter, the zero-shot model and the same day last week. The same site-days for every model.}}
+
+{{table: code/reports/forecast_extensions/retrain_errors.csv | round=2}}
+
+{{table: code/reports/forecast_extensions/retrain_differences.csv | round=2}}
+
+{{table: code/reports/forecast_extensions/retrain_site_differences.csv | round=2}}
+
+- **The model trained once grows old**: 13.5 % in 2024, 14.5 % in 2025, 14.0 % in 2026.
+  Trained again each quarter it is better by 1.2 points in 2025 (−1.4 to −1.1) and by 1.5
+  points in 2026 (−1.9 to −1.2); over the whole test by 0.6 points (−1.0 to −0.2), at 87 of 91
+  sites.
+- **In 2024 re-training does not help** (+0.2 points, −0.4 to +1.2): one site fails for two
+  weeks in June 2024 after a re-training (its error over the test rises by 28 points). Without
+  it the mean gain is 0.9 points; the median site gains 0.6.
+- **The zero-shot model stays ahead of the re-trained one** in every quarter and every year:
+  by 2.1 points over the whole test (−2.5 to −1.7), at 88 of 91 sites, and by 6.2 points at the
+  sites with on-site generation. The lead narrows from 2.5 points in 2024 to 1.8 in 2025 and
+  1.3 in 2026 (−1.6 to −0.8), as the re-trained model gets more data. Whether it narrows
+  further is open: 2026 has 127 days.
+- **The finding of the proof of concept holds** (−1.5 points against a model trained on two
+  years and tested on the year after): it is not a lead over a model that had grown old.
+
+*4. Where the forecast range fails, and an online correction.* The forecast has a 10 % and a
+90 % quantile; the demand should be inside them 80 % of the time, with 10 % below and 10 %
+above. Scored on 1,117 days (the first 90 days are left out for every method), 91 sites.
+
+{{figure: range_reliability | caption=Share of the half-hours with the demand below each quantile of the forecast, by site group. On the dashed diagonal the quantiles are right.}}
+
+{{figure: range_below_hours | caption=Demand below the 10 % quantile, by hour of the day and season. Nominal: 10 %.}}
+
+{{figure: range_above_hours | caption=Demand above the 90 % quantile, by hour of the day and season. Nominal: 10 %.}}
+
+- **The range is too narrow, and the fault is at the lower bound.** The demand is inside the
+  range 75.7 % of the time (74.5 to 76.5), below it 14.0 % and above it 10.3 %. The lower
+  bound fails in every season and hour, most at night (15 to 18 % below); the upper bound is
+  right outside events. This is the opposite tail to the district-heating paper, which finds
+  the upper quantile too low. The forecast without inputs shows the same (76.1 % inside).
+- **On event days the upper bound fails**: 14.9 % of the half-hours above the range on
+  heat-wave days and 13.8 % on cold-spell days, against 10.2 % on other days. This fits
+  finding 4.5: on heat-wave days the peak is above what the forecast allows for.
+- **On bank holidays the lower bound fails**: 23 % below the range (70 % inside).
+- **One site is inside its range 31 % of the time**; 77 % of the sites are within five points
+  of 80 %.
+
+The correction follows Angelopoulos, Candes and Tibshirani (2023, conformal PID control). For
+each site, bound and half-hour of the day an offset moves out after a miss and in after a hit
+(quantile tracking), with the learning rate of the paper and with feedback as late as in
+operation (the half-hours after 16:00 learn from two days before). The comparator is a fixed
+rule on the scores of the last 90 days.
+
+{{figure: range_groups | caption=Share of the half-hours inside the 80 % range by season, site group, day type and event days: the range of the model and the range tracked online. Intervals from resampling sites.}}
+
+{{figure: range_over_time | caption=Share inside the range in windows of 30 days at the sites with on-site generation.}}
+
+{{table: code/reports/forecast_range/coverage.csv | cols=model,method,grouping,group,sites,below_pct,above_pct,inside_pct,inside_lo,inside_hi,width_pct,loss_pct | round=1}}
+
+{{table: code/reports/forecast_range/spread.csv | round=1}}
+
+{{table: code/reports/forecast_range/learning_rates.csv | cols=model,method,learning_rate,below_pct,above_pct,inside_pct,width_pct,loss_pct | round=2}}
+
+- **Tracking makes the coverage right everywhere it can react**: 80.0 % inside, 10.0 % at each
+  bound, in every season, block of hours, site group and year (79.8 to 80.6 %). The share of
+  site x season x four-hour cells within five points of 80 % goes from 65 to 99 %, and the
+  worst site from 31 to 80 %. The fixed rule gets to 77.8 %; the integrator adds nothing.
+- **It pays with width, not with a better range.** The range is 14 % wider (32.8 to 37.3 % of
+  the demand) and the quantile loss of the two bounds is not lower (5.69 to 5.87 % of the
+  demand; higher at 89 of 91 sites). With a fifth of the learning rate the coverage is 79.8 %
+  at the model's loss (5.68 %) and a range that is 7 % wider. The learning rate was set before
+  the run; the table gives all five.
+- **It cannot foresee**: bank holidays stay at 74.5 % inside, heat-wave days at 77.6 % and
+  cold-spell days at 77.1 %. A method that reacts to yesterday's misses is late for a day that
+  is unlike yesterday. The paper's third part, a model that forecasts the scores, is the place
+  for the calendar and the weather forecast; it is not built.
+
 ## 8. What this page changes
 
 **Withdrawn or corrected**
@@ -345,6 +491,10 @@ For the forecast with calendar and weather inputs (76,009 site-days on 855 days)
   the leading models, not for all in the table.
 - *The two night-heavy sites probably have storage heating* (clustering page): both run a
   plant.
+- *The zero-shot model's upper quantile is too low, as for district heat* (said when the
+  paper of Spoek et al. was read): on the whole record the lower bound is the one that fails
+  (14.0 % below the 10 % quantile); the upper bound fails only on heat-wave and cold-spell
+  days (finding 4.13).
 
 **Confirmed on the whole record**
 
@@ -354,6 +504,8 @@ For the forecast with calendar and weather inputs (76,009 site-days on 855 days)
   site-days and hold 37 % of the error (1.8 % and 42 % in the test year).
 - Heat-wave days cost the forecast value in both large summers and under both definitions of
   a heat-wave day.
+- The zero-shot lead over the trained model is not a lead over a model that grew old: against
+  the same model trained again each quarter it is 2.1 points over 2024 to May 2026.
 
 **How numbers for the same thing relate**
 

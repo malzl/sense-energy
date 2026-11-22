@@ -1,0 +1,86 @@
+{
+  "retrain": {
+    "site_days": 75276,
+    "nmae_pct": {
+      "chronos2_ifs": 11.27,
+      "lightgbm_once": 13.93,
+      "lightgbm_quarterly": 13.33,
+      "seasonal_naive": 18.04
+    },
+    "differences": {
+      "lightgbm_quarterly minus lightgbm_once": [
+        -0.6,
+        -0.96,
+        -0.18
+      ],
+      "chronos2_ifs minus lightgbm_quarterly": [
+        -2.07,
+        -2.54,
+        -1.69
+      ],
+      "chronos2_ifs minus lightgbm_once": [
+        -2.67,
+        -2.86,
+        -2.47
+      ]
+    }
+  },
+  "correction": {
+    "site_days": 35365,
+    "nmae_pct": {
+      "corrected": 8.11,
+      "day_ahead": 11.32,
+      "direct": 7.51,
+      "error_carried": 9.05,
+      "value_carried": 13.02
+    },
+    "differences": {
+      "corrected minus day_ahead": [
+        -3.22,
+        -3.4,
+        -3.04
+      ],
+      "corrected minus error_carried": [
+        -0.94,
+        -0.98,
+        -0.9
+      ],
+      "corrected minus direct": [
+        0.6,
+        0.56,
+        0.64
+      ],
+      "direct minus day_ahead": [
+        -3.82,
+        -4.03,
+        -3.62
+      ]
+    }
+  },
+  "split": {
+    "site_days": 35112,
+    "nmae_pct": {
+      "chronos2": 11.72,
+      "chronos2_ifs": 11.1,
+      "chronos2_ifs_fc_only": 11.08,
+      "chronos2_ifs_split": 11.08
+    },
+    "differences": {
+      "chronos2_ifs_split minus chronos2_ifs": [
+        -0.03,
+        -0.06,
+        -0.0
+      ],
+      "chronos2_ifs_fc_only minus chronos2_ifs": [
+        -0.02,
+        -0.04,
+        -0.0
+      ],
+      "chronos2_ifs_split minus chronos2_ifs_fc_only": [
+        -0.01,
+        -0.02,
+        0.01
+      ]
+    }
+  }
+}
