@@ -164,6 +164,33 @@ def run_context(threads: int = 12, limit_origins: int | None = None) -> pd.DataF
     return out
 
 
+LONG_CONTEXTS = (4032, 8064)  # 12 and 24 weeks of half-hours
+
+
+def run_context_long(device: str | None = None) -> pd.DataFrame:
+    """The proof-of-concept origins with 12 and 24 weeks of context (``run_context`` stops at
+    two weeks and the proof of concept uses six). Spoek et al. (2026) find 12 weeks best for
+    district heat load; this is the same test on our data. Uses a GPU if one is visible."""
+    from ..compute import autocast, select_device
+    from ..models.foundation import load_chronos2
+
+    config, panel = setup()
+    origins = poc.make_origins(
+        panel, config, config["test_start"], config["test_end"], int(config["origin_stride_days"])
+    )
+    device = device or select_device()
+    pipe = load_chronos2(device)
+    frames = []
+    for periods in LONG_CONTEXTS:
+        with autocast(device):
+            cfg = {**config, "context_periods": periods}
+            frames.append(_run(pipe, panel, origins, cfg, f"chronos2_ctx{periods}", None, 128))
+    out = pd.concat(frames, ignore_index=True)
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out.to_parquet(OUT_DIR / "forecasts_context_long.parquet", index=False)
+    return out
+
+
 def visits_on_grid(panel: poc.Panel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Daily footfall on the panel's half-hour grid: the site's count of the day (T x S), the
     count of the day before (T x S) and the university campus's count of the day (T,)."""

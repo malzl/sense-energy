@@ -5423,6 +5423,85 @@ half-hours are observed and at least 80 % of the six weeks before it.</p>
   </tbody>
 </table><p class="source">source: <a href="data/model_differences.csv">code/reports/forecast_record/model_differences.csv</a> (8 rows shown)</p>
 
+<p><strong>How much history the model needs</strong> (added 22 November 2026; <code>forecast_probe.run_context_long</code>,
+<code>code/reports/forecast_anatomy/context_long.csv</code>). Spoek et al. (2026) find twelve weeks of
+history best for zero-shot district heat load forecasts. On our 69 test days, without inputs:
+one week 16.4 % error, two weeks 12.7 %, six weeks 12.2 %, twelve weeks 12.1 %, twenty-four
+weeks 12.2 %. Twelve weeks are better than six by 0.09 points (0.03 to 0.16); twenty-four are
+not (−0.05, −0.13 to +0.04); two weeks are worse than six by 0.54 points (0.35 to 0.72). The
+paper's result holds on our data, with a small gain; the earlier statement that two weeks are
+sufficient was too generous.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>history_days</th>
+      <th>nmae_pct</th>
+      <th>crps_pct</th>
+      <th>coverage_80</th>
+      <th>nmae_no_plant</th>
+      <th>nmae_plant</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>31.13</td>
+      <td>24.94</td>
+      <td>79.08</td>
+      <td>30.13</td>
+      <td>37.74</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>21.7</td>
+      <td>17.63</td>
+      <td>73.12</td>
+      <td>21.24</td>
+      <td>24.7</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>16.39</td>
+      <td>12.91</td>
+      <td>74.96</td>
+      <td>15.77</td>
+      <td>20.5</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>12.73</td>
+      <td>10.15</td>
+      <td>76.92</td>
+      <td>12.11</td>
+      <td>16.81</td>
+    </tr>
+    <tr>
+      <td>42</td>
+      <td>12.2</td>
+      <td>9.71</td>
+      <td>76.37</td>
+      <td>11.54</td>
+      <td>16.5</td>
+    </tr>
+    <tr>
+      <td>84</td>
+      <td>12.1</td>
+      <td>9.63</td>
+      <td>76.49</td>
+      <td>11.48</td>
+      <td>16.25</td>
+    </tr>
+    <tr>
+      <td>168</td>
+      <td>12.15</td>
+      <td>9.69</td>
+      <td>77.09</td>
+      <td>11.54</td>
+      <td>16.12</td>
+    </tr>
+  </tbody>
+</table><p class="source">source: <a href="data/context_long.csv">code/reports/forecast_anatomy/context_long.csv</a> (7 rows shown)</p>
+
 <p><strong>A rule for special days</strong> (added 22 November 2026; command <code>special-days</code>,
 <code>analysis/special_days.py</code>, tables in <code>code/reports/special_days/</code>). Arora and Taylor (2013,
 2018) forecast anomalous load with a rule: each special day refers to the most recent day of

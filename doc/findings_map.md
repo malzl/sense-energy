@@ -250,6 +250,17 @@ half-hours are observed and at least 80 % of the six weeks before it.
 
 {{table: code/reports/forecast_record/model_differences.csv | round=2}}
 
+**How much history the model needs** (added 22 November 2026; `forecast_probe.run_context_long`,
+`code/reports/forecast_anatomy/context_long.csv`). Spoek et al. (2026) find twelve weeks of
+history best for zero-shot district heat load forecasts. On our 69 test days, without inputs:
+one week 16.4 % error, two weeks 12.7 %, six weeks 12.2 %, twelve weeks 12.1 %, twenty-four
+weeks 12.2 %. Twelve weeks are better than six by 0.09 points (0.03 to 0.16); twenty-four are
+not (−0.05, −0.13 to +0.04); two weeks are worse than six by 0.54 points (0.35 to 0.72). The
+paper's result holds on our data, with a small gain; the earlier statement that two weeks are
+sufficient was too generous.
+
+{{table: code/reports/forecast_anatomy/context_long.csv | round=2}}
+
 **A rule for special days** (added 22 November 2026; command `special-days`,
 `analysis/special_days.py`, tables in `code/reports/special_days/`). Arora and Taylor (2013,
 2018) forecast anomalous load with a rule: each special day refers to the most recent day of
