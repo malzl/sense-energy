@@ -52,6 +52,15 @@ KIND_ORDER = (
     "day after a bank holiday",
 )
 RULES = ("forecast", "rule, by half-hour", "rule, one ratio for the day", "most recent Sunday")
+SPECIAL_KINDS = ("bank holiday", "Christmas period")
+PROXIMITY_KINDS = ("day before a bank holiday", "day after a bank holiday")
+DAY_CLASSES = ("all days", "normal days", "special days", "proximity days")
+SPECIAL_PARTS = ("bank holidays", "Christmas period")  # the two parts of the special days
+POLICIES = {
+    "rule on bank holidays": ("bank holiday",),
+    "rule on special days": SPECIAL_KINDS,
+    "rule on special and proximity days": SPECIAL_KINDS + PROXIMITY_KINDS,
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -293,6 +302,64 @@ def overall_effect(sd: pd.DataFrame, record: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def day_class(kind: pd.Series) -> pd.Series:
+    """Normal, special (bank holidays and the Christmas period) or proximity day (the working
+    day before or after a bank holiday)."""
+    out = pd.Series("normal days", index=kind.index)
+    out[kind.isin(SPECIAL_KINDS)] = "special days"
+    out[kind.isin(PROXIMITY_KINDS)] = "proximity days"
+    return out
+
+
+def day_classes(sd: pd.DataFrame, record: pd.DataFrame) -> pd.DataFrame:
+    """The forecast with and without the rule on all days, normal days, special days and
+    proximity days (Arora and Taylor score their rule on these four sets), and on the two parts
+    of the special days. Three policies: the rule on the bank holidays only, on the special
+    days, and on the special and the proximity days. A day without a corresponding past day
+    keeps the forecast, and so does every day outside the policy; the error on the normal days
+    is therefore the same with and without the rule. Differences with 95 % intervals from
+    resampling sites."""
+    rows = []
+    cols = ["model", "site_code", "day", "kind", "ae_rule_half-hour"]
+    record = record[(record["day"] >= EVAL_START) & record["model"].isin(set(sd["model"]))]
+    for model, base in record.groupby("model"):
+        x = base.merge(sd[cols], on=["model", "site_code", "day"], how="left")
+        x["class"] = day_class(x["kind"])
+        total_error, total_days = x["ae"].sum(), len(x)
+        for policy, kinds in POLICIES.items():
+            applied = x["kind"].isin(kinds) & x["ae_rule_half-hour"].notna()
+            x["ae_rule"] = np.where(applied, x["ae_rule_half-hour"], x["ae"])
+            sets = {"all days": x} | {c: x[x["class"] == c] for c in DAY_CLASSES[1:]}
+            sets["bank holidays"] = x[x["kind"] == "bank holiday"]
+            sets["Christmas period"] = x[x["kind"] == "Christmas period"]
+            for name, g in sets.items():
+                per = g.groupby("site_code")[["a", "ae", "ae_rule"]].sum()
+
+                def diff(p):
+                    return fr.nmae(p, "ae_rule") - fr.nmae(p, "ae")
+
+                d, lo, hi = fr._boot(per, diff)
+                rows.append(
+                    {
+                        "model": model,
+                        "policy": policy,
+                        "day_class": name,
+                        "sites": len(per),
+                        "site_days": len(g),
+                        "days": g["day"].nunique(),
+                        "share_of_days_pct": 100 * len(g) / total_days,
+                        "share_of_error_pct": 100 * g["ae"].sum() / total_error,
+                        "rule_applied_pct": 100 * applied[g.index].mean(),
+                        "nmae_forecast_pct": fr.nmae(per, "ae"),
+                        "nmae_with_rule_pct": fr.nmae(per, "ae_rule"),
+                        "rule_minus_forecast_pts": d,
+                        "lo": lo,
+                        "hi": hi,
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
 def run() -> dict:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     _, panel = fa.poc_panel()
@@ -314,10 +381,19 @@ def run() -> dict:
     )
     overall = overall_effect(sd, record)
     overall.to_csv(OUT_DIR / "overall.csv", index=False)
+    classes = day_classes(sd, record)
+    classes.to_csv(OUT_DIR / "day_classes.csv", index=False)
     summary = {
         "evaluation_start": EVAL_START,
         "scores": scores[scores["sites_group"] == "all sites"].round(2).to_dict(orient="records"),
         "overall": overall.round(2).to_dict(orient="records"),
+        "day_classes": classes.round(2).to_dict(orient="records"),
     }
     (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2, default=str) + "\n")
-    return {"summary": summary, "scores": scores, "names": names, "overall": overall}
+    return {
+        "summary": summary,
+        "scores": scores,
+        "names": names,
+        "overall": overall,
+        "day_classes": classes,
+    }

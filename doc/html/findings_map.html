@@ -404,10 +404,10 @@ forecast.</p>
 </tr>
 <tr>
   <td>4.11</td>
-  <td>A rule for bank holidays repairs the forecast's weakest days</td>
-  <td>on bank holidays the error is 23.5 % (ordinary days about 11 %); with the same holiday of the past as a correction it is 18.3 % (−5.2 points, −8.2 to −2.4). Over all days the gain is 0.06 points</td>
-  <td>rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on; 19 bank holidays, 91 sites. On the days next to a holiday the rule makes the forecast worse (+3 to +4 points)</td>
-  <td>Solid for bank holidays</td>
+  <td>A rule for special days works on the bank holidays and only there</td>
+  <td>bank holidays: 23.5 to 18.5 % error (−4.9 points, −7.8 to −2.3). Special days (bank holidays and the Christmas period, 4.1 % of days): 16.7 to 14.9 % with the rule on bank holidays (−1.8, −2.8 to −0.9). All days: 11.33 to 11.27 % (−0.06, −0.09 to −0.03). Normal days (11.1 %) do not change</td>
+  <td>rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on, 76,009 site-days. The rule on the Christmas period adds 3.6 points (2.9 to 4.4) and on the proximity days 3.2 points (2.7 to 3.7); the same pattern without inputs (bank holidays −13.8 points)</td>
+  <td>Solid for bank holidays; the rule fails on the Christmas period and the proximity days</td>
 </tr>
 </tbody>
 </table>
@@ -6080,6 +6080,656 @@ the error of all days from 11.33 to 11.27 % (−0.06 points, −0.09 to −0.03)
   </tbody>
 </table><p class="source">source: <a href="data/overall.csv">code/reports/special_days/overall.csv</a> (2 rows shown)</p>
 
+<p><strong>The rule on all days, normal days, special days and proximity days</strong> (added 22 November 2026;
+<code>day_classes.csv</code>). Arora and Taylor score a rule for special days on four sets of days. Here:
+special days are the bank holidays and the Christmas period (24 and 27 to 31 December, 2
+January); proximity days are the working day before and the working day after a bank holiday;
+all other days are normal days. Three policies say where the rule is applied; a day outside
+the policy keeps the forecast, so the normal days are the same with and without the rule.</p>
+<figure class="single"><img src="figures/special_day_classes.png" alt="special_day_classes" loading="lazy"><figcaption>Day-ahead error on all days, normal days, special days (and their two parts) and proximity days: the forecast, and the forecast with the rule under three policies. Forecast with calendar and weather inputs, 2024 to May 2026, 91 sites. <code>special_day_classes</code> <a href="figures/special_day_classes.pdf">PDF</a></figcaption></figure>
+
+<details class="table"><summary>Table: 36 rows</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>policy</th>
+      <th>day_class</th>
+      <th>site_days</th>
+      <th>days</th>
+      <th>share_of_days_pct</th>
+      <th>share_of_error_pct</th>
+      <th>rule_applied_pct</th>
+      <th>nmae_forecast_pct</th>
+      <th>nmae_with_rule_pct</th>
+      <th>rule_minus_forecast_pts</th>
+      <th>lo</th>
+      <th>hi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on bank holidays</td>
+      <td>all days</td>
+      <td>76009</td>
+      <td>855</td>
+      <td>100</td>
+      <td>100</td>
+      <td>2.17</td>
+      <td>12.01</td>
+      <td>11.82</td>
+      <td>-0.19</td>
+      <td>-0.25</td>
+      <td>-0.13</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on bank holidays</td>
+      <td>normal days</td>
+      <td>71136</td>
+      <td>800</td>
+      <td>93.59</td>
+      <td>91.22</td>
+      <td>0</td>
+      <td>11.52</td>
+      <td>11.52</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on bank holidays</td>
+      <td>special days</td>
+      <td>3117</td>
+      <td>35</td>
+      <td>4.1</td>
+      <td>6.31</td>
+      <td>52.84</td>
+      <td>22.43</td>
+      <td>16.83</td>
+      <td>-5.6</td>
+      <td>-7.47</td>
+      <td>-3.85</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on bank holidays</td>
+      <td>proximity days</td>
+      <td>1756</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.47</td>
+      <td>0</td>
+      <td>16.45</td>
+      <td>16.45</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on bank holidays</td>
+      <td>bank holidays</td>
+      <td>1755</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>3.35</td>
+      <td>93.85</td>
+      <td>32.53</td>
+      <td>18.76</td>
+      <td>-13.78</td>
+      <td>-19.33</td>
+      <td>-8.75</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on bank holidays</td>
+      <td>Christmas period</td>
+      <td>1362</td>
+      <td>15</td>
+      <td>1.79</td>
+      <td>2.96</td>
+      <td>0</td>
+      <td>15.4</td>
+      <td>15.4</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special days</td>
+      <td>all days</td>
+      <td>76009</td>
+      <td>855</td>
+      <td>100</td>
+      <td>100</td>
+      <td>3.84</td>
+      <td>12.01</td>
+      <td>11.89</td>
+      <td>-0.12</td>
+      <td>-0.18</td>
+      <td>-0.06</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special days</td>
+      <td>normal days</td>
+      <td>71136</td>
+      <td>800</td>
+      <td>93.59</td>
+      <td>91.22</td>
+      <td>0</td>
+      <td>11.52</td>
+      <td>11.52</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special days</td>
+      <td>special days</td>
+      <td>3117</td>
+      <td>35</td>
+      <td>4.1</td>
+      <td>6.31</td>
+      <td>93.62</td>
+      <td>22.43</td>
+      <td>18.57</td>
+      <td>-3.86</td>
+      <td>-5.74</td>
+      <td>-2.08</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special days</td>
+      <td>proximity days</td>
+      <td>1756</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.47</td>
+      <td>0</td>
+      <td>16.45</td>
+      <td>16.45</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special days</td>
+      <td>bank holidays</td>
+      <td>1755</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>3.35</td>
+      <td>93.85</td>
+      <td>32.53</td>
+      <td>18.76</td>
+      <td>-13.78</td>
+      <td>-19.33</td>
+      <td>-8.75</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special days</td>
+      <td>Christmas period</td>
+      <td>1362</td>
+      <td>15</td>
+      <td>1.79</td>
+      <td>2.96</td>
+      <td>93.32</td>
+      <td>15.4</td>
+      <td>18.65</td>
+      <td>3.25</td>
+      <td>2.62</td>
+      <td>3.89</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special and proximity days</td>
+      <td>all days</td>
+      <td>76009</td>
+      <td>855</td>
+      <td>100</td>
+      <td>100</td>
+      <td>6.13</td>
+      <td>12.01</td>
+      <td>11.91</td>
+      <td>-0.1</td>
+      <td>-0.17</td>
+      <td>-0.03</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special and proximity days</td>
+      <td>normal days</td>
+      <td>71136</td>
+      <td>800</td>
+      <td>93.59</td>
+      <td>91.22</td>
+      <td>0</td>
+      <td>11.52</td>
+      <td>11.52</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special and proximity days</td>
+      <td>special days</td>
+      <td>3117</td>
+      <td>35</td>
+      <td>4.1</td>
+      <td>6.31</td>
+      <td>93.62</td>
+      <td>22.43</td>
+      <td>18.57</td>
+      <td>-3.86</td>
+      <td>-5.74</td>
+      <td>-2.08</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special and proximity days</td>
+      <td>proximity days</td>
+      <td>1756</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.47</td>
+      <td>98.97</td>
+      <td>16.45</td>
+      <td>17.64</td>
+      <td>1.2</td>
+      <td>0.45</td>
+      <td>1.9</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special and proximity days</td>
+      <td>bank holidays</td>
+      <td>1755</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>3.35</td>
+      <td>93.85</td>
+      <td>32.53</td>
+      <td>18.76</td>
+      <td>-13.78</td>
+      <td>-19.33</td>
+      <td>-8.75</td>
+    </tr>
+    <tr>
+      <td>chronos2</td>
+      <td>rule on special and proximity days</td>
+      <td>Christmas period</td>
+      <td>1362</td>
+      <td>15</td>
+      <td>1.79</td>
+      <td>2.96</td>
+      <td>93.32</td>
+      <td>15.4</td>
+      <td>18.65</td>
+      <td>3.25</td>
+      <td>2.62</td>
+      <td>3.89</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on bank holidays</td>
+      <td>all days</td>
+      <td>76009</td>
+      <td>855</td>
+      <td>100</td>
+      <td>100</td>
+      <td>2.17</td>
+      <td>11.33</td>
+      <td>11.27</td>
+      <td>-0.06</td>
+      <td>-0.09</td>
+      <td>-0.03</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on bank holidays</td>
+      <td>normal days</td>
+      <td>71136</td>
+      <td>800</td>
+      <td>93.59</td>
+      <td>92.72</td>
+      <td>0</td>
+      <td>11.09</td>
+      <td>11.09</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on bank holidays</td>
+      <td>special days</td>
+      <td>3117</td>
+      <td>35</td>
+      <td>4.1</td>
+      <td>5.03</td>
+      <td>52.84</td>
+      <td>16.68</td>
+      <td>14.88</td>
+      <td>-1.8</td>
+      <td>-2.77</td>
+      <td>-0.88</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on bank holidays</td>
+      <td>proximity days</td>
+      <td>1756</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.25</td>
+      <td>0</td>
+      <td>13.45</td>
+      <td>13.45</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on bank holidays</td>
+      <td>bank holidays</td>
+      <td>1755</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.83</td>
+      <td>93.85</td>
+      <td>23.46</td>
+      <td>18.53</td>
+      <td>-4.93</td>
+      <td>-7.84</td>
+      <td>-2.25</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on bank holidays</td>
+      <td>Christmas period</td>
+      <td>1362</td>
+      <td>15</td>
+      <td>1.79</td>
+      <td>2.2</td>
+      <td>0</td>
+      <td>11.9</td>
+      <td>11.9</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special days</td>
+      <td>all days</td>
+      <td>76009</td>
+      <td>855</td>
+      <td>100</td>
+      <td>100</td>
+      <td>3.84</td>
+      <td>11.33</td>
+      <td>11.35</td>
+      <td>0.02</td>
+      <td>-0.02</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special days</td>
+      <td>normal days</td>
+      <td>71136</td>
+      <td>800</td>
+      <td>93.59</td>
+      <td>92.72</td>
+      <td>0</td>
+      <td>11.09</td>
+      <td>11.09</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special days</td>
+      <td>special days</td>
+      <td>3117</td>
+      <td>35</td>
+      <td>4.1</td>
+      <td>5.03</td>
+      <td>93.62</td>
+      <td>16.68</td>
+      <td>16.84</td>
+      <td>0.16</td>
+      <td>-0.82</td>
+      <td>1.06</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special days</td>
+      <td>proximity days</td>
+      <td>1756</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.25</td>
+      <td>0</td>
+      <td>13.45</td>
+      <td>13.45</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special days</td>
+      <td>bank holidays</td>
+      <td>1755</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.83</td>
+      <td>93.85</td>
+      <td>23.46</td>
+      <td>18.53</td>
+      <td>-4.93</td>
+      <td>-7.84</td>
+      <td>-2.25</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special days</td>
+      <td>Christmas period</td>
+      <td>1362</td>
+      <td>15</td>
+      <td>1.79</td>
+      <td>2.2</td>
+      <td>93.32</td>
+      <td>11.9</td>
+      <td>15.49</td>
+      <td>3.59</td>
+      <td>2.93</td>
+      <td>4.39</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special and proximity days</td>
+      <td>all days</td>
+      <td>76009</td>
+      <td>855</td>
+      <td>100</td>
+      <td>100</td>
+      <td>6.13</td>
+      <td>11.33</td>
+      <td>11.42</td>
+      <td>0.09</td>
+      <td>0.05</td>
+      <td>0.13</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special and proximity days</td>
+      <td>normal days</td>
+      <td>71136</td>
+      <td>800</td>
+      <td>93.59</td>
+      <td>92.72</td>
+      <td>0</td>
+      <td>11.09</td>
+      <td>11.09</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special and proximity days</td>
+      <td>special days</td>
+      <td>3117</td>
+      <td>35</td>
+      <td>4.1</td>
+      <td>5.03</td>
+      <td>93.62</td>
+      <td>16.68</td>
+      <td>16.84</td>
+      <td>0.16</td>
+      <td>-0.82</td>
+      <td>1.06</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special and proximity days</td>
+      <td>proximity days</td>
+      <td>1756</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.25</td>
+      <td>98.97</td>
+      <td>13.45</td>
+      <td>16.65</td>
+      <td>3.21</td>
+      <td>2.7</td>
+      <td>3.73</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special and proximity days</td>
+      <td>bank holidays</td>
+      <td>1755</td>
+      <td>20</td>
+      <td>2.31</td>
+      <td>2.83</td>
+      <td>93.85</td>
+      <td>23.46</td>
+      <td>18.53</td>
+      <td>-4.93</td>
+      <td>-7.84</td>
+      <td>-2.25</td>
+    </tr>
+    <tr>
+      <td>chronos2_ifs</td>
+      <td>rule on special and proximity days</td>
+      <td>Christmas period</td>
+      <td>1362</td>
+      <td>15</td>
+      <td>1.79</td>
+      <td>2.2</td>
+      <td>93.32</td>
+      <td>11.9</td>
+      <td>15.49</td>
+      <td>3.59</td>
+      <td>2.93</td>
+      <td>4.39</td>
+    </tr>
+  </tbody>
+</table></details><p class="source">source: <a href="data/day_classes.csv">code/reports/special_days/day_classes.csv</a> (36 rows shown)</p>
+
+<p>For the forecast with calendar and weather inputs (76,009 site-days on 855 days):</p>
+<table>
+<thead>
+<tr>
+  <th>Days</th>
+  <th>Share of days</th>
+  <th>Forecast</th>
+  <th>Rule on bank holidays</th>
+  <th>Rule on special days</th>
+  <th>Rule on special and proximity days</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>All days</td>
+  <td>100 %</td>
+  <td>11.33 %</td>
+  <td>11.27 % (−0.06, −0.09 to −0.03)</td>
+  <td>11.35 % (+0.02, −0.02 to +0.05)</td>
+  <td>11.42 % (+0.09, 0.05 to 0.13)</td>
+</tr>
+<tr>
+  <td>Normal days</td>
+  <td>93.6 %</td>
+  <td>11.09 %</td>
+  <td>11.09 %</td>
+  <td>11.09 %</td>
+  <td>11.09 %</td>
+</tr>
+<tr>
+  <td>Special days</td>
+  <td>4.1 %</td>
+  <td>16.68 %</td>
+  <td>14.88 % (−1.80, −2.77 to −0.88)</td>
+  <td>16.84 % (+0.16, −0.82 to +1.06)</td>
+  <td>16.84 %</td>
+</tr>
+<tr>
+  <td>of these: bank holidays</td>
+  <td>2.3 %</td>
+  <td>23.46 %</td>
+  <td>18.53 % (−4.93, −7.84 to −2.25)</td>
+  <td>18.53 %</td>
+  <td>18.53 %</td>
+</tr>
+<tr>
+  <td>of these: Christmas period</td>
+  <td>1.8 %</td>
+  <td>11.90 %</td>
+  <td>11.90 %</td>
+  <td>15.49 % (+3.59, 2.93 to 4.39)</td>
+  <td>15.49 %</td>
+</tr>
+<tr>
+  <td>Proximity days</td>
+  <td>2.3 %</td>
+  <td>13.45 %</td>
+  <td>13.45 %</td>
+  <td>13.45 %</td>
+  <td>16.65 % (+3.21, 2.70 to 3.73)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The rule works on the bank holidays and only there.</strong> Applied to the bank holidays it
+lowers the error of the special days by 1.8 points and the error of all days by 0.06 points;
+both intervals exclude zero.</li>
+<li><strong>Applied to all special days it gains nothing</strong> (+0.16 points on the special days): the
+loss on the Christmas period cancels the gain on the bank holidays. The Christmas period is
+no anomaly at these sites (11.9 % error against 11.1 % on normal days), so one past day adds
+noise.</li>
+<li><strong>Applied to the proximity days it does harm</strong> (+3.2 points). The proximity days are harder
+than normal days (13.5 % against 11.1 %), but the same day a year before does not say how.</li>
+<li><strong>Without inputs the same pattern is larger</strong>: bank holidays 32.5 to 18.8 % (−13.8 points,
+−19.3 to −8.8), special days −5.6 points with the rule on bank holidays, all days −0.19
+points (−0.25 to −0.13); Christmas period +3.3 and proximity days +1.2 points.</li>
+<li>A hospital is not the national grid: the national load of the two papers falls on the days
+around a holiday as well, and a hospital's does not. The policy for these sites is the rule
+on bank holidays.</li>
+</ul>
 <h2 id="8-what-this-page-changes">8. What this page changes</h2>
 <p><strong>Withdrawn or corrected</strong></p>
 <ul>

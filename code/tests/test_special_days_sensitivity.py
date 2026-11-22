@@ -76,3 +76,49 @@ def test_a_constant_shift_between_arms_is_bounded_around_itself():
     assert lo < 5.0 < hi and lo > 0  # a large effect survives a moderate hidden factor
     lo, hi = cs.effect_bounds(y1 - 4.0, y0, 0.05, 50.0)
     assert lo < 0 < hi  # a small effect does not survive a strong one
+
+
+def test_day_classes_change_only_the_days_inside_the_policy(monkeypatch):
+    monkeypatch.setattr(sp.fr, "N_BOOT", 50)
+    sites = [f"S{i}" for i in range(6)]
+    days = pd.date_range("2024-12-20", "2025-01-10")
+    record = pd.DataFrame(
+        [
+            {"model": "m", "site_code": s, "day": d, "a": 100.0, "ae": 10.0}
+            for s in sites
+            for d in days
+        ]
+    )
+    kinds = {
+        pd.Timestamp("2024-12-25"): ("bank holiday", 4.0),  # the rule helps
+        pd.Timestamp("2024-12-27"): ("Christmas period", 14.0),  # the rule hurts
+        pd.Timestamp("2025-01-02"): ("day after a bank holiday", 16.0),
+        pd.Timestamp("2025-01-01"): ("bank holiday", np.nan),  # no corresponding past day
+    }
+    sd = pd.DataFrame(
+        [
+            {"model": "m", "site_code": s, "day": d, "kind": k, "ae_rule_half-hour": e}
+            for s in sites
+            for d, (k, e) in kinds.items()
+        ]
+    )
+    out = sp.day_classes(sd, record).set_index(["policy", "day_class"])
+    assert sp.day_class(sd["kind"]).value_counts().to_dict() == {
+        "special days": 18,
+        "proximity days": 6,
+    }
+    for policy in sp.POLICIES:
+        assert out.loc[(policy, "normal days"), "rule_minus_forecast_pts"] == 0.0
+        assert out.loc[(policy, "normal days"), "days"] == len(days) - 4
+    holidays = out.loc[("rule on bank holidays", "bank holidays")]
+    assert np.isclose(holidays["nmae_with_rule_pct"], 7.0)  # one of two corrected: (4 + 10) / 2
+    assert np.isclose(holidays["rule_applied_pct"], 50.0)
+    assert out.loc[("rule on bank holidays", "Christmas period"), "rule_minus_forecast_pts"] == 0.0
+    christmas = out.loc[("rule on special days", "Christmas period"), "nmae_with_rule_pct"]
+    assert np.isclose(christmas, 14.0)
+    assert out.loc[("rule on special days", "proximity days"), "rule_minus_forecast_pts"] == 0.0
+    both = out.loc[("rule on special and proximity days", "proximity days")]
+    assert np.isclose(both["nmae_with_rule_pct"], 16.0)
+    # all days: the three changes add up over the 22 days
+    total = out.loc[("rule on special and proximity days", "all days"), "rule_minus_forecast_pts"]
+    assert np.isclose(total, (-6.0 + 4.0 + 6.0) / len(days))

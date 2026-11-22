@@ -86,7 +86,7 @@ forecast.
 | 4.8 | Visitor counts add nothing to the forecast | +0.006 points (−0.012 to +0.024) | two sites; agrees with 2.6 | Indicative |
 | 4.9 | Coherent forecasts across meters, sites and trusts improve the national total | 8.0 to 6.8 % | no interval; 61 test days | Indicative |
 | 4.10 | A published method for heat and cold waves (Lu et al. 2026) is level with the zero-shot model | 11 % behind in Europe, 6.5 % ahead in PJM | the paper's own public data; one seed | Indicative |
-| 4.11 | A rule for bank holidays repairs the forecast's weakest days | on bank holidays the error is 23.5 % (ordinary days about 11 %); with the same holiday of the past as a correction it is 18.3 % (−5.2 points, −8.2 to −2.4). Over all days the gain is 0.06 points | rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on; 19 bank holidays, 91 sites. On the days next to a holiday the rule makes the forecast worse (+3 to +4 points) | Solid for bank holidays |
+| 4.11 | A rule for special days works on the bank holidays and only there | bank holidays: 23.5 to 18.5 % error (−4.9 points, −7.8 to −2.3). Special days (bank holidays and the Christmas period, 4.1 % of days): 16.7 to 14.9 % with the rule on bank holidays (−1.8, −2.8 to −0.9). All days: 11.33 to 11.27 % (−0.06, −0.09 to −0.03). Normal days (11.1 %) do not change | rule of Arora and Taylor (2013, 2018) on the whole-record forecasts from 2024 on, 76,009 site-days. The rule on the Christmas period adds 3.6 points (2.9 to 4.4) and on the proximity days 3.2 points (2.7 to 3.7); the same pattern without inputs (bank holidays −13.8 points) | Solid for bank holidays; the rule fails on the Christmas period and the proximity days |
 
 ## 5. What changes when the estate changes?
 
@@ -287,6 +287,44 @@ the corresponding past special day, by half-hour.
   the error of all days from 11.33 to 11.27 % (−0.06 points, −0.09 to −0.03).
 
 {{table: code/reports/special_days/overall.csv | round=2}}
+
+**The rule on all days, normal days, special days and proximity days** (added 22 November 2026;
+`day_classes.csv`). Arora and Taylor score a rule for special days on four sets of days. Here:
+special days are the bank holidays and the Christmas period (24 and 27 to 31 December, 2
+January); proximity days are the working day before and the working day after a bank holiday;
+all other days are normal days. Three policies say where the rule is applied; a day outside
+the policy keeps the forecast, so the normal days are the same with and without the rule.
+
+{{figure: special_day_classes | caption=Day-ahead error on all days, normal days, special days (and their two parts) and proximity days: the forecast, and the forecast with the rule under three policies. Forecast with calendar and weather inputs, 2024 to May 2026, 91 sites.}}
+
+{{table: code/reports/special_days/day_classes.csv | cols=model,policy,day_class,site_days,days,share_of_days_pct,share_of_error_pct,rule_applied_pct,nmae_forecast_pct,nmae_with_rule_pct,rule_minus_forecast_pts,lo,hi | round=2}}
+
+For the forecast with calendar and weather inputs (76,009 site-days on 855 days):
+
+| Days | Share of days | Forecast | Rule on bank holidays | Rule on special days | Rule on special and proximity days |
+|---|---|---|---|---|---|
+| All days | 100 % | 11.33 % | 11.27 % (−0.06, −0.09 to −0.03) | 11.35 % (+0.02, −0.02 to +0.05) | 11.42 % (+0.09, 0.05 to 0.13) |
+| Normal days | 93.6 % | 11.09 % | 11.09 % | 11.09 % | 11.09 % |
+| Special days | 4.1 % | 16.68 % | 14.88 % (−1.80, −2.77 to −0.88) | 16.84 % (+0.16, −0.82 to +1.06) | 16.84 % |
+| of these: bank holidays | 2.3 % | 23.46 % | 18.53 % (−4.93, −7.84 to −2.25) | 18.53 % | 18.53 % |
+| of these: Christmas period | 1.8 % | 11.90 % | 11.90 % | 15.49 % (+3.59, 2.93 to 4.39) | 15.49 % |
+| Proximity days | 2.3 % | 13.45 % | 13.45 % | 13.45 % | 16.65 % (+3.21, 2.70 to 3.73) |
+
+- **The rule works on the bank holidays and only there.** Applied to the bank holidays it
+  lowers the error of the special days by 1.8 points and the error of all days by 0.06 points;
+  both intervals exclude zero.
+- **Applied to all special days it gains nothing** (+0.16 points on the special days): the
+  loss on the Christmas period cancels the gain on the bank holidays. The Christmas period is
+  no anomaly at these sites (11.9 % error against 11.1 % on normal days), so one past day adds
+  noise.
+- **Applied to the proximity days it does harm** (+3.2 points). The proximity days are harder
+  than normal days (13.5 % against 11.1 %), but the same day a year before does not say how.
+- **Without inputs the same pattern is larger**: bank holidays 32.5 to 18.8 % (−13.8 points,
+  −19.3 to −8.8), special days −5.6 points with the rule on bank holidays, all days −0.19
+  points (−0.25 to −0.13); Christmas period +3.3 and proximity days +1.2 points.
+- A hospital is not the national grid: the national load of the two papers falls on the days
+  around a holiday as well, and a hospital's does not. The policy for these sites is the rule
+  on bank holidays.
 
 ## 8. What this page changes
 
