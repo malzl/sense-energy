@@ -1,0 +1,35 @@
+{
+  "model": "chronos2_ifs",
+  "days_scored": 1117,
+  "sites": 91,
+  "whole_record": {
+    "model": {
+      "below_pct": 14.01,
+      "above_pct": 10.34,
+      "inside_pct": 75.65,
+      "width_pct": 32.75,
+      "loss_pct": 5.69
+    },
+    "rolling quantile": {
+      "below_pct": 11.06,
+      "above_pct": 11.19,
+      "inside_pct": 77.75,
+      "width_pct": 34.12,
+      "loss_pct": 5.72
+    },
+    "quantile tracking": {
+      "below_pct": 9.99,
+      "above_pct": 9.96,
+      "inside_pct": 80.05,
+      "width_pct": 37.27,
+      "loss_pct": 5.87
+    },
+    "tracking with integrator": {
+      "below_pct": 9.97,
+      "above_pct": 9.97,
+      "inside_pct": 80.06,
+      "width_pct": 38.4,
+      "loss_pct": 5.99
+    }
+  }
+}

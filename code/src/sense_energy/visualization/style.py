@@ -905,3 +905,88 @@ PREDICTOR_ORDER = (
     "the other sites of the region",
     "the site's other events",
 )
+
+# Extensions of the day-ahead forecast (analysis/forecast_extensions.py and forecast_range.py).
+RETRAIN_MODEL_NAMES = {
+    "seasonal_naive": "seasonal naive",
+    "lightgbm_once": "trained model, trained once",
+    "lightgbm_quarterly": "trained model, trained again each quarter",
+    "chronos2_ifs": "zero-shot model",
+}
+RETRAIN_MODEL_COLORS = {
+    "seasonal_naive": "#7A7A7A",
+    "lightgbm_once": "#E69F00",
+    "lightgbm_quarterly": "#D55E00",
+    "chronos2_ifs": "#0072B2",
+}
+RETRAIN_MODEL_LINESTYLES = {
+    "seasonal_naive": ":",
+    "lightgbm_once": "--",
+    "lightgbm_quarterly": "-.",
+    "chronos2_ifs": "-",
+}
+RETRAIN_MODEL_MARKERS = {
+    "seasonal_naive": "x",
+    "lightgbm_once": "s",
+    "lightgbm_quarterly": "D",
+    "chronos2_ifs": "o",
+}
+CORRECTION_NAMES = {
+    "day_ahead": "day-ahead forecast",
+    "value_carried": "last metered value",
+    "error_carried": "day-ahead forecast plus its last error",
+    "corrected": "day-ahead forecast plus a forecast of its error",
+    "direct": "new zero-shot forecast of the demand",
+}
+CORRECTION_COLORS = {
+    "day_ahead": "#0072B2",
+    "value_carried": "#7A7A7A",
+    "error_carried": "#E69F00",
+    "corrected": "#D55E00",
+    "direct": "#009E73",
+}
+CORRECTION_MARKERS = {
+    "day_ahead": "o",
+    "value_carried": "x",
+    "error_carried": "s",
+    "corrected": "D",
+    "direct": "^",
+}
+SPLIT_WEATHER_NAMES = {
+    "chronos2_ifs_split": "measured and forecast weather as two inputs",
+    "chronos2_ifs_fc_only": "forecast weather only",
+}
+SPLIT_WEATHER_COLORS = {"chronos2_ifs_split": "#D55E00", "chronos2_ifs_fc_only": "#009E73"}
+SPLIT_WEATHER_MARKERS = {"chronos2_ifs_split": "D", "chronos2_ifs_fc_only": "^"}
+RANGE_METHOD_NAMES = {
+    "model": "range of the model",
+    "rolling quantile": "fixed rule on the last 90 days",
+    "quantile tracking": "tracked online",
+    "tracking with integrator": "tracked online, with integrator",
+}
+RANGE_METHOD_COLORS = {
+    "model": "#0072B2",
+    "rolling quantile": "#7A7A7A",
+    "quantile tracking": "#D55E00",
+    "tracking with integrator": "#E69F00",
+}
+RANGE_METHOD_MARKERS = {
+    "model": "o",
+    "rolling quantile": "x",
+    "quantile tracking": "D",
+    "tracking with integrator": "s",
+}
+RANGE_METHOD_LINESTYLES = {
+    "model": "-",
+    "rolling quantile": ":",
+    "quantile tracking": "--",
+    "tracking with integrator": "-.",
+}
+SEASON_ORDER = ("winter", "spring", "summer", "autumn")
+SEASON_COLORS = {
+    "winter": "#0072B2",
+    "spring": "#009E73",
+    "summer": "#D55E00",
+    "autumn": "#E69F00",
+}
+SEASON_LINESTYLES = {"winter": "-", "spring": "--", "summer": "-.", "autumn": ":"}

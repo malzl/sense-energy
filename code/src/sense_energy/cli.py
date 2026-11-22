@@ -715,6 +715,48 @@ def forecast_probes_cmd(which: str, threads: int, limit: int | None) -> None:
     click.echo(f"{which}: {len(out):,} forecast rows, models {sorted(out['model'].unique())}")
 
 
+@cli.command("forecast-extension-runs")
+@click.option(
+    "--which",
+    type=click.Choice(["correction", "split-weather", "retrain"]),
+    required=True,
+    help="correction: a second zero-shot model forecasts the errors of the day-ahead forecast "
+    "every two hours; split-weather: measured and forecast weather as separate inputs; "
+    "retrain: LightGBM trained once against trained again each quarter (CPU). The first two "
+    "use a GPU if one is visible.",
+)
+@click.option("--threads", default=16, show_default=True, help="For the re-training run.")
+def forecast_extension_runs_cmd(which: str, threads: int) -> None:
+    """Forecast runs for the extensions of the day-ahead forecast (whole record)."""
+    if which == "retrain":
+        from .experiments.gbm_rolling import run
+
+        out = run(threads)
+    else:
+        from .experiments import forecast_extensions as fx
+
+        out = fx.run_residual() if which == "correction" else fx.run_split_weather()
+    click.echo(f"{which}: {len(out):,} forecast rows")
+
+
+@cli.command("forecast-extensions")
+def forecast_extensions_cmd() -> None:
+    """Score the re-trained baseline, the correction within the day and the split weather
+    inputs against the day-ahead forecast of the whole record."""
+    from .analysis.forecast_extensions import run
+
+    click.echo(json.dumps(run()["summary"], indent=1, default=float))
+
+
+@cli.command("forecast-range")
+def forecast_range_cmd() -> None:
+    """Where the 80 % range of the day-ahead forecast fails, and its online correction
+    (conformal quantile tracking, Angelopoulos et al. 2023)."""
+    from .analysis.forecast_range import run
+
+    click.echo(json.dumps(run()["summary"], indent=1, default=float))
+
+
 @cli.command("forecast-anatomy")
 def forecast_anatomy_cmd() -> None:
     """Where the day-ahead error sits: site group, kind of day, level and shape, strikes, footfall."""
